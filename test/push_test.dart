@@ -560,16 +560,19 @@ void main() {
         t.widget<Switch>(find.byKey(Key('settings.notify.$key'))).onChanged !=
         null;
 
-    testWidgets('four switches from the server; two arrive later', (t) async {
+    testWidgets('four switches from the server; the brief arrives later', (
+      t,
+    ) async {
       await openSettings(t);
       expect(find.text('NOTIFICATIONS'), findsOneWidget);
       expect(switchOn(t, 'approvals'), isTrue);
       expect(switchOn(t, 'run_done'), isTrue);
       expect(switchOn(t, 'water'), isFalse);
       expect(switchEnabled(t, 'approvals'), isTrue);
-      expect(switchEnabled(t, 'water'), isFalse);
+      expect(switchEnabled(t, 'water'), isTrue);
       expect(switchEnabled(t, 'brief'), isFalse);
-      expect(find.text('Comes with the dashboard'), findsOneWidget);
+      expect(find.text('After each scheduled reading'), findsOneWidget);
+      expect(find.text('Comes with schedules'), findsOneWidget);
       expect(find.byType(StatusBanner), findsNothing);
     });
 
@@ -659,6 +662,57 @@ void main() {
         find.text("The server can't send notifications yet (no Firebase key)."),
         findsOneWidget,
       );
+    });
+  });
+
+  group('water level', () {
+    Map<String, Object?> waterData({String trend = '-2'}) => {
+      'kind': 'card',
+      'card_id': 'k1',
+      'type': 'water',
+      'severity': 'info',
+      'station': 'Siófok',
+      'level_cm': '98',
+      'lake_avg_cm': '101',
+      'trend_cm_24h': trend,
+      'lake_avg_trend_cm_24h': '',
+      'measured_at': '2026-10-20T18:00:00+00:00',
+    };
+
+    test('parses; other card types and broken ones are ignored', () {
+      final w = PushMessage.parse(waterData())! as WaterPush;
+      expect(
+        (w.station, w.levelCm, w.lakeAvgCm, w.trendCm),
+        ('Siófok', 98.0, 101.0, -2.0),
+      );
+      expect(PushMessage.parse({...waterData(), 'type': 'disk'}), isNull);
+      expect(PushMessage.parse({...waterData(), 'level_cm': ''}), isNull);
+    });
+
+    test('one notification, replaced by the next reading', () {
+      final n = waterNotification(
+        l,
+        PushMessage.parse(waterData())! as WaterPush,
+      );
+      expect(n.title, 'Water level · Siófok 98 cm');
+      expect(n.body, 'Lake average 101 cm · \u22122 cm vs yesterday');
+      expect(n.channel, NotifyChannel.cards);
+      expect(n.id, notificationId('card:water'));
+      final target = PushTarget.decode(n.payload)!;
+      expect((target.kind, target.conversationId), ('card', null));
+      final rising = waterNotification(
+        l,
+        PushMessage.parse(waterData(trend: '1'))! as WaterPush,
+      );
+      expect(rising.body, endsWith('+1 cm vs yesterday'));
+    });
+
+    test('shown in the background only', () async {
+      final n = FakeNotifications();
+      await handlePush(waterData(), n, now: now, foreground: true);
+      expect(n.shown, isEmpty);
+      await handlePush(waterData(), n, now: now);
+      expect(n.shown.single.channel, NotifyChannel.cards);
     });
   });
 }

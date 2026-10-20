@@ -281,8 +281,8 @@ class _ThinkingRoute extends ConsumerWidget {
 }
 
 /// Notification switches (design 16): stored on the server per device
-/// (`PATCH /devices/me`). Water level and the morning brief arrive with
-/// their screens. A banner says when this phone or the server cannot push.
+/// (`PATCH /devices/me`). The morning brief arrives with schedules (B4). A
+/// banner says when this phone or the server cannot push.
 class _Notifications extends ConsumerStatefulWidget {
   const _Notifications({required this.device});
 
@@ -304,6 +304,7 @@ class _NotificationsState extends ConsumerState<_Notifications> {
       await api.patchDevice(
         approvals: key == 'approvals' ? value : null,
         runDone: key == 'run_done' ? value : null,
+        water: key == 'water' ? value : null,
       );
       ref.invalidate(deviceInfoProvider);
       await ref.read(deviceInfoProvider.future);
@@ -407,9 +408,8 @@ class _NotificationsState extends ConsumerState<_Notifications> {
           'water',
           DelveIcons.water,
           l.settingsNotifyWater,
-          l.settingsNotifyLaterDashboard,
+          l.settingsNotifyWaterSub,
           notify?.water,
-          enabled: false,
         ),
         row(
           'brief',

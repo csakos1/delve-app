@@ -4,7 +4,7 @@ import '../ui/format.dart';
 import 'push_message.dart';
 
 /// The two Android notification channels (design 18).
-enum NotifyChannel { approvals, runs }
+enum NotifyChannel { approvals, runs, cards }
 
 /// Action ids on a notification.
 abstract final class NotifyActions {
@@ -126,6 +126,23 @@ NotificationSpec runDoneNotification(AppLocalizations l, RunDonePush p) {
       kind: 'run_done',
       conversationId: p.conversationId,
     ).encode(),
+    actions: [NotifyAction(NotifyActions.open, l.notifyOpen, opensApp: true)],
+  );
+}
+
+/// "Water level · Siófok 98 cm", "Lake average 101 cm · −2 cm vs yesterday";
+/// Open (the dashboard). One notification: the next reading replaces it.
+NotificationSpec waterNotification(AppLocalizations l, WaterPush p) {
+  final parts = [
+    if (p.lakeAvgCm case final avg?) l.notifyWaterLake('${avg.round()}'),
+    if (p.trendCm case final t?) l.notifyWaterTrend(signedCm(t)),
+  ];
+  return NotificationSpec(
+    id: notificationId('card:water'),
+    channel: NotifyChannel.cards,
+    title: l.notifyWaterTitle(p.station, '${p.levelCm.round()}'),
+    body: parts.join(' · '),
+    payload: const PushTarget(kind: 'card').encode(),
     actions: [NotifyAction(NotifyActions.open, l.notifyOpen, opensApp: true)],
   );
 }

@@ -7,6 +7,7 @@ import '../app/router.dart';
 import '../l10n/app_localizations.dart';
 import '../ui/format.dart';
 import 'push_controller.dart';
+import 'push_message.dart';
 import 'push_providers.dart';
 
 /// Keeps push alive while the app runs and acts on notification taps: opens
@@ -46,11 +47,16 @@ class _PushHostState extends ConsumerState<PushHost> {
     final l = AppLocalizations.of(context);
     final router = ref.read(routerProvider);
     final messenger = ScaffoldMessenger.maybeOf(context);
+    // a chat's notification opens the chat, a card's the dashboard
+    String place(PushTarget t) => switch (t.conversationId) {
+      final id? => Routes.chat(id),
+      null => Routes.dashboard,
+    };
     switch (event) {
       case PushOpen(:final target):
-        router.go(Routes.chat(target.conversationId));
+        router.go(place(target));
       case PushAnswered(:final target, :final approval):
-        router.go(Routes.chat(target.conversationId));
+        router.go(place(target));
         final late =
             approval.status == 'late_approved' ||
             approval.status == 'followup_started';

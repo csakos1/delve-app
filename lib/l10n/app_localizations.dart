@@ -1804,12 +1804,6 @@ abstract class AppLocalizations {
   /// **'Morning brief'**
   String get settingsNotifyBrief;
 
-  /// No description provided for @settingsNotifyLaterDashboard.
-  ///
-  /// In en, this message translates to:
-  /// **'Comes with the dashboard'**
-  String get settingsNotifyLaterDashboard;
-
   /// No description provided for @settingsNotifyLaterSchedules.
   ///
   /// In en, this message translates to:
@@ -1845,6 +1839,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t save: {reason}'**
   String settingsNotifySaveFailed(String reason);
+
+  /// No description provided for @dashUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String dashUpdated(String time);
+
+  /// No description provided for @dashConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected · tailnet'**
+  String get dashConnected;
+
+  /// No description provided for @dashWaterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lake Balaton water level'**
+  String get dashWaterTitle;
+
+  /// No description provided for @dashToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today {time}'**
+  String dashToday(String time);
+
+  /// No description provided for @dashCm.
+  ///
+  /// In en, this message translates to:
+  /// **'cm'**
+  String get dashCm;
+
+  /// No description provided for @dashLakeAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Lake average'**
+  String get dashLakeAverage;
+
+  /// No description provided for @dashVsYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'vs yesterday'**
+  String get dashVsYesterday;
+
+  /// No description provided for @dashWaterEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No water reading yet. It arrives after the next scheduled reading.'**
+  String get dashWaterEmpty;
+
+  /// No description provided for @notifyWaterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Water level · {station} {level} cm'**
+  String notifyWaterTitle(String station, String level);
+
+  /// No description provided for @notifyWaterLake.
+  ///
+  /// In en, this message translates to:
+  /// **'Lake average {level} cm'**
+  String notifyWaterLake(String level);
+
+  /// No description provided for @notifyWaterTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'{change} cm vs yesterday'**
+  String notifyWaterTrend(String change);
+
+  /// No description provided for @notifyChannelCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Water level'**
+  String get notifyChannelCards;
+
+  /// No description provided for @notifyChannelCardsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'After each scheduled reading'**
+  String get notifyChannelCardsDesc;
+
+  /// No description provided for @settingsNotifyWaterSub.
+  ///
+  /// In en, this message translates to:
+  /// **'After each scheduled reading'**
+  String get settingsNotifyWaterSub;
 }
 
 class _AppLocalizationsDelegate

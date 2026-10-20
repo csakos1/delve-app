@@ -239,6 +239,9 @@ class EventReducer {
           effects.add(() => live.context(conversationId, runId, sample));
         }
 
+      case CardNew(:final card):
+        await db.putCard(card);
+
       case final HealthStatus health:
         outcome.health = health;
 

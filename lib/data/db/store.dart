@@ -32,6 +32,18 @@ extension Store on AppDatabase {
         ),
       );
 
+  Future<void> putCard(AgentCard c) => into(cards).insertOnConflictUpdate(
+    CardsCompanion.insert(
+      id: c.id,
+      type: c.type,
+      severity: c.severity,
+      ts: c.ts,
+      origin: c.origin,
+      payload: c.payload,
+      receivedAt: c.receivedAt,
+    ),
+  );
+
   Future<void> putMessage(Message m) => into(messages).insertOnConflictUpdate(
     MessagesCompanion.insert(
       id: Value(m.id),

@@ -1017,9 +1017,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsNotifyBrief => 'Morning brief';
 
   @override
-  String get settingsNotifyLaterDashboard => 'Comes with the dashboard';
-
-  @override
   String get settingsNotifyLaterSchedules => 'Comes with schedules';
 
   @override
@@ -1041,4 +1038,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String settingsNotifySaveFailed(String reason) {
     return 'Couldn\'t save: $reason';
   }
+
+  @override
+  String dashUpdated(String time) {
+    return 'Updated $time';
+  }
+
+  @override
+  String get dashConnected => 'Connected · tailnet';
+
+  @override
+  String get dashWaterTitle => 'Lake Balaton water level';
+
+  @override
+  String dashToday(String time) {
+    return 'today $time';
+  }
+
+  @override
+  String get dashCm => 'cm';
+
+  @override
+  String get dashLakeAverage => 'Lake average';
+
+  @override
+  String get dashVsYesterday => 'vs yesterday';
+
+  @override
+  String get dashWaterEmpty =>
+      'No water reading yet. It arrives after the next scheduled reading.';
+
+  @override
+  String notifyWaterTitle(String station, String level) {
+    return 'Water level · $station $level cm';
+  }
+
+  @override
+  String notifyWaterLake(String level) {
+    return 'Lake average $level cm';
+  }
+
+  @override
+  String notifyWaterTrend(String change) {
+    return '$change cm vs yesterday';
+  }
+
+  @override
+  String get notifyChannelCards => 'Water level';
+
+  @override
+  String get notifyChannelCardsDesc => 'After each scheduled reading';
+
+  @override
+  String get settingsNotifyWaterSub => 'After each scheduled reading';
 }

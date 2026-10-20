@@ -183,6 +183,7 @@ void main() {
       final v1 = AppDatabase(NativeDatabase(file));
       await v1.customStatement('DROP TABLE connection_log');
       await v1.customStatement('ALTER TABLE conversations DROP COLUMN preview');
+      await v1.customStatement('DROP TABLE cards');
       await v1.customStatement('PRAGMA user_version = 1');
       await v1.close();
 
@@ -200,6 +201,7 @@ void main() {
     final file = File('${dir.path}/delve.sqlite');
     final v2 = AppDatabase(NativeDatabase(file));
     await v2.customStatement('ALTER TABLE conversations DROP COLUMN preview');
+    await v2.customStatement('DROP TABLE cards');
     await v2.customStatement(
       "INSERT INTO conversations (id, created_at, updated_at) VALUES ('c_old', 0, 0)",
     );
@@ -210,6 +212,20 @@ void main() {
     addTearDown(v3.close);
     final row = await v3.select(v3.conversations).getSingle();
     expect((row.id, row.preview), ('c_old', null));
+  });
+
+  test('a version 3 database gets the cards table on upgrade', () async {
+    final dir = await Directory.systemTemp.createTemp('delve-db');
+    addTearDown(() => dir.delete(recursive: true));
+    final file = File('${dir.path}/delve.sqlite');
+    final v3 = AppDatabase(NativeDatabase(file));
+    await v3.customStatement('DROP TABLE cards');
+    await v3.customStatement('PRAGMA user_version = 3');
+    await v3.close();
+
+    final v4 = AppDatabase(NativeDatabase(file));
+    addTearDown(v4.close);
+    expect(await v4.select(v4.cards).get(), isEmpty);
   });
 
   test('pending outbox rows come oldest first', () async {

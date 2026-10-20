@@ -249,6 +249,26 @@ class DelveApi {
     Approval.fromJson,
   );
 
+  /// Dashboard cards newest first, optionally of one [type] and from [since].
+  Future<List<AgentCard>> cards({
+    String? type,
+    DateTime? since,
+    int limit = 100,
+  }) async {
+    final json = await _json(
+      ApiRoutes.cards,
+      query: {
+        'type': type,
+        'since': since?.toUtc().toIso8601String(),
+        'limit': limit,
+      },
+    );
+    return _parse(
+      json,
+      (j) => [for (final c in _list(j, 'data')) AgentCard.fromJson(c)],
+    );
+  }
+
   static List<Map<String, Object?>> _list(
     Map<String, Object?> json,
     String key,

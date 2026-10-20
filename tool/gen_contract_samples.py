@@ -6,8 +6,8 @@ Run from a delve-backend checkout with its venv active:
 import json, sys, uuid
 from datetime import datetime, timedelta, timezone
 from delve import API_REVISION, protocol
-from delve.db.models import Approval, Conversation, Message, Run, ToolStep
-from delve.serialize import approval_out, conversation_out, message_out, run_out, step_out
+from delve.db.models import Approval, Card, Conversation, Message, Run, ToolStep
+from delve.serialize import approval_out, card_out, conversation_out, message_out, run_out, step_out
 
 t0 = datetime(2026, 10, 19, 21, 39, 0, 123456, tzinfo=timezone.utc)
 conv = Conversation(id="c_5f2a9e1b7c3d4e6f", title="Kernel and CPU count", created_at=t0,
@@ -34,6 +34,13 @@ step = ToolStep(id=97, run_id=run.run_id, tool="terminal", status="ok", preview_
     result={"exit_code": 0, "output": "7.2.11-arch1-1\n24"}, result_raw='{"exit_code": 0}',
     user_summary=None, duration_s=0.41, seq_started=5, seq_completed=7, approval_request_id="apr_3c9d1e2f")
 
+card = Card(id="643692effbf845d9b4a0594509b03157", v=1, type="water", severity="info",
+    ts=t0 - timedelta(hours=1), origin="script", session_id=None,
+    payload={"station": "Siófok", "level_cm": 98.0, "measured_at": "2026-10-19T18:52:00Z",
+             "trend_cm_24h": -2.0, "lake_avg_cm": 101.0, "lake_avg_trend_cm_24h": -1.0,
+             "data_source": "vizugy.hu"},
+    received_at=t0 - timedelta(hours=1) + timedelta(seconds=1))
+
 shapes = {
     "conversation": conversation_out(conv),
     "message": message_out(msg),
@@ -44,6 +51,7 @@ shapes = {
                                     "usage": None, "perf": None, "error": None})), "position": 0},
     "approval": approval_out(appr),
     "tool_step": step_out(step, appr),
+    "card": card_out(card),
     "tool_step_plain": step_out(ToolStep(id=98, run_id=run.run_id, tool="terminal", status="running",
         preview_start="nproc", result=None, result_raw=None, user_summary=None, duration_s=None,
         seq_started=9, seq_completed=None, approval_request_id=None)),
@@ -68,6 +76,7 @@ events = {
     "reasoning.final": {**base, "message_id": 412, "text": "17 times 23 is 391."},
     "context.updated": {**base, "tokens": 8728, "max": 65536, "pct": 13.3, "warn": False, "source": "final_read", "measured_at": t0.isoformat(), "final": True},
     "health.status": {"hermes": "ok", "hermes_version": "0.22.2"},
+    "card.new": card_out(card),
     "error": {"code": "thinking_route_not_applied", "ref_id": run.run_id, "message": "The thinking run did not use the thinking provider."},
 }
 for k, v in events.items():

@@ -35,7 +35,7 @@ class FakeServer implements HttpClientAdapter {
 
   static const meta = {
     'server_version': '0.1.0',
-    'api_revision': 3,
+    'api_revision': 4,
     'revision': 'eb4045ed6a94',
     'python': '3.14.8',
     'hermes_expected_version': '0.22.2',
@@ -44,7 +44,7 @@ class FakeServer implements HttpClientAdapter {
 
   static const status = {
     'server_version': '0.1.0',
-    'api_revision': 3,
+    'api_revision': 4,
     'revision': 'eb4045ed6a94',
     'hermes': 'ok',
     'hermes_version': '0.22.2',
@@ -85,6 +85,7 @@ class FakeServer implements HttpClientAdapter {
     });
     json('GET', '/api/v1/runs/open', {'data': <Object?>[]});
     json('GET', '/api/v1/approvals', {'data': <Object?>[]});
+    json('GET', '/api/v1/cards', {'data': <Object?>[]});
   }
 
   void on(String method, String path, FakeHandler handler) =>

@@ -46,6 +46,24 @@ sealed class PushMessage {
           requestId: requestId,
           status: s('status') ?? '',
         );
+      case 'card':
+        final cardId = s('card_id');
+        final level = double.tryParse(s('level_cm') ?? '');
+        final station = s('station');
+        if (cardId == null ||
+            s('type') != 'water' ||
+            level == null ||
+            station == null ||
+            station.isEmpty) {
+          return null;
+        }
+        return WaterPush(
+          cardId: cardId,
+          station: station,
+          levelCm: level,
+          lakeAvgCm: double.tryParse(s('lake_avg_cm') ?? ''),
+          trendCm: double.tryParse(s('trend_cm_24h') ?? ''),
+        );
       case 'run_done':
         final conversationId = s('conversation_id');
         final runId = s('run_id');
@@ -115,6 +133,25 @@ final class RunDonePush extends PushMessage {
   bool get failed => status == 'failed';
 }
 
+/// A new scheduled water reading (`card`, type `water`).
+final class WaterPush extends PushMessage {
+  const WaterPush({
+    required this.cardId,
+    required this.station,
+    required this.levelCm,
+    this.lakeAvgCm,
+    this.trendCm,
+  });
+
+  final String cardId;
+  final String station;
+  final double levelCm;
+  final double? lakeAvgCm;
+
+  /// Change at the station over 24 h, cm.
+  final double? trendCm;
+}
+
 /// Notification id for a key (request id, run id): FNV-1a, positive 31 bit.
 /// Stable across isolates and app starts, so the background handler can
 /// replace or remove what another isolate showed.
@@ -129,11 +166,7 @@ int notificationId(String key) {
 
 /// What a tap or an action carries back: the notification's payload.
 class PushTarget {
-  const PushTarget({
-    required this.kind,
-    required this.conversationId,
-    this.requestId,
-  });
+  const PushTarget({required this.kind, this.conversationId, this.requestId});
 
   static PushTarget? decode(String? payload) {
     if (payload == null || payload.isEmpty) return null;
@@ -143,10 +176,12 @@ class PushTarget {
       final kind = j['kind'];
       final conv = j['conversation_id'];
       final req = j['request_id'];
-      if (kind is! String || conv is! String) return null;
+      if (kind is! String) return null;
+      // a chat's notification needs its chat; a card's opens the dashboard
+      if (kind != 'card' && conv is! String) return null;
       return PushTarget(
         kind: kind,
-        conversationId: conv,
+        conversationId: conv is String ? conv : null,
         requestId: req is String ? req : null,
       );
     } on FormatException {
@@ -154,14 +189,16 @@ class PushTarget {
     }
   }
 
-  /// `approval` or `run_done`.
+  /// `approval`, `run_done` or `card`.
   final String kind;
-  final String conversationId;
+
+  /// null for a card.
+  final String? conversationId;
   final String? requestId;
 
   String encode() => jsonEncode({
     'kind': kind,
-    'conversation_id': conversationId,
+    'conversation_id': ?conversationId,
     'request_id': ?requestId,
   });
 }

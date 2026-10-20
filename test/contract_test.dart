@@ -62,6 +62,7 @@ void main() {
           'open_run': (j) => OpenRun.fromJson(j).toJson(),
           'approval': (j) => Approval.fromJson(j).toJson(),
           'tool_step': (j) => ToolStep.fromJson(j).toJson(),
+          'card': (j) => AgentCard.fromJson(j).toJson(),
         };
 
     test('every contract shape has a model', () {
@@ -196,7 +197,7 @@ void main() {
 
     test('unknown event types are kept, malformed known ones throw', () {
       final f = IncomingFrame.parse({
-        'type': 'card.new',
+        'type': 'future.event',
         'seq': 3,
         'data': {'id': 'x'},
       });

@@ -712,7 +712,6 @@
   "settingsNotifyRunDoneSub": "Only when the app is in the background",
   "settingsNotifyWater": "Water level",
   "settingsNotifyBrief": "Morning brief",
-  "settingsNotifyLaterDashboard": "Comes with the dashboard",
   "settingsNotifyLaterSchedules": "Comes with schedules",
   "settingsNotifyPermissionOff": "Notifications are off for Delve on this phone.",
   "settingsNotifyAllow": "Allow",
@@ -725,5 +724,57 @@
         "type": "String"
       }
     }
-  }
+  },
+  "dashUpdated": "Updated {time}",
+  "@dashUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dashConnected": "Connected · tailnet",
+  "dashWaterTitle": "Lake Balaton water level",
+  "dashToday": "today {time}",
+  "@dashToday": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dashCm": "cm",
+  "dashLakeAverage": "Lake average",
+  "dashVsYesterday": "vs yesterday",
+  "dashWaterEmpty": "No water reading yet. It arrives after the next scheduled reading.",
+  "notifyWaterTitle": "Water level · {station} {level} cm",
+  "@notifyWaterTitle": {
+    "placeholders": {
+      "station": {
+        "type": "String"
+      },
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyWaterLake": "Lake average {level} cm",
+  "@notifyWaterLake": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyWaterTrend": "{change} cm vs yesterday",
+  "@notifyWaterTrend": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyChannelCards": "Water level",
+  "notifyChannelCardsDesc": "After each scheduled reading",
+  "settingsNotifyWaterSub": "After each scheduled reading"
 }

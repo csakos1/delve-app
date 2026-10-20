@@ -3,7 +3,7 @@
 /// Oldest backend contract this build works with (`/meta` `api_revision`).
 /// Raise it together with the models when the app starts relying on a newer
 /// contract; a smaller server revision shows the "server too old" screen.
-const int kMinApiRevision = 3; // 3: PATCH /devices/me (notify), preview
+const int kMinApiRevision = 4; // 4: GET /cards, card.new
 
 /// REST routes the app calls (method + path template); checked against the
 /// backend contract in `test/contract_test.dart`.
@@ -35,6 +35,7 @@ abstract final class ApiRoutes {
   static const approvals = ('GET', '/api/v1/approvals');
   static const answerApproval = ('POST', '/api/v1/approvals/{request_id}');
   static const openRuns = ('GET', '/api/v1/runs/open');
+  static const cards = ('GET', '/api/v1/cards');
   static const ws = ('WS', '/api/v1/ws');
 
   static const List<(String, String)> all = <(String, String)>[
@@ -54,6 +55,7 @@ abstract final class ApiRoutes {
     approvals,
     answerApproval,
     openRuns,
+    cards,
     ws,
   ];
 

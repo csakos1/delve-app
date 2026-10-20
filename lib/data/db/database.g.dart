@@ -5157,6 +5157,456 @@ class ConnectionLogCompanion extends UpdateCompanion<ConnectionLogRow> {
   }
 }
 
+class $CardsTable extends Cards with TableInfo<$CardsTable, CardRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CardsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _severityMeta = const VerificationMeta(
+    'severity',
+  );
+  @override
+  late final GeneratedColumn<String> severity = GeneratedColumn<String>(
+    'severity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tsMeta = const VerificationMeta('ts');
+  @override
+  late final GeneratedColumn<DateTime> ts = GeneratedColumn<DateTime>(
+    'ts',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _originMeta = const VerificationMeta('origin');
+  @override
+  late final GeneratedColumn<String> origin = GeneratedColumn<String>(
+    'origin',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<Map<String, Object?>, String>
+  payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<Map<String, Object?>>($CardsTable.$converterpayload);
+  static const VerificationMeta _receivedAtMeta = const VerificationMeta(
+    'receivedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> receivedAt = GeneratedColumn<DateTime>(
+    'received_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    type,
+    severity,
+    ts,
+    origin,
+    payload,
+    receivedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cards';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CardRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('severity')) {
+      context.handle(
+        _severityMeta,
+        severity.isAcceptableOrUnknown(data['severity']!, _severityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_severityMeta);
+    }
+    if (data.containsKey('ts')) {
+      context.handle(_tsMeta, ts.isAcceptableOrUnknown(data['ts']!, _tsMeta));
+    } else if (isInserting) {
+      context.missing(_tsMeta);
+    }
+    if (data.containsKey('origin')) {
+      context.handle(
+        _originMeta,
+        origin.isAcceptableOrUnknown(data['origin']!, _originMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_originMeta);
+    }
+    if (data.containsKey('received_at')) {
+      context.handle(
+        _receivedAtMeta,
+        receivedAt.isAcceptableOrUnknown(data['received_at']!, _receivedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_receivedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CardRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CardRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      severity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}severity'],
+      )!,
+      ts: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}ts'],
+      )!,
+      origin: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}origin'],
+      )!,
+      payload: $CardsTable.$converterpayload.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}payload'],
+        )!,
+      ),
+      receivedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}received_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CardsTable createAlias(String alias) {
+    return $CardsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<Map<String, Object?>, String> $converterpayload =
+      const JsonMapConverter();
+}
+
+class CardRow extends DataClass implements Insertable<CardRow> {
+  final String id;
+  final String type;
+  final String severity;
+  final DateTime ts;
+  final String origin;
+  final Map<String, Object?> payload;
+  final DateTime receivedAt;
+  const CardRow({
+    required this.id,
+    required this.type,
+    required this.severity,
+    required this.ts,
+    required this.origin,
+    required this.payload,
+    required this.receivedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['type'] = Variable<String>(type);
+    map['severity'] = Variable<String>(severity);
+    map['ts'] = Variable<DateTime>(ts);
+    map['origin'] = Variable<String>(origin);
+    {
+      map['payload'] = Variable<String>(
+        $CardsTable.$converterpayload.toSql(payload),
+      );
+    }
+    map['received_at'] = Variable<DateTime>(receivedAt);
+    return map;
+  }
+
+  CardsCompanion toCompanion(bool nullToAbsent) {
+    return CardsCompanion(
+      id: Value(id),
+      type: Value(type),
+      severity: Value(severity),
+      ts: Value(ts),
+      origin: Value(origin),
+      payload: Value(payload),
+      receivedAt: Value(receivedAt),
+    );
+  }
+
+  factory CardRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CardRow(
+      id: serializer.fromJson<String>(json['id']),
+      type: serializer.fromJson<String>(json['type']),
+      severity: serializer.fromJson<String>(json['severity']),
+      ts: serializer.fromJson<DateTime>(json['ts']),
+      origin: serializer.fromJson<String>(json['origin']),
+      payload: serializer.fromJson<Map<String, Object?>>(json['payload']),
+      receivedAt: serializer.fromJson<DateTime>(json['receivedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'type': serializer.toJson<String>(type),
+      'severity': serializer.toJson<String>(severity),
+      'ts': serializer.toJson<DateTime>(ts),
+      'origin': serializer.toJson<String>(origin),
+      'payload': serializer.toJson<Map<String, Object?>>(payload),
+      'receivedAt': serializer.toJson<DateTime>(receivedAt),
+    };
+  }
+
+  CardRow copyWith({
+    String? id,
+    String? type,
+    String? severity,
+    DateTime? ts,
+    String? origin,
+    Map<String, Object?>? payload,
+    DateTime? receivedAt,
+  }) => CardRow(
+    id: id ?? this.id,
+    type: type ?? this.type,
+    severity: severity ?? this.severity,
+    ts: ts ?? this.ts,
+    origin: origin ?? this.origin,
+    payload: payload ?? this.payload,
+    receivedAt: receivedAt ?? this.receivedAt,
+  );
+  CardRow copyWithCompanion(CardsCompanion data) {
+    return CardRow(
+      id: data.id.present ? data.id.value : this.id,
+      type: data.type.present ? data.type.value : this.type,
+      severity: data.severity.present ? data.severity.value : this.severity,
+      ts: data.ts.present ? data.ts.value : this.ts,
+      origin: data.origin.present ? data.origin.value : this.origin,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      receivedAt: data.receivedAt.present
+          ? data.receivedAt.value
+          : this.receivedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CardRow(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('severity: $severity, ')
+          ..write('ts: $ts, ')
+          ..write('origin: $origin, ')
+          ..write('payload: $payload, ')
+          ..write('receivedAt: $receivedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, type, severity, ts, origin, payload, receivedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CardRow &&
+          other.id == this.id &&
+          other.type == this.type &&
+          other.severity == this.severity &&
+          other.ts == this.ts &&
+          other.origin == this.origin &&
+          other.payload == this.payload &&
+          other.receivedAt == this.receivedAt);
+}
+
+class CardsCompanion extends UpdateCompanion<CardRow> {
+  final Value<String> id;
+  final Value<String> type;
+  final Value<String> severity;
+  final Value<DateTime> ts;
+  final Value<String> origin;
+  final Value<Map<String, Object?>> payload;
+  final Value<DateTime> receivedAt;
+  final Value<int> rowid;
+  const CardsCompanion({
+    this.id = const Value.absent(),
+    this.type = const Value.absent(),
+    this.severity = const Value.absent(),
+    this.ts = const Value.absent(),
+    this.origin = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.receivedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CardsCompanion.insert({
+    required String id,
+    required String type,
+    required String severity,
+    required DateTime ts,
+    required String origin,
+    required Map<String, Object?> payload,
+    required DateTime receivedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       type = Value(type),
+       severity = Value(severity),
+       ts = Value(ts),
+       origin = Value(origin),
+       payload = Value(payload),
+       receivedAt = Value(receivedAt);
+  static Insertable<CardRow> custom({
+    Expression<String>? id,
+    Expression<String>? type,
+    Expression<String>? severity,
+    Expression<DateTime>? ts,
+    Expression<String>? origin,
+    Expression<String>? payload,
+    Expression<DateTime>? receivedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (type != null) 'type': type,
+      if (severity != null) 'severity': severity,
+      if (ts != null) 'ts': ts,
+      if (origin != null) 'origin': origin,
+      if (payload != null) 'payload': payload,
+      if (receivedAt != null) 'received_at': receivedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CardsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? type,
+    Value<String>? severity,
+    Value<DateTime>? ts,
+    Value<String>? origin,
+    Value<Map<String, Object?>>? payload,
+    Value<DateTime>? receivedAt,
+    Value<int>? rowid,
+  }) {
+    return CardsCompanion(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      severity: severity ?? this.severity,
+      ts: ts ?? this.ts,
+      origin: origin ?? this.origin,
+      payload: payload ?? this.payload,
+      receivedAt: receivedAt ?? this.receivedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (severity.present) {
+      map['severity'] = Variable<String>(severity.value);
+    }
+    if (ts.present) {
+      map['ts'] = Variable<DateTime>(ts.value);
+    }
+    if (origin.present) {
+      map['origin'] = Variable<String>(origin.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(
+        $CardsTable.$converterpayload.toSql(payload.value),
+      );
+    }
+    if (receivedAt.present) {
+      map['received_at'] = Variable<DateTime>(receivedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CardsCompanion(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('severity: $severity, ')
+          ..write('ts: $ts, ')
+          ..write('origin: $origin, ')
+          ..write('payload: $payload, ')
+          ..write('receivedAt: $receivedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5168,6 +5618,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $OutboxTable outbox = $OutboxTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final $ConnectionLogTable connectionLog = $ConnectionLogTable(this);
+  late final $CardsTable cards = $CardsTable(this);
   late final Index messagesByConversation = Index(
     'messages_by_conversation',
     'CREATE INDEX messages_by_conversation ON messages (conversation_id, id)',
@@ -5184,6 +5635,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'approvals_by_status',
     'CREATE INDEX approvals_by_status ON approvals (status)',
   );
+  late final Index cardsByType = Index(
+    'cards_by_type',
+    'CREATE INDEX cards_by_type ON cards (type, ts)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5197,10 +5652,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     outbox,
     syncState,
     connectionLog,
+    cards,
     messagesByConversation,
     runsByConversation,
     toolStepsByRun,
     approvalsByStatus,
+    cardsByType,
   ];
 }
 
@@ -7684,6 +8141,244 @@ typedef $$ConnectionLogTableProcessedTableManager =
       ConnectionLogRow,
       PrefetchHooks Function()
     >;
+typedef $$CardsTableCreateCompanionBuilder =
+    CardsCompanion Function({
+      required String id,
+      required String type,
+      required String severity,
+      required DateTime ts,
+      required String origin,
+      required Map<String, Object?> payload,
+      required DateTime receivedAt,
+      Value<int> rowid,
+    });
+typedef $$CardsTableUpdateCompanionBuilder =
+    CardsCompanion Function({
+      Value<String> id,
+      Value<String> type,
+      Value<String> severity,
+      Value<DateTime> ts,
+      Value<String> origin,
+      Value<Map<String, Object?>> payload,
+      Value<DateTime> receivedAt,
+      Value<int> rowid,
+    });
+
+class $$CardsTableFilterComposer extends Composer<_$AppDatabase, $CardsTable> {
+  $$CardsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get severity => $composableBuilder(
+    column: $table.severity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get ts => $composableBuilder(
+    column: $table.ts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get origin => $composableBuilder(
+    column: $table.origin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<
+    Map<String, Object?>,
+    Map<String, Object>,
+    String
+  >
+  get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<DateTime> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CardsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CardsTable> {
+  $$CardsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get severity => $composableBuilder(
+    column: $table.severity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get ts => $composableBuilder(
+    column: $table.ts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get origin => $composableBuilder(
+    column: $table.origin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CardsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CardsTable> {
+  $$CardsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get severity =>
+      $composableBuilder(column: $table.severity, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get ts =>
+      $composableBuilder(column: $table.ts, builder: (column) => column);
+
+  GeneratedColumn<String> get origin =>
+      $composableBuilder(column: $table.origin, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Map<String, Object?>, String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$CardsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CardsTable,
+          CardRow,
+          $$CardsTableFilterComposer,
+          $$CardsTableOrderingComposer,
+          $$CardsTableAnnotationComposer,
+          $$CardsTableCreateCompanionBuilder,
+          $$CardsTableUpdateCompanionBuilder,
+          (CardRow, BaseReferences<_$AppDatabase, $CardsTable, CardRow>),
+          CardRow,
+          PrefetchHooks Function()
+        > {
+  $$CardsTableTableManager(_$AppDatabase db, $CardsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CardsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CardsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CardsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> severity = const Value.absent(),
+                Value<DateTime> ts = const Value.absent(),
+                Value<String> origin = const Value.absent(),
+                Value<Map<String, Object?>> payload = const Value.absent(),
+                Value<DateTime> receivedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CardsCompanion(
+                id: id,
+                type: type,
+                severity: severity,
+                ts: ts,
+                origin: origin,
+                payload: payload,
+                receivedAt: receivedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String type,
+                required String severity,
+                required DateTime ts,
+                required String origin,
+                required Map<String, Object?> payload,
+                required DateTime receivedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => CardsCompanion.insert(
+                id: id,
+                type: type,
+                severity: severity,
+                ts: ts,
+                origin: origin,
+                payload: payload,
+                receivedAt: receivedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CardsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CardsTable,
+      CardRow,
+      $$CardsTableFilterComposer,
+      $$CardsTableOrderingComposer,
+      $$CardsTableAnnotationComposer,
+      $$CardsTableCreateCompanionBuilder,
+      $$CardsTableUpdateCompanionBuilder,
+      (CardRow, BaseReferences<_$AppDatabase, $CardsTable, CardRow>),
+      CardRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7703,4 +8398,6 @@ class $AppDatabaseManager {
       $$SyncStateTableTableManager(_db, _db.syncState);
   $$ConnectionLogTableTableManager get connectionLog =>
       $$ConnectionLogTableTableManager(_db, _db.connectionLog);
+  $$CardsTableTableManager get cards =>
+      $$CardsTableTableManager(_db, _db.cards);
 }

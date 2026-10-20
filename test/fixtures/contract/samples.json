@@ -152,6 +152,24 @@
         "responded_at": null
       }
     },
+    "card": {
+      "id": "643692effbf845d9b4a0594509b03157",
+      "type": "water",
+      "severity": "info",
+      "ts": "2026-10-19T20:39:00.123456+00:00",
+      "origin": "script",
+      "session_id": null,
+      "payload": {
+        "station": "Siófok",
+        "level_cm": 98.0,
+        "measured_at": "2026-10-19T18:52:00Z",
+        "trend_cm_24h": -2.0,
+        "lake_avg_cm": 101.0,
+        "lake_avg_trend_cm_24h": -1.0,
+        "data_source": "vizugy.hu"
+      },
+      "received_at": "2026-10-19T20:39:01.123456+00:00"
+    },
     "tool_step_plain": {
       "id": 98,
       "run_id": "run_8e4b1c2d3a4f5e6b",
@@ -419,6 +437,24 @@
       "hermes": "ok",
       "hermes_version": "0.22.2"
     },
+    "card.new": {
+      "id": "643692effbf845d9b4a0594509b03157",
+      "type": "water",
+      "severity": "info",
+      "ts": "2026-10-19T20:39:00.123456+00:00",
+      "origin": "script",
+      "session_id": null,
+      "payload": {
+        "station": "Siófok",
+        "level_cm": 98.0,
+        "measured_at": "2026-10-19T18:52:00Z",
+        "trend_cm_24h": -2.0,
+        "lake_avg_cm": 101.0,
+        "lake_avg_trend_cm_24h": -1.0,
+        "data_source": "vizugy.hu"
+      },
+      "received_at": "2026-10-19T20:39:01.123456+00:00"
+    },
     "error": {
       "code": "thinking_route_not_applied",
       "ref_id": "run_8e4b1c2d3a4f5e6b",
@@ -428,7 +464,7 @@
   "connection": {
     "hello.ok": {
       "server_version": "0.1.0",
-      "api_revision": 3,
+      "api_revision": 4,
       "revision": "eb4045ed6a94",
       "hermes": "ok",
       "hermes_version": "0.22.2",
@@ -443,7 +479,7 @@
     },
     "meta": {
       "server_version": "0.1.0",
-      "api_revision": 3,
+      "api_revision": 4,
       "revision": "eb4045ed6a94",
       "python": "3.14.8",
       "hermes_expected_version": "0.22.2",
@@ -451,7 +487,7 @@
     },
     "status": {
       "server_version": "0.1.0",
-      "api_revision": 3,
+      "api_revision": 4,
       "revision": null,
       "hermes": null,
       "hermes_version": null,

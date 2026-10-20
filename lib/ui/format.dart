@@ -68,3 +68,11 @@ String apiErrorText(AppLocalizations l, Object error) => switch (error) {
   ApiCancelled() => l.errorCancelled,
   _ => '$error',
 };
+
+/// A change in whole centimetres: `−2`, `+1`, `0` (a real minus sign).
+String signedCm(double v) {
+  final r = v.round();
+  if (r < 0) return '\u2212${-r}';
+  if (r > 0) return '+$r';
+  return '0';
+}

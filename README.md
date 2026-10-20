@@ -44,9 +44,16 @@ reached over Tailscale only.
   and closes 3 s after the app goes to the background, so the server knows when to push.
   The chat list falls back to the server's preview for chats never opened here.
 
-With A6 the MVP is complete; B1 adds notifications; dashboard, system, schedules,
-observability, attachments and the home widget follow (B2–B7). Requires a server with
-API revision 3 or newer (`PATCH /api/v1/devices/me`, conversation `preview`).
+- B2: the Dashboard — the connection and the Lake Balaton water level: the latest
+  scheduled reading (station and lake average, the change against yesterday) and the
+  week as a chart (drawn by hand: the station line with its area, the lake average
+  dashed). Cards arrive as `card.new` and load over REST when the tab opens or on pull;
+  the agent's own water cards stay out of the chart. Settings → Water level turns on a
+  notification after each scheduled reading.
+
+With A6 the MVP is complete; B1 adds notifications, B2 the dashboard; system, schedules,
+observability, attachments and the home widget follow (B3–B7). Requires a server with
+API revision 4 or newer (`GET /api/v1/cards`, `card.new`).
 
 ## Stack
 
@@ -82,6 +89,7 @@ lib/
   app/pairing*.dart          pairing flow, URL and code checks
   app/chat_list.dart         conversation list: database query, paging, archive
   app/chat.dart              one chat: database query, ChatActions (send, stop, open)
+  app/dashboard.dart         water readings from the cards, the week, REST reload
   sync/                      WebSocket client: engine (connection, outbox, requests),
                              reducer (events → database), resync, live runs, transport
   push/                      notifications: FCM transport, controller (token, taps),
@@ -100,6 +108,7 @@ test/
   chat_screen_test.dart      the chat with a fake ChatActions: runs, steps, composer
   reducer_test.dart          recorded WebSocket conversations replayed into the database
   sync_engine_test.dart      the connection against a local fake WebSocket server
+  dashboard_test.dart        water readings, the week, the Dashboard screen
   push_test.dart             pushes → notifications, Deny in the background, the
                              controller with fakes, Settings → Notifications
   support/                   fake REST server (a dio adapter), fake WebSocket server,

@@ -113,6 +113,7 @@ sealed class ServerEvent extends IncomingFrame {
     'reasoning.final',
     'context.updated',
     'health.status',
+    'card.new',
     'error',
   };
 
@@ -220,6 +221,7 @@ sealed class ServerEvent extends IncomingFrame {
       hermes: _strOrNull(d, 'hermes'),
       hermesVersion: _strOrNull(d, 'hermes_version'),
     ),
+    'card.new' => CardNew(seq, AgentCard.fromJson(d)),
     'error' => ServerError(
       seq,
       code: _str(d, 'code'),
@@ -435,6 +437,12 @@ final class ServerError extends ServerEvent {
   final String code;
   final String? message;
   final String? refId;
+}
+
+/// A new dashboard card.
+final class CardNew extends ServerEvent {
+  const CardNew(super.seq, this.card);
+  final AgentCard card;
 }
 
 final class UnknownEvent extends ServerEvent {

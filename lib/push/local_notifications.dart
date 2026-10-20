@@ -105,16 +105,24 @@ class LocalNotifications implements PhoneNotifications {
       return;
     }
     final countdown = spec.countdownTo;
+    final (name, description) = switch (spec.channel) {
+      NotifyChannel.approvals => (
+        l.notifyChannelApprovals,
+        l.notifyChannelApprovalsDesc,
+      ),
+      NotifyChannel.runs => (l.notifyChannelRuns, l.notifyChannelRunsDesc),
+      NotifyChannel.cards => (l.notifyChannelCards, l.notifyChannelCardsDesc),
+    };
     final android = AndroidNotificationDetails(
-      approvals ? 'approvals' : 'runs',
-      approvals ? l.notifyChannelApprovals : l.notifyChannelRuns,
-      channelDescription: approvals
-          ? l.notifyChannelApprovalsDesc
-          : l.notifyChannelRunsDesc,
+      spec.channel.name,
+      name,
+      channelDescription: description,
       importance: approvals ? Importance.high : Importance.defaultImportance,
       priority: approvals ? Priority.high : Priority.defaultPriority,
       styleInformation: BigTextStyleInformation(spec.body),
-      onlyAlertOnce: true, // an update (agent stopped waiting) stays quiet
+      // an approval's update (agent stopped waiting) stays quiet; a new
+      // reading or answer replacing an older one alerts again
+      onlyAlertOnce: approvals,
       usesChronometer: countdown != null,
       chronometerCountDown: countdown != null,
       when: countdown?.millisecondsSinceEpoch,

@@ -20,6 +20,7 @@ part 'database.g.dart';
     Outbox,
     SyncState,
     ConnectionLog,
+    Cards,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -28,7 +29,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// 1: A1 tables. 2: connection log (A3).
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   /// Entries the connection log keeps.
   static const int connectionLogLimit = 500;
@@ -42,6 +43,7 @@ class AppDatabase extends _$AppDatabase {
     onUpgrade: (m, from, to) async {
       if (from < 2) await m.createTable(connectionLog);
       if (from < 3) await m.addColumn(conversations, conversations.preview);
+      if (from < 4) await m.createTable(cards);
     },
   );
 
@@ -139,6 +141,25 @@ class AppDatabase extends _$AppDatabase {
       ],
     );
   }
+
+  /// Cards of [type] from [since] on, oldest first (the dashboard's chart);
+  /// [origin] narrows to one source (the scheduled script for water).
+  Stream<List<CardRow>> watchCards({
+    required String type,
+    required DateTime since,
+    String? origin,
+  }) =>
+      (select(cards)
+            ..where(
+              (c) =>
+                  c.type.equals(type) &
+                  c.ts.isBiggerOrEqualValue(since) &
+                  (origin == null
+                      ? const Constant(true)
+                      : c.origin.equals(origin)),
+            )
+            ..orderBy([(c) => OrderingTerm.asc(c.ts)]))
+          .watch();
 
   /// The stream position (null `lastSeq`: nothing loaded from this server
   /// yet — the Chats skeleton).

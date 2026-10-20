@@ -154,6 +154,22 @@ class SyncState extends Table {
   List<String> get customConstraints => ['CHECK (id = 1)'];
 }
 
+/// Dashboard cards (schema 4): `GET /cards` and `card.new`.
+@DataClassName('CardRow')
+@TableIndex(name: 'cards_by_type', columns: {#type, #ts})
+class Cards extends Table {
+  TextColumn get id => text()();
+  TextColumn get type => text()();
+  TextColumn get severity => text()();
+  DateTimeColumn get ts => dateTime()();
+  TextColumn get origin => text()();
+  TextColumn get payload => text().map(const JsonMapConverter())();
+  DateTimeColumn get receivedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 /// What the WebSocket connection did (Settings → Connection log). Kept to the
 /// newest 500 entries and kept across unpairing (it holds no server data).
 @DataClassName('ConnectionLogRow')
