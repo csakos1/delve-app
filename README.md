@@ -12,8 +12,11 @@ reached over Tailscale only.
   unpair).
 - A3: WebSocket client — connection state machine, events into the local database,
   resume and reload, outbox, connection log (Settings → Connection).
+- A4a: conversation list — newest first with preview, context fill, running / queued /
+  approval markers; swipe to archive (with Undo), search, paging, empty state, first-load
+  skeleton, reconnecting banner; More → Archived chats (swipe to restore).
 
-Chat and approvals follow in A4–A6. Requires a server with
+The chat itself and approvals follow in A4b–A6. Requires a server with
 API revision 2 or newer (`DELETE /api/v1/devices/me` for unpairing).
 
 ## Stack
@@ -46,16 +49,19 @@ lib/
   api/rest_client.dart       REST client (dio); api_error.dart maps every failure
   app/session.dart           paired / unpaired / server-too-old, credentials, 401 handling
   app/pairing*.dart          pairing flow, URL and code checks
+  app/chat_list.dart         conversation list: database query, paging, archive
   sync/                      WebSocket client: engine (connection, outbox, requests),
                              reducer (events → database), resync, live runs, transport
   data/credentials.dart      token and server URL in Android secure storage
   data/db/                   drift tables and queries; store.dart: server objects → rows
-  ui/                        shell (bottom navigation), screens, shared widgets
+  ui/                        shell (bottom navigation), screens, shared widgets;
+                             format.dart: list times, previews, error texts
   l10n/app_en.arb            UI strings (English)
 test/
   contract_test.dart         models and frames against the backend contract
   theme_test.dart            theme against the design tokens
   database_test.dart, app_test.dart, session_test.dart, rest_client_test.dart, …
+  chat_list_test.dart        list query, paging, archive, the Chats screen states
   reducer_test.dart          recorded WebSocket conversations replayed into the database
   sync_engine_test.dart      the connection against a local fake WebSocket server
   support/                   fake REST server (a dio adapter), fake WebSocket server,

@@ -801,6 +801,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Protocol'**
   String get logKindProtocol;
+
+  /// No description provided for @chatsSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search chats'**
+  String get chatsSearch;
+
+  /// No description provided for @chatsSearchClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close search'**
+  String get chatsSearchClose;
+
+  /// No description provided for @chatsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search titles and messages'**
+  String get chatsSearchHint;
+
+  /// No description provided for @chatsNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats match “{query}”'**
+  String chatsNoMatch(String query);
+
+  /// No description provided for @chatsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats yet'**
+  String get chatsEmptyTitle;
+
+  /// No description provided for @chatsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your agent anything. Runs happen on your desktop; this phone only talks to it over Tailscale.'**
+  String get chatsEmptyBody;
+
+  /// No description provided for @chatsApprovalPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval needed: {command}'**
+  String chatsApprovalPreview(String command);
+
+  /// No description provided for @chatsMarkerApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'approval needed'**
+  String get chatsMarkerApproval;
+
+  /// No description provided for @chatsMarkerRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'running'**
+  String get chatsMarkerRunning;
+
+  /// No description provided for @chatsMarkerRunningQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'running · {count} queued'**
+  String chatsMarkerRunningQueued(int count);
+
+  /// No description provided for @chatsMarkerWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'queued'**
+  String get chatsMarkerWaiting;
+
+  /// No description provided for @chatsDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get chatsDetails;
+
+  /// No description provided for @chatsArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get chatsArchive;
+
+  /// No description provided for @chatsArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat archived'**
+  String get chatsArchived;
+
+  /// No description provided for @chatsUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get chatsUndo;
+
+  /// No description provided for @chatsArchiveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t archive: {reason}'**
+  String chatsArchiveFailed(String reason);
+
+  /// No description provided for @chatsRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t refresh: {reason}'**
+  String chatsRefreshFailed(String reason);
+
+  /// No description provided for @errorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'too many requests, try again in {seconds} s'**
+  String errorRateLimited(int seconds);
+
+  /// No description provided for @errorHttp.
+  ///
+  /// In en, this message translates to:
+  /// **'server error (HTTP {status})'**
+  String errorHttp(String status);
+
+  /// No description provided for @errorCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'cancelled'**
+  String get errorCancelled;
+
+  /// No description provided for @moreArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived chats'**
+  String get moreArchived;
+
+  /// No description provided for @moreArchivedSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats you swiped away'**
+  String get moreArchivedSub;
+
+  /// No description provided for @archivedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No archived chats. Swipe a chat to the left on the Chats screen to archive it.'**
+  String get archivedEmpty;
+
+  /// No description provided for @archivedRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get archivedRestore;
+
+  /// No description provided for @archivedRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat restored'**
+  String get archivedRestored;
+
+  /// No description provided for @archivedRestoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore: {reason}'**
+  String archivedRestoreFailed(String reason);
 }
 
 class _AppLocalizationsDelegate

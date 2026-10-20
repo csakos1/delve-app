@@ -409,4 +409,100 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get logKindProtocol => 'Protocol';
+
+  @override
+  String get chatsSearch => 'Search chats';
+
+  @override
+  String get chatsSearchClose => 'Close search';
+
+  @override
+  String get chatsSearchHint => 'Search titles and messages';
+
+  @override
+  String chatsNoMatch(String query) {
+    return 'No chats match “$query”';
+  }
+
+  @override
+  String get chatsEmptyTitle => 'No chats yet';
+
+  @override
+  String get chatsEmptyBody =>
+      'Ask your agent anything. Runs happen on your desktop; this phone only talks to it over Tailscale.';
+
+  @override
+  String chatsApprovalPreview(String command) {
+    return 'Approval needed: $command';
+  }
+
+  @override
+  String get chatsMarkerApproval => 'approval needed';
+
+  @override
+  String get chatsMarkerRunning => 'running';
+
+  @override
+  String chatsMarkerRunningQueued(int count) {
+    return 'running · $count queued';
+  }
+
+  @override
+  String get chatsMarkerWaiting => 'queued';
+
+  @override
+  String get chatsDetails => 'Details';
+
+  @override
+  String get chatsArchive => 'Archive';
+
+  @override
+  String get chatsArchived => 'Chat archived';
+
+  @override
+  String get chatsUndo => 'Undo';
+
+  @override
+  String chatsArchiveFailed(String reason) {
+    return 'Couldn\'t archive: $reason';
+  }
+
+  @override
+  String chatsRefreshFailed(String reason) {
+    return 'Couldn\'t refresh: $reason';
+  }
+
+  @override
+  String errorRateLimited(int seconds) {
+    return 'too many requests, try again in $seconds s';
+  }
+
+  @override
+  String errorHttp(String status) {
+    return 'server error (HTTP $status)';
+  }
+
+  @override
+  String get errorCancelled => 'cancelled';
+
+  @override
+  String get moreArchived => 'Archived chats';
+
+  @override
+  String get moreArchivedSub => 'Chats you swiped away';
+
+  @override
+  String get archivedEmpty =>
+      'No archived chats. Swipe a chat to the left on the Chats screen to archive it.';
+
+  @override
+  String get archivedRestore => 'Restore';
+
+  @override
+  String get archivedRestored => 'Chat restored';
+
+  @override
+  String archivedRestoreFailed(String reason) {
+    return 'Couldn\'t restore: $reason';
+  }
 }

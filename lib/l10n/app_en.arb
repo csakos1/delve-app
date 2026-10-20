@@ -244,5 +244,87 @@
   "logKindOutbox": "Outbox",
   "logKindHermes": "Hermes",
   "logKindServerError": "Server error",
-  "logKindProtocol": "Protocol"
+  "logKindProtocol": "Protocol",
+  "chatsSearch": "Search chats",
+  "chatsSearchClose": "Close search",
+  "chatsSearchHint": "Search titles and messages",
+  "chatsNoMatch": "No chats match “{query}”",
+  "@chatsNoMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsEmptyTitle": "No chats yet",
+  "chatsEmptyBody": "Ask your agent anything. Runs happen on your desktop; this phone only talks to it over Tailscale.",
+  "chatsApprovalPreview": "Approval needed: {command}",
+  "@chatsApprovalPreview": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsMarkerApproval": "approval needed",
+  "chatsMarkerRunning": "running",
+  "chatsMarkerRunningQueued": "running · {count} queued",
+  "@chatsMarkerRunningQueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsMarkerWaiting": "queued",
+  "chatsDetails": "Details",
+  "chatsArchive": "Archive",
+  "chatsArchived": "Chat archived",
+  "chatsUndo": "Undo",
+  "chatsArchiveFailed": "Couldn't archive: {reason}",
+  "@chatsArchiveFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsRefreshFailed": "Couldn't refresh: {reason}",
+  "@chatsRefreshFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "errorRateLimited": "too many requests, try again in {seconds} s",
+  "@errorRateLimited": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "errorHttp": "server error (HTTP {status})",
+  "@errorHttp": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "errorCancelled": "cancelled",
+  "moreArchived": "Archived chats",
+  "moreArchivedSub": "Chats you swiped away",
+  "archivedEmpty": "No archived chats. Swipe a chat to the left on the Chats screen to archive it.",
+  "archivedRestore": "Restore",
+  "archivedRestored": "Chat restored",
+  "archivedRestoreFailed": "Couldn't restore: {reason}",
+  "@archivedRestoreFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -3,6 +3,7 @@ import 'package:delve/app/providers.dart';
 import 'package:delve/app/session.dart';
 import 'package:delve/data/credentials.dart';
 import 'package:delve/data/db/database.dart';
+import 'package:delve/sync/connection_status.dart';
 import 'package:delve/sync/sync_providers.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
@@ -30,7 +31,7 @@ const testAppInfo = AppInfo('0.1.0', '1');
 
 /// Everything a test needs to drive the app and look behind it.
 class TestEnv {
-  TestEnv({Credentials? credentials})
+  TestEnv({Credentials? credentials, this.status})
     : db = memoryDb(),
       store = MemoryCredentialStore(credentials),
       server = FakeServer();
@@ -38,6 +39,9 @@ class TestEnv {
   final AppDatabase db;
   final MemoryCredentialStore store;
   final FakeServer server;
+
+  /// Connection state the screens see (the socket itself is off in tests).
+  final ConnectionStatus? status;
 
   // (The override list is written out twice: its element type lives in a
   // different library across Riverpod versions.)
@@ -48,6 +52,8 @@ class TestEnv {
       httpAdapterProvider.overrideWithValue(server),
       appInfoProvider.overrideWith((ref) async => testAppInfo),
       syncEnabledProvider.overrideWithValue(false), // no socket here
+      if (status case final s?)
+        connectionStatusProvider.overrideWith((ref) => Stream.value(s)),
     ],
     child: child,
   );
@@ -60,6 +66,8 @@ class TestEnv {
         httpAdapterProvider.overrideWithValue(server),
         appInfoProvider.overrideWith((ref) async => testAppInfo),
         syncEnabledProvider.overrideWithValue(false), // no socket here
+        if (status case final s?)
+          connectionStatusProvider.overrideWith((ref) => Stream.value(s)),
       ],
     );
     addTearDown(c.dispose);
@@ -77,11 +85,27 @@ void setDesignSize(WidgetTester tester) {
 }
 
 /// Pumps the whole app; [paired] starts with stored credentials.
-Future<TestEnv> pumpDelve(WidgetTester tester, {bool paired = true}) async {
-  final env = TestEnv(credentials: paired ? pairedCredentials() : null);
+Future<TestEnv> pumpDelve(
+  WidgetTester tester, {
+  bool paired = true,
+  ConnectionStatus? status,
+  Future<void> Function(TestEnv env)? before,
+  bool settle = true,
+}) async {
+  final env = TestEnv(
+    credentials: paired ? pairedCredentials() : null,
+    status: status,
+  );
   addTearDown(env.dispose);
   setDesignSize(tester);
+  if (before != null) await tester.runAsync(() => before(env));
   await tester.pumpWidget(env.app(const DelveApp()));
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+  }
   return env;
 }

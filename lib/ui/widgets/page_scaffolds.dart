@@ -162,4 +162,9 @@ abstract final class DelveIcons {
   static const IconData keyOff = Symbols.key_off_rounded;
   static const IconData log = Symbols.receipt_long_rounded;
   static const IconData history = Symbols.history_rounded;
+  static const IconData search = Symbols.search_rounded;
+  static const IconData close = Symbols.close_rounded;
+  static const IconData archive = Symbols.archive_rounded;
+  static const IconData unarchive = Symbols.unarchive_rounded;
+  static const IconData forum = Symbols.forum_rounded;
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../ui/screens/approvals_screen.dart';
+import '../ui/screens/archived_chats_screen.dart';
 import '../ui/screens/chat_screen.dart';
 import '../ui/screens/chats_screen.dart';
 import '../ui/screens/connection_log_screen.dart';
@@ -34,6 +35,7 @@ abstract final class Routes {
   static const observability = '/more/observability';
   static const settings = '/more/settings';
   static const connectionLog = '/more/settings/log';
+  static const archived = '/more/archived';
 
   /// Screens that are only reachable in one session state.
   static const gates = {splash, pair, serverTooOld};
@@ -119,9 +121,11 @@ GoRouter buildRouter({
                     GoRoute(
                       path: page.segment,
                       parentNavigatorKey: rootKey,
-                      builder: (_, _) => page == MorePage.settings
-                          ? const SettingsScreen()
-                          : SubPagePlaceholder(page: page),
+                      builder: (_, _) => switch (page) {
+                        MorePage.settings => const SettingsScreen(),
+                        MorePage.archived => const ArchivedChatsScreen(),
+                        _ => SubPagePlaceholder(page: page),
+                      },
                       routes: [
                         if (page == MorePage.settings)
                           GoRoute(

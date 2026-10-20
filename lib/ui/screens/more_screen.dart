@@ -16,7 +16,8 @@ enum MorePage {
     Routes.observability,
     'B',
   ),
-  settings('settings', DelveIcons.settings, Routes.settings, 'A2');
+  settings('settings', DelveIcons.settings, Routes.settings, 'A2'),
+  archived('archived', DelveIcons.archive, Routes.archived, 'A4');
 
   const MorePage(this.segment, this.icon, this.route, this.step);
 
@@ -32,6 +33,7 @@ enum MorePage {
     MorePage.schedules => l.moreSchedules,
     MorePage.observability => l.moreObservability,
     MorePage.settings => l.moreSettings,
+    MorePage.archived => l.moreArchived,
   };
 
   String subtitle(AppLocalizations l) => switch (this) {
@@ -39,10 +41,11 @@ enum MorePage {
     MorePage.schedules => l.moreSchedulesSub,
     MorePage.observability => l.moreObservabilitySub,
     MorePage.settings => l.moreSettingsSub,
+    MorePage.archived => l.moreArchivedSub,
   };
 }
 
-/// 13-0 More — System, Schedules, Observability, Settings.
+/// 13-0 More — System, Schedules, Observability, Settings, Archived chats.
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
 

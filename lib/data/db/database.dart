@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
+import '../../api/models/approval.dart' show answerableApprovalStatuses;
+import '../../api/models/run.dart' show openRunStatuses;
 import 'converters.dart';
 import 'tables.dart';
 
@@ -93,6 +95,53 @@ class AppDatabase extends _$AppDatabase {
         .watchSingle();
   }
 
+  /// The Chats list (02a): each conversation with what its row shows, newest
+  /// first. Re-emits when any of the four tables changes.
+  Stream<List<ChatListItem>> watchChatList({bool archived = false}) {
+    String inList(Iterable<String> values) =>
+        values.map((v) => "'$v'").join(', ');
+    final active = inList(openRunStatuses.where((s) => s != 'queued'));
+    final answerable = inList(answerableApprovalStatuses);
+    return customSelect(
+      'SELECT c.*, '
+      '(SELECT substr(m.content, 1, 300) FROM messages m '
+      "WHERE m.conversation_id = c.id AND m.role IN ('user', 'assistant') "
+      "AND m.content <> '' ORDER BY m.id DESC LIMIT 1) AS last_text, "
+      '(SELECT substr(m.content, 1, 200) FROM messages m '
+      "WHERE m.conversation_id = c.id AND m.role = 'user' "
+      'ORDER BY m.id ASC LIMIT 1) AS first_user, '
+      '(SELECT a.command FROM approvals a '
+      'WHERE a.conversation_id = c.id AND a.status IN ($answerable) '
+      'ORDER BY a.created_at DESC LIMIT 1) AS approval_command, '
+      '(SELECT count(*) FROM runs r '
+      'WHERE r.conversation_id = c.id AND r.status IN ($active)) '
+      'AS active_runs, '
+      '(SELECT count(*) FROM runs r '
+      "WHERE r.conversation_id = c.id AND r.status = 'queued') AS queued_runs "
+      'FROM conversations c WHERE c.archived = ? '
+      'ORDER BY c.updated_at DESC, c.id DESC',
+      variables: [Variable.withBool(archived)],
+      readsFrom: {conversations, messages, approvals, runs},
+    ).watch().map(
+      (rows) => [
+        for (final row in rows)
+          ChatListItem(
+            conversation: conversations.map(row.data),
+            lastText: row.readNullable<String>('last_text'),
+            firstUserText: row.readNullable<String>('first_user'),
+            approvalCommand: row.readNullable<String>('approval_command'),
+            activeRuns: row.read<int>('active_runs'),
+            queuedRuns: row.read<int>('queued_runs'),
+          ),
+      ],
+    );
+  }
+
+  /// The stream position (null `lastSeq`: nothing loaded from this server
+  /// yet — the Chats skeleton).
+  Stream<SyncStateRow> watchSyncState() =>
+      (select(syncState)..where((t) => t.id.equals(1))).watchSingle();
+
   // --- sync (A3) ------------------------------------------------------------
 
   /// Appends a connection-log entry and drops the oldest beyond the limit.
@@ -135,4 +184,33 @@ class AppDatabase extends _$AppDatabase {
     }
     return q.watch();
   }
+}
+
+/// One row of the Chats list.
+class ChatListItem {
+  const ChatListItem({
+    required this.conversation,
+    this.lastText,
+    this.firstUserText,
+    this.approvalCommand,
+    this.activeRuns = 0,
+    this.queuedRuns = 0,
+  });
+
+  final ConversationRow conversation;
+
+  /// Newest user or assistant text (the preview line).
+  final String? lastText;
+
+  /// First user message (the title until the agent names the chat).
+  final String? firstUserText;
+
+  /// Command of the newest approval that can still be answered.
+  final String? approvalCommand;
+
+  /// Runs of this conversation that have started and not ended.
+  final int activeRuns;
+
+  /// Runs of this conversation waiting in the queue.
+  final int queuedRuns;
 }
