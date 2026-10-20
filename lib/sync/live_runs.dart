@@ -37,6 +37,7 @@ class LiveRun {
     this.firstDeltaAt,
     this.interim = const [],
     this.context,
+    this.contextStart,
   });
 
   final String conversationId;
@@ -61,6 +62,17 @@ class LiveRun {
   final List<String> interim;
   final LiveContext? context;
 
+  /// Tokens of the first context sample of this run: the context grows from
+  /// here while the model thinks (the "N tok" of the thinking block).
+  final int? contextStart;
+
+  /// Tokens the run added since its first context sample (0 before two).
+  int get contextGrowth {
+    final now = context?.tokens, start = contextStart;
+    if (now == null || start == null || now < start) return 0;
+    return now - start;
+  }
+
   bool get isThinking => thinking && firstDeltaAt == null;
 
   LiveRun copyWith({
@@ -69,6 +81,7 @@ class LiveRun {
     DateTime? firstDeltaAt,
     List<String>? interim,
     LiveContext? context,
+    int? contextStart,
   }) => LiveRun(
     conversationId: conversationId,
     runId: runId,
@@ -80,6 +93,7 @@ class LiveRun {
     firstDeltaAt: firstDeltaAt ?? this.firstDeltaAt,
     interim: interim ?? this.interim,
     context: context ?? this.context,
+    contextStart: contextStart ?? this.contextStart,
   );
 }
 
@@ -172,7 +186,12 @@ class LiveRunsBuffer {
   void context(String conversationId, String runId, LiveContext context) {
     final current = _byConversation[conversationId];
     if (current == null || current.runId != runId) return;
-    _put(current.copyWith(context: context));
+    _put(
+      current.copyWith(
+        context: context,
+        contextStart: current.contextStart ?? context.tokens,
+      ),
+    );
   }
 
   /// The run ended (or its final message arrived): the database has it now.

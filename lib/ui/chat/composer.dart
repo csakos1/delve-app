@@ -5,8 +5,8 @@ import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
 
 /// The floating composer: a surface-1 container (radius 24, elevation-1) with
-/// the message field on top and a row of [+], room for the Thinking pill
-/// (A6) and Send / Stop below. Send shows whenever there is text (a message
+/// the message field on top and a row of [+], the Thinking pill and
+/// Send / Stop below. Send shows whenever there is text (a message
 /// typed during a run is queued); otherwise Stop while a run is active.
 class Composer extends StatefulWidget {
   const Composer({
@@ -15,6 +15,7 @@ class Composer extends StatefulWidget {
     this.onStop,
     this.queued = 0,
     this.leading = const [],
+    this.caption,
   });
 
   /// Returns once the message is queued; the field clears then.
@@ -26,8 +27,11 @@ class Composer extends StatefulWidget {
   /// Queued runs of this chat ("N more messages queued").
   final int queued;
 
-  /// Controls after [+] (the Thinking pill, A6).
+  /// Controls after [+] (the Thinking pill).
   final List<Widget> leading;
+
+  /// A short note under the row ("Applies to your next message"); fades.
+  final String? caption;
 
   @override
   State<Composer> createState() => _ComposerState();
@@ -185,6 +189,25 @@ class _ComposerState extends State<Composer> {
                     AnimatedSwitcher(duration: DelveTokens.fast, child: action),
                   ],
                 ),
+                AnimatedSize(
+                  duration: DelveTokens.short,
+                  alignment: Alignment.topLeft,
+                  child: widget.caption == null
+                      ? const SizedBox(width: double.infinity)
+                      : Padding(
+                          padding: const EdgeInsets.only(
+                            left: DelveTokens.touchTarget + DelveTokens.space3,
+                            bottom: DelveTokens.space1,
+                          ),
+                          child: Text(
+                            widget.caption!,
+                            key: const Key('composer.caption'),
+                            style: context.text.labelSmall!.copyWith(
+                              color: d.textMuted,
+                            ),
+                          ),
+                        ),
+                ),
               ],
             ),
           ),
@@ -252,6 +275,90 @@ class _RoundButton extends StatelessWidget {
                     size: 22,
                     filled: filledIcon,
                     color: fg,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Thinking on/off for this conversation (h 32, radius full, 48 dp hit
+/// box). ON: accent fill; OFF: 1 dp outline. Null [onChanged] disables it
+/// (no server).
+class ThinkingPill extends StatelessWidget {
+  const ThinkingPill({super.key, required this.on, required this.onChanged});
+
+  final bool on;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final cs = context.colors;
+    final d = context.delve;
+    final enabled = onChanged != null;
+    final Color fg;
+    final Color bg;
+    final BorderSide side;
+    if (!enabled) {
+      fg = d.textDisabled;
+      bg = Colors.transparent;
+      side = BorderSide(color: cs.outlineVariant);
+    } else if (on) {
+      fg = cs.onPrimary;
+      bg = cs.primary;
+      side = BorderSide.none;
+    } else {
+      fg = cs.onSurfaceVariant;
+      bg = Colors.transparent;
+      side = BorderSide(color: cs.outline);
+    }
+    return Semantics(
+      toggled: on,
+      enabled: enabled,
+      label: l.composerThinking,
+      excludeSemantics: true,
+      child: SizedBox(
+        height: DelveTokens.touchTarget,
+        child: Center(
+          child: AnimatedContainer(
+            duration: DelveTokens.short,
+            curve: Curves.easeOutCubic,
+            height: 32,
+            decoration: ShapeDecoration(
+              color: bg,
+              shape: StadiumBorder(side: side),
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              shape: const StadiumBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                key: const Key('composer.thinking'),
+                onTap: enabled ? () => onChanged!(!on) : null,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DelveTokens.space3,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SymbolIcon(
+                        DelveIcons.thinking,
+                        size: 18,
+                        filled: on,
+                        color: fg,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l.composerThinking,
+                        style: context.text.labelLarge!.copyWith(color: fg),
+                      ),
+                    ],
                   ),
                 ),
               ),

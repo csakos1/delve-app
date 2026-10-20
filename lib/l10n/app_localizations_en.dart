@@ -792,4 +792,136 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatFollowUp => 'Follow-up run: approved';
+
+  @override
+  String get composerThinking => 'Thinking';
+
+  @override
+  String get composerThinkingCaption => 'Applies to your next message';
+
+  @override
+  String thinkingFailed(String reason) {
+    return 'Couldn\'t switch Thinking: $reason';
+  }
+
+  @override
+  String get thinkingNow => 'Thinking…';
+
+  @override
+  String thinkingTokens(String count) {
+    return '$count tok';
+  }
+
+  @override
+  String get thinkingThought => 'Thought';
+
+  @override
+  String thinkingThoughtFor(String time) {
+    return 'Thought for $time';
+  }
+
+  @override
+  String get thinkingShowAll => 'Show all';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String usageLine(String total, String context) {
+    return 'Σ $total tok · ctx $context';
+  }
+
+  @override
+  String get usageNoContext => '—';
+
+  @override
+  String get usageTitle => 'Usage';
+
+  @override
+  String usageRunCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count runs',
+      one: '1 run',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String usageLoadFailed(String reason) {
+    return 'Couldn\'t load usage: $reason';
+  }
+
+  @override
+  String get usageInput => 'Input';
+
+  @override
+  String get usageOutput => 'Output';
+
+  @override
+  String get usageCacheRead => 'Cache read';
+
+  @override
+  String get usageTotal => 'Total';
+
+  @override
+  String get usageContext => 'Context';
+
+  @override
+  String get usageWarnMark => '75% · warn';
+
+  @override
+  String get usageRuns => 'Runs';
+
+  @override
+  String get usageNewestFirst => 'newest first';
+
+  @override
+  String get usageNoRuns => 'No runs yet.';
+
+  @override
+  String get usagePrefillNote =>
+      'Prefill speed is shown only for prompts of 500 tokens or more.';
+
+  @override
+  String usageRun(int number) {
+    return 'Run $number';
+  }
+
+  @override
+  String usageRunState(int number, String state) {
+    return 'Run $number · $state';
+  }
+
+  @override
+  String get usageRunFailed => 'failed';
+
+  @override
+  String get usageRunStopped => 'stopped';
+
+  @override
+  String get usageRunQueued => 'queued';
+
+  @override
+  String get usageRunRunning => 'running';
+
+  @override
+  String usageIn(String count) {
+    return 'in $count';
+  }
+
+  @override
+  String usageOut(String count) {
+    return 'out $count';
+  }
+
+  @override
+  String get usagePrefill => 'Prefill';
+
+  @override
+  String get usageGeneration => 'Generation';
+
+  @override
+  String get usageFirstToken => 'First token';
 }

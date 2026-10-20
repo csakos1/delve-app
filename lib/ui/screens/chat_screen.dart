@@ -19,6 +19,7 @@ import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
 import '../chat/chat_items.dart';
 import '../chat/composer.dart';
+import '../chat/usage.dart';
 import '../format.dart';
 import '../widgets/chat_row.dart';
 import '../widgets/page_scaffolds.dart';
@@ -56,6 +57,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _moving = false;
   ChatActions? _opened;
 
+  /// Thinking for a new chat (sent with its first message).
+  bool _newThinking = false;
+
+  /// An existing chat's Thinking switch while the server has not confirmed
+  /// it yet.
+  bool? _thinkingPending;
+
+  /// "Applies to your next message" under the composer, for 2 s.
+  Timer? _captionTimer;
+  bool _caption = false;
+
   @override
   void initState() {
     super.initState();
@@ -85,9 +97,47 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
+    _captionTimer?.cancel();
     _opened?.close();
     super.dispose();
   }
+
+  void _showCaption() {
+    _captionTimer?.cancel();
+    setState(() => _caption = true);
+    _captionTimer = Timer(DelveTokens.caption, () {
+      if (mounted) setState(() => _caption = false);
+    });
+  }
+
+  /// Thinking for the next message: local for a new chat, otherwise saved
+  /// on the server (the pill shows the wanted state until it answers).
+  Future<void> _setThinking(bool on) async {
+    final id = widget.conversationId;
+    _showCaption();
+    if (id == null) {
+      setState(() => _newThinking = on);
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    final actions = ref.read(chatActionsProvider);
+    if (actions == null) return;
+    setState(() => _thinkingPending = on);
+    try {
+      await actions.setThinking(id, thinking: on);
+    } on Exception catch (e) {
+      if (mounted) _snack(l.thinkingFailed(apiErrorText(l, e)));
+    } finally {
+      if (mounted) setState(() => _thinkingPending = null);
+    }
+  }
+
+  Widget _pill({required bool on}) => ThinkingPill(
+    on: on,
+    onChanged: ref.watch(chatActionsProvider) == null
+        ? null
+        : (v) => unawaited(_setThinking(v)),
+  );
 
   void _snack(String text) {
     ScaffoldMessenger.of(context)
@@ -106,7 +156,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _send(String text) async {
     final actions = ref.read(chatActionsProvider);
     if (actions == null) return;
-    final id = await actions.send(text, conversationId: widget.conversationId);
+    final id = await actions.send(
+      text,
+      conversationId: widget.conversationId,
+      thinking: widget.conversationId == null ? _newThinking : null,
+    );
     if (widget.conversationId == null && mounted) {
       setState(() => _firstClientMsgId = id);
     }
@@ -207,7 +261,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ],
                   ),
           ),
-          Composer(onSend: _send),
+          Composer(
+            onSend: _send,
+            leading: [_pill(on: _newThinking)],
+            caption: _caption ? l.composerThinkingCaption : null,
+          ),
         ],
       ),
     );
@@ -247,6 +305,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return Scaffold(
       appBar: _ChatAppBar(
         title: title,
+        onTitleTap: conversation == null
+            ? null
+            : () => unawaited(
+                showUsageSheet(context, conversationId: id, title: title),
+              ),
+        usage: conversation == null
+            ? null
+            : UsageLine(
+                numbers: UsageNumbers.of(conversation, live?.context),
+                onTap: () => unawaited(
+                  showUsageSheet(context, conversationId: id, title: title),
+                ),
+              ),
         actions: [
           if (conversation != null)
             PopupMenuButton<bool>(
@@ -304,6 +375,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ? null
                 : () => unawaited(_stop(stopTarget.runId)),
             queued: data?.queuedCount ?? 0,
+            leading: [
+              _pill(on: _thinkingPending ?? conversation?.thinking ?? false),
+            ],
+            caption: _caption ? l.composerThinkingCaption : null,
           ),
         ],
       ),
@@ -375,29 +450,52 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 }
 
-/// Top bar: surface-2, back, title (titleMedium, one line), actions. The
-/// usage line under it arrives with A6.
+/// Top bar: surface-2, back, title (titleMedium, one line), actions, and
+/// for an existing chat the usage line under it.
 class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const _ChatAppBar({required this.title, this.actions = const []});
+  const _ChatAppBar({
+    required this.title,
+    this.actions = const [],
+    this.usage,
+    this.onTitleTap,
+  });
 
   final String title;
   final List<Widget> actions;
 
+  /// The usage line under the title (an existing chat).
+  final UsageLine? usage;
+
+  /// Title and usage line are one target: the Usage sheet.
+  final VoidCallback? onTitleTap;
+
   @override
-  Size get preferredSize => const Size.fromHeight(DelveTokens.topBar);
+  Size get preferredSize => Size.fromHeight(
+    DelveTokens.topBar + (usage == null ? 0 : UsageLine.height),
+  );
 
   @override
   Widget build(BuildContext context) => AppBar(
     backgroundColor: context.colors.surfaceContainer,
     leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
-    title: Text(
-      title,
-      key: const Key('chat.title'),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: context.text.titleMedium,
+    title: GestureDetector(
+      onTap: onTitleTap,
+      behavior: HitTestBehavior.opaque,
+      child: Text(
+        title,
+        key: const Key('chat.title'),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: context.text.titleMedium,
+      ),
     ),
     actions: actions,
+    bottom: usage == null
+        ? null
+        : PreferredSize(
+            preferredSize: const Size.fromHeight(UsageLine.height),
+            child: usage!,
+          ),
   );
 }
 

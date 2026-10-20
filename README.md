@@ -28,8 +28,14 @@ reached over Tailscale only.
   when; Allow once / Deny / ⋯ (Allow for session, Open chat), reloaded on open and on
   pull. The inbox answers over REST. In the chat, a follow-up run's prompt reads as
   "Follow-up run: approved" with its command.
+- A6: Thinking — the pill in the composer (per chat, saved on the server; for a new
+  chat sent with its first message), the thinking block (live clock and tokens, then
+  "Thought for …" opening the reasoning); usage — the line under the chat title (total
+  tokens, context fill with the live sample while a run goes) and the Usage sheet
+  (totals, context, runs with prefill, generation and first-token time).
 
-Thinking and the usage line follow in A6. Requires a server with
+With A6 the MVP is complete; notifications, dashboard, system, schedules,
+observability, attachments and the home widget follow (B1–B7). Requires a server with
 API revision 2 or newer (`DELETE /api/v1/devices/me` for unpairing).
 
 ## Stack

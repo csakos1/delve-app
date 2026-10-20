@@ -11,6 +11,7 @@ import 'package:delve/sync/sync_providers.dart';
 import 'package:delve/ui/chat/approval_card.dart';
 import 'package:delve/ui/chat/chat_items.dart';
 import 'package:delve/ui/chat/tool_step_card.dart';
+import 'package:delve/ui/chat/usage.dart';
 import 'package:delve/ui/format.dart';
 import 'package:delve/ui/screens/chat_screen.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
@@ -34,8 +35,14 @@ class FakeChatActions implements ChatActions {
   int _n = 0;
 
   @override
-  Future<String> send(String text, {String? conversationId}) async {
-    calls.add('send $text $conversationId');
+  Future<String> send(
+    String text, {
+    String? conversationId,
+    bool? thinking,
+  }) async {
+    calls.add(
+      'send $text $conversationId${thinking ?? false ? ' thinking' : ''}',
+    );
     final id = 'cm_${++_n}';
     await db
         .into(db.outbox)
@@ -66,6 +73,17 @@ class FakeChatActions implements ChatActions {
     final e = stopError;
     if (e != null) throw e;
     return 'stopping';
+  }
+
+  @override
+  Future<void> setThinking(
+    String conversationId, {
+    required bool thinking,
+  }) async {
+    calls.add('thinking $conversationId $thinking');
+    await (db.update(db.conversations)
+          ..where((c) => c.id.equals(conversationId)))
+        .write(ConversationsCompanion(thinking: Value(thinking)));
   }
 
   @override
@@ -714,6 +732,254 @@ void main() {
       expect(approvalClassLabel(l, 'whatever'), 'command');
       expect(followUpCommand('Prompt:\n\nrm -r /tmp/x'), 'rm -r /tmp/x');
       expect(followUpCommand('only text'), 'only text');
+    });
+  });
+
+  group('thinking and usage', () {
+    /// A finished Thinking run with its reasoning.
+    Future<void> seedThought(TestEnv env) async {
+      final db = env.db;
+      await db.putConversation(conversation('c_1'));
+      await db.batch(
+        (b) => b
+          ..insertAll(db.messages, [
+            message(1, 'user', 'Why did it restart?', runId: 'run_t'),
+            message(
+              2,
+              'assistant',
+              'Out of memory.',
+              runId: 'run_t',
+            ).copyWith(reasoning: const Value('Plan: read the journal.')),
+          ])
+          ..insertAll(db.runs, [
+            run('run_t', 'completed').copyWith(
+              thinking: const Value(true),
+              perf: const Value({'first_delta_s': 23.4}),
+            ),
+          ]),
+      );
+    }
+
+    /// A Thinking run that has not written anything yet.
+    Future<void> seedThinking(TestEnv env) async {
+      final db = env.db;
+      await db.putConversation(conversation('c_1'));
+      await db.batch(
+        (b) => b
+          ..insertAll(db.messages, [
+            message(1, 'user', 'Think hard', runId: 'run_k'),
+            message(2, 'assistant', '', runId: 'run_k', status: 'streaming'),
+          ])
+          ..insertAll(db.runs, [
+            run('run_k', 'running').copyWith(thinking: const Value(true)),
+          ]),
+      );
+    }
+
+    testWidgets('the pill saves Thinking for this chat; caption for 2 s', (
+      t,
+    ) async {
+      final env = await start(t, seedFinished);
+      await openChat(t);
+      expect(find.byKey(const Key('composer.caption')), findsNothing);
+      await t.tap(find.byKey(const Key('composer.thinking')));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 200));
+      expect(fake.calls, contains('thinking c_1 true'));
+      expect(find.byKey(const Key('composer.caption')), findsOneWidget);
+      final stored = await env.db.select(env.db.conversations).getSingle();
+      expect(stored.thinking, isTrue);
+      await t.pump(const Duration(seconds: 2));
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('composer.caption')), findsNothing);
+    });
+
+    testWidgets('a new chat sends its first message with Thinking', (t) async {
+      await start(t, (_) async {});
+      await t.tap(find.byKey(const Key('chats.emptyNew')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('composer.thinking')));
+      await t.pumpAndSettle();
+      await t.enterText(find.byKey(const Key('composer.field')), 'hi');
+      await t.pump();
+      await t.tap(find.byKey(const Key('composer.send')));
+      await t.pumpAndSettle();
+      expect(fake.calls, ['send hi null thinking']);
+    });
+
+    testWidgets('a finished Thinking run: "Thought for 23 s" opens it', (
+      t,
+    ) async {
+      await start(t, seedThought);
+      await openChat(t);
+      expect(find.text('Thought for 23 s'), findsOneWidget);
+      expect(find.text('Plan: read the journal.'), findsNothing);
+      await t.tap(find.byKey(const Key('thinking.toggle')));
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.text('Plan: read the journal.'), findsOneWidget);
+    });
+
+    testWidgets('live thinking: clock and tokens, then "Thought for"', (
+      t,
+    ) async {
+      await start(t, seedThinking);
+      await openChat(t, settle: false);
+      expect(find.byKey(const Key('thinking.live')), findsOneWidget);
+      expect(find.text('Working…'), findsNothing);
+
+      final container = ProviderScope.containerOf(
+        t.element(find.byType(ChatScreen)),
+      );
+      final started = DateTime.now();
+      LiveContext sample(int tokens) => LiveContext(
+        tokens: tokens,
+        max: 65536,
+        pct: tokens / 655.36,
+        warn: false,
+        source: 'sample',
+        measuredAt: DateTime.now(),
+      );
+      container.read(liveRunsProvider.notifier).set({
+        'c_1': LiveRun(
+          conversationId: 'c_1',
+          runId: 'run_k',
+          thinking: true,
+          startedAt: started,
+          messageId: 2,
+          context: sample(9100),
+          contextStart: 8600,
+        ),
+      });
+      await t.pump();
+      expect(find.textContaining('500 tok'), findsOneWidget);
+      expect(
+        t.widget<Text>(find.byKey(const Key('chat.usageText'))).data,
+        contains('ctx 9,100 / 65,536'),
+      );
+
+      container.read(liveRunsProvider.notifier).set({
+        'c_1': LiveRun(
+          conversationId: 'c_1',
+          runId: 'run_k',
+          thinking: true,
+          startedAt: started,
+          messageId: 2,
+          text: 'Done.',
+          firstDeltaAt: started.add(const Duration(seconds: 12)),
+        ),
+      });
+      await t.pump();
+      await t.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('thinking.live')), findsNothing);
+      expect(find.text('Thought for 12 s'), findsOneWidget);
+    });
+
+    testWidgets('the usage line opens the Usage sheet', (t) async {
+      final env = await start(t, seedFinished);
+      Map<String, Object?> runJson(
+        String id,
+        String status,
+        Map<String, Object?> perf,
+      ) => sample('run', {
+        'run_id': id,
+        'conversation_id': 'c_1',
+        'status': status,
+        'perf': perf,
+      });
+      env.server.json('GET', '/api/v1/conversations/c_1/usage', {
+        'conversation_id': 'c_1',
+        'totals': sample('conversation')['totals'],
+        'context': sample('conversation')['context'],
+        'runs': [
+          runJson('run_a', 'completed', {
+            'prompt_tokens': 122,
+            'prefill_tps': 210.4,
+            'gen_tps': 20.6,
+            'first_delta_s': 2.96,
+          }),
+          runJson('run_b', 'running', {
+            'prompt_tokens': 900,
+            'prefill_tps': 642.3,
+            'gen_tps': 21.4,
+            'first_delta_s': 6.8,
+          }),
+        ],
+      });
+      await openChat(t);
+      expect(
+        t.widget<Text>(find.byKey(const Key('chat.usageText'))).data,
+        'Σ 25,954 tok · ctx 8,728 / 65,536 · 13%',
+      );
+      await t.tap(find.byKey(const Key('chat.usage')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('usage.sheet')), findsOneWidget);
+      expect(find.text('Usage'), findsOneWidget);
+      expect(find.text('Kernel check · 2 runs'), findsOneWidget);
+      expect(find.text('25,954'), findsOneWidget);
+      expect(find.text('Run 1'), findsOneWidget);
+      expect(find.text('Run 2 · running'), findsOneWidget);
+      expect(find.text('642 tok/s'), findsOneWidget);
+      expect(find.text('21.4 tok/s'), findsOneWidget);
+      // run 1 prefilled only 122 tokens: no prefill speed
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('usage.run.run_a')),
+          matching: find.text('—'),
+        ),
+        findsOneWidget,
+      );
+      await t.tap(find.byKey(const Key('usage.close')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('usage.sheet')), findsNothing);
+    });
+
+    testWidgets('the sheet says when usage cannot be loaded', (t) async {
+      final env = await start(t, seedFinished);
+      await openChat(t);
+      env.server.unreachable = true;
+      await t.tap(find.byKey(const Key('chat.usage')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('usage.error')), findsOneWidget);
+    });
+
+    test('numbers: counts, context text, speeds, live context', () {
+      expect(tokenCount(48210), '48,210');
+      expect(contextText(41980, 65536, 64.1), '41,980 / 65,536 · 64%');
+      expect(contextText(null, 65536, null), isNull);
+
+      final speeds = runSpeeds(
+        Run.fromJson(
+          sample('run', {
+            'perf': {'prompt_tokens': 499, 'prefill_tps': 210.0},
+          }),
+        ),
+      );
+      expect(speeds.prefill, '—');
+      expect(speeds.generation, '—');
+      expect(speeds.firstToken, '—');
+
+      final buffer = LiveRunsBuffer()
+        ..started(
+          conversationId: 'c',
+          runId: 'r',
+          thinking: true,
+          at: DateTime.now(),
+        );
+      LiveContext ctx(int n) => LiveContext(
+        tokens: n,
+        max: 100,
+        pct: n.toDouble(),
+        warn: n >= 75,
+        source: 'sample',
+        measuredAt: DateTime.now(),
+      );
+      buffer
+        ..context('c', 'r', ctx(40))
+        ..context('c', 'r', ctx(80));
+      final live = buffer['c']!;
+      expect(live.contextStart, 40);
+      expect(live.contextGrowth, 40);
     });
   });
 

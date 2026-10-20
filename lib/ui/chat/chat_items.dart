@@ -13,6 +13,7 @@ import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import 'approval_card.dart';
 import 'markdown.dart';
+import 'thinking_block.dart';
 import 'tool_step_card.dart';
 
 void _copyWithNote(BuildContext context, String text) {
@@ -276,7 +277,30 @@ class RunBlock extends StatelessWidget {
     final cancelled =
         run?.status == 'cancelled' || message.status == 'cancelled';
 
+    // Thinking runs (05): live while the model reasons (no text, no step
+    // yet), then "Thought for …" with the reasoning once it arrived.
+    final thinkingRun = (run?.thinking ?? false) || (live?.thinking ?? false);
+    final thinkingNow =
+        isActive &&
+        thinkingRun &&
+        steps.isEmpty &&
+        interim.isEmpty &&
+        (live != null ? live.isThinking : text.trim().isEmpty);
+
     final items = <Widget>[
+      if (thinkingRun)
+        _RailItem(
+          rail: railColor,
+          node: nodeColor,
+          child: ThinkingBlock(
+            key: ValueKey('thinking.${message.id}'),
+            live: thinkingNow,
+            since: run?.startedAt ?? live?.startedAt ?? message.createdAt,
+            tokens: live?.contextGrowth ?? 0,
+            seconds: _thoughtSeconds(run, live),
+            reasoning: message.reasoning,
+          ),
+        ),
       for (final s in interim)
         _RailItem(
           rail: railColor,
@@ -304,7 +328,7 @@ class RunBlock extends StatelessWidget {
             child: DelveMarkdown(data: text),
           ),
         )
-      else if (isActive && steps.isEmpty && interim.isEmpty)
+      else if (isActive && steps.isEmpty && interim.isEmpty && !thinkingNow)
         _RailItem(
           rail: railColor,
           node: nodeColor,
@@ -364,6 +388,16 @@ class RunBlock extends StatelessWidget {
       ),
       child: column,
     );
+  }
+
+  /// How long the model thought: the run's time to its first text
+  /// (`perf.first_delta_s`), or what this app saw live.
+  static double? _thoughtSeconds(RunRow? run, LiveRun? live) {
+    final measured = run?.perf?['first_delta_s'];
+    if (measured is num) return measured.toDouble();
+    final first = live?.firstDeltaAt;
+    if (live == null || first == null) return null;
+    return first.difference(live.startedAt).inMilliseconds / 1000;
   }
 
   /// An answerable approval replaces its step (04, 08a); otherwise the tool

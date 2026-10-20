@@ -34,6 +34,18 @@ String countdownText(Duration left) {
   return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
 }
 
+/// A token count with thousands separators: `48,210`.
+String tokenCount(num n) => NumberFormat('#,##0', 'en_US').format(n);
+
+/// The context fill as the usage line writes it: `41,980 / 65,536 · 64%`,
+/// or null when nothing was measured yet.
+String? contextText(int? tokens, int? max, double? pct) {
+  if (tokens == null) return null;
+  final of = max == null ? '' : ' / ${tokenCount(max)}';
+  final percent = pct == null ? '' : ' · ${pct.round()}%';
+  return '${tokenCount(tokens)}$of$percent';
+}
+
 /// One line of message text for a list preview: no code fences or bold
 /// markers, whitespace collapsed.
 String previewText(String text) => text

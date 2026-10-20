@@ -1449,6 +1449,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Follow-up run: approved'**
   String get chatFollowUp;
+
+  /// No description provided for @composerThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking'**
+  String get composerThinking;
+
+  /// No description provided for @composerThinkingCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to your next message'**
+  String get composerThinkingCaption;
+
+  /// No description provided for @thinkingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t switch Thinking: {reason}'**
+  String thinkingFailed(String reason);
+
+  /// No description provided for @thinkingNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking…'**
+  String get thinkingNow;
+
+  /// No description provided for @thinkingTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tok'**
+  String thinkingTokens(String count);
+
+  /// No description provided for @thinkingThought.
+  ///
+  /// In en, this message translates to:
+  /// **'Thought'**
+  String get thinkingThought;
+
+  /// No description provided for @thinkingThoughtFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Thought for {time}'**
+  String thinkingThoughtFor(String time);
+
+  /// No description provided for @thinkingShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get thinkingShowAll;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @usageLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Σ {total} tok · ctx {context}'**
+  String usageLine(String total, String context);
+
+  /// No description provided for @usageNoContext.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get usageNoContext;
+
+  /// No description provided for @usageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage'**
+  String get usageTitle;
+
+  /// No description provided for @usageRunCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 run} other{{count} runs}}'**
+  String usageRunCount(int count);
+
+  /// No description provided for @usageLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load usage: {reason}'**
+  String usageLoadFailed(String reason);
+
+  /// No description provided for @usageInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Input'**
+  String get usageInput;
+
+  /// No description provided for @usageOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Output'**
+  String get usageOutput;
+
+  /// No description provided for @usageCacheRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache read'**
+  String get usageCacheRead;
+
+  /// No description provided for @usageTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get usageTotal;
+
+  /// No description provided for @usageContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Context'**
+  String get usageContext;
+
+  /// No description provided for @usageWarnMark.
+  ///
+  /// In en, this message translates to:
+  /// **'75% · warn'**
+  String get usageWarnMark;
+
+  /// No description provided for @usageRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs'**
+  String get usageRuns;
+
+  /// No description provided for @usageNewestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'newest first'**
+  String get usageNewestFirst;
+
+  /// No description provided for @usageNoRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'No runs yet.'**
+  String get usageNoRuns;
+
+  /// No description provided for @usagePrefillNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefill speed is shown only for prompts of 500 tokens or more.'**
+  String get usagePrefillNote;
+
+  /// No description provided for @usageRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Run {number}'**
+  String usageRun(int number);
+
+  /// No description provided for @usageRunState.
+  ///
+  /// In en, this message translates to:
+  /// **'Run {number} · {state}'**
+  String usageRunState(int number, String state);
+
+  /// No description provided for @usageRunFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'failed'**
+  String get usageRunFailed;
+
+  /// No description provided for @usageRunStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'stopped'**
+  String get usageRunStopped;
+
+  /// No description provided for @usageRunQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'queued'**
+  String get usageRunQueued;
+
+  /// No description provided for @usageRunRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'running'**
+  String get usageRunRunning;
+
+  /// No description provided for @usageIn.
+  ///
+  /// In en, this message translates to:
+  /// **'in {count}'**
+  String usageIn(String count);
+
+  /// No description provided for @usageOut.
+  ///
+  /// In en, this message translates to:
+  /// **'out {count}'**
+  String usageOut(String count);
+
+  /// No description provided for @usagePrefill.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefill'**
+  String get usagePrefill;
+
+  /// No description provided for @usageGeneration.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation'**
+  String get usageGeneration;
+
+  /// No description provided for @usageFirstToken.
+  ///
+  /// In en, this message translates to:
+  /// **'First token'**
+  String get usageFirstToken;
 }
 
 class _AppLocalizationsDelegate

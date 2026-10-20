@@ -151,8 +151,14 @@ final chatProvider = StreamProvider.autoDispose.family<ChatData, String>(
 
 /// What the chat screen asks of the server. Tests replace it with a fake.
 abstract class ChatActions {
-  /// Queues [text] (outbox) and returns its `client_msg_id`.
-  Future<String> send(String text, {String? conversationId});
+  /// Queues [text] (outbox) and returns its `client_msg_id`. [thinking] is
+  /// for a new chat only: an existing chat runs with its own setting.
+  Future<String> send(String text, {String? conversationId, bool? thinking});
+
+  /// Thinking on/off for [conversationId] (from its next run on). Over REST,
+  /// so it works whether or not the socket is live; the change comes back
+  /// as `conversation.updated` too.
+  Future<void> setThinking(String conversationId, {required bool thinking});
 
   Future<void> retry(String clientMsgId);
 
@@ -192,8 +198,24 @@ class EngineChatActions implements ChatActions {
   SyncEngine get _engine => engine ?? (throw const NotConnected());
 
   @override
-  Future<String> send(String text, {String? conversationId}) =>
-      _engine.sendMessage(text, conversationId: conversationId);
+  Future<String> send(String text, {String? conversationId, bool? thinking}) =>
+      _engine.sendMessage(
+        text,
+        conversationId: conversationId,
+        thinking: conversationId == null ? thinking : null,
+      );
+
+  @override
+  Future<void> setThinking(
+    String conversationId, {
+    required bool thinking,
+  }) async {
+    final conv = await api.patchConversation(
+      conversationId,
+      thinking: thinking,
+    );
+    await db.putConversation(conv);
+  }
 
   @override
   Future<void> retry(String clientMsgId) => _engine.retryMessage(clientMsgId);

@@ -520,5 +520,116 @@
   "approvalsOpenChat": "Open chat",
   "approvalsWhoYou": "You",
   "approvalsWhoAuto": "Delve (follow-up)",
-  "chatFollowUp": "Follow-up run: approved"
+  "chatFollowUp": "Follow-up run: approved",
+  "composerThinking": "Thinking",
+  "composerThinkingCaption": "Applies to your next message",
+  "thinkingFailed": "Couldn't switch Thinking: {reason}",
+  "@thinkingFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "thinkingNow": "Thinking…",
+  "thinkingTokens": "{count} tok",
+  "@thinkingTokens": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "thinkingThought": "Thought",
+  "thinkingThoughtFor": "Thought for {time}",
+  "@thinkingThoughtFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "thinkingShowAll": "Show all",
+  "close": "Close",
+  "usageLine": "Σ {total} tok · ctx {context}",
+  "@usageLine": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      },
+      "context": {
+        "type": "String"
+      }
+    }
+  },
+  "usageNoContext": "—",
+  "usageTitle": "Usage",
+  "usageRunCount": "{count, plural, =1{1 run} other{{count} runs}}",
+  "@usageRunCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usageLoadFailed": "Couldn't load usage: {reason}",
+  "@usageLoadFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "usageInput": "Input",
+  "usageOutput": "Output",
+  "usageCacheRead": "Cache read",
+  "usageTotal": "Total",
+  "usageContext": "Context",
+  "usageWarnMark": "75% · warn",
+  "usageRuns": "Runs",
+  "usageNewestFirst": "newest first",
+  "usageNoRuns": "No runs yet.",
+  "usagePrefillNote": "Prefill speed is shown only for prompts of 500 tokens or more.",
+  "usageRun": "Run {number}",
+  "@usageRun": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "usageRunState": "Run {number} · {state}",
+  "@usageRunState": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "usageRunFailed": "failed",
+  "usageRunStopped": "stopped",
+  "usageRunQueued": "queued",
+  "usageRunRunning": "running",
+  "usageIn": "in {count}",
+  "@usageIn": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "usageOut": "out {count}",
+  "@usageOut": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "usagePrefill": "Prefill",
+  "usageGeneration": "Generation",
+  "usageFirstToken": "First token"
 }
