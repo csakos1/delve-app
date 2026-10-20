@@ -1,0 +1,512 @@
+{
+  "_note": "Generated from delve-backend serializers (decision 176); keys must equal contract.json.",
+  "shapes": {
+    "conversation": {
+      "id": "c_5f2a9e1b7c3d4e6f",
+      "title": "Kernel and CPU count",
+      "created_at": "2026-10-19T21:39:00.123456+00:00",
+      "updated_at": "2026-10-19T21:42:00.123456+00:00",
+      "archived": false,
+      "thinking": true,
+      "origin": "app",
+      "last_run_id": "run_8e4b1c2d3a4f5e6b",
+      "context": {
+        "tokens": 8728,
+        "max": 65536,
+        "pct": 13.3,
+        "warn": false,
+        "measured_at": "2026-10-19T21:42:00.123456+00:00"
+      },
+      "totals": {
+        "input_tokens": 25887,
+        "output_tokens": 67,
+        "cache_read_tokens": 17152,
+        "total_tokens": 25954
+      }
+    },
+    "message": {
+      "id": 412,
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "role": "assistant",
+      "content": "Kernel 7.2.11, 24 CPUs.",
+      "interim": "I'll check uname and nproc.",
+      "reasoning": null,
+      "status": "final",
+      "client_msg_id": null,
+      "created_at": "2026-10-19T21:39:02.123456+00:00"
+    },
+    "message_user": {
+      "id": 411,
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "role": "user",
+      "content": "uname -r && nproc",
+      "interim": null,
+      "reasoning": null,
+      "status": "final",
+      "client_msg_id": "0b8f3c52-7a1e-4d2b-9c61-2f5e8a7d3b10",
+      "created_at": "2026-10-19T21:39:00.123456+00:00"
+    },
+    "run": {
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "status": "completed",
+      "thinking": false,
+      "origin": "app",
+      "queued_at": "2026-10-19T21:39:00.123456+00:00",
+      "started_at": "2026-10-19T21:39:01.123456+00:00",
+      "ended_at": "2026-10-19T21:39:03.123456+00:00",
+      "usage": {
+        "input_tokens": 17315,
+        "output_tokens": 63,
+        "cache_read_tokens": 17152
+      },
+      "perf": {
+        "sse_reconnects": 0,
+        "first_delta_s": 2.96,
+        "context_source": "final_read",
+        "llama_calls_seen": 2,
+        "prompt_tokens": 122,
+        "predicted_tokens": 63,
+        "prefill_tps": 210.4,
+        "gen_tps": 20.6
+      },
+      "error": null
+    },
+    "open_run": {
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "status": "running",
+      "thinking": false,
+      "origin": "app",
+      "queued_at": "2026-10-19T21:39:00.123456+00:00",
+      "started_at": "2026-10-19T21:39:00.123456+00:00",
+      "ended_at": null,
+      "usage": null,
+      "perf": null,
+      "error": null,
+      "position": 0
+    },
+    "approval": {
+      "request_id": "apr_3c9d1e2f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "command": "rm -r /tmp/delve-12-4-smoke-dir",
+      "description": "recursive delete",
+      "pattern_keys": [
+        "rm -r"
+      ],
+      "action_class": "delete_kill",
+      "status": "pending",
+      "choice": null,
+      "choices": [
+        "once",
+        "session",
+        "deny"
+      ],
+      "decided_by": null,
+      "created_at": "2026-10-19T21:39:00.123456+00:00",
+      "hermes_deadline": "2026-10-19T21:44:00.123456+00:00",
+      "expires_at": "2026-10-19T22:09:00.123456+00:00",
+      "responded_at": null
+    },
+    "tool_step": {
+      "id": 97,
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "tool": "terminal",
+      "status": "ok",
+      "preview": "uname -r && nproc",
+      "result": {
+        "exit_code": 0,
+        "output": "7.2.11-arch1-1\n24"
+      },
+      "result_raw": "{\"exit_code\": 0}",
+      "user_summary": null,
+      "duration_s": 0.41,
+      "seq_started": 5,
+      "seq_completed": 7,
+      "approval_request_id": "apr_3c9d1e2f",
+      "approval": {
+        "request_id": "apr_3c9d1e2f",
+        "run_id": "run_8e4b1c2d3a4f5e6b",
+        "conversation_id": "c_5f2a9e1b7c3d4e6f",
+        "command": "rm -r /tmp/delve-12-4-smoke-dir",
+        "description": "recursive delete",
+        "pattern_keys": [
+          "rm -r"
+        ],
+        "action_class": "delete_kill",
+        "status": "pending",
+        "choice": null,
+        "choices": [
+          "once",
+          "session",
+          "deny"
+        ],
+        "decided_by": null,
+        "created_at": "2026-10-19T21:39:00.123456+00:00",
+        "hermes_deadline": "2026-10-19T21:44:00.123456+00:00",
+        "expires_at": "2026-10-19T22:09:00.123456+00:00",
+        "responded_at": null
+      }
+    },
+    "tool_step_plain": {
+      "id": 98,
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "tool": "terminal",
+      "status": "running",
+      "preview": "nproc",
+      "result": null,
+      "result_raw": null,
+      "user_summary": null,
+      "duration_s": null,
+      "seq_started": 9,
+      "seq_completed": null,
+      "approval_request_id": null,
+      "approval": null
+    }
+  },
+  "events": {
+    "conversation.created": {
+      "id": "c_5f2a9e1b7c3d4e6f",
+      "title": "Kernel and CPU count",
+      "created_at": "2026-10-19T21:39:00.123456+00:00",
+      "updated_at": "2026-10-19T21:42:00.123456+00:00",
+      "archived": false,
+      "thinking": true,
+      "origin": "app",
+      "last_run_id": "run_8e4b1c2d3a4f5e6b",
+      "context": {
+        "tokens": 8728,
+        "max": 65536,
+        "pct": 13.3,
+        "warn": false,
+        "measured_at": "2026-10-19T21:42:00.123456+00:00"
+      },
+      "totals": {
+        "input_tokens": 25887,
+        "output_tokens": 67,
+        "cache_read_tokens": 17152,
+        "total_tokens": 25954
+      }
+    },
+    "conversation.updated": {
+      "id": "c_5f2a9e1b7c3d4e6f",
+      "title": null,
+      "created_at": "2026-10-19T21:39:00.123456+00:00",
+      "updated_at": "2026-10-19T21:42:00.123456+00:00",
+      "archived": false,
+      "thinking": true,
+      "origin": "app",
+      "last_run_id": "run_8e4b1c2d3a4f5e6b",
+      "context": {
+        "tokens": null,
+        "max": 65536,
+        "pct": null,
+        "warn": false,
+        "measured_at": null
+      },
+      "totals": {
+        "input_tokens": 25887,
+        "output_tokens": 67,
+        "cache_read_tokens": 17152,
+        "total_tokens": 25954
+      }
+    },
+    "message.created": {
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "message": {
+        "id": 412,
+        "conversation_id": "c_5f2a9e1b7c3d4e6f",
+        "run_id": "run_8e4b1c2d3a4f5e6b",
+        "role": "assistant",
+        "content": "Kernel 7.2.11, 24 CPUs.",
+        "interim": "I'll check uname and nproc.",
+        "reasoning": null,
+        "status": "final",
+        "client_msg_id": null,
+        "created_at": "2026-10-19T21:39:02.123456+00:00"
+      }
+    },
+    "message.updated": {
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "message": {
+        "id": 412,
+        "conversation_id": "c_5f2a9e1b7c3d4e6f",
+        "run_id": "run_8e4b1c2d3a4f5e6b",
+        "role": "assistant",
+        "content": "Kernel 7.2.11, 24 CPUs.",
+        "interim": "I'll check uname and nproc.",
+        "reasoning": null,
+        "status": "streaming",
+        "client_msg_id": null,
+        "created_at": "2026-10-19T21:39:02.123456+00:00"
+      }
+    },
+    "message.delta": {
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "message_id": 412,
+      "delta": "Kernel "
+    },
+    "message.interim": {
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "message_id": 412,
+      "text": "I'll check uname and nproc."
+    },
+    "run.queued": {
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "q_7d1f0c2b9a8e4f6d",
+      "position": 1,
+      "thinking": true,
+      "origin": "app"
+    },
+    "run.started": {
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "queued_id": "q_7d1f0c2b9a8e4f6d",
+      "thinking": true
+    },
+    "run.updated": {
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "status": "waiting_for_approval"
+    },
+    "run.finished": {
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "status": "completed",
+      "usage": {
+        "input_tokens": 17315,
+        "output_tokens": 63,
+        "cache_read_tokens": 17152
+      },
+      "error": null
+    },
+    "tool.started": {
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "step": {
+        "id": 98,
+        "run_id": "run_8e4b1c2d3a4f5e6b",
+        "tool": "terminal",
+        "status": "running",
+        "preview": "nproc",
+        "result": null,
+        "result_raw": null,
+        "user_summary": null,
+        "duration_s": null,
+        "seq_started": 9,
+        "seq_completed": null,
+        "approval_request_id": null,
+        "approval": null
+      }
+    },
+    "tool.completed": {
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "step": {
+        "id": 97,
+        "run_id": "run_8e4b1c2d3a4f5e6b",
+        "tool": "terminal",
+        "status": "ok",
+        "preview": "uname -r && nproc",
+        "result": {
+          "exit_code": 0,
+          "output": "7.2.11-arch1-1\n24"
+        },
+        "result_raw": "{\"exit_code\": 0}",
+        "user_summary": null,
+        "duration_s": 0.41,
+        "seq_started": 5,
+        "seq_completed": 7,
+        "approval_request_id": "apr_3c9d1e2f",
+        "approval": {
+          "request_id": "apr_3c9d1e2f",
+          "run_id": "run_8e4b1c2d3a4f5e6b",
+          "conversation_id": "c_5f2a9e1b7c3d4e6f",
+          "command": "rm -r /tmp/delve-12-4-smoke-dir",
+          "description": "recursive delete",
+          "pattern_keys": [
+            "rm -r"
+          ],
+          "action_class": "delete_kill",
+          "status": "pending",
+          "choice": null,
+          "choices": [
+            "once",
+            "session",
+            "deny"
+          ],
+          "decided_by": null,
+          "created_at": "2026-10-19T21:39:00.123456+00:00",
+          "hermes_deadline": "2026-10-19T21:44:00.123456+00:00",
+          "expires_at": "2026-10-19T22:09:00.123456+00:00",
+          "responded_at": null
+        }
+      }
+    },
+    "approval.request": {
+      "request_id": "apr_3c9d1e2f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "command": "rm -r /tmp/delve-12-4-smoke-dir",
+      "description": "recursive delete",
+      "pattern_keys": [
+        "rm -r"
+      ],
+      "action_class": "delete_kill",
+      "status": "pending",
+      "choice": null,
+      "choices": [
+        "once",
+        "session",
+        "deny"
+      ],
+      "decided_by": null,
+      "created_at": "2026-10-19T21:39:00.123456+00:00",
+      "hermes_deadline": "2026-10-19T21:44:00.123456+00:00",
+      "expires_at": "2026-10-19T22:09:00.123456+00:00",
+      "responded_at": null,
+      "step_id": 97
+    },
+    "approval.updated": {
+      "request_id": "apr_3c9d1e2f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "command": "rm -r /tmp/delve-12-4-smoke-dir",
+      "description": "recursive delete",
+      "pattern_keys": [
+        "rm -r"
+      ],
+      "action_class": "delete_kill",
+      "status": "denied",
+      "choice": "deny",
+      "choices": [
+        "once",
+        "session",
+        "deny"
+      ],
+      "decided_by": "pixel",
+      "created_at": "2026-10-19T21:39:00.123456+00:00",
+      "hermes_deadline": "2026-10-19T21:44:00.123456+00:00",
+      "expires_at": "2026-10-19T22:09:00.123456+00:00",
+      "responded_at": "2026-10-19T21:39:04.123456+00:00"
+    },
+    "reasoning.final": {
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "message_id": 412,
+      "text": "17 times 23 is 391."
+    },
+    "context.updated": {
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "tokens": 8728,
+      "max": 65536,
+      "pct": 13.3,
+      "warn": false,
+      "source": "final_read",
+      "measured_at": "2026-10-19T21:39:00.123456+00:00",
+      "final": true
+    },
+    "health.status": {
+      "hermes": "ok",
+      "hermes_version": "0.22.2"
+    },
+    "error": {
+      "code": "thinking_route_not_applied",
+      "ref_id": "run_8e4b1c2d3a4f5e6b",
+      "message": "The thinking run did not use the thinking provider."
+    }
+  },
+  "connection": {
+    "hello.ok": {
+      "server_version": "0.1.0",
+      "api_revision": 1,
+      "revision": "eb4045ed6a94",
+      "hermes": "ok",
+      "hermes_version": "0.22.2",
+      "thinking_route": {
+        "ok": true,
+        "run_id": "run_8e4b1c2d3a4f5e6b",
+        "at": "2026-10-19T21:39:00.123456+00:00"
+      },
+      "epoch": "9f8e7d6c5b4a3921",
+      "seq": 1042,
+      "resync_required": false
+    },
+    "meta": {
+      "server_version": "0.1.0",
+      "api_revision": 1,
+      "revision": "eb4045ed6a94",
+      "python": "3.14.8",
+      "hermes_expected_version": "0.22.2",
+      "approval_timeout_s": 300
+    },
+    "status": {
+      "server_version": "0.1.0",
+      "api_revision": 1,
+      "revision": null,
+      "hermes": null,
+      "hermes_version": null,
+      "thinking_route": null
+    },
+    "history_message": {
+      "id": 412,
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "run_id": "run_8e4b1c2d3a4f5e6b",
+      "role": "assistant",
+      "content": "Kernel 7.2.11, 24 CPUs.",
+      "interim": "I'll check uname and nproc.",
+      "reasoning": null,
+      "status": "final",
+      "client_msg_id": null,
+      "created_at": "2026-10-19T21:39:02.123456+00:00",
+      "tool_steps": [
+        {
+          "id": 97,
+          "run_id": "run_8e4b1c2d3a4f5e6b",
+          "tool": "terminal",
+          "status": "ok",
+          "preview": "uname -r && nproc",
+          "result": {
+            "exit_code": 0,
+            "output": "7.2.11-arch1-1\n24"
+          },
+          "result_raw": "{\"exit_code\": 0}",
+          "user_summary": null,
+          "duration_s": 0.41,
+          "seq_started": 5,
+          "seq_completed": 7,
+          "approval_request_id": "apr_3c9d1e2f",
+          "approval": {
+            "request_id": "apr_3c9d1e2f",
+            "run_id": "run_8e4b1c2d3a4f5e6b",
+            "conversation_id": "c_5f2a9e1b7c3d4e6f",
+            "command": "rm -r /tmp/delve-12-4-smoke-dir",
+            "description": "recursive delete",
+            "pattern_keys": [
+              "rm -r"
+            ],
+            "action_class": "delete_kill",
+            "status": "pending",
+            "choice": null,
+            "choices": [
+              "once",
+              "session",
+              "deny"
+            ],
+            "decided_by": null,
+            "created_at": "2026-10-19T21:39:00.123456+00:00",
+            "hermes_deadline": "2026-10-19T21:44:00.123456+00:00",
+            "expires_at": "2026-10-19T22:09:00.123456+00:00",
+            "responded_at": null
+          }
+        }
+      ]
+    }
+  }
+}

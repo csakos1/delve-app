@@ -1,0 +1,25 @@
+{
+  "@@locale": "en",
+  "appTitle": "Delve",
+  "navChats": "Chats",
+  "navDashboard": "Dashboard",
+  "navApprovals": "Approvals",
+  "navMore": "More",
+  "approvalsBadge": "{count, plural, =1{1 approval waiting} other{{count} approvals waiting}}",
+  "@approvalsBadge": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "moreSystem": "System",
+  "moreSystemSub": "llama-server, Hermes, backend",
+  "moreSchedules": "Schedules",
+  "moreSchedulesSub": "Recurring prompts",
+  "moreObservability": "Observability",
+  "moreObservabilitySub": "Throughput, tokens, runs",
+  "moreSettings": "Settings",
+  "moreSettingsSub": "Server, device, about",
+  "newChat": "New chat",
+  "chatTitle": "Chat",
+  "pairingTitle": "Pair with your server",
+  "notBuiltYet": "Not built yet",
+  "back": "Back"
+}

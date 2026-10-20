@@ -1,0 +1,443 @@
+{
+  "$schema_note": "Delve · Direction C 'Depth' (no glow) · generated from the design system tokens. Sizes in logical px (dp / sp).",
+  "color": {
+    "background": "#111213",
+    "surface": {
+      "level0": "#111213",
+      "level1": "#18191b",
+      "level2": "#202124",
+      "level3": "#28292d",
+      "level4": "#323438",
+      "lowest": "#0c0d0e"
+    },
+    "outline": "#7a7d83",
+    "outlineVariant": "#34363a",
+    "text": {
+      "primary": "#eceef0",
+      "secondary": "#adb1b6",
+      "muted": "#9a9ea4",
+      "disabled": "#5c5f65"
+    },
+    "accent": {
+      "accent": "#5fd4ea",
+      "onAccent": "#062a32",
+      "accentContainer": "#163a42",
+      "onAccentContainer": "#bdeef8"
+    },
+    "status": {
+      "ok": {
+        "fg": "#72d28f",
+        "bg": "#1b2a20",
+        "border": "#2f5a3c"
+      },
+      "warn": {
+        "fg": "#ecb553",
+        "bg": "#2e2614",
+        "border": "#6b5221"
+      },
+      "alert": {
+        "fg": "#f2736c",
+        "bg": "#33201f",
+        "border": "#6e322f"
+      },
+      "info": {
+        "fg": "#b0b4b9",
+        "bg": "#25272a",
+        "border": "#45484d"
+      }
+    },
+    "code": {
+      "bg": "#18191b",
+      "fg": "#d9dce0",
+      "comment": "#9a9ea4",
+      "keyword": "#7fd8ec",
+      "string": "#a8d38a",
+      "number": "#e9b872"
+    },
+    "flutterColorScheme": {
+      "brightness": "dark",
+      "primary": "0xFF5FD4EA",
+      "onPrimary": "0xFF062A32",
+      "primaryContainer": "0xFF163A42",
+      "onPrimaryContainer": "0xFFBDEEF8",
+      "secondary": "0xFFADB1B6",
+      "onSecondary": "0xFF1A1B1D",
+      "secondaryContainer": "0xFF323438",
+      "onSecondaryContainer": "0xFFECEEF0",
+      "tertiary": "0xFFECB553",
+      "onTertiary": "0xFF2A1D04",
+      "tertiaryContainer": "0xFF2E2614",
+      "onTertiaryContainer": "0xFFF7D79A",
+      "error": "0xFFF2736C",
+      "onError": "0xFF3A0B09",
+      "errorContainer": "0xFF33201F",
+      "onErrorContainer": "0xFFFFD9D6",
+      "surface": "0xFF111213",
+      "onSurface": "0xFFECEEF0",
+      "onSurfaceVariant": "0xFFADB1B6",
+      "surfaceDim": "0xFF111213",
+      "surfaceBright": "0xFF323438",
+      "surfaceContainerLowest": "0xFF0C0D0E",
+      "surfaceContainerLow": "0xFF18191B",
+      "surfaceContainer": "0xFF202124",
+      "surfaceContainerHigh": "0xFF28292D",
+      "surfaceContainerHighest": "0xFF323438",
+      "outline": "0xFF7A7D83",
+      "outlineVariant": "0xFF34363A",
+      "shadow": "0xFF000000",
+      "scrim": "0xFF000000",
+      "inverseSurface": "0xFFECEEF0",
+      "onInverseSurface": "0xFF1D1E20",
+      "inversePrimary": "0xFF006879",
+      "surfaceTint": "transparent"
+    },
+    "flutterDelveColorsExtension": {
+      "textMuted": "0xFF9A9EA4",
+      "textDisabled": "0xFF5C5F65",
+      "okFg": "0xFF72D28F",
+      "okBg": "0xFF1B2A20",
+      "okBorder": "0xFF2F5A3C",
+      "warnFg": "0xFFECB553",
+      "warnBg": "0xFF2E2614",
+      "warnBorder": "0xFF6B5221",
+      "alertFg": "0xFFF2736C",
+      "alertBg": "0xFF33201F",
+      "alertBorder": "0xFF6E322F",
+      "infoFg": "0xFFB0B4B9",
+      "infoBg": "0xFF25272A",
+      "infoBorder": "0xFF45484D",
+      "codeBg": "0xFF18191B",
+      "codeFg": "0xFFD9DCE0",
+      "codeComment": "0xFF9A9EA4",
+      "codeKeyword": "0xFF7FD8EC",
+      "codeString": "0xFFA8D38A",
+      "codeNumber": "0xFFE9B872",
+      "scrim": "0xA3000000"
+    }
+  },
+  "typography": {
+    "fonts": [
+      {
+        "family": "Jost",
+        "weights": "300, 400, 500",
+        "source": "fonts.google.com/specimen/Jost · OFL",
+        "note": "latin + latin-ext (á é í ó ö ő ú ü ű ✓). No Greek → Σ never set in Jost; fontFamilyFallback: ['Inter']."
+      },
+      {
+        "family": "Inter",
+        "weights": "400, 400 italic, 500, 600",
+        "source": "fonts.google.com/specimen/Inter · OFL",
+        "note": "latin-ext ✓, Greek ✓ (Σ)."
+      },
+      {
+        "family": "JetBrains Mono",
+        "weights": "400, 500",
+        "source": "fonts.google.com/specimen/JetBrains+Mono · OFL",
+        "note": "latin-ext ✓, Greek ✓ (Σ). Use tabular figures (default)."
+      }
+    ],
+    "flutterFamilyNames": {
+      "Jost": "Jost",
+      "Inter": "Inter",
+      "JetBrains Mono": "JetBrainsMono"
+    },
+    "styles": [
+      {
+        "role": "displaySmall",
+        "flutter": "TextTheme.displaySmall",
+        "family": "Jost",
+        "sizeSp": 40,
+        "lineHeight": 44,
+        "height": 1.1,
+        "weight": 300,
+        "letterSpacing": 0,
+        "use": "Big numbers on Dashboard / widgets (98 cm)."
+      },
+      {
+        "role": "headlineMedium",
+        "flutter": "TextTheme.headlineMedium",
+        "family": "Jost",
+        "sizeSp": 28,
+        "lineHeight": 36,
+        "height": 1.2857,
+        "weight": 400,
+        "letterSpacing": 0,
+        "use": "Top-level screen titles (Chats, Dashboard, Approvals)."
+      },
+      {
+        "role": "headlineSmall",
+        "flutter": "TextTheme.headlineSmall",
+        "family": "Jost",
+        "sizeSp": 24,
+        "lineHeight": 32,
+        "height": 1.3333,
+        "weight": 400,
+        "letterSpacing": 0,
+        "use": "Pairing title, blocking-screen title."
+      },
+      {
+        "role": "titleLarge",
+        "flutter": "TextTheme.titleLarge",
+        "family": "Jost",
+        "sizeSp": 20,
+        "lineHeight": 26,
+        "height": 1.3,
+        "weight": 500,
+        "letterSpacing": 0,
+        "use": "Sub-page app bar title, bottom-sheet and dialog titles."
+      },
+      {
+        "role": "titleMedium",
+        "flutter": "TextTheme.titleMedium",
+        "family": "Jost",
+        "sizeSp": 17,
+        "lineHeight": 24,
+        "height": 1.4118,
+        "weight": 500,
+        "letterSpacing": 0.1,
+        "use": "Chat top-bar title, card titles."
+      },
+      {
+        "role": "titleSmall",
+        "flutter": "TextTheme.titleSmall",
+        "family": "Inter",
+        "sizeSp": 14,
+        "lineHeight": 20,
+        "height": 1.4286,
+        "weight": 600,
+        "letterSpacing": 0.1,
+        "use": "List-row titles, section headers, tool name, approval heading."
+      },
+      {
+        "role": "bodyLarge",
+        "flutter": "TextTheme.bodyLarge",
+        "family": "Inter",
+        "sizeSp": 15,
+        "lineHeight": 22,
+        "height": 1.4667,
+        "weight": 400,
+        "letterSpacing": 0,
+        "use": "Message text (user + assistant), text-field input."
+      },
+      {
+        "role": "bodyMedium",
+        "flutter": "TextTheme.bodyMedium",
+        "family": "Inter",
+        "sizeSp": 14,
+        "lineHeight": 20,
+        "height": 1.4286,
+        "weight": 400,
+        "letterSpacing": 0,
+        "use": "Default body, list-row previews, settings values."
+      },
+      {
+        "role": "bodySmall",
+        "flutter": "TextTheme.bodySmall",
+        "family": "Inter",
+        "sizeSp": 12,
+        "lineHeight": 17,
+        "height": 1.4167,
+        "weight": 400,
+        "letterSpacing": 0.1,
+        "use": "Supporting text, interim remarks (italic), notes."
+      },
+      {
+        "role": "labelLarge",
+        "flutter": "TextTheme.labelLarge",
+        "family": "Inter",
+        "sizeSp": 14,
+        "lineHeight": 20,
+        "height": 1.4286,
+        "weight": 600,
+        "letterSpacing": 0.1,
+        "use": "Buttons."
+      },
+      {
+        "role": "labelMedium",
+        "flutter": "TextTheme.labelMedium",
+        "family": "Inter",
+        "sizeSp": 12,
+        "lineHeight": 16,
+        "height": 1.3333,
+        "weight": 500,
+        "letterSpacing": 0.2,
+        "use": "Chips, meta rows, nav labels, status words."
+      },
+      {
+        "role": "labelSmall",
+        "flutter": "TextTheme.labelSmall",
+        "family": "Inter",
+        "sizeSp": 11,
+        "lineHeight": 14,
+        "height": 1.2727,
+        "weight": 500,
+        "letterSpacing": 0.3,
+        "use": "Captions, badges, section eyebrows."
+      },
+      {
+        "role": "mono",
+        "flutter": "DelveText.mono",
+        "family": "JetBrains Mono",
+        "sizeSp": 13,
+        "lineHeight": 19,
+        "height": 1.4615,
+        "weight": 400,
+        "letterSpacing": 0,
+        "use": "Commands, paths, IDs, code blocks."
+      },
+      {
+        "role": "monoSmall",
+        "flutter": "DelveText.monoSmall",
+        "family": "JetBrains Mono",
+        "sizeSp": 11.5,
+        "lineHeight": 16,
+        "height": 1.3913,
+        "weight": 400,
+        "letterSpacing": 0,
+        "use": "Usage line (Σ …), token counts, log output, durations."
+      }
+    ]
+  },
+  "spacing": {
+    "space-1": 4,
+    "space-2": 8,
+    "space-3": 12,
+    "space-4": 16,
+    "space-5": 20,
+    "space-6": 24,
+    "space-8": 32
+  },
+  "radius": {
+    "radius-xs": 6,
+    "radius-sm": 8,
+    "radius-md": 12,
+    "radius-lg": 16,
+    "radius-xl": 24,
+    "radius-full": "StadiumBorder"
+  },
+  "elevation": {
+    "elevation-1": {
+      "boxShadow": "BoxShadow(color: Color(0x59000000), blurRadius: 12, offset: Offset(0, 4))",
+      "use": "Floating composer, FAB-like elements, swipe-revealed row."
+    },
+    "elevation-2": {
+      "boxShadow": "BoxShadow(color: Color(0x73000000), blurRadius: 24, offset: Offset(0, 8))",
+      "use": "Bottom sheet, dialog, menu, snackbar."
+    },
+    "materialElevationMapping": "When a Material widget needs `elevation`: elevation-1 ≈ 3, elevation-2 ≈ 6, with shadowColor black and surfaceTint transparent."
+  },
+  "borderWidth": {
+    "border-hairline": 1,
+    "border-focus": 2,
+    "border-indicator": 2
+  },
+  "motion": [
+    {
+      "name": "motion-fast",
+      "ms": 100,
+      "curve": "Curves.easeOut",
+      "use": "Press state layer, icon swap send↔stop."
+    },
+    {
+      "name": "motion-short",
+      "ms": 150,
+      "curve": "Curves.easeOutCubic",
+      "use": "Thinking pill ON/OFF, switch, chip select."
+    },
+    {
+      "name": "motion-medium",
+      "ms": 250,
+      "curve": "Curves.easeInOutCubic",
+      "use": "Expand/collapse thought & tool result, composer grow."
+    },
+    {
+      "name": "motion-long",
+      "ms": 350,
+      "curve": "Curves.easeOutCubic (enter) / Curves.easeInCubic (exit)",
+      "use": "Bottom sheet, dialog, page push."
+    },
+    {
+      "name": "motion-caption",
+      "ms": 2000,
+      "curve": "hold, then 150 ms fade",
+      "use": "“Applies to your next message” caption under the Thinking pill."
+    },
+    {
+      "name": "motion-progress",
+      "ms": 1800,
+      "curve": "Curves.linear (LinearProgressIndicator default)",
+      "use": "Indeterminate live progress line — no glow, 2 dp."
+    }
+  ],
+  "icons": {
+    "set": "Material Symbols Rounded",
+    "package": "material_symbols_icons (Symbols.*, rounded style)",
+    "weight": 400,
+    "grade": 0,
+    "opticalSize": 24,
+    "fill": "0; 1 for active nav item and status icons",
+    "sizes": [
+      [
+        "icon-sm",
+        16,
+        "Inline status, chip icons"
+      ],
+      [
+        "icon-md",
+        20,
+        "Dense rows, composer buttons"
+      ],
+      [
+        "icon-lg",
+        24,
+        "App bar, nav, list leading"
+      ]
+    ]
+  },
+  "opacity": {
+    "state-hover": 0.08,
+    "state-focus": 0.1,
+    "state-pressed": 0.1,
+    "state-dragged": 0.16,
+    "disabled-container": 0.12,
+    "disabled-content": 0.38
+  },
+  "sizes": {
+    "touch-target": 48,
+    "top-bar": 56,
+    "usage-line": 28,
+    "bottom-nav": 72,
+    "list-row": 76,
+    "composer-min": 98,
+    "button": 48,
+    "chip": 32,
+    "send-button": 44
+  },
+  "charts": {
+    "library": "fl_chart",
+    "line": {
+      "barWidth": 2,
+      "isCurved": false,
+      "dotData": "last point only, radius 3.5",
+      "dash": "[5, 4] for comparison series"
+    },
+    "area": {
+      "belowBarData": "solid accent @ 12 % (no gradient)"
+    },
+    "bar": {
+      "width": "64 % of slot",
+      "radius": 2
+    },
+    "grid": {
+      "horizontalOnly": true,
+      "color": "#34363a",
+      "strokeWidth": 1
+    },
+    "axisLabels": "monoSmall muted (y) · labelSmall muted (x)",
+    "seriesColors": [
+      "#5fd4ea",
+      "#adb1b6",
+      "#ecb553"
+    ]
+  }
+}

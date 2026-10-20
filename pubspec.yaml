@@ -1,0 +1,72 @@
+name: delve
+description: Android client for the Delve personal agent.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.11.0 <4.0.0"
+  flutter: ">=3.41.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
+  # state, models, storage
+  flutter_riverpod: ^3.0.0
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.12.0
+  drift: ^2.28.0
+  drift_flutter: ^0.2.4
+
+  # navigation, network (network clients arrive in A2/A3)
+  go_router: ">=14.6.0 <18.0.0"
+  dio: ^5.8.0
+  web_socket_channel: ^3.0.2
+  flutter_secure_storage: ">=9.2.2 <11.0.0"
+  connectivity_plus: ">=6.1.0 <8.0.0"
+  uuid: ^4.5.1
+
+  # ui
+  material_symbols_icons: ^4.2800.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.5.0
+  freezed: ^3.0.0
+  json_serializable: ^6.9.0
+  drift_dev: ^2.28.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+  fonts:
+    - family: Jost
+      fonts:
+        - asset: assets/fonts/Jost-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Jost-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Jost-Medium.ttf
+          weight: 500
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/JetBrainsMono-Medium.ttf
+          weight: 500
