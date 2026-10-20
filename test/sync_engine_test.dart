@@ -49,7 +49,11 @@ void main() {
   late SyncEngine engine;
   late int unauthorized;
 
-  SyncEngine makeEngine({Uri? server, StreamController<void>? network}) {
+  SyncEngine makeEngine({
+    Uri? server,
+    StreamController<void>? network,
+    SyncTiming timing = fast,
+  }) {
     final origin = server ?? ws.origin;
     final creds = Credentials(
       server: origin,
@@ -66,7 +70,7 @@ void main() {
       api: api,
       transport: const IoWsTransport(connectTimeout: Duration(seconds: 2)),
       onUnauthorized: () => unauthorized++,
-      timing: fast,
+      timing: timing,
       random: Random(1),
       networkChanges: network?.stream,
     );
@@ -99,6 +103,36 @@ void main() {
     () => engine.status.isLive && !engine.status.resyncing,
     reason: 'live',
   );
+
+  test('pings while live, so the server knows the phone is there', () async {
+    await engine.dispose();
+    engine = makeEngine(
+      timing: const SyncTiming(
+        helloTimeout: Duration(milliseconds: 400),
+        silence: Duration(milliseconds: 600),
+        backoffMin: Duration(milliseconds: 10),
+        backoffMax: Duration(milliseconds: 40),
+        pauseGrace: Duration(milliseconds: 100),
+        batchWindow: Duration(milliseconds: 5),
+        ackTimeout: Duration(seconds: 2),
+        pingInterval: Duration(milliseconds: 30),
+      ),
+    );
+    await engine.start();
+    final conn = await ws.nextConnection();
+    await live();
+    await eventually(() => conn.all('ping').length >= 3, reason: 'pings');
+    expect(engine.status.isLive, isTrue);
+    expect(conn.all('ping').first['id'], 'ping');
+  });
+
+  test('the default pause grace closes the socket before Android cuts it', () {
+    expect(
+      const SyncTiming().pauseGrace,
+      lessThan(const Duration(seconds: 10)),
+    );
+    expect(const SyncTiming().pingInterval, const Duration(seconds: 20));
+  });
 
   test(
     'first connection: hello without a position, reload over REST, live',

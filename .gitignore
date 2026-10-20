@@ -15,6 +15,8 @@
 /android/.gradle/
 /android/local.properties
 /android/key.properties
+# Firebase (push): local copy, CI writes it from the GOOGLE_SERVICES_JSON secret
+/android/app/google-services.json
 /android/app/debug/
 /android/app/profile/
 /android/app/release/

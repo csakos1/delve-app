@@ -13,6 +13,7 @@ extension Store on AppDatabase {
         ConversationsCompanion.insert(
           id: c.id,
           title: Value(c.title),
+          preview: Value(c.preview),
           createdAt: c.createdAt,
           updatedAt: c.updatedAt,
           archived: Value(c.archived),

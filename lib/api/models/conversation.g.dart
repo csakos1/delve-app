@@ -10,6 +10,7 @@ _Conversation _$ConversationFromJson(Map<String, dynamic> json) =>
     _Conversation(
       id: json['id'] as String,
       title: json['title'] as String?,
+      preview: json['preview'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       archived: json['archived'] as bool,
@@ -24,6 +25,7 @@ Map<String, dynamic> _$ConversationToJson(_Conversation instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
+      'preview': instance.preview,
       'created_at': instance.createdAt.toIso8601String(),
       'updated_at': instance.updatedAt.toIso8601String(),
       'archived': instance.archived,

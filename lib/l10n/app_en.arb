@@ -637,5 +637,93 @@
       }
     }
   },
-  "contextChipEmpty": "Context not measured yet, opens usage"
+  "contextChipEmpty": "Context not measured yet, opens usage",
+  "notifyApprovalTitle": "Approval needed · {kind}",
+  "@notifyApprovalTitle": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyApprovalWaits": "Agent waits · {chat}",
+  "@notifyApprovalWaits": {
+    "placeholders": {
+      "chat": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyApprovalWaitsNoChat": "Agent waits",
+  "notifyLateTitle": "Agent stopped waiting · {kind}",
+  "@notifyLateTitle": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyLateBody": "Approvable until {time} · {chat}",
+  "@notifyLateBody": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "chat": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyLateBodyNoChat": "Approvable until {time}",
+  "@notifyLateBodyNoChat": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyRunDone": "Run finished · {chat}",
+  "@notifyRunDone": {
+    "placeholders": {
+      "chat": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyRunDoneNoChat": "Run finished",
+  "notifyRunFailed": "Run failed · {chat}",
+  "@notifyRunFailed": {
+    "placeholders": {
+      "chat": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyRunFailedNoChat": "Run failed",
+  "notifyOpen": "Open",
+  "notifyChannelApprovals": "Approvals",
+  "notifyChannelApprovalsDesc": "Commands waiting for your OK",
+  "notifyChannelRuns": "Finished runs",
+  "notifyChannelRunsDesc": "Answers that arrive while Delve is in the background",
+  "settingsNotifications": "Notifications",
+  "settingsNotifyApprovals": "Approvals",
+  "settingsNotifyApprovalsSub": "Allow once / Deny from the notification",
+  "settingsNotifyRunDone": "Run finished",
+  "settingsNotifyRunDoneSub": "Only when the app is in the background",
+  "settingsNotifyWater": "Water level",
+  "settingsNotifyBrief": "Morning brief",
+  "settingsNotifyLaterDashboard": "Comes with the dashboard",
+  "settingsNotifyLaterSchedules": "Comes with schedules",
+  "settingsNotifyPermissionOff": "Notifications are off for Delve on this phone.",
+  "settingsNotifyAllow": "Allow",
+  "settingsNotifyNoServer": "The server can't send notifications yet (no Firebase key).",
+  "settingsNotifyNoApp": "This build can't receive notifications (no Firebase configuration).",
+  "settingsNotifySaveFailed": "Couldn't save: {reason}",
+  "@settingsNotifySaveFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  }
 }

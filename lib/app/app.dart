@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
+import '../push/push_host.dart';
 import '../sync/sync_lifecycle.dart';
 import '../theme/delve_theme.dart';
 import 'router.dart';
@@ -28,7 +29,7 @@ class DelveApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(routerProvider),
       builder: (context, child) =>
-          SyncLifecycle(child: child ?? const SizedBox()),
+          SyncLifecycle(child: PushHost(child: child ?? const SizedBox())),
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,15 +11,18 @@ import '../../api/models/models.dart';
 import '../../app/router.dart';
 import '../../app/session.dart';
 import '../../l10n/app_localizations.dart';
+import '../../push/push_controller.dart';
+import '../../push/push_providers.dart';
 import '../../sync/connection_status.dart';
 import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
+import '../format.dart';
 import '../widgets/connection_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 
-/// 16 Settings — server and connection, this device, thinking route,
-/// versions, unpair. (Notification switches arrive with FCM after the MVP.)
+/// 16 Settings — server and connection, this device, notifications,
+/// thinking route, versions, unpair.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -92,6 +97,8 @@ class SettingsScreen extends ConsumerWidget {
                 _ => null,
               },
             ),
+            _Section(l.settingsNotifications),
+            _Notifications(device: device),
             _Section(l.settingsThinkingRoute),
             _ThinkingRoute(status: status, failed: failed),
             _Section(l.settingsVersions),
@@ -267,6 +274,150 @@ class _ThinkingRoute extends ConsumerWidget {
                 : () => ref.invalidate(serverStatusProvider),
             child: Text(l.settingsCheckAgain),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Notification switches (design 16): stored on the server per device
+/// (`PATCH /devices/me`). Water level and the morning brief arrive with
+/// their screens. A banner says when this phone or the server cannot push.
+class _Notifications extends ConsumerStatefulWidget {
+  const _Notifications({required this.device});
+
+  final AsyncValue<DeviceInfo> device;
+
+  @override
+  ConsumerState<_Notifications> createState() => _NotificationsState();
+}
+
+class _NotificationsState extends ConsumerState<_Notifications> {
+  /// Switches flipped but not yet confirmed by the server.
+  final Map<String, bool> _pending = {};
+
+  Future<void> _set(String key, bool value) async {
+    final api = ref.read(apiProvider);
+    if (api == null) return;
+    setState(() => _pending[key] = value);
+    try {
+      await api.patchDevice(
+        approvals: key == 'approvals' ? value : null,
+        runDone: key == 'run_done' ? value : null,
+      );
+      ref.invalidate(deviceInfoProvider);
+      await ref.read(deviceInfoProvider.future);
+    } on Object catch (e) {
+      if (mounted) {
+        final l = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l.settingsNotifySaveFailed(apiErrorText(l, e))),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _pending.remove(key));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final device = widget.device.value;
+    final push = ref.watch(pushStateProvider).value ?? const PushState();
+    final notify = device?.notify;
+
+    final Widget? banner = switch ((push, device)) {
+      (PushState(available: false), _) => StatusBanner(
+        kind: StatusKind.info,
+        icon: DelveIcons.notificationsOff,
+        text: l.settingsNotifyNoApp,
+      ),
+      (_, DeviceInfo(push: false)) => StatusBanner(
+        kind: StatusKind.info,
+        icon: DelveIcons.notificationsOff,
+        text: l.settingsNotifyNoServer,
+      ),
+      (PushState(permitted: false), _) => StatusBanner(
+        key: const Key('settings.notify.permission'),
+        kind: StatusKind.warn,
+        icon: DelveIcons.notificationsOff,
+        text: l.settingsNotifyPermissionOff,
+        actionLabel: l.settingsNotifyAllow,
+        onAction: () =>
+            unawaited(ref.read(pushControllerProvider)?.requestPermission()),
+      ),
+      _ => null,
+    };
+
+    Widget row(
+      String key,
+      IconData icon,
+      String title,
+      String subtitle,
+      bool? value, {
+      bool enabled = true,
+    }) {
+      final on = _pending[key] ?? value ?? false;
+      final canChange = enabled && value != null && !_pending.containsKey(key);
+      return InkWell(
+        onTap: canChange ? () => unawaited(_set(key, !on)) : null,
+        child: _Item(
+          icon: icon,
+          title: title,
+          subtitle: subtitle,
+          trailing: Switch(
+            key: Key('settings.notify.$key'),
+            value: on,
+            onChanged: canChange ? (v) => unawaited(_set(key, v)) : null,
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (banner != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DelveTokens.space4,
+              0,
+              DelveTokens.space4,
+              DelveTokens.space2,
+            ),
+            child: banner,
+          ),
+        row(
+          'approvals',
+          DelveIcons.approvals,
+          l.settingsNotifyApprovals,
+          l.settingsNotifyApprovalsSub,
+          notify?.approvals,
+        ),
+        row(
+          'run_done',
+          DelveIcons.ok,
+          l.settingsNotifyRunDone,
+          l.settingsNotifyRunDoneSub,
+          notify?.runDone,
+        ),
+        row(
+          'water',
+          DelveIcons.water,
+          l.settingsNotifyWater,
+          l.settingsNotifyLaterDashboard,
+          notify?.water,
+          enabled: false,
+        ),
+        row(
+          'brief',
+          DelveIcons.brief,
+          l.settingsNotifyBrief,
+          l.settingsNotifyLaterSchedules,
+          notify?.brief,
+          enabled: false,
         ),
       ],
     );

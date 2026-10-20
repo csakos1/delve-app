@@ -35,7 +35,7 @@ class FakeServer implements HttpClientAdapter {
 
   static const meta = {
     'server_version': '0.1.0',
-    'api_revision': 2,
+    'api_revision': 3,
     'revision': 'eb4045ed6a94',
     'python': '3.14.8',
     'hermes_expected_version': '0.22.2',
@@ -44,7 +44,7 @@ class FakeServer implements HttpClientAdapter {
 
   static const status = {
     'server_version': '0.1.0',
-    'api_revision': 2,
+    'api_revision': 3,
     'revision': 'eb4045ed6a94',
     'hermes': 'ok',
     'hermes_version': '0.22.2',
@@ -61,6 +61,13 @@ class FakeServer implements HttpClientAdapter {
     'created_at': '2026-10-12T18:00:00+00:00',
     'last_seen_at': null,
     'fcm': false,
+    'push': true,
+    'notify': {
+      'approvals': true,
+      'run_done': true,
+      'water': false,
+      'brief': false,
+    },
   };
 
   /// A healthy, paired server.
@@ -71,6 +78,7 @@ class FakeServer implements HttpClientAdapter {
     json('GET', '/api/v1/status', status);
     json('GET', '/api/v1/devices/me', device);
     routes['DELETE /api/v1/devices/me'] = (_) => const FakeReply(204);
+    routes['PUT /api/v1/devices/me/fcm'] = (_) => const FakeReply(204);
     json('GET', '/api/v1/conversations', {
       'data': <Object?>[],
       'next_cursor': null,

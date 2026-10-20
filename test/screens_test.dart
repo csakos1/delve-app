@@ -134,6 +134,17 @@ void main() {
       expect(find.text('https://archlinux.example.ts.net'), findsOneWidget);
       expect(find.text('pixel'), findsOneWidget);
       expect(find.text('OK'), findsOneWidget);
+      // the versions are below the notification switches
+      await t.scrollUntilVisible(
+        find.text('0.22.2'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(SettingsScreen),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
       expect(find.text('0.1.0 (1)'), findsOneWidget);
       expect(find.text('0.1.0 · revision eb4045e'), findsOneWidget);
       expect(find.text('0.22.2'), findsOneWidget);

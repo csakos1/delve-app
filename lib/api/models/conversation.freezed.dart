@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Conversation {
 
- String get id; String? get title; DateTime get createdAt; DateTime get updatedAt; bool get archived; bool get thinking; String get origin; String? get lastRunId; ContextFill get context; TokenTotals get totals;
+ String get id; String? get title;/// The latest user/assistant text, ≤ 200 characters (API 3).
+ String? get preview; DateTime get createdAt; DateTime get updatedAt; bool get archived; bool get thinking; String get origin; String? get lastRunId; ContextFill get context; TokenTotals get totals;
 /// Create a copy of Conversation
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +29,16 @@ $ConversationCopyWith<Conversation> get copyWith => _$ConversationCopyWithImpl<C
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Conversation&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.archived, archived) || other.archived == archived)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.lastRunId, lastRunId) || other.lastRunId == lastRunId)&&(identical(other.context, context) || other.context == context)&&(identical(other.totals, totals) || other.totals == totals));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Conversation&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.preview, preview) || other.preview == preview)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.archived, archived) || other.archived == archived)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.lastRunId, lastRunId) || other.lastRunId == lastRunId)&&(identical(other.context, context) || other.context == context)&&(identical(other.totals, totals) || other.totals == totals));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,createdAt,updatedAt,archived,thinking,origin,lastRunId,context,totals);
+int get hashCode => Object.hash(runtimeType,id,title,preview,createdAt,updatedAt,archived,thinking,origin,lastRunId,context,totals);
 
 @override
 String toString() {
-  return 'Conversation(id: $id, title: $title, createdAt: $createdAt, updatedAt: $updatedAt, archived: $archived, thinking: $thinking, origin: $origin, lastRunId: $lastRunId, context: $context, totals: $totals)';
+  return 'Conversation(id: $id, title: $title, preview: $preview, createdAt: $createdAt, updatedAt: $updatedAt, archived: $archived, thinking: $thinking, origin: $origin, lastRunId: $lastRunId, context: $context, totals: $totals)';
 }
 
 
@@ -48,7 +49,7 @@ abstract mixin class $ConversationCopyWith<$Res>  {
   factory $ConversationCopyWith(Conversation value, $Res Function(Conversation) _then) = _$ConversationCopyWithImpl;
 @useResult
 $Res call({
- String id, String? title, DateTime createdAt, DateTime updatedAt, bool archived, bool thinking, String origin, String? lastRunId, ContextFill context, TokenTotals totals
+ String id, String? title, String? preview, DateTime createdAt, DateTime updatedAt, bool archived, bool thinking, String origin, String? lastRunId, ContextFill context, TokenTotals totals
 });
 
 
@@ -65,10 +66,11 @@ class _$ConversationCopyWithImpl<$Res>
 
 /// Create a copy of Conversation
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = freezed,Object? createdAt = null,Object? updatedAt = null,Object? archived = null,Object? thinking = null,Object? origin = null,Object? lastRunId = freezed,Object? context = null,Object? totals = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = freezed,Object? preview = freezed,Object? createdAt = null,Object? updatedAt = null,Object? archived = null,Object? thinking = null,Object? origin = null,Object? lastRunId = freezed,Object? context = null,Object? totals = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,preview: freezed == preview ? _self.preview : preview // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,archived: null == archived ? _self.archived : archived // ignore: cast_nullable_to_non_nullable
@@ -180,10 +182,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? title,  DateTime createdAt,  DateTime updatedAt,  bool archived,  bool thinking,  String origin,  String? lastRunId,  ContextFill context,  TokenTotals totals)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? title,  String? preview,  DateTime createdAt,  DateTime updatedAt,  bool archived,  bool thinking,  String origin,  String? lastRunId,  ContextFill context,  TokenTotals totals)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Conversation() when $default != null:
-return $default(_that.id,_that.title,_that.createdAt,_that.updatedAt,_that.archived,_that.thinking,_that.origin,_that.lastRunId,_that.context,_that.totals);case _:
+return $default(_that.id,_that.title,_that.preview,_that.createdAt,_that.updatedAt,_that.archived,_that.thinking,_that.origin,_that.lastRunId,_that.context,_that.totals);case _:
   return orElse();
 
 }
@@ -201,10 +203,10 @@ return $default(_that.id,_that.title,_that.createdAt,_that.updatedAt,_that.archi
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? title,  DateTime createdAt,  DateTime updatedAt,  bool archived,  bool thinking,  String origin,  String? lastRunId,  ContextFill context,  TokenTotals totals)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? title,  String? preview,  DateTime createdAt,  DateTime updatedAt,  bool archived,  bool thinking,  String origin,  String? lastRunId,  ContextFill context,  TokenTotals totals)  $default,) {final _that = this;
 switch (_that) {
 case _Conversation():
-return $default(_that.id,_that.title,_that.createdAt,_that.updatedAt,_that.archived,_that.thinking,_that.origin,_that.lastRunId,_that.context,_that.totals);case _:
+return $default(_that.id,_that.title,_that.preview,_that.createdAt,_that.updatedAt,_that.archived,_that.thinking,_that.origin,_that.lastRunId,_that.context,_that.totals);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -221,10 +223,10 @@ return $default(_that.id,_that.title,_that.createdAt,_that.updatedAt,_that.archi
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? title,  DateTime createdAt,  DateTime updatedAt,  bool archived,  bool thinking,  String origin,  String? lastRunId,  ContextFill context,  TokenTotals totals)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? title,  String? preview,  DateTime createdAt,  DateTime updatedAt,  bool archived,  bool thinking,  String origin,  String? lastRunId,  ContextFill context,  TokenTotals totals)?  $default,) {final _that = this;
 switch (_that) {
 case _Conversation() when $default != null:
-return $default(_that.id,_that.title,_that.createdAt,_that.updatedAt,_that.archived,_that.thinking,_that.origin,_that.lastRunId,_that.context,_that.totals);case _:
+return $default(_that.id,_that.title,_that.preview,_that.createdAt,_that.updatedAt,_that.archived,_that.thinking,_that.origin,_that.lastRunId,_that.context,_that.totals);case _:
   return null;
 
 }
@@ -236,11 +238,13 @@ return $default(_that.id,_that.title,_that.createdAt,_that.updatedAt,_that.archi
 @JsonSerializable()
 
 class _Conversation implements Conversation {
-  const _Conversation({required this.id, this.title, required this.createdAt, required this.updatedAt, required this.archived, required this.thinking, required this.origin, this.lastRunId, required this.context, required this.totals});
+  const _Conversation({required this.id, this.title, this.preview, required this.createdAt, required this.updatedAt, required this.archived, required this.thinking, required this.origin, this.lastRunId, required this.context, required this.totals});
   factory _Conversation.fromJson(Map<String, dynamic> json) => _$ConversationFromJson(json);
 
 @override final  String id;
 @override final  String? title;
+/// The latest user/assistant text, ≤ 200 characters (API 3).
+@override final  String? preview;
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;
 @override final  bool archived;
@@ -263,16 +267,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Conversation&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.archived, archived) || other.archived == archived)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.lastRunId, lastRunId) || other.lastRunId == lastRunId)&&(identical(other.context, context) || other.context == context)&&(identical(other.totals, totals) || other.totals == totals));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Conversation&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.preview, preview) || other.preview == preview)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.archived, archived) || other.archived == archived)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.lastRunId, lastRunId) || other.lastRunId == lastRunId)&&(identical(other.context, context) || other.context == context)&&(identical(other.totals, totals) || other.totals == totals));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,createdAt,updatedAt,archived,thinking,origin,lastRunId,context,totals);
+int get hashCode => Object.hash(runtimeType,id,title,preview,createdAt,updatedAt,archived,thinking,origin,lastRunId,context,totals);
 
 @override
 String toString() {
-  return 'Conversation(id: $id, title: $title, createdAt: $createdAt, updatedAt: $updatedAt, archived: $archived, thinking: $thinking, origin: $origin, lastRunId: $lastRunId, context: $context, totals: $totals)';
+  return 'Conversation(id: $id, title: $title, preview: $preview, createdAt: $createdAt, updatedAt: $updatedAt, archived: $archived, thinking: $thinking, origin: $origin, lastRunId: $lastRunId, context: $context, totals: $totals)';
 }
 
 
@@ -283,7 +287,7 @@ abstract mixin class _$ConversationCopyWith<$Res> implements $ConversationCopyWi
   factory _$ConversationCopyWith(_Conversation value, $Res Function(_Conversation) _then) = __$ConversationCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String? title, DateTime createdAt, DateTime updatedAt, bool archived, bool thinking, String origin, String? lastRunId, ContextFill context, TokenTotals totals
+ String id, String? title, String? preview, DateTime createdAt, DateTime updatedAt, bool archived, bool thinking, String origin, String? lastRunId, ContextFill context, TokenTotals totals
 });
 
 
@@ -300,10 +304,11 @@ class __$ConversationCopyWithImpl<$Res>
 
 /// Create a copy of Conversation
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = freezed,Object? createdAt = null,Object? updatedAt = null,Object? archived = null,Object? thinking = null,Object? origin = null,Object? lastRunId = freezed,Object? context = null,Object? totals = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = freezed,Object? preview = freezed,Object? createdAt = null,Object? updatedAt = null,Object? archived = null,Object? thinking = null,Object? origin = null,Object? lastRunId = freezed,Object? context = null,Object? totals = null,}) {
   return _then(_Conversation(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,preview: freezed == preview ? _self.preview : preview // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,archived: null == archived ? _self.archived : archived // ignore: cast_nullable_to_non_nullable

@@ -9,6 +9,9 @@ abstract class Conversation with _$Conversation {
   const factory Conversation({
     required String id,
     String? title,
+
+    /// The latest user/assistant text, ≤ 200 characters (API 3).
+    String? preview,
     required DateTime createdAt,
     required DateTime updatedAt,
     required bool archived,

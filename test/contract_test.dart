@@ -99,6 +99,7 @@ void main() {
       expect(c.context.pct, 13.3);
       expect(c.totals.totalTokens, 25954);
       expect(c.createdAt.isUtc, isTrue);
+      expect(c.preview, 'Kernel 7.2.11, 24 CPUs.');
 
       final m = Message.fromJson(obj(sampleShapes['message_user']));
       expect(m.clientMsgId, '0b8f3c52-7a1e-4d2b-9c61-2f5e8a7d3b10');
@@ -114,6 +115,37 @@ void main() {
       final h = HistoryMessage.fromJson(obj(connection['history_message']));
       expect(h.message.id, 412);
       expect(h.toolSteps.single.tool, 'terminal');
+    });
+
+    test('devices/me carries push and the notification settings', () {
+      final raw = obj(connection['device_me']);
+      expect(raw.keys.toSet(), {
+        'id',
+        'name',
+        'created_at',
+        'last_seen_at',
+        'fcm',
+        'push',
+        'notify',
+      });
+      final d = DeviceInfo.fromJson(raw);
+      expect((d.fcm, d.push), (true, true));
+      expect(
+        d.notify,
+        const NotifySettings(runDone: false),
+        reason: 'run_done maps to runDone',
+      );
+      expect(
+        obj(raw['notify']).keys.toSet(),
+        const NotifySettings().toJson().keys.toSet(),
+      );
+      // an API 2 server: no push, the defaults
+      final old = DeviceInfo.fromJson(
+        {...raw}
+          ..remove('push')
+          ..remove('notify'),
+      );
+      expect((old.push, old.notify), (false, const NotifySettings()));
     });
   });
 

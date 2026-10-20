@@ -109,6 +109,10 @@ _DeviceInfo _$DeviceInfoFromJson(Map<String, dynamic> json) => _DeviceInfo(
       ? null
       : DateTime.parse(json['last_seen_at'] as String),
   fcm: json['fcm'] as bool,
+  push: json['push'] as bool? ?? false,
+  notify: json['notify'] == null
+      ? const NotifySettings()
+      : NotifySettings.fromJson(json['notify'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$DeviceInfoToJson(_DeviceInfo instance) =>
@@ -118,4 +122,22 @@ Map<String, dynamic> _$DeviceInfoToJson(_DeviceInfo instance) =>
       'created_at': instance.createdAt.toIso8601String(),
       'last_seen_at': instance.lastSeenAt?.toIso8601String(),
       'fcm': instance.fcm,
+      'push': instance.push,
+      'notify': instance.notify.toJson(),
+    };
+
+_NotifySettings _$NotifySettingsFromJson(Map<String, dynamic> json) =>
+    _NotifySettings(
+      approvals: json['approvals'] as bool? ?? true,
+      runDone: json['run_done'] as bool? ?? true,
+      water: json['water'] as bool? ?? false,
+      brief: json['brief'] as bool? ?? false,
+    );
+
+Map<String, dynamic> _$NotifySettingsToJson(_NotifySettings instance) =>
+    <String, dynamic>{
+      'approvals': instance.approvals,
+      'run_done': instance.runDone,
+      'water': instance.water,
+      'brief': instance.brief,
     };

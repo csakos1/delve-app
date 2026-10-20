@@ -102,6 +102,32 @@ class DelveApi {
   Future<DeviceInfo> deviceMe() async =>
       _parse(await _json(ApiRoutes.deviceMe), DeviceInfo.fromJson);
 
+  /// This device's notification settings; only the given keys change.
+  Future<DeviceInfo> patchDevice({
+    bool? approvals,
+    bool? runDone,
+    bool? water,
+    bool? brief,
+  }) async => _parse(
+    await _json(
+      ApiRoutes.patchDevice,
+      body: {
+        'notify': {
+          'approvals': ?approvals,
+          'run_done': ?runDone,
+          'water': ?water,
+          'brief': ?brief,
+        },
+      },
+    ),
+    DeviceInfo.fromJson,
+  );
+
+  /// Stores this phone's FCM token on the server (`null` clears it).
+  Future<void> putFcmToken(String? fcmToken) async {
+    await _json(ApiRoutes.deviceFcm, body: {'token': fcmToken});
+  }
+
   /// Revokes this device's token on the server.
   Future<void> unpair() async {
     await _json(ApiRoutes.unpair);

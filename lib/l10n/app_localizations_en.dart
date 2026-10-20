@@ -932,4 +932,113 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contextChipEmpty => 'Context not measured yet, opens usage';
+
+  @override
+  String notifyApprovalTitle(String kind) {
+    return 'Approval needed · $kind';
+  }
+
+  @override
+  String notifyApprovalWaits(String chat) {
+    return 'Agent waits · $chat';
+  }
+
+  @override
+  String get notifyApprovalWaitsNoChat => 'Agent waits';
+
+  @override
+  String notifyLateTitle(String kind) {
+    return 'Agent stopped waiting · $kind';
+  }
+
+  @override
+  String notifyLateBody(String time, String chat) {
+    return 'Approvable until $time · $chat';
+  }
+
+  @override
+  String notifyLateBodyNoChat(String time) {
+    return 'Approvable until $time';
+  }
+
+  @override
+  String notifyRunDone(String chat) {
+    return 'Run finished · $chat';
+  }
+
+  @override
+  String get notifyRunDoneNoChat => 'Run finished';
+
+  @override
+  String notifyRunFailed(String chat) {
+    return 'Run failed · $chat';
+  }
+
+  @override
+  String get notifyRunFailedNoChat => 'Run failed';
+
+  @override
+  String get notifyOpen => 'Open';
+
+  @override
+  String get notifyChannelApprovals => 'Approvals';
+
+  @override
+  String get notifyChannelApprovalsDesc => 'Commands waiting for your OK';
+
+  @override
+  String get notifyChannelRuns => 'Finished runs';
+
+  @override
+  String get notifyChannelRunsDesc =>
+      'Answers that arrive while Delve is in the background';
+
+  @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotifyApprovals => 'Approvals';
+
+  @override
+  String get settingsNotifyApprovalsSub =>
+      'Allow once / Deny from the notification';
+
+  @override
+  String get settingsNotifyRunDone => 'Run finished';
+
+  @override
+  String get settingsNotifyRunDoneSub =>
+      'Only when the app is in the background';
+
+  @override
+  String get settingsNotifyWater => 'Water level';
+
+  @override
+  String get settingsNotifyBrief => 'Morning brief';
+
+  @override
+  String get settingsNotifyLaterDashboard => 'Comes with the dashboard';
+
+  @override
+  String get settingsNotifyLaterSchedules => 'Comes with schedules';
+
+  @override
+  String get settingsNotifyPermissionOff =>
+      'Notifications are off for Delve on this phone.';
+
+  @override
+  String get settingsNotifyAllow => 'Allow';
+
+  @override
+  String get settingsNotifyNoServer =>
+      'The server can\'t send notifications yet (no Firebase key).';
+
+  @override
+  String get settingsNotifyNoApp =>
+      'This build can\'t receive notifications (no Firebase configuration).';
+
+  @override
+  String settingsNotifySaveFailed(String reason) {
+    return 'Couldn\'t save: $reason';
+  }
 }

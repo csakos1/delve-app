@@ -27,6 +27,17 @@ class $ConversationsTable extends Conversations
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _previewMeta = const VerificationMeta(
+    'preview',
+  );
+  @override
+  late final GeneratedColumn<String> preview = GeneratedColumn<String>(
+    'preview',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -212,6 +223,7 @@ class $ConversationsTable extends Conversations
   List<GeneratedColumn> get $columns => [
     id,
     title,
+    preview,
     createdAt,
     updatedAt,
     archived,
@@ -249,6 +261,12 @@ class $ConversationsTable extends Conversations
       context.handle(
         _titleMeta,
         title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    }
+    if (data.containsKey('preview')) {
+      context.handle(
+        _previewMeta,
+        preview.isAcceptableOrUnknown(data['preview']!, _previewMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -377,6 +395,10 @@ class $ConversationsTable extends Conversations
         DriftSqlType.string,
         data['${effectivePrefix}title'],
       ),
+      preview: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}preview'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -449,6 +471,10 @@ class $ConversationsTable extends Conversations
 class ConversationRow extends DataClass implements Insertable<ConversationRow> {
   final String id;
   final String? title;
+
+  /// The server's list preview (schema 3): the latest text, also for chats
+  /// whose messages were never loaded here.
+  final String? preview;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool archived;
@@ -467,6 +493,7 @@ class ConversationRow extends DataClass implements Insertable<ConversationRow> {
   const ConversationRow({
     required this.id,
     this.title,
+    this.preview,
     required this.createdAt,
     required this.updatedAt,
     required this.archived,
@@ -489,6 +516,9 @@ class ConversationRow extends DataClass implements Insertable<ConversationRow> {
     map['id'] = Variable<String>(id);
     if (!nullToAbsent || title != null) {
       map['title'] = Variable<String>(title);
+    }
+    if (!nullToAbsent || preview != null) {
+      map['preview'] = Variable<String>(preview);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -524,6 +554,9 @@ class ConversationRow extends DataClass implements Insertable<ConversationRow> {
       title: title == null && nullToAbsent
           ? const Value.absent()
           : Value(title),
+      preview: preview == null && nullToAbsent
+          ? const Value.absent()
+          : Value(preview),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       archived: Value(archived),
@@ -560,6 +593,7 @@ class ConversationRow extends DataClass implements Insertable<ConversationRow> {
     return ConversationRow(
       id: serializer.fromJson<String>(json['id']),
       title: serializer.fromJson<String?>(json['title']),
+      preview: serializer.fromJson<String?>(json['preview']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       archived: serializer.fromJson<bool>(json['archived']),
@@ -585,6 +619,7 @@ class ConversationRow extends DataClass implements Insertable<ConversationRow> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'title': serializer.toJson<String?>(title),
+      'preview': serializer.toJson<String?>(preview),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'archived': serializer.toJson<bool>(archived),
@@ -606,6 +641,7 @@ class ConversationRow extends DataClass implements Insertable<ConversationRow> {
   ConversationRow copyWith({
     String? id,
     Value<String?> title = const Value.absent(),
+    Value<String?> preview = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? archived,
@@ -624,6 +660,7 @@ class ConversationRow extends DataClass implements Insertable<ConversationRow> {
   }) => ConversationRow(
     id: id ?? this.id,
     title: title.present ? title.value : this.title,
+    preview: preview.present ? preview.value : this.preview,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     archived: archived ?? this.archived,
@@ -648,6 +685,7 @@ class ConversationRow extends DataClass implements Insertable<ConversationRow> {
     return ConversationRow(
       id: data.id.present ? data.id.value : this.id,
       title: data.title.present ? data.title.value : this.title,
+      preview: data.preview.present ? data.preview.value : this.preview,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       archived: data.archived.present ? data.archived.value : this.archived,
@@ -685,6 +723,7 @@ class ConversationRow extends DataClass implements Insertable<ConversationRow> {
     return (StringBuffer('ConversationRow(')
           ..write('id: $id, ')
           ..write('title: $title, ')
+          ..write('preview: $preview, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('archived: $archived, ')
@@ -708,6 +747,7 @@ class ConversationRow extends DataClass implements Insertable<ConversationRow> {
   int get hashCode => Object.hash(
     id,
     title,
+    preview,
     createdAt,
     updatedAt,
     archived,
@@ -730,6 +770,7 @@ class ConversationRow extends DataClass implements Insertable<ConversationRow> {
       (other is ConversationRow &&
           other.id == this.id &&
           other.title == this.title &&
+          other.preview == this.preview &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.archived == this.archived &&
@@ -750,6 +791,7 @@ class ConversationRow extends DataClass implements Insertable<ConversationRow> {
 class ConversationsCompanion extends UpdateCompanion<ConversationRow> {
   final Value<String> id;
   final Value<String?> title;
+  final Value<String?> preview;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<bool> archived;
@@ -769,6 +811,7 @@ class ConversationsCompanion extends UpdateCompanion<ConversationRow> {
   const ConversationsCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
+    this.preview = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.archived = const Value.absent(),
@@ -789,6 +832,7 @@ class ConversationsCompanion extends UpdateCompanion<ConversationRow> {
   ConversationsCompanion.insert({
     required String id,
     this.title = const Value.absent(),
+    this.preview = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.archived = const Value.absent(),
@@ -811,6 +855,7 @@ class ConversationsCompanion extends UpdateCompanion<ConversationRow> {
   static Insertable<ConversationRow> custom({
     Expression<String>? id,
     Expression<String>? title,
+    Expression<String>? preview,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<bool>? archived,
@@ -831,6 +876,7 @@ class ConversationsCompanion extends UpdateCompanion<ConversationRow> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (title != null) 'title': title,
+      if (preview != null) 'preview': preview,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (archived != null) 'archived': archived,
@@ -853,6 +899,7 @@ class ConversationsCompanion extends UpdateCompanion<ConversationRow> {
   ConversationsCompanion copyWith({
     Value<String>? id,
     Value<String?>? title,
+    Value<String?>? preview,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<bool>? archived,
@@ -873,6 +920,7 @@ class ConversationsCompanion extends UpdateCompanion<ConversationRow> {
     return ConversationsCompanion(
       id: id ?? this.id,
       title: title ?? this.title,
+      preview: preview ?? this.preview,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       archived: archived ?? this.archived,
@@ -900,6 +948,9 @@ class ConversationsCompanion extends UpdateCompanion<ConversationRow> {
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
+    }
+    if (preview.present) {
+      map['preview'] = Variable<String>(preview.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -957,6 +1008,7 @@ class ConversationsCompanion extends UpdateCompanion<ConversationRow> {
     return (StringBuffer('ConversationsCompanion(')
           ..write('id: $id, ')
           ..write('title: $title, ')
+          ..write('preview: $preview, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('archived: $archived, ')
@@ -5156,6 +5208,7 @@ typedef $$ConversationsTableCreateCompanionBuilder =
     ConversationsCompanion Function({
       required String id,
       Value<String?> title,
+      Value<String?> preview,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<bool> archived,
@@ -5177,6 +5230,7 @@ typedef $$ConversationsTableUpdateCompanionBuilder =
     ConversationsCompanion Function({
       Value<String> id,
       Value<String?> title,
+      Value<String?> preview,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<bool> archived,
@@ -5211,6 +5265,11 @@ class $$ConversationsTableFilterComposer
 
   ColumnFilters<String> get title => $composableBuilder(
     column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get preview => $composableBuilder(
+    column: $table.preview,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5309,6 +5368,11 @@ class $$ConversationsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get preview => $composableBuilder(
+    column: $table.preview,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -5399,6 +5463,9 @@ class $$ConversationsTableAnnotationComposer
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get preview =>
+      $composableBuilder(column: $table.preview, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -5493,6 +5560,7 @@ class $$ConversationsTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String?> title = const Value.absent(),
+                Value<String?> preview = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
@@ -5512,6 +5580,7 @@ class $$ConversationsTableTableManager
               }) => ConversationsCompanion(
                 id: id,
                 title: title,
+                preview: preview,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archived: archived,
@@ -5533,6 +5602,7 @@ class $$ConversationsTableTableManager
               ({
                 required String id,
                 Value<String?> title = const Value.absent(),
+                Value<String?> preview = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<bool> archived = const Value.absent(),
@@ -5552,6 +5622,7 @@ class $$ConversationsTableTableManager
               }) => ConversationsCompanion.insert(
                 id: id,
                 title: title,
+                preview: preview,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archived: archived,

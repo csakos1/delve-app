@@ -180,4 +180,7 @@ abstract final class DelveIcons {
   static const IconData block = Symbols.block_rounded;
   static const IconData timerOff = Symbols.timer_off_rounded;
   static const IconData gppBad = Symbols.gpp_bad_rounded;
+  static const IconData water = Symbols.waves_rounded;
+  static const IconData brief = Symbols.wb_twilight_rounded;
+  static const IconData notificationsOff = Symbols.notifications_off_rounded;
 }

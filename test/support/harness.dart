@@ -4,6 +4,8 @@ import 'package:delve/app/providers.dart';
 import 'package:delve/app/session.dart';
 import 'package:delve/data/credentials.dart';
 import 'package:delve/data/db/database.dart';
+import 'package:delve/push/push_controller.dart';
+import 'package:delve/push/push_providers.dart';
 import 'package:delve/sync/connection_status.dart';
 import 'package:delve/sync/sync_providers.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
@@ -32,7 +34,7 @@ const testAppInfo = AppInfo('0.1.0', '1');
 
 /// Everything a test needs to drive the app and look behind it.
 class TestEnv {
-  TestEnv({Credentials? credentials, this.status, this.actions})
+  TestEnv({Credentials? credentials, this.status, this.actions, this.push})
     : db = memoryDb(),
       store = MemoryCredentialStore(credentials),
       server = FakeServer();
@@ -47,6 +49,9 @@ class TestEnv {
   /// What the chat screen sends (the socket is off in tests).
   final ChatActions? actions;
 
+  /// Push on this phone as Settings sees it (push itself is off in tests).
+  final PushState? push;
+
   // (The override list is written out twice: its element type lives in a
   // different library across Riverpod versions.)
   ProviderScope app(Widget child) => ProviderScope(
@@ -56,6 +61,9 @@ class TestEnv {
       httpAdapterProvider.overrideWithValue(server),
       appInfoProvider.overrideWith((ref) async => testAppInfo),
       syncEnabledProvider.overrideWithValue(false), // no socket here
+      pushEnabledProvider.overrideWithValue(false), // no Firebase here
+      if (push case final p?)
+        pushStateProvider.overrideWith((ref) => Stream.value(p)),
       if (status case final s?)
         connectionStatusProvider.overrideWith((ref) => Stream.value(s)),
       if (actions case final a?) chatActionsProvider.overrideWithValue(a),
@@ -71,6 +79,9 @@ class TestEnv {
         httpAdapterProvider.overrideWithValue(server),
         appInfoProvider.overrideWith((ref) async => testAppInfo),
         syncEnabledProvider.overrideWithValue(false), // no socket here
+        pushEnabledProvider.overrideWithValue(false), // no Firebase here
+        if (push case final p?)
+          pushStateProvider.overrideWith((ref) => Stream.value(p)),
         if (status case final s?)
           connectionStatusProvider.overrideWith((ref) => Stream.value(s)),
         if (actions case final a?) chatActionsProvider.overrideWithValue(a),
@@ -96,6 +107,7 @@ Future<TestEnv> pumpDelve(
   bool paired = true,
   ConnectionStatus? status,
   ChatActions? actions,
+  PushState? push,
   Future<void> Function(TestEnv env)? before,
   bool settle = true,
 }) async {
@@ -103,6 +115,7 @@ Future<TestEnv> pumpDelve(
     credentials: paired ? pairedCredentials() : null,
     status: status,
     actions: actions,
+    push: push,
   );
   addTearDown(env.dispose);
   setDesignSize(tester);

@@ -3,7 +3,7 @@
 /// Oldest backend contract this build works with (`/meta` `api_revision`).
 /// Raise it together with the models when the app starts relying on a newer
 /// contract; a smaller server revision shows the "server too old" screen.
-const int kMinApiRevision = 2; // 2: DELETE /devices/me (unpair)
+const int kMinApiRevision = 3; // 3: PATCH /devices/me (notify), preview
 
 /// REST routes the app calls (method + path template); checked against the
 /// backend contract in `test/contract_test.dart`.
@@ -17,6 +17,7 @@ abstract final class ApiRoutes {
   static const deviceMe = ('GET', '/api/v1/devices/me');
   static const deviceFcm = ('PUT', '/api/v1/devices/me/fcm');
   static const unpair = ('DELETE', '/api/v1/devices/me');
+  static const patchDevice = ('PATCH', '/api/v1/devices/me');
   static const conversations = ('GET', '/api/v1/conversations');
   static const conversation = (
     'GET',
@@ -44,6 +45,7 @@ abstract final class ApiRoutes {
     deviceMe,
     deviceFcm,
     unpair,
+    patchDevice,
     conversations,
     conversation,
     patchConversation,

@@ -1671,6 +1671,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Context not measured yet, opens usage'**
   String get contextChipEmpty;
+
+  /// No description provided for @notifyApprovalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval needed · {kind}'**
+  String notifyApprovalTitle(String kind);
+
+  /// No description provided for @notifyApprovalWaits.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent waits · {chat}'**
+  String notifyApprovalWaits(String chat);
+
+  /// No description provided for @notifyApprovalWaitsNoChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent waits'**
+  String get notifyApprovalWaitsNoChat;
+
+  /// No description provided for @notifyLateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent stopped waiting · {kind}'**
+  String notifyLateTitle(String kind);
+
+  /// No description provided for @notifyLateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Approvable until {time} · {chat}'**
+  String notifyLateBody(String time, String chat);
+
+  /// No description provided for @notifyLateBodyNoChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Approvable until {time}'**
+  String notifyLateBodyNoChat(String time);
+
+  /// No description provided for @notifyRunDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Run finished · {chat}'**
+  String notifyRunDone(String chat);
+
+  /// No description provided for @notifyRunDoneNoChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Run finished'**
+  String get notifyRunDoneNoChat;
+
+  /// No description provided for @notifyRunFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Run failed · {chat}'**
+  String notifyRunFailed(String chat);
+
+  /// No description provided for @notifyRunFailedNoChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Run failed'**
+  String get notifyRunFailedNoChat;
+
+  /// No description provided for @notifyOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get notifyOpen;
+
+  /// No description provided for @notifyChannelApprovals.
+  ///
+  /// In en, this message translates to:
+  /// **'Approvals'**
+  String get notifyChannelApprovals;
+
+  /// No description provided for @notifyChannelApprovalsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Commands waiting for your OK'**
+  String get notifyChannelApprovalsDesc;
+
+  /// No description provided for @notifyChannelRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished runs'**
+  String get notifyChannelRuns;
+
+  /// No description provided for @notifyChannelRunsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Answers that arrive while Delve is in the background'**
+  String get notifyChannelRunsDesc;
+
+  /// No description provided for @settingsNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotifications;
+
+  /// No description provided for @settingsNotifyApprovals.
+  ///
+  /// In en, this message translates to:
+  /// **'Approvals'**
+  String get settingsNotifyApprovals;
+
+  /// No description provided for @settingsNotifyApprovalsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow once / Deny from the notification'**
+  String get settingsNotifyApprovalsSub;
+
+  /// No description provided for @settingsNotifyRunDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Run finished'**
+  String get settingsNotifyRunDone;
+
+  /// No description provided for @settingsNotifyRunDoneSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Only when the app is in the background'**
+  String get settingsNotifyRunDoneSub;
+
+  /// No description provided for @settingsNotifyWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Water level'**
+  String get settingsNotifyWater;
+
+  /// No description provided for @settingsNotifyBrief.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning brief'**
+  String get settingsNotifyBrief;
+
+  /// No description provided for @settingsNotifyLaterDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Comes with the dashboard'**
+  String get settingsNotifyLaterDashboard;
+
+  /// No description provided for @settingsNotifyLaterSchedules.
+  ///
+  /// In en, this message translates to:
+  /// **'Comes with schedules'**
+  String get settingsNotifyLaterSchedules;
+
+  /// No description provided for @settingsNotifyPermissionOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off for Delve on this phone.'**
+  String get settingsNotifyPermissionOff;
+
+  /// No description provided for @settingsNotifyAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get settingsNotifyAllow;
+
+  /// No description provided for @settingsNotifyNoServer.
+  ///
+  /// In en, this message translates to:
+  /// **'The server can\'t send notifications yet (no Firebase key).'**
+  String get settingsNotifyNoServer;
+
+  /// No description provided for @settingsNotifyNoApp.
+  ///
+  /// In en, this message translates to:
+  /// **'This build can\'t receive notifications (no Firebase configuration).'**
+  String get settingsNotifyNoApp;
+
+  /// No description provided for @settingsNotifySaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save: {reason}'**
+  String settingsNotifySaveFailed(String reason);
 }
 
 class _AppLocalizationsDelegate

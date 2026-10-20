@@ -76,7 +76,8 @@ abstract class RegisteredDevice with _$RegisteredDevice {
       _$RegisteredDeviceFromJson(json);
 }
 
-/// `GET /api/v1/devices/me`.
+/// `GET` / `PATCH /api/v1/devices/me`. `fcm`: the server has this phone's
+/// push token; `push`: the server can send pushes at all (API 3).
 @freezed
 abstract class DeviceInfo with _$DeviceInfo {
   const factory DeviceInfo({
@@ -85,8 +86,24 @@ abstract class DeviceInfo with _$DeviceInfo {
     required DateTime createdAt,
     DateTime? lastSeenAt,
     required bool fcm,
+    @Default(false) bool push,
+    @Default(NotifySettings()) NotifySettings notify,
   }) = _DeviceInfo;
 
   factory DeviceInfo.fromJson(Map<String, Object?> json) =>
       _$DeviceInfoFromJson(json);
+}
+
+/// Which pushes this device wants (`devices.notify`, decision 260).
+@freezed
+abstract class NotifySettings with _$NotifySettings {
+  const factory NotifySettings({
+    @Default(true) bool approvals,
+    @Default(true) bool runDone,
+    @Default(false) bool water,
+    @Default(false) bool brief,
+  }) = _NotifySettings;
+
+  factory NotifySettings.fromJson(Map<String, Object?> json) =>
+      _$NotifySettingsFromJson(json);
 }

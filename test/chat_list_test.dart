@@ -30,6 +30,7 @@ Conversation conversation(
   sample('conversation', {
     'id': id,
     'title': title,
+    'preview': null,
     'updated_at': (updated ?? t0).toIso8601String(),
     'archived': archived,
     'thinking': thinking,

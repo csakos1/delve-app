@@ -28,7 +28,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// 1: A1 tables. 2: connection log (A3).
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   /// Entries the connection log keeps.
   static const int connectionLogLimit = 500;
@@ -41,6 +41,7 @@ class AppDatabase extends _$AppDatabase {
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) await m.createTable(connectionLog);
+      if (from < 3) await m.addColumn(conversations, conversations.preview);
     },
   );
 
@@ -104,9 +105,11 @@ class AppDatabase extends _$AppDatabase {
     final answerable = inList(answerableApprovalStatuses);
     return customSelect(
       'SELECT c.*, '
-      '(SELECT substr(m.content, 1, 300) FROM messages m '
+      // the local messages when there are any, else the server's preview
+      'coalesce((SELECT substr(m.content, 1, 300) FROM messages m '
       "WHERE m.conversation_id = c.id AND m.role IN ('user', 'assistant') "
-      "AND m.content <> '' ORDER BY m.id DESC LIMIT 1) AS last_text, "
+      "AND m.content <> '' ORDER BY m.id DESC LIMIT 1), c.preview) "
+      'AS last_text, '
       '(SELECT substr(m.content, 1, 200) FROM messages m '
       "WHERE m.conversation_id = c.id AND m.role = 'user' "
       'ORDER BY m.id ASC LIMIT 1) AS first_user, '

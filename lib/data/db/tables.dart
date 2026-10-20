@@ -10,6 +10,10 @@ import 'converters.dart';
 class Conversations extends Table {
   TextColumn get id => text()();
   TextColumn get title => text().nullable()();
+
+  /// The server's list preview (schema 3): the latest text, also for chats
+  /// whose messages were never loaded here.
+  TextColumn get preview => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();

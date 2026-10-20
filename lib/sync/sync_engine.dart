@@ -27,9 +27,10 @@ class SyncTiming {
     this.silence = const Duration(seconds: 45),
     this.backoffMin = const Duration(seconds: 1),
     this.backoffMax = const Duration(seconds: 30),
-    this.pauseGrace = const Duration(seconds: 60),
+    this.pauseGrace = const Duration(seconds: 3),
     this.batchWindow = const Duration(milliseconds: 80),
     this.ackTimeout = const Duration(seconds: 15),
+    this.pingInterval = const Duration(seconds: 20),
   });
 
   final Duration helloTimeout;
@@ -40,11 +41,17 @@ class SyncTiming {
   final Duration backoffMax;
 
   /// How long the socket stays open after the app went to the background.
+  /// Short: the socket is closed cleanly before Android cuts the network
+  /// (~10 s), so the server knows at once to push "run finished".
   final Duration pauseGrace;
 
   /// Events are written in batches collected over this window.
   final Duration batchWindow;
   final Duration ackTimeout;
+
+  /// A `ping` this often while live: the server counts a socket as live only
+  /// while frames arrive (push presence, decision 261).
+  final Duration pingInterval;
 }
 
 /// Why a request over the socket did not get an answer.
@@ -141,6 +148,7 @@ class SyncEngine {
   Timer? _retryTimer;
   Timer? _pauseTimer;
   Timer? _flushTimer;
+  Timer? _pingTimer;
 
   /// Why we closed the socket ourselves (null: the server or network did).
   (ConnectionProblem?, String)? _ourClose;
@@ -225,6 +233,9 @@ class SyncEngine {
   /// The chat on screen; a resync reloads its messages too.
   void focusConversation(String? conversationId) => _focus = conversationId;
 
+  /// The chat on screen (push: its approvals need no notification).
+  String? get focus => _focus;
+
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
@@ -234,6 +245,7 @@ class SyncEngine {
       _retryTimer,
       _pauseTimer,
       _flushTimer,
+      _pingTimer,
     ]) {
       t?.cancel();
     }
@@ -302,6 +314,18 @@ class SyncEngine {
     _armSilence(gen);
   }
 
+  void _startPing(int gen) {
+    _pingTimer?.cancel();
+    _pingTimer = Timer.periodic(timing.pingInterval, (t) {
+      final link = _link;
+      if (gen != _generation || link == null) {
+        t.cancel();
+        return;
+      }
+      link.send(jsonEncode(ClientFrames.ping(id: 'ping')));
+    });
+  }
+
   void _armSilence(int gen) {
     _silenceTimer?.cancel();
     _silenceTimer = Timer(timing.silence, () {
@@ -325,6 +349,8 @@ class SyncEngine {
     _generation++; // late callbacks of this socket (hello, resync) are void
     _helloTimer?.cancel();
     _silenceTimer?.cancel();
+    _pingTimer?.cancel();
+    _pingTimer = null;
     unawaited(_linkSub?.cancel());
     _linkSub = null;
     _link = null;
@@ -481,6 +507,7 @@ class SyncEngine {
         resyncing: needResync,
       ),
     );
+    _startPing(gen);
     _log(
       LogKind.connected,
       'seq ${hello.seq}, epoch ${_short(hello.epoch)}'

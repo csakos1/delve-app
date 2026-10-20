@@ -1441,7 +1441,7 @@ as String,
 /// @nodoc
 mixin _$DeviceInfo {
 
- String get id; String get name; DateTime get createdAt; DateTime? get lastSeenAt; bool get fcm;
+ String get id; String get name; DateTime get createdAt; DateTime? get lastSeenAt; bool get fcm; bool get push; NotifySettings get notify;
 /// Create a copy of DeviceInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1454,16 +1454,16 @@ $DeviceInfoCopyWith<DeviceInfo> get copyWith => _$DeviceInfoCopyWithImpl<DeviceI
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeviceInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.fcm, fcm) || other.fcm == fcm));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeviceInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.fcm, fcm) || other.fcm == fcm)&&(identical(other.push, push) || other.push == push)&&(identical(other.notify, notify) || other.notify == notify));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,createdAt,lastSeenAt,fcm);
+int get hashCode => Object.hash(runtimeType,id,name,createdAt,lastSeenAt,fcm,push,notify);
 
 @override
 String toString() {
-  return 'DeviceInfo(id: $id, name: $name, createdAt: $createdAt, lastSeenAt: $lastSeenAt, fcm: $fcm)';
+  return 'DeviceInfo(id: $id, name: $name, createdAt: $createdAt, lastSeenAt: $lastSeenAt, fcm: $fcm, push: $push, notify: $notify)';
 }
 
 
@@ -1474,11 +1474,11 @@ abstract mixin class $DeviceInfoCopyWith<$Res>  {
   factory $DeviceInfoCopyWith(DeviceInfo value, $Res Function(DeviceInfo) _then) = _$DeviceInfoCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, DateTime createdAt, DateTime? lastSeenAt, bool fcm
+ String id, String name, DateTime createdAt, DateTime? lastSeenAt, bool fcm, bool push, NotifySettings notify
 });
 
 
-
+$NotifySettingsCopyWith<$Res> get notify;
 
 }
 /// @nodoc
@@ -1491,17 +1491,28 @@ class _$DeviceInfoCopyWithImpl<$Res>
 
 /// Create a copy of DeviceInfo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? createdAt = null,Object? lastSeenAt = freezed,Object? fcm = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? createdAt = null,Object? lastSeenAt = freezed,Object? fcm = null,Object? push = null,Object? notify = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,fcm: null == fcm ? _self.fcm : fcm // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,push: null == push ? _self.push : push // ignore: cast_nullable_to_non_nullable
+as bool,notify: null == notify ? _self.notify : notify // ignore: cast_nullable_to_non_nullable
+as NotifySettings,
   ));
 }
-
+/// Create a copy of DeviceInfo
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$NotifySettingsCopyWith<$Res> get notify {
+  
+  return $NotifySettingsCopyWith<$Res>(_self.notify, (value) {
+    return _then(_self.copyWith(notify: value));
+  });
+}
 }
 
 
@@ -1583,10 +1594,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  DateTime createdAt,  DateTime? lastSeenAt,  bool fcm)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  DateTime createdAt,  DateTime? lastSeenAt,  bool fcm,  bool push,  NotifySettings notify)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DeviceInfo() when $default != null:
-return $default(_that.id,_that.name,_that.createdAt,_that.lastSeenAt,_that.fcm);case _:
+return $default(_that.id,_that.name,_that.createdAt,_that.lastSeenAt,_that.fcm,_that.push,_that.notify);case _:
   return orElse();
 
 }
@@ -1604,10 +1615,10 @@ return $default(_that.id,_that.name,_that.createdAt,_that.lastSeenAt,_that.fcm);
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  DateTime createdAt,  DateTime? lastSeenAt,  bool fcm)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  DateTime createdAt,  DateTime? lastSeenAt,  bool fcm,  bool push,  NotifySettings notify)  $default,) {final _that = this;
 switch (_that) {
 case _DeviceInfo():
-return $default(_that.id,_that.name,_that.createdAt,_that.lastSeenAt,_that.fcm);case _:
+return $default(_that.id,_that.name,_that.createdAt,_that.lastSeenAt,_that.fcm,_that.push,_that.notify);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1624,10 +1635,10 @@ return $default(_that.id,_that.name,_that.createdAt,_that.lastSeenAt,_that.fcm);
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  DateTime createdAt,  DateTime? lastSeenAt,  bool fcm)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  DateTime createdAt,  DateTime? lastSeenAt,  bool fcm,  bool push,  NotifySettings notify)?  $default,) {final _that = this;
 switch (_that) {
 case _DeviceInfo() when $default != null:
-return $default(_that.id,_that.name,_that.createdAt,_that.lastSeenAt,_that.fcm);case _:
+return $default(_that.id,_that.name,_that.createdAt,_that.lastSeenAt,_that.fcm,_that.push,_that.notify);case _:
   return null;
 
 }
@@ -1639,7 +1650,7 @@ return $default(_that.id,_that.name,_that.createdAt,_that.lastSeenAt,_that.fcm);
 @JsonSerializable()
 
 class _DeviceInfo implements DeviceInfo {
-  const _DeviceInfo({required this.id, required this.name, required this.createdAt, this.lastSeenAt, required this.fcm});
+  const _DeviceInfo({required this.id, required this.name, required this.createdAt, this.lastSeenAt, required this.fcm, this.push = false, this.notify = const NotifySettings()});
   factory _DeviceInfo.fromJson(Map<String, dynamic> json) => _$DeviceInfoFromJson(json);
 
 @override final  String id;
@@ -1647,6 +1658,8 @@ class _DeviceInfo implements DeviceInfo {
 @override final  DateTime createdAt;
 @override final  DateTime? lastSeenAt;
 @override final  bool fcm;
+@override@JsonKey() final  bool push;
+@override@JsonKey() final  NotifySettings notify;
 
 /// Create a copy of DeviceInfo
 /// with the given fields replaced by the non-null parameter values.
@@ -1661,16 +1674,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DeviceInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.fcm, fcm) || other.fcm == fcm));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DeviceInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.fcm, fcm) || other.fcm == fcm)&&(identical(other.push, push) || other.push == push)&&(identical(other.notify, notify) || other.notify == notify));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,createdAt,lastSeenAt,fcm);
+int get hashCode => Object.hash(runtimeType,id,name,createdAt,lastSeenAt,fcm,push,notify);
 
 @override
 String toString() {
-  return 'DeviceInfo(id: $id, name: $name, createdAt: $createdAt, lastSeenAt: $lastSeenAt, fcm: $fcm)';
+  return 'DeviceInfo(id: $id, name: $name, createdAt: $createdAt, lastSeenAt: $lastSeenAt, fcm: $fcm, push: $push, notify: $notify)';
 }
 
 
@@ -1681,11 +1694,11 @@ abstract mixin class _$DeviceInfoCopyWith<$Res> implements $DeviceInfoCopyWith<$
   factory _$DeviceInfoCopyWith(_DeviceInfo value, $Res Function(_DeviceInfo) _then) = __$DeviceInfoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, DateTime createdAt, DateTime? lastSeenAt, bool fcm
+ String id, String name, DateTime createdAt, DateTime? lastSeenAt, bool fcm, bool push, NotifySettings notify
 });
 
 
-
+@override $NotifySettingsCopyWith<$Res> get notify;
 
 }
 /// @nodoc
@@ -1698,13 +1711,296 @@ class __$DeviceInfoCopyWithImpl<$Res>
 
 /// Create a copy of DeviceInfo
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? createdAt = null,Object? lastSeenAt = freezed,Object? fcm = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? createdAt = null,Object? lastSeenAt = freezed,Object? fcm = null,Object? push = null,Object? notify = null,}) {
   return _then(_DeviceInfo(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,fcm: null == fcm ? _self.fcm : fcm // ignore: cast_nullable_to_non_nullable
+as bool,push: null == push ? _self.push : push // ignore: cast_nullable_to_non_nullable
+as bool,notify: null == notify ? _self.notify : notify // ignore: cast_nullable_to_non_nullable
+as NotifySettings,
+  ));
+}
+
+/// Create a copy of DeviceInfo
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$NotifySettingsCopyWith<$Res> get notify {
+  
+  return $NotifySettingsCopyWith<$Res>(_self.notify, (value) {
+    return _then(_self.copyWith(notify: value));
+  });
+}
+}
+
+
+/// @nodoc
+mixin _$NotifySettings {
+
+ bool get approvals; bool get runDone; bool get water; bool get brief;
+/// Create a copy of NotifySettings
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$NotifySettingsCopyWith<NotifySettings> get copyWith => _$NotifySettingsCopyWithImpl<NotifySettings>(this as NotifySettings, _$identity);
+
+  /// Serializes this NotifySettings to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotifySettings&&(identical(other.approvals, approvals) || other.approvals == approvals)&&(identical(other.runDone, runDone) || other.runDone == runDone)&&(identical(other.water, water) || other.water == water)&&(identical(other.brief, brief) || other.brief == brief));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,approvals,runDone,water,brief);
+
+@override
+String toString() {
+  return 'NotifySettings(approvals: $approvals, runDone: $runDone, water: $water, brief: $brief)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $NotifySettingsCopyWith<$Res>  {
+  factory $NotifySettingsCopyWith(NotifySettings value, $Res Function(NotifySettings) _then) = _$NotifySettingsCopyWithImpl;
+@useResult
+$Res call({
+ bool approvals, bool runDone, bool water, bool brief
+});
+
+
+
+
+}
+/// @nodoc
+class _$NotifySettingsCopyWithImpl<$Res>
+    implements $NotifySettingsCopyWith<$Res> {
+  _$NotifySettingsCopyWithImpl(this._self, this._then);
+
+  final NotifySettings _self;
+  final $Res Function(NotifySettings) _then;
+
+/// Create a copy of NotifySettings
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? approvals = null,Object? runDone = null,Object? water = null,Object? brief = null,}) {
+  return _then(_self.copyWith(
+approvals: null == approvals ? _self.approvals : approvals // ignore: cast_nullable_to_non_nullable
+as bool,runDone: null == runDone ? _self.runDone : runDone // ignore: cast_nullable_to_non_nullable
+as bool,water: null == water ? _self.water : water // ignore: cast_nullable_to_non_nullable
+as bool,brief: null == brief ? _self.brief : brief // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [NotifySettings].
+extension NotifySettingsPatterns on NotifySettings {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _NotifySettings value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _NotifySettings() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _NotifySettings value)  $default,){
+final _that = this;
+switch (_that) {
+case _NotifySettings():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _NotifySettings value)?  $default,){
+final _that = this;
+switch (_that) {
+case _NotifySettings() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool approvals,  bool runDone,  bool water,  bool brief)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _NotifySettings() when $default != null:
+return $default(_that.approvals,_that.runDone,_that.water,_that.brief);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool approvals,  bool runDone,  bool water,  bool brief)  $default,) {final _that = this;
+switch (_that) {
+case _NotifySettings():
+return $default(_that.approvals,_that.runDone,_that.water,_that.brief);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool approvals,  bool runDone,  bool water,  bool brief)?  $default,) {final _that = this;
+switch (_that) {
+case _NotifySettings() when $default != null:
+return $default(_that.approvals,_that.runDone,_that.water,_that.brief);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _NotifySettings implements NotifySettings {
+  const _NotifySettings({this.approvals = true, this.runDone = true, this.water = false, this.brief = false});
+  factory _NotifySettings.fromJson(Map<String, dynamic> json) => _$NotifySettingsFromJson(json);
+
+@override@JsonKey() final  bool approvals;
+@override@JsonKey() final  bool runDone;
+@override@JsonKey() final  bool water;
+@override@JsonKey() final  bool brief;
+
+/// Create a copy of NotifySettings
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$NotifySettingsCopyWith<_NotifySettings> get copyWith => __$NotifySettingsCopyWithImpl<_NotifySettings>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$NotifySettingsToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NotifySettings&&(identical(other.approvals, approvals) || other.approvals == approvals)&&(identical(other.runDone, runDone) || other.runDone == runDone)&&(identical(other.water, water) || other.water == water)&&(identical(other.brief, brief) || other.brief == brief));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,approvals,runDone,water,brief);
+
+@override
+String toString() {
+  return 'NotifySettings(approvals: $approvals, runDone: $runDone, water: $water, brief: $brief)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$NotifySettingsCopyWith<$Res> implements $NotifySettingsCopyWith<$Res> {
+  factory _$NotifySettingsCopyWith(_NotifySettings value, $Res Function(_NotifySettings) _then) = __$NotifySettingsCopyWithImpl;
+@override @useResult
+$Res call({
+ bool approvals, bool runDone, bool water, bool brief
+});
+
+
+
+
+}
+/// @nodoc
+class __$NotifySettingsCopyWithImpl<$Res>
+    implements _$NotifySettingsCopyWith<$Res> {
+  __$NotifySettingsCopyWithImpl(this._self, this._then);
+
+  final _NotifySettings _self;
+  final $Res Function(_NotifySettings) _then;
+
+/// Create a copy of NotifySettings
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? approvals = null,Object? runDone = null,Object? water = null,Object? brief = null,}) {
+  return _then(_NotifySettings(
+approvals: null == approvals ? _self.approvals : approvals // ignore: cast_nullable_to_non_nullable
+as bool,runDone: null == runDone ? _self.runDone : runDone // ignore: cast_nullable_to_non_nullable
+as bool,water: null == water ? _self.water : water // ignore: cast_nullable_to_non_nullable
+as bool,brief: null == brief ? _self.brief : brief // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

@@ -86,6 +86,28 @@ void main() {
     );
   });
 
+  test('the chat list falls back to the server preview', () async {
+    await db
+        .into(db.conversations)
+        .insert(
+          conv('c_1', t0).copyWith(preview: const Value('from the server')),
+        );
+    expect((await db.watchChatList().first).single.lastText, 'from the server');
+    await db
+        .into(db.messages)
+        .insert(
+          MessagesCompanion.insert(
+            id: const Value(7),
+            conversationId: 'c_1',
+            role: 'assistant',
+            content: 'loaded here',
+            status: 'final',
+            createdAt: t0,
+          ),
+        );
+    expect((await db.watchChatList().first).single.lastText, 'loaded here');
+  });
+
   test('answerable approvals are counted live', () async {
     final counts = db.watchAnswerableApprovalCount();
     expect(await counts.first, 0);
@@ -160,6 +182,7 @@ void main() {
       final file = File('${dir.path}/delve.sqlite');
       final v1 = AppDatabase(NativeDatabase(file));
       await v1.customStatement('DROP TABLE connection_log');
+      await v1.customStatement('ALTER TABLE conversations DROP COLUMN preview');
       await v1.customStatement('PRAGMA user_version = 1');
       await v1.close();
 
@@ -169,6 +192,24 @@ void main() {
       expect(await v2.select(v2.connectionLog).get(), hasLength(1));
       expect((await v2.readSyncState()).id, 1, reason: 'existing data kept');
     });
+  });
+
+  test('a version 2 database gets the preview column on upgrade', () async {
+    final dir = await Directory.systemTemp.createTemp('delve-db');
+    addTearDown(() => dir.delete(recursive: true));
+    final file = File('${dir.path}/delve.sqlite');
+    final v2 = AppDatabase(NativeDatabase(file));
+    await v2.customStatement('ALTER TABLE conversations DROP COLUMN preview');
+    await v2.customStatement(
+      "INSERT INTO conversations (id, created_at, updated_at) VALUES ('c_old', 0, 0)",
+    );
+    await v2.customStatement('PRAGMA user_version = 2');
+    await v2.close();
+
+    final v3 = AppDatabase(NativeDatabase(file));
+    addTearDown(v3.close);
+    final row = await v3.select(v3.conversations).getSingle();
+    expect((row.id, row.preview), ('c_old', null));
   });
 
   test('pending outbox rows come oldest first', () async {

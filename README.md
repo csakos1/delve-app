@@ -34,9 +34,19 @@ reached over Tailscale only.
   above 75 %, the live sample while a run goes) opening the Usage sheet
   (totals, context, runs with prefill, generation and first-token time).
 
-With A6 the MVP is complete; notifications, dashboard, system, schedules,
-observability, attachments and the home widget follow (B1–B7). Requires a server with
-API revision 2 or newer (`DELETE /api/v1/devices/me` for unpairing).
+- B1: notifications — FCM data messages from the backend turned into Android
+  notifications here: an approval ("Approval needed · <class>", the command, a countdown
+  to the agent's deadline; Allow once / Deny / Open — Allow once opens the app, so a
+  locked phone asks to unlock first, Deny works from the lock screen), updated when the
+  agent stops waiting and removed once the approval is answered anywhere; "Run finished"
+  while the app is in the background. Settings → Notifications switches (stored on the
+  server per device), permission and availability banners. The socket pings every 20 s
+  and closes 3 s after the app goes to the background, so the server knows when to push.
+  The chat list falls back to the server's preview for chats never opened here.
+
+With A6 the MVP is complete; B1 adds notifications; dashboard, system, schedules,
+observability, attachments and the home widget follow (B2–B7). Requires a server with
+API revision 3 or newer (`PATCH /api/v1/devices/me`, conversation `preview`).
 
 ## Stack
 
@@ -51,6 +61,7 @@ API revision 2 or newer (`DELETE /api/v1/devices/me` for unpairing).
 | Secrets | flutter_secure_storage (device token) |
 | Icons | Material Symbols Rounded (`material_symbols_icons`) |
 | Markdown | flutter_markdown_plus |
+| Push | firebase_messaging (data messages), flutter_local_notifications |
 | Fonts | Jost, Inter, JetBrains Mono — bundled, SIL OFL 1.1 |
 
 Data flow: WebSocket events and REST loads are written to the drift database; screens only
@@ -73,6 +84,8 @@ lib/
   app/chat.dart              one chat: database query, ChatActions (send, stop, open)
   sync/                      WebSocket client: engine (connection, outbox, requests),
                              reducer (events → database), resync, live runs, transport
+  push/                      notifications: FCM transport, controller (token, taps),
+                             background handlers, notification texts (design 18)
   data/credentials.dart      token and server URL in Android secure storage
   data/db/                   drift tables and queries; store.dart: server objects → rows
   ui/chat/                   chat pieces: run rail, tool step card, composer, Markdown
@@ -87,6 +100,8 @@ test/
   chat_screen_test.dart      the chat with a fake ChatActions: runs, steps, composer
   reducer_test.dart          recorded WebSocket conversations replayed into the database
   sync_engine_test.dart      the connection against a local fake WebSocket server
+  push_test.dart             pushes → notifications, Deny in the background, the
+                             controller with fakes, Settings → Notifications
   support/                   fake REST server (a dio adapter), fake WebSocket server,
                              recordings, the app harness
   fixtures/contract/         contract.json (from delve-backend), samples.json (generated)
@@ -124,6 +139,15 @@ flutter run                                                # device or emulator
 
 Generated files (`*.g.dart`, `*.freezed.dart`, `lib/l10n/app_localizations*.dart`) and
 `pubspec.lock` are committed; CI regenerates them and fails on any difference.
+
+### Push (Firebase)
+
+`android/app/google-services.json` (Firebase console → the project's Android app,
+`hu.csakos.delve`) is not in the repository: keep a local copy there; CI writes it from
+the `GOOGLE_SERVICES_JSON` secret. Without the file the Google Services Gradle plugin is
+not applied, the app builds and runs, and Settings says it cannot receive notifications.
+The server needs its own service account key (delve-backend README, "Push
+notifications").
 
 ### Backend contract
 
@@ -192,7 +216,8 @@ Widgets use `Theme.of(context)`, `context.delve` (`DelveColors`), `DelveText` an
 ## CI
 
 `.github/workflows/ci.yml`: gitleaks; `pub get`, generated code current, format,
-`flutter analyze`, `flutter test`; a debug APK as a build artifact.
+`flutter analyze`, `flutter test`; a debug APK as a build artifact (with push when the
+`GOOGLE_SERVICES_JSON` secret is set).
 
 ## Pre-commit hook
 

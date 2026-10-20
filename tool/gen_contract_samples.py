@@ -13,7 +13,8 @@ t0 = datetime(2026, 10, 19, 21, 39, 0, 123456, tzinfo=timezone.utc)
 conv = Conversation(id="c_5f2a9e1b7c3d4e6f", title="Kernel and CPU count", created_at=t0,
     updated_at=t0 + timedelta(minutes=3), archived=False, last_run_id="run_8e4b1c2d3a4f5e6b",
     thinking=True, context_tokens=8728, context_max=65536, context_measured_at=t0 + timedelta(minutes=3),
-    tokens_in=25887, tokens_out=67, tokens_cache_read=17152, origin="app")
+    tokens_in=25887, tokens_out=67, tokens_cache_read=17152, origin="app",
+    preview="Kernel 7.2.11, 24 CPUs.")
 msg = Message(id=412, conversation_id=conv.id, run_id="run_8e4b1c2d3a4f5e6b", role="assistant",
     content="Kernel 7.2.11, 24 CPUs.", interim="I'll check uname and nproc.", reasoning=None,
     client_msg_id=None, status="final", created_at=t0 + timedelta(seconds=2))
@@ -82,6 +83,10 @@ connection = {
     "status": {"server_version": "0.1.0", "api_revision": API_REVISION, "revision": None, "hermes": None,
                "hermes_version": None, "thinking_route": None},
     "history_message": {**m, "tool_steps": [shapes["tool_step"]]},
+    # GET/PATCH /api/v1/devices/me (api/devices.py _device_out; no shared serializer)
+    "device_me": {"id": "4f1c2b3a-9d8e-4f7a-8b6c-5d4e3f2a1b0c", "name": "pixel", "created_at": t0.isoformat(),
+                  "last_seen_at": (t0 + timedelta(minutes=1)).isoformat(), "fcm": True, "push": True,
+                  "notify": {"approvals": True, "run_done": False, "water": False, "brief": False}},
 }
 out = {"_note": "Generated from delve-backend serializers (decision 176); keys must equal contract.json.",
        "shapes": shapes, "events": events, "connection": connection}
