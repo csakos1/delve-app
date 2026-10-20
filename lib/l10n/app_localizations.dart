@@ -585,6 +585,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pair with another server'**
   String get tooOldPairOther;
+
+  /// No description provided for @settingsConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get settingsConnection;
+
+  /// No description provided for @connLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get connLive;
+
+  /// No description provided for @connLiveSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Live since {time}'**
+  String connLiveSince(String time);
+
+  /// No description provided for @connReloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Live · reloading after a server restart'**
+  String get connReloading;
+
+  /// No description provided for @connConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get connConnecting;
+
+  /// No description provided for @connRetrying.
+  ///
+  /// In en, this message translates to:
+  /// **'{problem} Retrying (attempt {attempt}).'**
+  String connRetrying(String problem, int attempt);
+
+  /// No description provided for @connOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get connOffline;
+
+  /// No description provided for @connPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected while the app is in the background'**
+  String get connPaused;
+
+  /// No description provided for @connAuthFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The server refused this device\'s token'**
+  String get connAuthFailed;
+
+  /// No description provided for @connUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach the server — is Tailscale on?'**
+  String get connUnreachable;
+
+  /// No description provided for @connRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is reachable, but Delve isn\'t answering.'**
+  String get connRejected;
+
+  /// No description provided for @connHelloTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The server didn\'t answer in time.'**
+  String get connHelloTimeout;
+
+  /// No description provided for @connSilent.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection went silent.'**
+  String get connSilent;
+
+  /// No description provided for @connClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'The server closed the connection.'**
+  String get connClosed;
+
+  /// No description provided for @connResyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Reloading after a server restart failed.'**
+  String get connResyncFailed;
+
+  /// No description provided for @chipLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get chipLive;
+
+  /// No description provided for @chipConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting'**
+  String get chipConnecting;
+
+  /// No description provided for @chipRetrying.
+  ///
+  /// In en, this message translates to:
+  /// **'Retrying'**
+  String get chipRetrying;
+
+  /// No description provided for @chipOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get chipOffline;
+
+  /// No description provided for @chipRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'Refused'**
+  String get chipRefused;
+
+  /// No description provided for @logTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection log'**
+  String get logTitle;
+
+  /// No description provided for @logEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged yet'**
+  String get logEmpty;
+
+  /// No description provided for @logReconnectNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect now'**
+  String get logReconnectNow;
+
+  /// No description provided for @logKindConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting'**
+  String get logKindConnecting;
+
+  /// No description provided for @logKindConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get logKindConnected;
+
+  /// No description provided for @logKindResync.
+  ///
+  /// In en, this message translates to:
+  /// **'Reloaded'**
+  String get logKindResync;
+
+  /// No description provided for @logKindClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get logKindClosed;
+
+  /// No description provided for @logKindFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get logKindFailed;
+
+  /// No description provided for @logKindBackoff.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get logKindBackoff;
+
+  /// No description provided for @logKindPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get logKindPaused;
+
+  /// No description provided for @logKindResumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Resumed'**
+  String get logKindResumed;
+
+  /// No description provided for @logKindAuthFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Token refused'**
+  String get logKindAuthFailed;
+
+  /// No description provided for @logKindOutbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Outbox'**
+  String get logKindOutbox;
+
+  /// No description provided for @logKindHermes.
+  ///
+  /// In en, this message translates to:
+  /// **'Hermes'**
+  String get logKindHermes;
+
+  /// No description provided for @logKindServerError.
+  ///
+  /// In en, this message translates to:
+  /// **'Server error'**
+  String get logKindServerError;
+
+  /// No description provided for @logKindProtocol.
+  ///
+  /// In en, this message translates to:
+  /// **'Protocol'**
+  String get logKindProtocol;
 }
 
 class _AppLocalizationsDelegate

@@ -10,8 +10,10 @@ reached over Tailscale only.
 - A2: pairing (server URL + one-time code), session handling (401 → back to pairing,
   server too old → blocking screen), Settings (server, device, thinking route, versions,
   unpair).
+- A3: WebSocket client — connection state machine, events into the local database,
+  resume and reload, outbox, connection log (Settings → Connection).
 
-The WebSocket client, chat and approvals follow in A3–A6. Requires a server with
+Chat and approvals follow in A4–A6. Requires a server with
 API revision 2 or newer (`DELETE /api/v1/devices/me` for unpairing).
 
 ## Stack
@@ -44,20 +46,27 @@ lib/
   api/rest_client.dart       REST client (dio); api_error.dart maps every failure
   app/session.dart           paired / unpaired / server-too-old, credentials, 401 handling
   app/pairing*.dart          pairing flow, URL and code checks
+  sync/                      WebSocket client: engine (connection, outbox, requests),
+                             reducer (events → database), resync, live runs, transport
   data/credentials.dart      token and server URL in Android secure storage
-  data/db/                   drift tables and queries
+  data/db/                   drift tables and queries; store.dart: server objects → rows
   ui/                        shell (bottom navigation), screens, shared widgets
   l10n/app_en.arb            UI strings (English)
 test/
   contract_test.dart         models and frames against the backend contract
   theme_test.dart            theme against the design tokens
   database_test.dart, app_test.dart, session_test.dart, rest_client_test.dart, …
-  support/                   fake server (a dio adapter) and the app harness
+  reducer_test.dart          recorded WebSocket conversations replayed into the database
+  sync_engine_test.dart      the connection against a local fake WebSocket server
+  support/                   fake REST server (a dio adapter), fake WebSocket server,
+                             recordings, the app harness
   fixtures/contract/         contract.json (from delve-backend), samples.json (generated)
   fixtures/design/           delve_tokens.json (from the design system)
+  fixtures/ws/               WebSocket recordings (tool/ws-record.py)
 tool/
   gen_contract_samples.py    regenerates samples.json with the backend serializers
   android-setup.py           one-off Android project settings
+  ws-record.py               records WebSocket conversations with a backend
   format.sh                  dart format for hand-written files
 ```
 
@@ -77,6 +86,7 @@ Every change:
 ```sh
 flutter pub get
 dart run build_runner build   # freezed, json, drift
+flutter gen-l10n              # after a change to lib/l10n/app_en.arb
 tool/format.sh
 flutter analyze
 flutter test
@@ -101,6 +111,46 @@ When the backend changes it:
 
 Unknown event types are kept as `UnknownEvent`, so an additive backend change does not
 break an older app.
+
+### WebSocket client
+
+`lib/sync/sync_engine.dart` keeps one socket to `wss://<server>/api/v1/ws` while the app is
+in the foreground (it closes 60 s after the app goes to the background; there is no
+background service). States: `offline → connecting → awaitingHello → live ⇄ backoff`, plus
+`authFailed` (close 4401: the token is forgotten and the app goes back to pairing).
+
+- **Resume:** `hello {last_seq, epoch}` from `sync_state`. A new epoch (server restart),
+  `resync_required` or a first connection reloads over REST instead (`sync/resync.dart`:
+  conversations, run queue, approvals, and every conversation that looks unfinished),
+  written in one transaction with the new position.
+- **Events** are written in batches (80 ms) in one transaction together with `last_seq`,
+  so after a crash nothing is lost or applied twice; the reducer (`sync/reducer.dart`)
+  only upserts. Text deltas, interim remarks and context samples of a running run stay in
+  memory (`liveRunsProvider`) until the final message arrives.
+- **Reconnects:** backoff 1 → 30 s with jitter, at once after a network change; 45 s
+  without a frame (the server sends a keepalive every 20 s) counts as a dead socket.
+- **Outbox:** `sendMessage` stores the message first and sends it with its `client_msg_id`
+  once live; unanswered sends are repeated with the same id (the backend is idempotent).
+  Approval answers are never queued: without a live socket they fail with `NotConnected`.
+- **Connection log:** the last 500 entries in the database (Settings → Connection), kept
+  across unpairing.
+
+#### Recordings
+
+`test/fixtures/ws/*.jsonl` are conversations recorded with `tool/ws-record.py`; the
+reducer tests replay them and compare the database with what the server said last. The
+committed ones come from `delve-backend` with its fixture-replaying fake Hermes. To record
+against the development backend (never production):
+
+```sh
+cd ~/delve-backend && . .venv/bin/activate && set -a && . ~/.config/delve/dev.env && set +a
+DELVE_TOKEN=$(cat ~/.config/delve/dev.token) python ../delve-app/tool/ws-record.py \
+  --url http://127.0.0.1:8700 --note "dev backend, Qwen3.8-27B"
+```
+
+The script redacts the token, the home directory, the user name and tailnet names; any
+approval a scenario does not expect is denied. `late` (about six minutes) is only recorded
+when named.
 
 ### Design tokens
 

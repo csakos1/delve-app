@@ -149,3 +149,15 @@ class SyncState extends Table {
   @override
   List<String> get customConstraints => ['CHECK (id = 1)'];
 }
+
+/// What the WebSocket connection did (Settings → Connection log). Kept to the
+/// newest 500 entries and kept across unpairing (it holds no server data).
+@DataClassName('ConnectionLogRow')
+class ConnectionLog extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get at => dateTime()();
+
+  /// A `LogKind` name (lib/sync/connection_log.dart).
+  TextColumn get kind => text()();
+  TextColumn get detail => text().nullable()();
+}

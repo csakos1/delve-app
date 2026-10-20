@@ -191,5 +191,58 @@
       }
     }
   },
-  "tooOldPairOther": "Pair with another server"
+  "tooOldPairOther": "Pair with another server",
+  "settingsConnection": "Connection",
+  "connLive": "Live",
+  "connLiveSince": "Live since {time}",
+  "@connLiveSince": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "connReloading": "Live · reloading after a server restart",
+  "connConnecting": "Connecting…",
+  "connRetrying": "{problem} Retrying (attempt {attempt}).",
+  "@connRetrying": {
+    "placeholders": {
+      "problem": {
+        "type": "String"
+      },
+      "attempt": {
+        "type": "int"
+      }
+    }
+  },
+  "connOffline": "Not connected",
+  "connPaused": "Disconnected while the app is in the background",
+  "connAuthFailed": "The server refused this device's token",
+  "connUnreachable": "Can't reach the server — is Tailscale on?",
+  "connRejected": "The server is reachable, but Delve isn't answering.",
+  "connHelloTimeout": "The server didn't answer in time.",
+  "connSilent": "The connection went silent.",
+  "connClosed": "The server closed the connection.",
+  "connResyncFailed": "Reloading after a server restart failed.",
+  "chipLive": "Live",
+  "chipConnecting": "Connecting",
+  "chipRetrying": "Retrying",
+  "chipOffline": "Offline",
+  "chipRefused": "Refused",
+  "logTitle": "Connection log",
+  "logEmpty": "Nothing logged yet",
+  "logReconnectNow": "Reconnect now",
+  "logKindConnecting": "Connecting",
+  "logKindConnected": "Connected",
+  "logKindResync": "Reloaded",
+  "logKindClosed": "Closed",
+  "logKindFailed": "Failed",
+  "logKindBackoff": "Waiting",
+  "logKindPaused": "Paused",
+  "logKindResumed": "Resumed",
+  "logKindAuthFailed": "Token refused",
+  "logKindOutbox": "Outbox",
+  "logKindHermes": "Hermes",
+  "logKindServerError": "Server error",
+  "logKindProtocol": "Protocol"
 }

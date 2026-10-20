@@ -1,9 +1,11 @@
 import 'package:delve/api/api_error.dart';
+import 'package:delve/api/protocol.dart';
 import 'package:delve/api/rest_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fake_server.dart';
 import 'support/harness.dart';
+import 'support/ws_fixtures.dart';
 
 void main() {
   late FakeServer server;
@@ -129,5 +131,116 @@ void main() {
     await api(token: 'dlv_x').unpair();
     expect(server.calls, ['DELETE /api/v1/devices/me']);
     expect(server.requests.single.headers['Authorization'], 'Bearer dlv_x');
+  });
+
+  group('A3 endpoints', () {
+    test('conversations: page, cursor and archived as query', () async {
+      server.json('GET', '/api/v1/conversations', {
+        'data': [sample('conversation')],
+        'next_cursor': 'abc',
+      });
+      final page = await api(
+        token: 't',
+      ).conversations(limit: 20, cursor: 'xyz');
+      expect(page.conversations.single.id, sample('conversation')['id']);
+      expect(page.nextCursor, 'abc');
+      expect(server.requests.single.uri.queryParameters, {
+        'limit': '20',
+        'cursor': 'xyz',
+        'archived': 'false',
+      });
+    });
+
+    test('messages carry their tool steps', () async {
+      server.json('GET', '/api/v1/conversations/c_1/messages', {
+        'data': [
+          sample('message', {'id': 1, 'role': 'user'}),
+          {
+            ...sample('message', {'id': 2, 'role': 'assistant'}),
+            'tool_steps': [sample('tool_step')],
+          },
+        ],
+        'has_more': true,
+      });
+      final page = await api(token: 't').messages('c_1', before: 9);
+      expect(page.hasMore, isTrue);
+      expect(page.messages.map((m) => m.toolSteps.length), [0, 1]);
+      expect(server.requests.single.uri.queryParameters, {
+        'before': '9',
+        'limit': '100',
+      });
+    });
+
+    test('open runs, usage, approvals', () async {
+      server.json('GET', '/api/v1/runs/open', {
+        'data': [sample('open_run')],
+      });
+      server.json('GET', '/api/v1/conversations/c_1/usage', {
+        'conversation_id': 'c_1',
+        'totals': sample('conversation')['totals'],
+        'context': sample('conversation')['context'],
+        'runs': [sample('run')],
+      });
+      server.json('GET', '/api/v1/approvals', {
+        'data': [sample('approval')],
+      });
+      final a = api(token: 't');
+      expect(
+        (await a.openRuns()).single.position,
+        sample('open_run')['position'],
+      );
+      expect((await a.usage('c_1')).runs, hasLength(1));
+      expect(
+        (await a.approvals()).single.requestId,
+        sample('approval')['request_id'],
+      );
+      expect(
+        server.requests.last.uri.queryParameters['status'],
+        'pending,expired_in_hermes',
+      );
+    });
+
+    test('answer and patch send exactly the fields asked for', () async {
+      server.on(
+        'POST',
+        '/api/v1/approvals/apr_1',
+        (_) => FakeReply(200, sample('approval', {'status': 'approved_once'})),
+      );
+      server.on(
+        'PATCH',
+        '/api/v1/conversations/c_1',
+        (_) => FakeReply(200, sample('conversation', {'thinking': true})),
+      );
+      final a = api(token: 't');
+      expect(
+        (await a.answerApproval('apr_1', ApprovalChoice.once)).status,
+        'approved_once',
+      );
+      expect(server.requests.last.data, {'choice': 'once'});
+      expect(
+        (await a.patchConversation('c_1', thinking: true)).thinking,
+        isTrue,
+      );
+      expect(server.requests.last.data, {'thinking': true});
+    });
+
+    test('a 409 keeps the backend code', () async {
+      server.json(
+        'POST',
+        '/api/v1/approvals/apr_1',
+        FakeServer.detail('approval_already_decided'),
+        status: 409,
+      );
+      await expectLater(
+        api(token: 't').answerApproval('apr_1', ApprovalChoice.deny),
+        throwsA(
+          isA<ApiRequestError>().having(
+            (e) => e.code,
+            'code',
+            'approval_already_decided',
+          ),
+        ),
+      );
+    });
   });
 }

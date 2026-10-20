@@ -296,4 +296,117 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tooOldPairOther => 'Pair with another server';
+
+  @override
+  String get settingsConnection => 'Connection';
+
+  @override
+  String get connLive => 'Live';
+
+  @override
+  String connLiveSince(String time) {
+    return 'Live since $time';
+  }
+
+  @override
+  String get connReloading => 'Live · reloading after a server restart';
+
+  @override
+  String get connConnecting => 'Connecting…';
+
+  @override
+  String connRetrying(String problem, int attempt) {
+    return '$problem Retrying (attempt $attempt).';
+  }
+
+  @override
+  String get connOffline => 'Not connected';
+
+  @override
+  String get connPaused => 'Disconnected while the app is in the background';
+
+  @override
+  String get connAuthFailed => 'The server refused this device\'s token';
+
+  @override
+  String get connUnreachable => 'Can\'t reach the server — is Tailscale on?';
+
+  @override
+  String get connRejected =>
+      'The server is reachable, but Delve isn\'t answering.';
+
+  @override
+  String get connHelloTimeout => 'The server didn\'t answer in time.';
+
+  @override
+  String get connSilent => 'The connection went silent.';
+
+  @override
+  String get connClosed => 'The server closed the connection.';
+
+  @override
+  String get connResyncFailed => 'Reloading after a server restart failed.';
+
+  @override
+  String get chipLive => 'Live';
+
+  @override
+  String get chipConnecting => 'Connecting';
+
+  @override
+  String get chipRetrying => 'Retrying';
+
+  @override
+  String get chipOffline => 'Offline';
+
+  @override
+  String get chipRefused => 'Refused';
+
+  @override
+  String get logTitle => 'Connection log';
+
+  @override
+  String get logEmpty => 'Nothing logged yet';
+
+  @override
+  String get logReconnectNow => 'Reconnect now';
+
+  @override
+  String get logKindConnecting => 'Connecting';
+
+  @override
+  String get logKindConnected => 'Connected';
+
+  @override
+  String get logKindResync => 'Reloaded';
+
+  @override
+  String get logKindClosed => 'Closed';
+
+  @override
+  String get logKindFailed => 'Failed';
+
+  @override
+  String get logKindBackoff => 'Waiting';
+
+  @override
+  String get logKindPaused => 'Paused';
+
+  @override
+  String get logKindResumed => 'Resumed';
+
+  @override
+  String get logKindAuthFailed => 'Token refused';
+
+  @override
+  String get logKindOutbox => 'Outbox';
+
+  @override
+  String get logKindHermes => 'Hermes';
+
+  @override
+  String get logKindServerError => 'Server error';
+
+  @override
+  String get logKindProtocol => 'Protocol';
 }

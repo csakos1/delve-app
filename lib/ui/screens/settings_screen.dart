@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../api/api_error.dart';
 import '../../api/models/models.dart';
+import '../../app/router.dart';
 import '../../app/session.dart';
 import '../../l10n/app_localizations.dart';
+import '../../sync/connection_status.dart';
+import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
+import '../widgets/connection_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 
-/// 16 Settings — server, this device, thinking route, versions, unpair.
-/// (Connection log arrives with the WebSocket client in A3, notification
-/// switches with FCM after the MVP.)
+/// 16 Settings — server and connection, this device, thinking route,
+/// versions, unpair. (Notification switches arrive with FCM after the MVP.)
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -74,6 +78,7 @@ class SettingsScreen extends ConsumerWidget {
                 },
               ),
             ),
+            const _ConnectionRow(),
             _Section(l.settingsThisDevice),
             _Item(
               icon: DelveIcons.device,
@@ -254,7 +259,8 @@ class _ThinkingRoute extends ConsumerWidget {
           trailing: StatusChip(kind: kind, icon: icon, label: chip),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 64),
+          // the button's own 12 dp inset puts its label on the 16 dp edge
+          padding: const EdgeInsets.only(left: DelveTokens.space1),
           child: TextButton(
             onPressed: status.isLoading
                 ? null
@@ -267,6 +273,33 @@ class _ThinkingRoute extends ConsumerWidget {
   }
 }
 
+/// Connection state; opens the connection log.
+class _ConnectionRow extends ConsumerWidget {
+  const _ConnectionRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final status =
+        ref.watch(connectionStatusProvider).value ?? ConnectionStatus.initial;
+    final view = ConnectionView.of(l, status);
+    return InkWell(
+      key: const Key('settings.connection'),
+      onTap: () => context.push(Routes.connectionLog),
+      child: _Item(
+        icon: DelveIcons.log,
+        title: l.settingsConnection,
+        subtitle: view.text,
+        trailing: StatusChip(
+          kind: view.kind,
+          icon: view.icon,
+          label: view.chip,
+        ),
+      ),
+    );
+  }
+}
+
 /// Section eyebrow: accent, upper case, spaced.
 class _Section extends StatelessWidget {
   const _Section(this.label);
@@ -275,7 +308,7 @@ class _Section extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(
-      64,
+      DelveTokens.space4,
       DelveTokens.space6,
       DelveTokens.space4,
       DelveTokens.space2,

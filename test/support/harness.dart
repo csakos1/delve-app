@@ -3,6 +3,7 @@ import 'package:delve/app/providers.dart';
 import 'package:delve/app/session.dart';
 import 'package:delve/data/credentials.dart';
 import 'package:delve/data/db/database.dart';
+import 'package:delve/sync/sync_providers.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
 import 'package:flutter/widgets.dart';
@@ -46,6 +47,7 @@ class TestEnv {
       credentialStoreProvider.overrideWithValue(store),
       httpAdapterProvider.overrideWithValue(server),
       appInfoProvider.overrideWith((ref) async => testAppInfo),
+      syncEnabledProvider.overrideWithValue(false), // no socket here
     ],
     child: child,
   );
@@ -57,6 +59,7 @@ class TestEnv {
         credentialStoreProvider.overrideWithValue(store),
         httpAdapterProvider.overrideWithValue(server),
         appInfoProvider.overrideWith((ref) async => testAppInfo),
+        syncEnabledProvider.overrideWithValue(false), // no socket here
       ],
     );
     addTearDown(c.dispose);

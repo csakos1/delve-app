@@ -156,4 +156,10 @@ abstract final class DelveIcons {
   static const IconData copy = Symbols.content_copy_rounded;
   static const IconData refresh = Symbols.refresh_rounded;
   static const IconData updateServer = Symbols.system_update_rounded;
+  static const IconData sync = Symbols.sync_rounded;
+  static const IconData syncProblem = Symbols.sync_problem_rounded;
+  static const IconData cloudOff = Symbols.cloud_off_rounded;
+  static const IconData keyOff = Symbols.key_off_rounded;
+  static const IconData log = Symbols.receipt_long_rounded;
+  static const IconData history = Symbols.history_rounded;
 }

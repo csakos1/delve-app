@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../ui/screens/approvals_screen.dart';
 import '../ui/screens/chat_screen.dart';
 import '../ui/screens/chats_screen.dart';
+import '../ui/screens/connection_log_screen.dart';
 import '../ui/screens/dashboard_screen.dart';
 import '../ui/screens/more_screen.dart';
 import '../ui/screens/pairing_screen.dart';
@@ -32,6 +33,7 @@ abstract final class Routes {
   static const schedules = '/more/schedules';
   static const observability = '/more/observability';
   static const settings = '/more/settings';
+  static const connectionLog = '/more/settings/log';
 
   /// Screens that are only reachable in one session state.
   static const gates = {splash, pair, serverTooOld};
@@ -120,6 +122,14 @@ GoRouter buildRouter({
                       builder: (_, _) => page == MorePage.settings
                           ? const SettingsScreen()
                           : SubPagePlaceholder(page: page),
+                      routes: [
+                        if (page == MorePage.settings)
+                          GoRoute(
+                            path: 'log',
+                            parentNavigatorKey: rootKey,
+                            builder: (_, _) => const ConnectionLogScreen(),
+                          ),
+                      ],
                     ),
                 ],
               ),

@@ -40,12 +40,17 @@ class DelveApi {
   Future<Map<String, Object?>> _json(
     (String, String) route, {
     Map<String, String> params = const {},
+    Map<String, Object?> query = const {},
     Object? body,
   }) async {
     try {
       final res = await _dio.request<Object?>(
         ApiRoutes.path(route.$2, params),
         data: body,
+        queryParameters: {
+          for (final e in query.entries)
+            if (e.value != null) e.key: e.value.toString(),
+        },
         options: Options(method: route.$1),
       );
       final data = res.data;
@@ -53,11 +58,15 @@ class DelveApi {
         return const <String, Object?>{};
       }
       if (data is Map<String, Object?>) return data;
-      if (data is Map<Object?, Object?>) return Map<String, Object?>.from(data);
+      if (data is Map<Object?, Object?>) {
+        return Map<String, Object?>.from(data);
+      }
       throw const ApiBadResponse('expected a JSON object');
     } on DioException catch (e) {
       final err = ApiError.fromDio(e);
-      if (err is ApiUnauthorized && token != null) onUnauthorized?.call();
+      if (err is ApiUnauthorized && token != null) {
+        onUnauthorized?.call();
+      }
       throw err;
     }
   }
@@ -97,4 +106,156 @@ class DelveApi {
   Future<void> unpair() async {
     await _json(ApiRoutes.unpair);
   }
+
+  // --- conversations, runs, approvals (A3) ---------------------------------
+
+  /// One page of the conversation list, newest first.
+  Future<ConversationPage> conversations({
+    int limit = 50,
+    String? cursor,
+    bool archived = false,
+  }) async {
+    final json = await _json(
+      ApiRoutes.conversations,
+      query: {'limit': limit, 'cursor': cursor, 'archived': archived},
+    );
+    return _parse(
+      json,
+      (j) => ConversationPage([
+        for (final c in _list(j, 'data')) Conversation.fromJson(c),
+      ], j['next_cursor'] as String?),
+    );
+  }
+
+  Future<Conversation> conversation(String id) async => _parse(
+    await _json(ApiRoutes.conversation, params: {'conversation_id': id}),
+    Conversation.fromJson,
+  );
+
+  /// The newest [limit] messages before message id [before], oldest first;
+  /// assistant messages carry their tool steps.
+  Future<MessagePage> messages(
+    String conversationId, {
+    int? before,
+    int limit = 100,
+  }) async {
+    final json = await _json(
+      ApiRoutes.messages,
+      params: {'conversation_id': conversationId},
+      query: {'before': before, 'limit': limit},
+    );
+    return _parse(
+      json,
+      (j) => MessagePage([
+        for (final m in _list(j, 'data')) HistoryMessage.fromJson(m),
+      ], hasMore: j['has_more']! as bool),
+    );
+  }
+
+  /// Totals, context fill and the newest [limit] runs (oldest first).
+  Future<ConversationUsage> usage(
+    String conversationId, {
+    int limit = 50,
+  }) async {
+    final json = await _json(
+      ApiRoutes.usage,
+      params: {'conversation_id': conversationId},
+      query: {'limit': limit},
+    );
+    return _parse(
+      json,
+      (j) => ConversationUsage(
+        conversationId: j['conversation_id']! as String,
+        totals: TokenTotals.fromJson(j['totals']! as Map<String, Object?>),
+        context: ContextFill.fromJson(j['context']! as Map<String, Object?>),
+        runs: [for (final r in _list(j, 'runs')) Run.fromJson(r)],
+      ),
+    );
+  }
+
+  Future<Conversation> patchConversation(
+    String id, {
+    bool? thinking,
+    bool? archived,
+  }) async => _parse(
+    await _json(
+      ApiRoutes.patchConversation,
+      params: {'conversation_id': id},
+      body: {'thinking': ?thinking, 'archived': ?archived},
+    ),
+    Conversation.fromJson,
+  );
+
+  /// The global queue: the active run first, then queued runs.
+  Future<List<OpenRun>> openRuns() async {
+    final json = await _json(ApiRoutes.openRuns);
+    return _parse(
+      json,
+      (j) => [for (final r in _list(j, 'data')) OpenRun.fromJson(r)],
+    );
+  }
+
+  /// Approvals with one of [statuses], newest first.
+  Future<List<Approval>> approvals({
+    Iterable<String> statuses = answerableApprovalStatuses,
+    int limit = 100,
+  }) async {
+    final json = await _json(
+      ApiRoutes.approvals,
+      query: {'status': statuses.join(','), 'limit': limit},
+    );
+    return _parse(
+      json,
+      (j) => [for (final a in _list(j, 'data')) Approval.fromJson(a)],
+    );
+  }
+
+  /// Answers an approval (also a late one); the answer is never queued.
+  Future<Approval> answerApproval(
+    String requestId,
+    ApprovalChoice choice,
+  ) async => _parse(
+    await _json(
+      ApiRoutes.answerApproval,
+      params: {'request_id': requestId},
+      body: {'choice': choice.wire},
+    ),
+    Approval.fromJson,
+  );
+
+  static List<Map<String, Object?>> _list(
+    Map<String, Object?> json,
+    String key,
+  ) => [
+    for (final item in json[key]! as List<Object?>)
+      item! as Map<String, Object?>,
+  ];
+}
+
+/// `GET /conversations`: one page and the cursor of the next (null = last).
+class ConversationPage {
+  const ConversationPage(this.conversations, this.nextCursor);
+  final List<Conversation> conversations;
+  final String? nextCursor;
+}
+
+/// `GET /conversations/{id}/messages`.
+class MessagePage {
+  const MessagePage(this.messages, {required this.hasMore});
+  final List<HistoryMessage> messages;
+  final bool hasMore;
+}
+
+/// `GET /conversations/{id}/usage`.
+class ConversationUsage {
+  const ConversationUsage({
+    required this.conversationId,
+    required this.totals,
+    required this.context,
+    required this.runs,
+  });
+  final String conversationId;
+  final TokenTotals totals;
+  final ContextFill context;
+  final List<Run> runs;
 }

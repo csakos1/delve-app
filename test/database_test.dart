@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:delve/data/db/database.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
@@ -125,5 +127,63 @@ void main() {
     expect(await db.select(db.approvals).get(), isEmpty);
     final s = await db.readSyncState();
     expect((s.epoch, s.lastSeq), (null, null));
+  });
+
+  group('connection log', () {
+    test('keeps the newest entries only', () async {
+      for (var i = 0; i < AppDatabase.connectionLogLimit + 10; i++) {
+        await db.addLogEntry(
+          'connecting',
+          '$i',
+          at: t0.add(Duration(seconds: i)),
+        );
+      }
+      final rows = await db.watchConnectionLog().first;
+      expect(rows, hasLength(AppDatabase.connectionLogLimit));
+      expect(
+        rows.first.detail,
+        '${AppDatabase.connectionLogLimit + 9}',
+        reason: 'newest first',
+      );
+      expect(rows.last.detail, '10');
+    });
+
+    test('survives unpairing (it explains why the token went)', () async {
+      await db.addLogEntry('authFailed', '4401 unauthorized');
+      await db.wipe();
+      expect(await db.select(db.connectionLog).get(), hasLength(1));
+    });
+
+    test('a version 1 database gets the table on upgrade', () async {
+      final dir = await Directory.systemTemp.createTemp('delve-db');
+      addTearDown(() => dir.delete(recursive: true));
+      final file = File('${dir.path}/delve.sqlite');
+      final v1 = AppDatabase(NativeDatabase(file));
+      await v1.customStatement('DROP TABLE connection_log');
+      await v1.customStatement('PRAGMA user_version = 1');
+      await v1.close();
+
+      final v2 = AppDatabase(NativeDatabase(file));
+      addTearDown(v2.close);
+      await v2.addLogEntry('connected', null);
+      expect(await v2.select(v2.connectionLog).get(), hasLength(1));
+      expect((await v2.readSyncState()).id, 1, reason: 'existing data kept');
+    });
+  });
+
+  test('pending outbox rows come oldest first', () async {
+    for (final (id, at) in [('b', 2), ('a', 1), ('c', 3)]) {
+      await db
+          .into(db.outbox)
+          .insert(
+            OutboxCompanion.insert(
+              clientMsgId: id,
+              body: id,
+              createdAt: t0.add(Duration(seconds: at)),
+              state: Value(id == 'c' ? 'failed' : 'pending'),
+            ),
+          );
+    }
+    expect((await db.pendingOutbox()).map((r) => r.clientMsgId), ['a', 'b']);
   });
 }

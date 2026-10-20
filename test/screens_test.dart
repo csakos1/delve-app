@@ -139,6 +139,42 @@ void main() {
       expect(find.text('0.22.2'), findsOneWidget);
     });
 
+    testWidgets('section labels and Check again sit on the 16 dp edge', (
+      t,
+    ) async {
+      await openSettings(t);
+      for (final label in [
+        'SERVER',
+        'THIS DEVICE',
+        'THINKING ROUTE',
+        'Check again',
+      ]) {
+        expect(t.getTopLeft(find.text(label)).dx, 16, reason: label);
+      }
+    });
+
+    testWidgets('connection row shows the state and opens the log', (t) async {
+      final env = await openSettings(t);
+      expect(find.text('Connection'), findsOneWidget);
+      expect(find.text('Offline'), findsOneWidget); // no socket in widget tests
+      await t.runAsync(() async {
+        await env.db.addLogEntry('connected', 'seq 12, epoch 0b9d03de, reload');
+        await env.db.addLogEntry('authFailed', '4401 unauthorized');
+      });
+      await t.tap(find.byKey(const Key('settings.connection')));
+      await t.pumpAndSettle();
+      expect(find.text('Connection log'), findsOneWidget);
+      expect(find.text('Not connected'), findsOneWidget);
+      expect(find.text('Reconnect now'), findsOneWidget);
+      expect(find.text('Token refused'), findsOneWidget);
+      expect(find.text('4401 unauthorized'), findsOneWidget);
+      // newest first
+      expect(
+        t.getTopLeft(find.text('Token refused')).dy,
+        lessThan(t.getTopLeft(find.text('Connected')).dy),
+      );
+    });
+
     testWidgets('a failed thinking route is called out', (t) async {
       final env = await pumpDelve(t);
       env.server.json('GET', '/api/v1/status', {

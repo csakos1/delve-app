@@ -71,6 +71,12 @@ class FakeServer implements HttpClientAdapter {
     json('GET', '/api/v1/status', status);
     json('GET', '/api/v1/devices/me', device);
     routes['DELETE /api/v1/devices/me'] = (_) => const FakeReply(204);
+    json('GET', '/api/v1/conversations', {
+      'data': <Object?>[],
+      'next_cursor': null,
+    });
+    json('GET', '/api/v1/runs/open', {'data': <Object?>[]});
+    json('GET', '/api/v1/approvals', {'data': <Object?>[]});
   }
 
   void on(String method, String path, FakeHandler handler) =>

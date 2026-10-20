@@ -4810,6 +4810,301 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
   }
 }
 
+class $ConnectionLogTable extends ConnectionLog
+    with TableInfo<$ConnectionLogTable, ConnectionLogRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ConnectionLogTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _atMeta = const VerificationMeta('at');
+  @override
+  late final GeneratedColumn<DateTime> at = GeneratedColumn<DateTime>(
+    'at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _detailMeta = const VerificationMeta('detail');
+  @override
+  late final GeneratedColumn<String> detail = GeneratedColumn<String>(
+    'detail',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, at, kind, detail];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'connection_log';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ConnectionLogRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('at')) {
+      context.handle(_atMeta, at.isAcceptableOrUnknown(data['at']!, _atMeta));
+    } else if (isInserting) {
+      context.missing(_atMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('detail')) {
+      context.handle(
+        _detailMeta,
+        detail.isAcceptableOrUnknown(data['detail']!, _detailMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ConnectionLogRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ConnectionLogRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      at: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}at'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      detail: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}detail'],
+      ),
+    );
+  }
+
+  @override
+  $ConnectionLogTable createAlias(String alias) {
+    return $ConnectionLogTable(attachedDatabase, alias);
+  }
+}
+
+class ConnectionLogRow extends DataClass
+    implements Insertable<ConnectionLogRow> {
+  final int id;
+  final DateTime at;
+
+  /// A `LogKind` name (lib/sync/connection_log.dart).
+  final String kind;
+  final String? detail;
+  const ConnectionLogRow({
+    required this.id,
+    required this.at,
+    required this.kind,
+    this.detail,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['at'] = Variable<DateTime>(at);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || detail != null) {
+      map['detail'] = Variable<String>(detail);
+    }
+    return map;
+  }
+
+  ConnectionLogCompanion toCompanion(bool nullToAbsent) {
+    return ConnectionLogCompanion(
+      id: Value(id),
+      at: Value(at),
+      kind: Value(kind),
+      detail: detail == null && nullToAbsent
+          ? const Value.absent()
+          : Value(detail),
+    );
+  }
+
+  factory ConnectionLogRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ConnectionLogRow(
+      id: serializer.fromJson<int>(json['id']),
+      at: serializer.fromJson<DateTime>(json['at']),
+      kind: serializer.fromJson<String>(json['kind']),
+      detail: serializer.fromJson<String?>(json['detail']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'at': serializer.toJson<DateTime>(at),
+      'kind': serializer.toJson<String>(kind),
+      'detail': serializer.toJson<String?>(detail),
+    };
+  }
+
+  ConnectionLogRow copyWith({
+    int? id,
+    DateTime? at,
+    String? kind,
+    Value<String?> detail = const Value.absent(),
+  }) => ConnectionLogRow(
+    id: id ?? this.id,
+    at: at ?? this.at,
+    kind: kind ?? this.kind,
+    detail: detail.present ? detail.value : this.detail,
+  );
+  ConnectionLogRow copyWithCompanion(ConnectionLogCompanion data) {
+    return ConnectionLogRow(
+      id: data.id.present ? data.id.value : this.id,
+      at: data.at.present ? data.at.value : this.at,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      detail: data.detail.present ? data.detail.value : this.detail,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ConnectionLogRow(')
+          ..write('id: $id, ')
+          ..write('at: $at, ')
+          ..write('kind: $kind, ')
+          ..write('detail: $detail')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, at, kind, detail);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ConnectionLogRow &&
+          other.id == this.id &&
+          other.at == this.at &&
+          other.kind == this.kind &&
+          other.detail == this.detail);
+}
+
+class ConnectionLogCompanion extends UpdateCompanion<ConnectionLogRow> {
+  final Value<int> id;
+  final Value<DateTime> at;
+  final Value<String> kind;
+  final Value<String?> detail;
+  const ConnectionLogCompanion({
+    this.id = const Value.absent(),
+    this.at = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.detail = const Value.absent(),
+  });
+  ConnectionLogCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime at,
+    required String kind,
+    this.detail = const Value.absent(),
+  }) : at = Value(at),
+       kind = Value(kind);
+  static Insertable<ConnectionLogRow> custom({
+    Expression<int>? id,
+    Expression<DateTime>? at,
+    Expression<String>? kind,
+    Expression<String>? detail,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (at != null) 'at': at,
+      if (kind != null) 'kind': kind,
+      if (detail != null) 'detail': detail,
+    });
+  }
+
+  ConnectionLogCompanion copyWith({
+    Value<int>? id,
+    Value<DateTime>? at,
+    Value<String>? kind,
+    Value<String?>? detail,
+  }) {
+    return ConnectionLogCompanion(
+      id: id ?? this.id,
+      at: at ?? this.at,
+      kind: kind ?? this.kind,
+      detail: detail ?? this.detail,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (at.present) {
+      map['at'] = Variable<DateTime>(at.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (detail.present) {
+      map['detail'] = Variable<String>(detail.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ConnectionLogCompanion(')
+          ..write('id: $id, ')
+          ..write('at: $at, ')
+          ..write('kind: $kind, ')
+          ..write('detail: $detail')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4820,6 +5115,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ApprovalsTable approvals = $ApprovalsTable(this);
   late final $OutboxTable outbox = $OutboxTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
+  late final $ConnectionLogTable connectionLog = $ConnectionLogTable(this);
   late final Index messagesByConversation = Index(
     'messages_by_conversation',
     'CREATE INDEX messages_by_conversation ON messages (conversation_id, id)',
@@ -4848,6 +5144,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     approvals,
     outbox,
     syncState,
+    connectionLog,
     messagesByConversation,
     runsByConversation,
     toolStepsByRun,
@@ -7137,6 +7434,185 @@ typedef $$SyncStateTableProcessedTableManager =
       SyncStateRow,
       PrefetchHooks Function()
     >;
+typedef $$ConnectionLogTableCreateCompanionBuilder =
+    ConnectionLogCompanion Function({
+      Value<int> id,
+      required DateTime at,
+      required String kind,
+      Value<String?> detail,
+    });
+typedef $$ConnectionLogTableUpdateCompanionBuilder =
+    ConnectionLogCompanion Function({
+      Value<int> id,
+      Value<DateTime> at,
+      Value<String> kind,
+      Value<String?> detail,
+    });
+
+class $$ConnectionLogTableFilterComposer
+    extends Composer<_$AppDatabase, $ConnectionLogTable> {
+  $$ConnectionLogTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get at => $composableBuilder(
+    column: $table.at,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get detail => $composableBuilder(
+    column: $table.detail,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ConnectionLogTableOrderingComposer
+    extends Composer<_$AppDatabase, $ConnectionLogTable> {
+  $$ConnectionLogTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get at => $composableBuilder(
+    column: $table.at,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get detail => $composableBuilder(
+    column: $table.detail,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ConnectionLogTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ConnectionLogTable> {
+  $$ConnectionLogTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get at =>
+      $composableBuilder(column: $table.at, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get detail =>
+      $composableBuilder(column: $table.detail, builder: (column) => column);
+}
+
+class $$ConnectionLogTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ConnectionLogTable,
+          ConnectionLogRow,
+          $$ConnectionLogTableFilterComposer,
+          $$ConnectionLogTableOrderingComposer,
+          $$ConnectionLogTableAnnotationComposer,
+          $$ConnectionLogTableCreateCompanionBuilder,
+          $$ConnectionLogTableUpdateCompanionBuilder,
+          (
+            ConnectionLogRow,
+            BaseReferences<
+              _$AppDatabase,
+              $ConnectionLogTable,
+              ConnectionLogRow
+            >,
+          ),
+          ConnectionLogRow,
+          PrefetchHooks Function()
+        > {
+  $$ConnectionLogTableTableManager(_$AppDatabase db, $ConnectionLogTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ConnectionLogTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ConnectionLogTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ConnectionLogTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> at = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> detail = const Value.absent(),
+              }) => ConnectionLogCompanion(
+                id: id,
+                at: at,
+                kind: kind,
+                detail: detail,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required DateTime at,
+                required String kind,
+                Value<String?> detail = const Value.absent(),
+              }) => ConnectionLogCompanion.insert(
+                id: id,
+                at: at,
+                kind: kind,
+                detail: detail,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ConnectionLogTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ConnectionLogTable,
+      ConnectionLogRow,
+      $$ConnectionLogTableFilterComposer,
+      $$ConnectionLogTableOrderingComposer,
+      $$ConnectionLogTableAnnotationComposer,
+      $$ConnectionLogTableCreateCompanionBuilder,
+      $$ConnectionLogTableUpdateCompanionBuilder,
+      (
+        ConnectionLogRow,
+        BaseReferences<_$AppDatabase, $ConnectionLogTable, ConnectionLogRow>,
+      ),
+      ConnectionLogRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7154,4 +7630,6 @@ class $AppDatabaseManager {
       $$OutboxTableTableManager(_db, _db.outbox);
   $$SyncStateTableTableManager get syncState =>
       $$SyncStateTableTableManager(_db, _db.syncState);
+  $$ConnectionLogTableTableManager get connectionLog =>
+      $$ConnectionLogTableTableManager(_db, _db.connectionLog);
 }

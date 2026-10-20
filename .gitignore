@@ -26,3 +26,6 @@
 # misc
 *.log
 .env*
+
+# python
+__pycache__/
