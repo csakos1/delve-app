@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/models/models.dart';
+import '../api/protocol.dart';
 import '../api/rest_client.dart';
 import '../data/db/database.dart';
 import '../data/db/store.dart';
@@ -160,6 +161,11 @@ abstract class ChatActions {
   /// Throws [SyncError] when not connected or refused.
   Future<String> stop(String runId);
 
+  /// Answers an approval over the socket (decision 246: the chat answers
+  /// live, the inbox and notifications over REST). Never queued: throws
+  /// [SyncError] when not connected, refused or unanswered.
+  Future<void> answer(String requestId, ApprovalChoice choice);
+
   /// The chat opened: loads what is missing locally (messages over the
   /// socket, or REST when it is down; the runs of the chat over REST).
   /// Failures are left out: the chat shows what the database has.
@@ -198,6 +204,10 @@ class EngineChatActions implements ChatActions {
 
   @override
   Future<String> stop(String runId) => _engine.stopRun(runId);
+
+  @override
+  Future<void> answer(String requestId, ApprovalChoice choice) =>
+      _engine.respondApproval(requestId, choice);
 
   @override
   Future<void> open(String conversationId) async {

@@ -9,6 +9,7 @@ import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
+import 'approval_card.dart';
 
 /// How a tool step reads (07 Tool step states).
 enum StepLook {
@@ -92,12 +93,20 @@ String displayCommand(String command) => command.replaceAll('-', '-⁠');
 /// Tool step card: header (status chip, tool, meta, chevron), the command,
 /// a note or the result well.
 class ToolStepCard extends StatefulWidget {
-  const ToolStepCard({super.key, required this.step, this.approval});
+  const ToolStepCard({
+    super.key,
+    required this.step,
+    this.approval,
+    this.selfDevice,
+  });
 
   final ToolStepRow step;
 
   /// The step's approval, if it asked for one.
   final ApprovalRow? approval;
+
+  /// This phone's device name (its answers read "by you").
+  final String? selfDevice;
 
   @override
   State<ToolStepCard> createState() => _ToolStepCardState();
@@ -242,6 +251,19 @@ class _ToolStepCardState extends State<ToolStepCard> {
                       ? d.warnFg
                       : cs.onSurfaceVariant,
                 ),
+              ),
+            ),
+          if (widget.approval case final a? when !isAnswerable(a))
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DelveTokens.space3,
+                0,
+                DelveTokens.space3,
+                DelveTokens.space2 + 2,
+              ),
+              child: ApprovalOutcome(
+                approval: a,
+                selfDevice: widget.selfDevice,
               ),
             ),
           if (result != null)

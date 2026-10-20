@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../api/protocol.dart';
 import '../../app/chat.dart';
 import '../../app/chat_list.dart';
 import '../../app/providers.dart';
@@ -11,6 +12,7 @@ import '../../app/router.dart';
 import '../../app/session.dart';
 import '../../data/db/database.dart';
 import '../../l10n/app_localizations.dart';
+import '../../sync/connection_status.dart';
 import '../../sync/live_runs.dart';
 import '../../sync/sync_engine.dart';
 import '../../sync/sync_providers.dart';
@@ -121,6 +123,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  /// Answers an approval in the chat over the socket (decision 246).
+  Future<void> _answer(ApprovalRow approval, ApprovalChoice choice) async {
+    final l = AppLocalizations.of(context);
+    final actions = ref.read(chatActionsProvider);
+    if (actions == null) return;
+    try {
+      await actions.answer(approval.requestId, choice);
+    } on Exception catch (e) {
+      if (mounted) _snack(l.approvalFailed(_syncErrorText(l, e)));
+    }
+  }
+
   Future<void> _setArchived(String id, {required bool archived}) async {
     final l = AppLocalizations.of(context);
     try {
@@ -205,6 +219,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final l = AppLocalizations.of(context);
     final data = ref.watch(chatProvider(id)).value;
     final live = ref.watch(liveRunsProvider.select((m) => m[id]));
+    final connected = ref.watch(
+      connectionStatusProvider.select(
+        (s) => s.value?.phase == ConnectionPhase.live,
+      ),
+    );
+    final selfDevice = ref.watch(
+      sessionProvider.select((s) => s.credentials?.deviceName),
+    );
 
     final conversation = data?.conversation;
     final firstUser = data?.messages
@@ -218,7 +240,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             l.newChat,
           );
     final stopTarget = data?.openRuns.firstOrNull;
-    final items = data == null ? const <Widget>[] : _items(data, live);
+    final items = data == null
+        ? const <Widget>[]
+        : _items(data, live, connected: connected, selfDevice: selfDevice);
 
     return Scaffold(
       appBar: _ChatAppBar(
@@ -288,7 +312,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   /// The chat oldest first: messages (a run per assistant message), then
   /// what is still in the outbox.
-  List<Widget> _items(ChatData data, LiveRun? live) {
+  List<Widget> _items(
+    ChatData data,
+    LiveRun? live, {
+    required bool connected,
+    String? selfDevice,
+  }) {
     final out = <Widget>[];
     for (final m in data.messages) {
       final key = ValueKey('msg.${m.id}');
@@ -316,6 +345,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onRetry: asked == null
                   ? null
                   : () => unawaited(_send(asked.content)),
+              onAnswer: connected ? _answer : null,
+              selfDevice: selfDevice,
             ),
           );
         default:

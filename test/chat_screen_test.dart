@@ -1,13 +1,17 @@
 import 'package:delve/api/models/models.dart';
+import 'package:delve/api/protocol.dart';
 import 'package:delve/app/chat.dart';
 import 'package:delve/data/db/database.dart';
 import 'package:delve/data/db/store.dart';
 import 'package:delve/l10n/app_localizations_en.dart';
+import 'package:delve/sync/connection_status.dart';
 import 'package:delve/sync/live_runs.dart';
 import 'package:delve/sync/sync_engine.dart';
 import 'package:delve/sync/sync_providers.dart';
+import 'package:delve/ui/chat/approval_card.dart';
 import 'package:delve/ui/chat/chat_items.dart';
 import 'package:delve/ui/chat/tool_step_card.dart';
+import 'package:delve/ui/format.dart';
 import 'package:delve/ui/screens/chat_screen.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:flutter/material.dart';
@@ -26,6 +30,7 @@ class FakeChatActions implements ChatActions {
   late AppDatabase db;
   final calls = <String>[];
   Object? stopError;
+  Object? answerError;
   int _n = 0;
 
   @override
@@ -61,6 +66,13 @@ class FakeChatActions implements ChatActions {
     final e = stopError;
     if (e != null) throw e;
     return 'stopping';
+  }
+
+  @override
+  Future<void> answer(String requestId, ApprovalChoice choice) async {
+    calls.add('answer $requestId ${choice.wire}');
+    final e = answerError;
+    if (e != null) throw e;
   }
 
   @override
@@ -194,6 +206,73 @@ Future<void> seedRunning(TestEnv env) async {
       ..insertAll(db.runs, [run('run_c', 'running'), run('q_d', 'queued')]),
   );
 }
+
+const restartCommand = 'systemctl --user restart llama-server';
+
+/// A run whose step asked for approval: [status] of the approval, the
+/// agent's deadline [left] from now.
+Future<void> seedApproval(
+  TestEnv env, {
+  String status = 'pending',
+  Duration left = const Duration(seconds: 250),
+  String stepStatus = 'running',
+  String? decidedBy,
+  String? choice,
+}) async {
+  final db = env.db;
+  final now = DateTime.now().toUtc();
+  final waiting = status == 'pending';
+  await db.putConversation(conversation('c_1'));
+  await db.batch(
+    (b) => b
+      ..insertAll(db.messages, [
+        message(1, 'user', 'Restart it', runId: 'run_e'),
+        message(
+          2,
+          'assistant',
+          waiting ? '' : 'Done.',
+          runId: 'run_e',
+          status: waiting ? 'streaming' : 'final',
+        ),
+      ])
+      ..insertAll(db.runs, [
+        run('run_e', waiting ? 'waiting_for_approval' : 'completed'),
+      ])
+      ..insertAll(db.toolSteps, [
+        step(
+          5,
+          'run_e',
+          stepStatus,
+          restartCommand,
+          null,
+        ).copyWith(approvalRequestId: const Value('apr_1')),
+      ]),
+  );
+  await db.putApproval(
+    Approval.fromJson(
+      sample('approval', {
+        'request_id': 'apr_1',
+        'run_id': 'run_e',
+        'conversation_id': 'c_1',
+        'command': restartCommand,
+        'description': 'restart a user service',
+        'action_class': 'service_restart',
+        'status': status,
+        'choice': choice,
+        'decided_by': decidedBy,
+        'created_at': now
+            .subtract(Duration(seconds: 300 - left.inSeconds))
+            .toIso8601String(),
+        'hermes_deadline': now.add(left).toIso8601String(),
+        'expires_at': now.add(const Duration(minutes: 30)).toIso8601String(),
+        'responded_at': decidedBy == null ? null : now.toIso8601String(),
+      }),
+    ),
+    stepId: 5,
+  );
+}
+
+const liveStatus = ConnectionStatus(phase: ConnectionPhase.live);
 
 Future<void> openChat(WidgetTester t, {bool settle = true}) async {
   await t.tap(find.text('Kernel check'));
@@ -446,6 +525,153 @@ void main() {
         t.widget<Text>(find.byKey(const Key('chat.title'))).data,
         'hi there',
       );
+    });
+  });
+
+  group('approvals', () {
+    Future<void> startApproval(
+      WidgetTester t, {
+      bool live = true,
+      String status = 'pending',
+      Duration left = const Duration(seconds: 250),
+      String stepStatus = 'running',
+      String? decidedBy,
+      String? choice,
+    }) async {
+      await pumpDelve(
+        t,
+        actions: fake,
+        status: live ? liveStatus : null,
+        settle: false,
+        before: (env) async {
+          fake.db = env.db;
+          await seedApproval(
+            env,
+            status: status,
+            left: left,
+            stepStatus: stepStatus,
+            decidedBy: decidedBy,
+            choice: choice,
+          );
+        },
+      );
+      await openChat(t, settle: false);
+    }
+
+    Future<void> tapKey(WidgetTester t, String key) async {
+      final f = find.byKey(Key(key));
+      await t.ensureVisible(f);
+      await t.pump();
+      await t.tap(f);
+      await t.pump();
+      await t.pump();
+    }
+
+    FilledButton button(WidgetTester t, String key) =>
+        t.widget<FilledButton>(find.byKey(Key(key)));
+
+    testWidgets('waiting: class, command, countdown and three answers', (
+      t,
+    ) async {
+      await startApproval(t);
+      expect(find.byKey(const Key('approval.apr_1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('step.5')), findsNothing);
+      expect(find.text('Approval needed'), findsOneWidget);
+      expect(find.text('service restart'), findsOneWidget);
+      expect(find.text('restart a user service'), findsOneWidget);
+      expect(find.textContaining('Agent waits 4:'), findsOneWidget);
+      expect(find.byKey(const Key('approval.offline')), findsNothing);
+
+      await tapKey(t, 'approval.once');
+      await tapKey(t, 'approval.session');
+      await tapKey(t, 'approval.deny');
+      expect(fake.calls, [
+        'open c_1',
+        'answer apr_1 once',
+        'answer apr_1 session',
+        'answer apr_1 deny',
+      ]);
+    });
+
+    testWidgets('not connected: the buttons are off, never queued', (t) async {
+      await startApproval(t, live: false);
+      expect(find.byKey(const Key('approval.offline')), findsOneWidget);
+      expect(button(t, 'approval.once').onPressed, isNull);
+      expect(button(t, 'approval.deny').onPressed, isNull);
+      expect(
+        t
+            .widget<TextButton>(find.byKey(const Key('approval.session')))
+            .onPressed,
+        isNull,
+      );
+      await tapKey(t, 'approval.once');
+      expect(fake.calls.where((c) => c.startsWith('answer')), isEmpty);
+    });
+
+    testWidgets('under a minute the countdown is urgent', (t) async {
+      await startApproval(t, left: const Duration(seconds: 45));
+      expect(find.textContaining('Agent waits 0:4'), findsOneWidget);
+    });
+
+    testWidgets('expired in the agent: late approval, no session', (t) async {
+      await startApproval(
+        t,
+        status: 'expired_in_hermes',
+        stepStatus: 'timeout',
+      );
+      expect(find.text('Agent stopped waiting'), findsOneWidget);
+      expect(find.byKey(const Key('approval.late')), findsOneWidget);
+      expect(find.byKey(const Key('approval.session')), findsNothing);
+      expect(find.byKey(const Key('approval.countdown')), findsNothing);
+      await tapKey(t, 'approval.once');
+      expect(fake.calls.last, 'answer apr_1 once');
+    });
+
+    testWidgets('answered: the step card says who and how', (t) async {
+      await startApproval(
+        t,
+        status: 'approved_once',
+        stepStatus: 'ok',
+        decidedBy: 'pixel',
+        choice: 'once',
+      );
+      expect(find.byKey(const Key('approval.apr_1')), findsNothing);
+      expect(find.byKey(const ValueKey('step.5')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('approval.outcome.apr_1')),
+        findsOneWidget,
+      );
+      expect(find.text('Approved'), findsOneWidget);
+      expect(find.textContaining('by you · Allow once'), findsOneWidget);
+    });
+
+    testWidgets('a refused answer says why', (t) async {
+      fake.answerError = const RequestRejected(
+        'approval_not_pending',
+        'approval is no longer pending',
+      );
+      await startApproval(t);
+      await tapKey(t, 'approval.deny');
+      await t.pump(const Duration(milliseconds: 100));
+      expect(
+        find.text("Couldn't answer: approval is no longer pending"),
+        findsOneWidget,
+      );
+      // the buttons work again after a failure
+      expect(button(t, 'approval.deny').onPressed, isNotNull);
+    });
+
+    test('countdown, clock time and class labels', () {
+      expect(countdownText(const Duration(seconds: 252)), '4:12');
+      expect(countdownText(const Duration(seconds: 45)), '0:45');
+      expect(countdownText(const Duration(seconds: -3)), '0:00');
+      final at = DateTime(2026, 10, 20, 1, 30);
+      expect(clockTime(at, DateTime(2026, 10, 20, 0, 5)), '01:30');
+      expect(clockTime(at, DateTime(2026, 10, 19, 23)), 'Tue 01:30');
+      final l = AppLocalizationsEn();
+      expect(approvalClassLabel(l, 'pkg_upgrade'), 'package upgrade');
+      expect(approvalClassLabel(l, 'delete_kill'), 'delete / kill');
+      expect(approvalClassLabel(l, 'whatever'), 'command');
     });
   });
 

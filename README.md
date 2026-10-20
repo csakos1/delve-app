@@ -18,8 +18,14 @@ reached over Tailscale only.
 - A4b: the chat — messages, runs on a rail (interim remarks, tool step cards in every
   state, Markdown answers), the streaming run overlaid live, failed runs with Retry,
   the composer (outbox states, Stop, queue note), context warning, new chat.
+- A5a: approvals in the chat — the approval card in place of the waiting step (class,
+  command verbatim, countdown to the agent's deadline, Allow once / Deny / Allow for
+  session), the late-approval card once the agent stopped waiting, how an answered
+  approval ended on its step. Answers go over the socket and are never queued: without
+  a live connection the buttons are off.
 
-Approvals follow in A5, thinking and the usage line in A6. Requires a server with
+The approvals inbox and late approval from it follow in A5b, thinking and the usage
+line in A6. Requires a server with
 API revision 2 or newer (`DELETE /api/v1/devices/me` for unpairing).
 
 ## Stack

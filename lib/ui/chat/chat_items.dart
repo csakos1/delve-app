@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../api/models/models.dart';
+import '../../api/protocol.dart';
 import '../../data/db/database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../sync/live_runs.dart';
 import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
+import 'approval_card.dart';
 import 'markdown.dart';
 import 'tool_step_card.dart';
 
@@ -172,6 +174,8 @@ class RunBlock extends StatelessWidget {
     required this.approvals,
     this.live,
     this.onRetry,
+    this.onAnswer,
+    this.selfDevice,
   });
 
   final MessageRow message;
@@ -184,6 +188,14 @@ class RunBlock extends StatelessWidget {
 
   /// Re-sends the message that started a failed run.
   final VoidCallback? onRetry;
+
+  /// Answers an approval; null when not connected (the card's buttons are
+  /// disabled then).
+  final Future<void> Function(ApprovalRow approval, ApprovalChoice choice)?
+  onAnswer;
+
+  /// This phone's device name (answers it gave read "by you").
+  final String? selfDevice;
 
   bool get active =>
       (run != null && openRunStatuses.contains(run!.status)) ||
@@ -230,12 +242,7 @@ class RunBlock extends StatelessWidget {
         _RailItem(
           rail: railColor,
           node: _stepNode(context, step, nodeColor),
-          child: ToolStepCard(
-            step: step,
-            approval: step.approvalRequestId == null
-                ? null
-                : approvals[step.approvalRequestId],
-          ),
+          child: _step(step),
         ),
       if (text.trim().isNotEmpty)
         _RailItem(
@@ -306,6 +313,22 @@ class RunBlock extends StatelessWidget {
       ),
       child: column,
     );
+  }
+
+  /// An answerable approval replaces its step (04, 08a); otherwise the tool
+  /// card, with how its approval ended.
+  Widget _step(ToolStepRow step) {
+    final approval = step.approvalRequestId == null
+        ? null
+        : approvals[step.approvalRequestId];
+    if (approval != null && isAnswerable(approval)) {
+      final answer = onAnswer;
+      return ApprovalCard(
+        approval: approval,
+        onAnswer: answer == null ? null : (c) => answer(approval, c),
+      );
+    }
+    return ToolStepCard(step: step, approval: approval, selfDevice: selfDevice);
   }
 
   Color _stepNode(BuildContext context, ToolStepRow step, Color normal) {

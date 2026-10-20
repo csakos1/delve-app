@@ -1221,6 +1221,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The agent refused the run ({code}).'**
   String runFailedHermes(String code);
+
+  /// No description provided for @approvalNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval needed'**
+  String get approvalNeeded;
+
+  /// No description provided for @approvalStoppedWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent stopped waiting'**
+  String get approvalStoppedWaiting;
+
+  /// No description provided for @approvalWaits.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent waits {time}'**
+  String approvalWaits(String time);
+
+  /// No description provided for @approvalLateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent stopped waiting. You can still approve until {time} — Delve will run it in a follow-up.'**
+  String approvalLateBody(String time);
+
+  /// No description provided for @approvalClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'The approval window closed at {time}.'**
+  String approvalClosed(String time);
+
+  /// No description provided for @approvalAllowOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow once'**
+  String get approvalAllowOnce;
+
+  /// No description provided for @approvalDeny.
+  ///
+  /// In en, this message translates to:
+  /// **'Deny'**
+  String get approvalDeny;
+
+  /// No description provided for @approvalAllowSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow for session'**
+  String get approvalAllowSession;
+
+  /// No description provided for @approvalOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected — you can answer once the connection is back.'**
+  String get approvalOffline;
+
+  /// No description provided for @approvalFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t answer: {reason}'**
+  String approvalFailed(String reason);
+
+  /// No description provided for @approvalClassPkgUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'package upgrade'**
+  String get approvalClassPkgUpgrade;
+
+  /// No description provided for @approvalClassServiceRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'service restart'**
+  String get approvalClassServiceRestart;
+
+  /// No description provided for @approvalClassDeleteKill.
+  ///
+  /// In en, this message translates to:
+  /// **'delete / kill'**
+  String get approvalClassDeleteKill;
+
+  /// No description provided for @approvalClassOther.
+  ///
+  /// In en, this message translates to:
+  /// **'command'**
+  String get approvalClassOther;
+
+  /// No description provided for @approvalApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get approvalApproved;
+
+  /// No description provided for @approvalApprovedLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved late'**
+  String get approvalApprovedLate;
+
+  /// No description provided for @approvalRanLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Ran in a follow-up'**
+  String get approvalRanLater;
+
+  /// No description provided for @approvalSuperseded.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow-up ran something else'**
+  String get approvalSuperseded;
+
+  /// No description provided for @approvalDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Denied'**
+  String get approvalDenied;
+
+  /// No description provided for @approvalExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get approvalExpired;
+
+  /// No description provided for @approvalCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get approvalCancelled;
+
+  /// No description provided for @approvalByYou.
+  ///
+  /// In en, this message translates to:
+  /// **'by you'**
+  String get approvalByYou;
+
+  /// No description provided for @approvalBy.
+  ///
+  /// In en, this message translates to:
+  /// **'by {name}'**
+  String approvalBy(String name);
 }
 
 class _AppLocalizationsDelegate

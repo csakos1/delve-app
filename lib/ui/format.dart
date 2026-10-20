@@ -19,6 +19,21 @@ String listTime(DateTime at, DateTime now) {
   return DateFormat('d MMM y').format(a);
 }
 
+/// A time of day near [now]: `HH:mm` today, `EEE HH:mm` on another day
+/// (approval deadlines, answers). Local time.
+String clockTime(DateTime at, DateTime now) {
+  final a = at.toLocal();
+  final n = now.toLocal();
+  final sameDay = a.year == n.year && a.month == n.month && a.day == n.day;
+  return DateFormat(sameDay ? 'HH:mm' : 'EEE HH:mm').format(a);
+}
+
+/// A countdown as `m:ss` (`4:07`, `0:45`); negative counts as zero.
+String countdownText(Duration left) {
+  final s = left.isNegative ? 0 : left.inSeconds;
+  return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+}
+
 /// One line of message text for a list preview: no code fences or bold
 /// markers, whitespace collapsed.
 String previewText(String text) => text

@@ -426,5 +426,63 @@
         "type": "String"
       }
     }
+  },
+  "approvalNeeded": "Approval needed",
+  "approvalStoppedWaiting": "Agent stopped waiting",
+  "approvalWaits": "Agent waits {time}",
+  "@approvalWaits": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "approvalLateBody": "Agent stopped waiting. You can still approve until {time} — Delve will run it in a follow-up.",
+  "@approvalLateBody": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "approvalClosed": "The approval window closed at {time}.",
+  "@approvalClosed": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "approvalAllowOnce": "Allow once",
+  "approvalDeny": "Deny",
+  "approvalAllowSession": "Allow for session",
+  "approvalOffline": "Not connected — you can answer once the connection is back.",
+  "approvalFailed": "Couldn't answer: {reason}",
+  "@approvalFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "approvalClassPkgUpgrade": "package upgrade",
+  "approvalClassServiceRestart": "service restart",
+  "approvalClassDeleteKill": "delete / kill",
+  "approvalClassOther": "command",
+  "approvalApproved": "Approved",
+  "approvalApprovedLate": "Approved late",
+  "approvalRanLater": "Ran in a follow-up",
+  "approvalSuperseded": "Follow-up ran something else",
+  "approvalDenied": "Denied",
+  "approvalExpired": "Expired",
+  "approvalCancelled": "Cancelled",
+  "approvalByYou": "by you",
+  "approvalBy": "by {name}",
+  "@approvalBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

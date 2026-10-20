@@ -660,4 +660,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String runFailedHermes(String code) {
     return 'The agent refused the run ($code).';
   }
+
+  @override
+  String get approvalNeeded => 'Approval needed';
+
+  @override
+  String get approvalStoppedWaiting => 'Agent stopped waiting';
+
+  @override
+  String approvalWaits(String time) {
+    return 'Agent waits $time';
+  }
+
+  @override
+  String approvalLateBody(String time) {
+    return 'Agent stopped waiting. You can still approve until $time — Delve will run it in a follow-up.';
+  }
+
+  @override
+  String approvalClosed(String time) {
+    return 'The approval window closed at $time.';
+  }
+
+  @override
+  String get approvalAllowOnce => 'Allow once';
+
+  @override
+  String get approvalDeny => 'Deny';
+
+  @override
+  String get approvalAllowSession => 'Allow for session';
+
+  @override
+  String get approvalOffline =>
+      'Not connected — you can answer once the connection is back.';
+
+  @override
+  String approvalFailed(String reason) {
+    return 'Couldn\'t answer: $reason';
+  }
+
+  @override
+  String get approvalClassPkgUpgrade => 'package upgrade';
+
+  @override
+  String get approvalClassServiceRestart => 'service restart';
+
+  @override
+  String get approvalClassDeleteKill => 'delete / kill';
+
+  @override
+  String get approvalClassOther => 'command';
+
+  @override
+  String get approvalApproved => 'Approved';
+
+  @override
+  String get approvalApprovedLate => 'Approved late';
+
+  @override
+  String get approvalRanLater => 'Ran in a follow-up';
+
+  @override
+  String get approvalSuperseded => 'Follow-up ran something else';
+
+  @override
+  String get approvalDenied => 'Denied';
+
+  @override
+  String get approvalExpired => 'Expired';
+
+  @override
+  String get approvalCancelled => 'Cancelled';
+
+  @override
+  String get approvalByYou => 'by you';
+
+  @override
+  String approvalBy(String name) {
+    return 'by $name';
+  }
 }
