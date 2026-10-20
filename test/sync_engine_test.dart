@@ -528,6 +528,43 @@ void main() {
       expect(await logKinds(), containsAllInOrder(['paused', 'resumed']));
     });
 
+    test(
+      'a socket the system cuts in the background counts as a pause',
+      () async {
+        await engine.start();
+
+        await live();
+
+        engine.setForeground(false);
+
+        await ws.connections.first.close(1011, 'network cut');
+
+        await eventually(() => engine.status.phase == ConnectionPhase.offline);
+
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+
+        expect(
+          ws.connections,
+          hasLength(1),
+          reason: 'no retries in the background',
+        );
+
+        engine.setForeground(true);
+
+        final hello = await (await ws.nextConnection(index: 1)).next('hello');
+
+        expect((hello['data']! as Map<String, Object?>)['last_seq'], 0);
+
+        await live();
+
+        final kinds = await logKinds();
+
+        expect(kinds, containsAllInOrder(['paused', 'resumed', 'connected']));
+
+        expect(kinds, isNot(contains('closed')));
+      },
+    );
+
     test('a short trip to the background keeps the socket', () async {
       await engine.start();
       await live();

@@ -183,8 +183,7 @@ class SyncEngine {
       _pauseTimer = Timer(timing.pauseGrace, _pause);
       return;
     }
-    final wasPaused =
-        _pauseTimer == null && _status.phase == ConnectionPhase.offline;
+    final wasPaused = _status.phase == ConnectionPhase.offline;
     _pauseTimer?.cancel();
     _pauseTimer = null;
     if (!_started) return;
@@ -344,6 +343,16 @@ class SyncEngine {
 
     if (ours != null && ours.$1 == null) {
       // paused (logged there) or disposed
+      return;
+    }
+    if (!_foreground && ours == null && code != WsClose.unauthorized) {
+      // Android cuts the network of a background app within seconds: a pause,
+      // not a failure (the grace period cannot outlive it)
+      _pauseTimer?.cancel();
+      _pauseTimer = null;
+      _retryTimer?.cancel();
+      _log(LogKind.paused, 'closed in the background ($detail)');
+      _setPhase(ConnectionPhase.offline, clearRetry: true);
       return;
     }
     if (code == WsClose.unauthorized) {
