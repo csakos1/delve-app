@@ -30,8 +30,8 @@ reached over Tailscale only.
   "Follow-up run: approved" with its command.
 - A6: Thinking — the pill in the composer (per chat, saved on the server; for a new
   chat sent with its first message), the thinking block (live clock and tokens, then
-  "Thought for …" opening the reasoning); usage — the line under the chat title (total
-  tokens, context fill with the live sample while a run goes) and the Usage sheet
+  "Thought for …" opening the reasoning); usage — the context chip in the chat top bar (ring and percent, warning
+  above 75 %, the live sample while a run goes) opening the Usage sheet
   (totals, context, runs with prefill, generation and first-token time).
 
 With A6 the MVP is complete; notifications, dashboard, system, schedules,

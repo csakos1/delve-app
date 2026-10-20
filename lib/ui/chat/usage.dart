@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,7 +14,7 @@ import '../format.dart';
 import '../widgets/page_scaffolds.dart';
 import 'tool_step_card.dart' show formatDuration;
 
-/// The context fill above which the usage line turns warn (as the backend's
+/// The context fill above which the context chip turns warn (as the backend's
 /// `warn`).
 const double contextWarnPct = 75;
 
@@ -28,8 +30,8 @@ final conversationUsageProvider = FutureProvider.autoDispose
       return api.usage(id, limit: 200);
     });
 
-/// What the usage line shows: totals from the stored conversation, the
-/// context from the live run's latest sample while it runs.
+/// What the context chip shows: the stored conversation's context, or the
+/// live run's latest sample while it runs (the totals stay for the sheet).
 class UsageNumbers {
   const UsageNumbers({required this.total, this.tokens, this.max, this.pct});
 
@@ -56,66 +58,166 @@ class UsageNumbers {
   final double? pct;
 
   bool get warn => (pct ?? 0) >= contextWarnPct;
-
-  String line(AppLocalizations l) => l.usageLine(
-    tokenCount(total),
-    contextText(tokens, max, pct) ?? l.usageNoContext,
-  );
 }
 
-/// Under the chat title (30 dp): "Σ 48,210 tok · ctx 41,980 / 65,536 · 64%"
-/// and a 2 dp context bar with a tick at 75 %. Warn colours above it.
-class UsageLine extends StatelessWidget {
-  const UsageLine({super.key, required this.numbers, required this.onTap});
+/// The context chip in the chat top bar (option B): an 18 dp ring and the
+/// percent on surface-3; above 75 % a warning icon on warn colours; a dashed
+/// ring and "—" before anything was measured. Opens the Usage sheet; the
+/// token totals live there.
+class ContextChip extends StatelessWidget {
+  const ContextChip({super.key, required this.numbers, required this.onTap});
 
   final UsageNumbers numbers;
   final VoidCallback onTap;
 
-  static const double height = 32;
+  static const double ringSize = 18;
+  static const double ringStroke = 2.5;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final cs = context.colors;
     final d = context.delve;
-    return InkWell(
-      key: const Key('chat.usage'),
-      onTap: onTap,
-      child: SizedBox(
-        height: height,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space4),
-          child: Column(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        numbers.line(l),
-                        key: const Key('chat.usageText'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: DelveText.monoSmall.copyWith(
-                          color: numbers.warn ? d.warnFg : cs.onSurfaceVariant,
-                        ),
+    final pct = numbers.pct;
+    final empty = pct == null;
+    final fill = pct ?? 0;
+    final percent = fill.round();
+    final warn = numbers.warn;
+
+    final Color fg;
+    final Color bg;
+    final BorderSide side;
+    final Widget lead;
+    if (empty) {
+      fg = d.textMuted;
+      bg = cs.surfaceContainerHigh;
+      side = BorderSide.none;
+      lead = CustomPaint(
+        key: const Key('contextChip.empty'),
+        size: const Size.square(ringSize),
+        painter: _DashedRing(color: cs.outline, stroke: ringStroke),
+      );
+    } else if (warn) {
+      fg = d.warnFg;
+      bg = d.warnBg;
+      side = BorderSide(color: d.warnBorder);
+      lead = SymbolIcon(
+        DelveIcons.warning,
+        key: const Key('contextChip.warn'),
+        size: DelveTokens.iconSm,
+        filled: true,
+        color: d.warnFg,
+      );
+    } else {
+      fg = cs.onSurfaceVariant;
+      bg = cs.surfaceContainerHigh;
+      side = BorderSide.none;
+      lead = TweenAnimationBuilder<double>(
+        tween: Tween(end: (fill / 100).clamp(0.0, 1.0)),
+        duration: DelveTokens.medium,
+        curve: Curves.linear,
+        builder: (context, value, _) => SizedBox.square(
+          dimension: ringSize,
+          child: CircularProgressIndicator(
+            value: value,
+            strokeWidth: ringStroke,
+            color: cs.onSurfaceVariant,
+            backgroundColor: cs.surfaceContainerHighest,
+          ),
+        ),
+      );
+    }
+    final label = empty ? l.usageNoContext : '$percent%';
+    final semantics = empty
+        ? l.contextChipEmpty
+        : warn
+        ? l.contextChipWarn(percent)
+        : l.contextChipSemantics(percent);
+
+    return Semantics(
+      button: true,
+      label: semantics,
+      excludeSemantics: true,
+      child: GestureDetector(
+        // the 48 dp tall hit box around the 32 dp chip
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: SizedBox(
+          height: DelveTokens.touchTarget,
+          child: Center(
+            child: Material(
+              color: bg,
+              shape: StadiumBorder(side: side),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                key: const Key('chat.contextChip'),
+                onTap: onTap,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 64),
+                  child: SizedBox(
+                    height: 32,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          lead,
+                          const SizedBox(width: 6),
+                          Text(
+                            label,
+                            key: const Key('contextChip.label'),
+                            style: context.text.labelMedium!.copyWith(
+                              color: fg,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    SymbolIcon(
-                      DelveIcons.chevronRight,
-                      size: DelveTokens.iconSm,
-                      color: d.textMuted,
-                    ),
-                  ],
+                  ),
                 ),
               ),
-              ContextBar(pct: numbers.pct, height: 2),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+/// The empty ring: a dashed outline circle.
+class _DashedRing extends CustomPainter {
+  const _DashedRing({required this.color, required this.stroke});
+
+  final Color color;
+  final double stroke;
+
+  static const int dashes = 12;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke;
+    final rect = Rect.fromLTWH(
+      stroke / 2,
+      stroke / 2,
+      size.width - stroke,
+      size.height - stroke,
+    );
+    const sweep = 2 * math.pi / dashes;
+    for (var i = 0; i < dashes; i++) {
+      canvas.drawArc(rect, i * sweep, sweep * 0.55, false, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedRing old) =>
+      old.color != color || old.stroke != stroke;
 }
 
 /// Context fill bar: track surface-4, fill accent (warn above 75 %), a

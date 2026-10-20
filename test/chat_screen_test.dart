@@ -853,9 +853,10 @@ void main() {
       });
       await t.pump();
       expect(find.textContaining('500 tok'), findsOneWidget);
+      // the chip follows the live sample (9,100 / 65,536)
       expect(
-        t.widget<Text>(find.byKey(const Key('chat.usageText'))).data,
-        contains('ctx 9,100 / 65,536'),
+        t.widget<Text>(find.byKey(const Key('contextChip.label'))).data,
+        '14%',
       );
 
       container.read(liveRunsProvider.notifier).set({
@@ -875,7 +876,7 @@ void main() {
       expect(find.text('Thought for 12 s'), findsOneWidget);
     });
 
-    testWidgets('the usage line opens the Usage sheet', (t) async {
+    testWidgets('the context chip opens the Usage sheet', (t) async {
       final env = await start(t, seedFinished);
       Map<String, Object?> runJson(
         String id,
@@ -908,10 +909,11 @@ void main() {
       });
       await openChat(t);
       expect(
-        t.widget<Text>(find.byKey(const Key('chat.usageText'))).data,
-        'Σ 25,954 tok · ctx 8,728 / 65,536 · 13%',
+        t.widget<Text>(find.byKey(const Key('contextChip.label'))).data,
+        '13%',
       );
-      await t.tap(find.byKey(const Key('chat.usage')));
+      expect(find.byKey(const Key('contextChip.warn')), findsNothing);
+      await t.tap(find.byKey(const Key('chat.contextChip')));
       await t.pumpAndSettle();
       expect(find.byKey(const Key('usage.sheet')), findsOneWidget);
       expect(find.text('Usage'), findsOneWidget);
@@ -938,9 +940,50 @@ void main() {
       final env = await start(t, seedFinished);
       await openChat(t);
       env.server.unreachable = true;
-      await t.tap(find.byKey(const Key('chat.usage')));
+      await t.tap(find.byKey(const Key('chat.contextChip')));
       await t.pumpAndSettle();
       expect(find.byKey(const Key('usage.error')), findsOneWidget);
+    });
+
+    testWidgets('the chip warns above 75 % and is empty before a measure', (
+      t,
+    ) async {
+      await start(t, (env) async {
+        await env.db.putConversation(conversation('c_1', pct: 81, warn: true));
+        await env.db.putConversation(
+          Conversation.fromJson(
+            sample('conversation', {
+              'id': 'c_2',
+              'title': 'Fresh chat',
+              'updated_at': t0
+                  .subtract(const Duration(hours: 1))
+                  .toIso8601String(),
+              'context': {
+                'tokens': null,
+                'max': null,
+                'pct': null,
+                'warn': false,
+                'measured_at': null,
+              },
+            }),
+          ),
+        );
+      });
+      await openChat(t);
+      expect(find.byKey(const Key('contextChip.warn')), findsOneWidget);
+      expect(
+        t.widget<Text>(find.byKey(const Key('contextChip.label'))).data,
+        '81%',
+      );
+      await t.tap(find.byType(BackButton));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Fresh chat'));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('contextChip.empty')), findsOneWidget);
+      expect(
+        t.widget<Text>(find.byKey(const Key('contextChip.label'))).data,
+        '—',
+      );
     });
 
     test('numbers: counts, context text, speeds, live context', () {

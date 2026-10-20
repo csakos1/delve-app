@@ -551,17 +551,6 @@
   },
   "thinkingShowAll": "Show all",
   "close": "Close",
-  "usageLine": "Σ {total} tok · ctx {context}",
-  "@usageLine": {
-    "placeholders": {
-      "total": {
-        "type": "String"
-      },
-      "context": {
-        "type": "String"
-      }
-    }
-  },
   "usageNoContext": "—",
   "usageTitle": "Usage",
   "usageRunCount": "{count, plural, =1{1 run} other{{count} runs}}",
@@ -631,5 +620,22 @@
   },
   "usagePrefill": "Prefill",
   "usageGeneration": "Generation",
-  "usageFirstToken": "First token"
+  "usageFirstToken": "First token",
+  "contextChipSemantics": "Context {percent} percent, opens usage",
+  "@contextChipSemantics": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "contextChipWarn": "Context {percent} percent, almost full, opens usage",
+  "@contextChipWarn": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "contextChipEmpty": "Context not measured yet, opens usage"
 }

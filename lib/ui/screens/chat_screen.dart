@@ -305,20 +305,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return Scaffold(
       appBar: _ChatAppBar(
         title: title,
-        onTitleTap: conversation == null
-            ? null
-            : () => unawaited(
+        actions: [
+          if (conversation != null)
+            ContextChip(
+              numbers: UsageNumbers.of(conversation, live?.context),
+              onTap: () => unawaited(
                 showUsageSheet(context, conversationId: id, title: title),
               ),
-        usage: conversation == null
-            ? null
-            : UsageLine(
-                numbers: UsageNumbers.of(conversation, live?.context),
-                onTap: () => unawaited(
-                  showUsageSheet(context, conversationId: id, title: title),
-                ),
-              ),
-        actions: [
+            ),
           if (conversation != null)
             PopupMenuButton<bool>(
               key: const Key('chat.menu'),
@@ -450,52 +444,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 }
 
-/// Top bar: surface-2, back, title (titleMedium, one line), actions, and
-/// for an existing chat the usage line under it.
+/// Top bar: surface-2, back, title (titleMedium, one line), the context
+/// chip (an existing chat) and the overflow menu.
 class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const _ChatAppBar({
-    required this.title,
-    this.actions = const [],
-    this.usage,
-    this.onTitleTap,
-  });
+  const _ChatAppBar({required this.title, this.actions = const []});
 
   final String title;
   final List<Widget> actions;
 
-  /// The usage line under the title (an existing chat).
-  final UsageLine? usage;
-
-  /// Title and usage line are one target: the Usage sheet.
-  final VoidCallback? onTitleTap;
-
   @override
-  Size get preferredSize => Size.fromHeight(
-    DelveTokens.topBar + (usage == null ? 0 : UsageLine.height),
-  );
+  Size get preferredSize => const Size.fromHeight(DelveTokens.topBar);
 
   @override
   Widget build(BuildContext context) => AppBar(
     backgroundColor: context.colors.surfaceContainer,
     leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
-    title: GestureDetector(
-      onTap: onTitleTap,
-      behavior: HitTestBehavior.opaque,
-      child: Text(
-        title,
-        key: const Key('chat.title'),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: context.text.titleMedium,
-      ),
+    title: Text(
+      title,
+      key: const Key('chat.title'),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: context.text.titleMedium,
     ),
     actions: actions,
-    bottom: usage == null
-        ? null
-        : PreferredSize(
-            preferredSize: const Size.fromHeight(UsageLine.height),
-            child: usage!,
-          ),
   );
 }
 

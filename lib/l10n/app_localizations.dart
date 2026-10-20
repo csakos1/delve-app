@@ -1504,12 +1504,6 @@ abstract class AppLocalizations {
   /// **'Close'**
   String get close;
 
-  /// No description provided for @usageLine.
-  ///
-  /// In en, this message translates to:
-  /// **'Σ {total} tok · ctx {context}'**
-  String usageLine(String total, String context);
-
   /// No description provided for @usageNoContext.
   ///
   /// In en, this message translates to:
@@ -1659,6 +1653,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'First token'**
   String get usageFirstToken;
+
+  /// No description provided for @contextChipSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Context {percent} percent, opens usage'**
+  String contextChipSemantics(int percent);
+
+  /// No description provided for @contextChipWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'Context {percent} percent, almost full, opens usage'**
+  String contextChipWarn(int percent);
+
+  /// No description provided for @contextChipEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Context not measured yet, opens usage'**
+  String get contextChipEmpty;
 }
 
 class _AppLocalizationsDelegate

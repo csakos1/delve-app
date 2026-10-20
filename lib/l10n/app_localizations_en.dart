@@ -827,11 +827,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get close => 'Close';
 
   @override
-  String usageLine(String total, String context) {
-    return 'Σ $total tok · ctx $context';
-  }
-
-  @override
   String get usageNoContext => '—';
 
   @override
@@ -924,4 +919,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get usageFirstToken => 'First token';
+
+  @override
+  String contextChipSemantics(int percent) {
+    return 'Context $percent percent, opens usage';
+  }
+
+  @override
+  String contextChipWarn(int percent) {
+    return 'Context $percent percent, almost full, opens usage';
+  }
+
+  @override
+  String get contextChipEmpty => 'Context not measured yet, opens usage';
 }
