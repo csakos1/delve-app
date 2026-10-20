@@ -957,6 +957,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t restore: {reason}'**
   String archivedRestoreFailed(String reason);
+
+  /// No description provided for @chatCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get chatCopied;
+
+  /// No description provided for @chatLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get chatLinkCopied;
+
+  /// No description provided for @chatMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat options'**
+  String get chatMenu;
+
+  /// No description provided for @chatNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'not connected to the server'**
+  String get chatNotConnected;
+
+  /// No description provided for @chatNoAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'the server did not answer'**
+  String get chatNoAnswer;
+
+  /// No description provided for @chatStopFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t stop: {reason}'**
+  String chatStopFailed(String reason);
+
+  /// No description provided for @chatWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working…'**
+  String get chatWorking;
+
+  /// No description provided for @chatRunStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Run stopped'**
+  String get chatRunStopped;
+
+  /// No description provided for @chatRunRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'running · {clock}'**
+  String chatRunRunning(String clock);
+
+  /// No description provided for @chatRunWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'waiting for approval · {clock}'**
+  String chatRunWaiting(String clock);
+
+  /// No description provided for @chatRunQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'queued'**
+  String get chatRunQueued;
+
+  /// No description provided for @chatContextWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'Context {pct}% full — consider a new chat'**
+  String chatContextWarn(int pct);
+
+  /// No description provided for @newChatIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Your agent on {host} · over Tailscale'**
+  String newChatIntro(String host);
+
+  /// No description provided for @newChatIntroNoHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Your agent, over Tailscale'**
+  String get newChatIntroNoHost;
+
+  /// No description provided for @composerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Message Delve…'**
+  String get composerHint;
+
+  /// No description provided for @composerSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get composerSend;
+
+  /// No description provided for @composerStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop run'**
+  String get composerStop;
+
+  /// No description provided for @composerAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo or file'**
+  String get composerAttach;
+
+  /// No description provided for @composerQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 more message queued} other{{count} more messages queued}}'**
+  String composerQueued(int count);
+
+  /// No description provided for @outboxWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the connection'**
+  String get outboxWaiting;
+
+  /// No description provided for @outboxSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get outboxSending;
+
+  /// No description provided for @outboxFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent'**
+  String get outboxFailed;
+
+  /// No description provided for @outboxFailedWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent: {reason}'**
+  String outboxFailedWhy(String reason);
+
+  /// No description provided for @outboxRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get outboxRetry;
+
+  /// No description provided for @outboxDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get outboxDiscard;
+
+  /// No description provided for @stepRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get stepRunning;
+
+  /// No description provided for @stepWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval needed'**
+  String get stepWaiting;
+
+  /// No description provided for @stepOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get stepOk;
+
+  /// No description provided for @stepError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get stepError;
+
+  /// No description provided for @stepCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get stepCancelled;
+
+  /// No description provided for @stepDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Denied'**
+  String get stepDenied;
+
+  /// No description provided for @stepTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed out'**
+  String get stepTimeout;
+
+  /// No description provided for @stepBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get stepBlocked;
+
+  /// No description provided for @stepCancelledNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Run stopped before this step finished.'**
+  String get stepCancelledNote;
+
+  /// No description provided for @stepDeniedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Not run. The agent was told it was denied.'**
+  String get stepDeniedNote;
+
+  /// No description provided for @stepBlockedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched a deny rule · never asks for approval.'**
+  String get stepBlockedNote;
+
+  /// No description provided for @stepWaitingNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent waits for your approval.'**
+  String get stepWaitingNote;
+
+  /// No description provided for @showMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get showMore;
+
+  /// No description provided for @runFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Run failed'**
+  String get runFailed;
+
+  /// No description provided for @runRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get runRetry;
+
+  /// No description provided for @runFailedUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'The run ended with an error.'**
+  String get runFailedUnknown;
+
+  /// No description provided for @runFailedLost.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent restarted and lost this run.'**
+  String get runFailedLost;
+
+  /// No description provided for @runFailedUnstable.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection to the agent kept dropping.'**
+  String get runFailedUnstable;
+
+  /// No description provided for @runFailedHermes.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent refused the run ({code}).'**
+  String runFailedHermes(String code);
 }
 
 class _AppLocalizationsDelegate

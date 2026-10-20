@@ -505,4 +505,159 @@ class AppLocalizationsEn extends AppLocalizations {
   String archivedRestoreFailed(String reason) {
     return 'Couldn\'t restore: $reason';
   }
+
+  @override
+  String get chatCopied => 'Copied';
+
+  @override
+  String get chatLinkCopied => 'Link copied';
+
+  @override
+  String get chatMenu => 'Chat options';
+
+  @override
+  String get chatNotConnected => 'not connected to the server';
+
+  @override
+  String get chatNoAnswer => 'the server did not answer';
+
+  @override
+  String chatStopFailed(String reason) {
+    return 'Couldn\'t stop: $reason';
+  }
+
+  @override
+  String get chatWorking => 'Working…';
+
+  @override
+  String get chatRunStopped => 'Run stopped';
+
+  @override
+  String chatRunRunning(String clock) {
+    return 'running · $clock';
+  }
+
+  @override
+  String chatRunWaiting(String clock) {
+    return 'waiting for approval · $clock';
+  }
+
+  @override
+  String get chatRunQueued => 'queued';
+
+  @override
+  String chatContextWarn(int pct) {
+    return 'Context $pct% full — consider a new chat';
+  }
+
+  @override
+  String newChatIntro(String host) {
+    return 'Your agent on $host · over Tailscale';
+  }
+
+  @override
+  String get newChatIntroNoHost => 'Your agent, over Tailscale';
+
+  @override
+  String get composerHint => 'Message Delve…';
+
+  @override
+  String get composerSend => 'Send';
+
+  @override
+  String get composerStop => 'Stop run';
+
+  @override
+  String get composerAttach => 'Add a photo or file';
+
+  @override
+  String composerQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more messages queued',
+      one: '1 more message queued',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get outboxWaiting => 'Waiting for the connection';
+
+  @override
+  String get outboxSending => 'Sending…';
+
+  @override
+  String get outboxFailed => 'Not sent';
+
+  @override
+  String outboxFailedWhy(String reason) {
+    return 'Not sent: $reason';
+  }
+
+  @override
+  String get outboxRetry => 'Retry';
+
+  @override
+  String get outboxDiscard => 'Discard';
+
+  @override
+  String get stepRunning => 'Running';
+
+  @override
+  String get stepWaiting => 'Approval needed';
+
+  @override
+  String get stepOk => 'OK';
+
+  @override
+  String get stepError => 'Error';
+
+  @override
+  String get stepCancelled => 'Cancelled';
+
+  @override
+  String get stepDenied => 'Denied';
+
+  @override
+  String get stepTimeout => 'Timed out';
+
+  @override
+  String get stepBlocked => 'Blocked';
+
+  @override
+  String get stepCancelledNote => 'Run stopped before this step finished.';
+
+  @override
+  String get stepDeniedNote => 'Not run. The agent was told it was denied.';
+
+  @override
+  String get stepBlockedNote =>
+      'Matched a deny rule · never asks for approval.';
+
+  @override
+  String get stepWaitingNote => 'The agent waits for your approval.';
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get runFailed => 'Run failed';
+
+  @override
+  String get runRetry => 'Retry';
+
+  @override
+  String get runFailedUnknown => 'The run ended with an error.';
+
+  @override
+  String get runFailedLost => 'The agent restarted and lost this run.';
+
+  @override
+  String get runFailedUnstable => 'The connection to the agent kept dropping.';
+
+  @override
+  String runFailedHermes(String code) {
+    return 'The agent refused the run ($code).';
+  }
 }

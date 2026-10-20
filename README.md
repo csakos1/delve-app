@@ -15,8 +15,11 @@ reached over Tailscale only.
 - A4a: conversation list — newest first with preview, context fill, running / queued /
   approval markers; swipe to archive (with Undo), search, paging, empty state, first-load
   skeleton, reconnecting banner; More → Archived chats (swipe to restore).
+- A4b: the chat — messages, runs on a rail (interim remarks, tool step cards in every
+  state, Markdown answers), the streaming run overlaid live, failed runs with Retry,
+  the composer (outbox states, Stop, queue note), context warning, new chat.
 
-The chat itself and approvals follow in A4b–A6. Requires a server with
+Approvals follow in A5, thinking and the usage line in A6. Requires a server with
 API revision 2 or newer (`DELETE /api/v1/devices/me` for unpairing).
 
 ## Stack
@@ -31,6 +34,7 @@ API revision 2 or newer (`DELETE /api/v1/devices/me` for unpairing).
 | Network | dio (REST), web_socket_channel (events) |
 | Secrets | flutter_secure_storage (device token) |
 | Icons | Material Symbols Rounded (`material_symbols_icons`) |
+| Markdown | flutter_markdown_plus |
 | Fonts | Jost, Inter, JetBrains Mono — bundled, SIL OFL 1.1 |
 
 Data flow: WebSocket events and REST loads are written to the drift database; screens only
@@ -50,10 +54,12 @@ lib/
   app/session.dart           paired / unpaired / server-too-old, credentials, 401 handling
   app/pairing*.dart          pairing flow, URL and code checks
   app/chat_list.dart         conversation list: database query, paging, archive
+  app/chat.dart              one chat: database query, ChatActions (send, stop, open)
   sync/                      WebSocket client: engine (connection, outbox, requests),
                              reducer (events → database), resync, live runs, transport
   data/credentials.dart      token and server URL in Android secure storage
   data/db/                   drift tables and queries; store.dart: server objects → rows
+  ui/chat/                   chat pieces: run rail, tool step card, composer, Markdown
   ui/                        shell (bottom navigation), screens, shared widgets;
                              format.dart: list times, previews, error texts
   l10n/app_en.arb            UI strings (English)
@@ -62,6 +68,7 @@ test/
   theme_test.dart            theme against the design tokens
   database_test.dart, app_test.dart, session_test.dart, rest_client_test.dart, …
   chat_list_test.dart        list query, paging, archive, the Chats screen states
+  chat_screen_test.dart      the chat with a fake ChatActions: runs, steps, composer
   reducer_test.dart          recorded WebSocket conversations replayed into the database
   sync_engine_test.dart      the connection against a local fake WebSocket server
   support/                   fake REST server (a dio adapter), fake WebSocket server,

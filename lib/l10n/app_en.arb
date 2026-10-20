@@ -326,5 +326,105 @@
         "type": "String"
       }
     }
+  },
+  "chatCopied": "Copied",
+  "chatLinkCopied": "Link copied",
+  "chatMenu": "Chat options",
+  "chatNotConnected": "not connected to the server",
+  "chatNoAnswer": "the server did not answer",
+  "chatStopFailed": "Couldn't stop: {reason}",
+  "@chatStopFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "chatWorking": "Working…",
+  "chatRunStopped": "Run stopped",
+  "chatRunRunning": "running · {clock}",
+  "@chatRunRunning": {
+    "placeholders": {
+      "clock": {
+        "type": "String"
+      }
+    }
+  },
+  "chatRunWaiting": "waiting for approval · {clock}",
+  "@chatRunWaiting": {
+    "placeholders": {
+      "clock": {
+        "type": "String"
+      }
+    }
+  },
+  "chatRunQueued": "queued",
+  "chatContextWarn": "Context {pct}% full — consider a new chat",
+  "@chatContextWarn": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "newChatIntro": "Your agent on {host} · over Tailscale",
+  "@newChatIntro": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "newChatIntroNoHost": "Your agent, over Tailscale",
+  "composerHint": "Message Delve…",
+  "composerSend": "Send",
+  "composerStop": "Stop run",
+  "composerAttach": "Add a photo or file",
+  "composerQueued": "{count, plural, =1{1 more message queued} other{{count} more messages queued}}",
+  "@composerQueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outboxWaiting": "Waiting for the connection",
+  "outboxSending": "Sending…",
+  "outboxFailed": "Not sent",
+  "outboxFailedWhy": "Not sent: {reason}",
+  "@outboxFailedWhy": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "outboxRetry": "Retry",
+  "outboxDiscard": "Discard",
+  "stepRunning": "Running",
+  "stepWaiting": "Approval needed",
+  "stepOk": "OK",
+  "stepError": "Error",
+  "stepCancelled": "Cancelled",
+  "stepDenied": "Denied",
+  "stepTimeout": "Timed out",
+  "stepBlocked": "Blocked",
+  "stepCancelledNote": "Run stopped before this step finished.",
+  "stepDeniedNote": "Not run. The agent was told it was denied.",
+  "stepBlockedNote": "Matched a deny rule · never asks for approval.",
+  "stepWaitingNote": "The agent waits for your approval.",
+  "showMore": "Show more",
+  "runFailed": "Run failed",
+  "runRetry": "Retry",
+  "runFailedUnknown": "The run ended with an error.",
+  "runFailedLost": "The agent restarted and lost this run.",
+  "runFailedUnstable": "The connection to the agent kept dropping.",
+  "runFailedHermes": "The agent refused the run ({code}).",
+  "@runFailedHermes": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
   }
 }

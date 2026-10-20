@@ -167,4 +167,17 @@ abstract final class DelveIcons {
   static const IconData archive = Symbols.archive_rounded;
   static const IconData unarchive = Symbols.unarchive_rounded;
   static const IconData forum = Symbols.forum_rounded;
+  static const IconData moreVert = Symbols.more_vert_rounded;
+  static const IconData warning = Symbols.warning_rounded;
+  static const IconData send = Symbols.arrow_upward_rounded;
+  static const IconData stop = Symbols.stop_rounded;
+  static const IconData schedule = Symbols.schedule_rounded;
+  static const IconData scheduleSend = Symbols.schedule_send_rounded;
+  static const IconData expandMore = Symbols.expand_more_rounded;
+  static const IconData expandLess = Symbols.expand_less_rounded;
+  static const IconData progress = Symbols.progress_activity_rounded;
+  static const IconData cancel = Symbols.cancel_rounded;
+  static const IconData block = Symbols.block_rounded;
+  static const IconData timerOff = Symbols.timer_off_rounded;
+  static const IconData gppBad = Symbols.gpp_bad_rounded;
 }

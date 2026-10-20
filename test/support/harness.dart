@@ -1,4 +1,5 @@
 import 'package:delve/app/app.dart';
+import 'package:delve/app/chat.dart';
 import 'package:delve/app/providers.dart';
 import 'package:delve/app/session.dart';
 import 'package:delve/data/credentials.dart';
@@ -31,7 +32,7 @@ const testAppInfo = AppInfo('0.1.0', '1');
 
 /// Everything a test needs to drive the app and look behind it.
 class TestEnv {
-  TestEnv({Credentials? credentials, this.status})
+  TestEnv({Credentials? credentials, this.status, this.actions})
     : db = memoryDb(),
       store = MemoryCredentialStore(credentials),
       server = FakeServer();
@@ -42,6 +43,9 @@ class TestEnv {
 
   /// Connection state the screens see (the socket itself is off in tests).
   final ConnectionStatus? status;
+
+  /// What the chat screen sends (the socket is off in tests).
+  final ChatActions? actions;
 
   // (The override list is written out twice: its element type lives in a
   // different library across Riverpod versions.)
@@ -54,6 +58,7 @@ class TestEnv {
       syncEnabledProvider.overrideWithValue(false), // no socket here
       if (status case final s?)
         connectionStatusProvider.overrideWith((ref) => Stream.value(s)),
+      if (actions case final a?) chatActionsProvider.overrideWithValue(a),
     ],
     child: child,
   );
@@ -68,6 +73,7 @@ class TestEnv {
         syncEnabledProvider.overrideWithValue(false), // no socket here
         if (status case final s?)
           connectionStatusProvider.overrideWith((ref) => Stream.value(s)),
+        if (actions case final a?) chatActionsProvider.overrideWithValue(a),
       ],
     );
     addTearDown(c.dispose);
@@ -89,12 +95,14 @@ Future<TestEnv> pumpDelve(
   WidgetTester tester, {
   bool paired = true,
   ConnectionStatus? status,
+  ChatActions? actions,
   Future<void> Function(TestEnv env)? before,
   bool settle = true,
 }) async {
   final env = TestEnv(
     credentials: paired ? pairedCredentials() : null,
     status: status,
+    actions: actions,
   );
   addTearDown(env.dispose);
   setDesignSize(tester);
