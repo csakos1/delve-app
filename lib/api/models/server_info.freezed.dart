@@ -1168,4 +1168,548 @@ $ThinkingRouteCopyWith<$Res>? get thinkingRoute {
 }
 }
 
+
+/// @nodoc
+mixin _$RegisteredDevice {
+
+ String get deviceId; String get name; String get token;
+/// Create a copy of RegisteredDevice
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RegisteredDeviceCopyWith<RegisteredDevice> get copyWith => _$RegisteredDeviceCopyWithImpl<RegisteredDevice>(this as RegisteredDevice, _$identity);
+
+  /// Serializes this RegisteredDevice to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RegisteredDevice&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.name, name) || other.name == name)&&(identical(other.token, token) || other.token == token));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,deviceId,name,token);
+
+@override
+String toString() {
+  return 'RegisteredDevice(deviceId: $deviceId, name: $name, token: $token)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RegisteredDeviceCopyWith<$Res>  {
+  factory $RegisteredDeviceCopyWith(RegisteredDevice value, $Res Function(RegisteredDevice) _then) = _$RegisteredDeviceCopyWithImpl;
+@useResult
+$Res call({
+ String deviceId, String name, String token
+});
+
+
+
+
+}
+/// @nodoc
+class _$RegisteredDeviceCopyWithImpl<$Res>
+    implements $RegisteredDeviceCopyWith<$Res> {
+  _$RegisteredDeviceCopyWithImpl(this._self, this._then);
+
+  final RegisteredDevice _self;
+  final $Res Function(RegisteredDevice) _then;
+
+/// Create a copy of RegisteredDevice
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? deviceId = null,Object? name = null,Object? token = null,}) {
+  return _then(_self.copyWith(
+deviceId: null == deviceId ? _self.deviceId : deviceId // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,token: null == token ? _self.token : token // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [RegisteredDevice].
+extension RegisteredDevicePatterns on RegisteredDevice {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _RegisteredDevice value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _RegisteredDevice() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _RegisteredDevice value)  $default,){
+final _that = this;
+switch (_that) {
+case _RegisteredDevice():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _RegisteredDevice value)?  $default,){
+final _that = this;
+switch (_that) {
+case _RegisteredDevice() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String deviceId,  String name,  String token)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _RegisteredDevice() when $default != null:
+return $default(_that.deviceId,_that.name,_that.token);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String deviceId,  String name,  String token)  $default,) {final _that = this;
+switch (_that) {
+case _RegisteredDevice():
+return $default(_that.deviceId,_that.name,_that.token);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String deviceId,  String name,  String token)?  $default,) {final _that = this;
+switch (_that) {
+case _RegisteredDevice() when $default != null:
+return $default(_that.deviceId,_that.name,_that.token);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _RegisteredDevice implements RegisteredDevice {
+  const _RegisteredDevice({required this.deviceId, required this.name, required this.token});
+  factory _RegisteredDevice.fromJson(Map<String, dynamic> json) => _$RegisteredDeviceFromJson(json);
+
+@override final  String deviceId;
+@override final  String name;
+@override final  String token;
+
+/// Create a copy of RegisteredDevice
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$RegisteredDeviceCopyWith<_RegisteredDevice> get copyWith => __$RegisteredDeviceCopyWithImpl<_RegisteredDevice>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$RegisteredDeviceToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RegisteredDevice&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.name, name) || other.name == name)&&(identical(other.token, token) || other.token == token));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,deviceId,name,token);
+
+@override
+String toString() {
+  return 'RegisteredDevice(deviceId: $deviceId, name: $name, token: $token)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$RegisteredDeviceCopyWith<$Res> implements $RegisteredDeviceCopyWith<$Res> {
+  factory _$RegisteredDeviceCopyWith(_RegisteredDevice value, $Res Function(_RegisteredDevice) _then) = __$RegisteredDeviceCopyWithImpl;
+@override @useResult
+$Res call({
+ String deviceId, String name, String token
+});
+
+
+
+
+}
+/// @nodoc
+class __$RegisteredDeviceCopyWithImpl<$Res>
+    implements _$RegisteredDeviceCopyWith<$Res> {
+  __$RegisteredDeviceCopyWithImpl(this._self, this._then);
+
+  final _RegisteredDevice _self;
+  final $Res Function(_RegisteredDevice) _then;
+
+/// Create a copy of RegisteredDevice
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? deviceId = null,Object? name = null,Object? token = null,}) {
+  return _then(_RegisteredDevice(
+deviceId: null == deviceId ? _self.deviceId : deviceId // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,token: null == token ? _self.token : token // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$DeviceInfo {
+
+ String get id; String get name; DateTime get createdAt; DateTime? get lastSeenAt; bool get fcm;
+/// Create a copy of DeviceInfo
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DeviceInfoCopyWith<DeviceInfo> get copyWith => _$DeviceInfoCopyWithImpl<DeviceInfo>(this as DeviceInfo, _$identity);
+
+  /// Serializes this DeviceInfo to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeviceInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.fcm, fcm) || other.fcm == fcm));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,name,createdAt,lastSeenAt,fcm);
+
+@override
+String toString() {
+  return 'DeviceInfo(id: $id, name: $name, createdAt: $createdAt, lastSeenAt: $lastSeenAt, fcm: $fcm)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $DeviceInfoCopyWith<$Res>  {
+  factory $DeviceInfoCopyWith(DeviceInfo value, $Res Function(DeviceInfo) _then) = _$DeviceInfoCopyWithImpl;
+@useResult
+$Res call({
+ String id, String name, DateTime createdAt, DateTime? lastSeenAt, bool fcm
+});
+
+
+
+
+}
+/// @nodoc
+class _$DeviceInfoCopyWithImpl<$Res>
+    implements $DeviceInfoCopyWith<$Res> {
+  _$DeviceInfoCopyWithImpl(this._self, this._then);
+
+  final DeviceInfo _self;
+  final $Res Function(DeviceInfo) _then;
+
+/// Create a copy of DeviceInfo
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? createdAt = null,Object? lastSeenAt = freezed,Object? fcm = null,}) {
+  return _then(_self.copyWith(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,fcm: null == fcm ? _self.fcm : fcm // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [DeviceInfo].
+extension DeviceInfoPatterns on DeviceInfo {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _DeviceInfo value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _DeviceInfo() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _DeviceInfo value)  $default,){
+final _that = this;
+switch (_that) {
+case _DeviceInfo():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _DeviceInfo value)?  $default,){
+final _that = this;
+switch (_that) {
+case _DeviceInfo() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  DateTime createdAt,  DateTime? lastSeenAt,  bool fcm)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _DeviceInfo() when $default != null:
+return $default(_that.id,_that.name,_that.createdAt,_that.lastSeenAt,_that.fcm);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  DateTime createdAt,  DateTime? lastSeenAt,  bool fcm)  $default,) {final _that = this;
+switch (_that) {
+case _DeviceInfo():
+return $default(_that.id,_that.name,_that.createdAt,_that.lastSeenAt,_that.fcm);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  DateTime createdAt,  DateTime? lastSeenAt,  bool fcm)?  $default,) {final _that = this;
+switch (_that) {
+case _DeviceInfo() when $default != null:
+return $default(_that.id,_that.name,_that.createdAt,_that.lastSeenAt,_that.fcm);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _DeviceInfo implements DeviceInfo {
+  const _DeviceInfo({required this.id, required this.name, required this.createdAt, this.lastSeenAt, required this.fcm});
+  factory _DeviceInfo.fromJson(Map<String, dynamic> json) => _$DeviceInfoFromJson(json);
+
+@override final  String id;
+@override final  String name;
+@override final  DateTime createdAt;
+@override final  DateTime? lastSeenAt;
+@override final  bool fcm;
+
+/// Create a copy of DeviceInfo
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$DeviceInfoCopyWith<_DeviceInfo> get copyWith => __$DeviceInfoCopyWithImpl<_DeviceInfo>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$DeviceInfoToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DeviceInfo&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.fcm, fcm) || other.fcm == fcm));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,name,createdAt,lastSeenAt,fcm);
+
+@override
+String toString() {
+  return 'DeviceInfo(id: $id, name: $name, createdAt: $createdAt, lastSeenAt: $lastSeenAt, fcm: $fcm)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$DeviceInfoCopyWith<$Res> implements $DeviceInfoCopyWith<$Res> {
+  factory _$DeviceInfoCopyWith(_DeviceInfo value, $Res Function(_DeviceInfo) _then) = __$DeviceInfoCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String name, DateTime createdAt, DateTime? lastSeenAt, bool fcm
+});
+
+
+
+
+}
+/// @nodoc
+class __$DeviceInfoCopyWithImpl<$Res>
+    implements _$DeviceInfoCopyWith<$Res> {
+  __$DeviceInfoCopyWithImpl(this._self, this._then);
+
+  final _DeviceInfo _self;
+  final $Res Function(_DeviceInfo) _then;
+
+/// Create a copy of DeviceInfo
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? createdAt = null,Object? lastSeenAt = freezed,Object? fcm = null,}) {
+  return _then(_DeviceInfo(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,lastSeenAt: freezed == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,fcm: null == fcm ? _self.fcm : fcm // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
 // dart format on

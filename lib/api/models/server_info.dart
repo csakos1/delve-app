@@ -62,3 +62,31 @@ abstract class HelloOk with _$HelloOk {
   factory HelloOk.fromJson(Map<String, Object?> json) =>
       _$HelloOkFromJson(json);
 }
+
+/// `POST /api/v1/devices/register` → 201.
+@freezed
+abstract class RegisteredDevice with _$RegisteredDevice {
+  const factory RegisteredDevice({
+    required String deviceId,
+    required String name,
+    required String token,
+  }) = _RegisteredDevice;
+
+  factory RegisteredDevice.fromJson(Map<String, Object?> json) =>
+      _$RegisteredDeviceFromJson(json);
+}
+
+/// `GET /api/v1/devices/me`.
+@freezed
+abstract class DeviceInfo with _$DeviceInfo {
+  const factory DeviceInfo({
+    required String id,
+    required String name,
+    required DateTime createdAt,
+    DateTime? lastSeenAt,
+    required bool fcm,
+  }) = _DeviceInfo;
+
+  factory DeviceInfo.fromJson(Map<String, Object?> json) =>
+      _$DeviceInfoFromJson(json);
+}

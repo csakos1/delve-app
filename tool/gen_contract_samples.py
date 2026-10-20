@@ -5,7 +5,7 @@ Run from a delve-backend checkout with its venv active:
 """
 import json, sys, uuid
 from datetime import datetime, timedelta, timezone
-from delve import protocol
+from delve import API_REVISION, protocol
 from delve.db.models import Approval, Conversation, Message, Run, ToolStep
 from delve.serialize import approval_out, conversation_out, message_out, run_out, step_out
 
@@ -74,12 +74,12 @@ for k, v in events.items():
     assert p is None, (k, p)
 assert set(events) == set(protocol.SERVER_EVENTS)
 connection = {
-    "hello.ok": {"server_version": "0.1.0", "api_revision": 1, "revision": "eb4045ed6a94", "hermes": "ok",
+    "hello.ok": {"server_version": "0.1.0", "api_revision": API_REVISION, "revision": "eb4045ed6a94", "hermes": "ok",
                  "hermes_version": "0.22.2", "thinking_route": {"ok": True, "run_id": run.run_id, "at": t0.isoformat()},
                  "epoch": "9f8e7d6c5b4a3921", "seq": 1042, "resync_required": False},
-    "meta": {"server_version": "0.1.0", "api_revision": 1, "revision": "eb4045ed6a94", "python": "3.14.8",
+    "meta": {"server_version": "0.1.0", "api_revision": API_REVISION, "revision": "eb4045ed6a94", "python": "3.14.8",
              "hermes_expected_version": "0.22.2", "approval_timeout_s": 300},
-    "status": {"server_version": "0.1.0", "api_revision": 1, "revision": None, "hermes": None,
+    "status": {"server_version": "0.1.0", "api_revision": API_REVISION, "revision": None, "hermes": None,
                "hermes_version": None, "thinking_route": None},
     "history_message": {**m, "tool_steps": [shapes["tool_step"]]},
 }

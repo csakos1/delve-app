@@ -86,3 +86,36 @@ Map<String, dynamic> _$HelloOkToJson(_HelloOk instance) => <String, dynamic>{
   'seq': instance.seq,
   'resync_required': instance.resyncRequired,
 };
+
+_RegisteredDevice _$RegisteredDeviceFromJson(Map<String, dynamic> json) =>
+    _RegisteredDevice(
+      deviceId: json['device_id'] as String,
+      name: json['name'] as String,
+      token: json['token'] as String,
+    );
+
+Map<String, dynamic> _$RegisteredDeviceToJson(_RegisteredDevice instance) =>
+    <String, dynamic>{
+      'device_id': instance.deviceId,
+      'name': instance.name,
+      'token': instance.token,
+    };
+
+_DeviceInfo _$DeviceInfoFromJson(Map<String, dynamic> json) => _DeviceInfo(
+  id: json['id'] as String,
+  name: json['name'] as String,
+  createdAt: DateTime.parse(json['created_at'] as String),
+  lastSeenAt: json['last_seen_at'] == null
+      ? null
+      : DateTime.parse(json['last_seen_at'] as String),
+  fcm: json['fcm'] as bool,
+);
+
+Map<String, dynamic> _$DeviceInfoToJson(_DeviceInfo instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'created_at': instance.createdAt.toIso8601String(),
+      'last_seen_at': instance.lastSeenAt?.toIso8601String(),
+      'fcm': instance.fcm,
+    };

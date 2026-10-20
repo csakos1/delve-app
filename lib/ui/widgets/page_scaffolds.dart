@@ -140,4 +140,20 @@ abstract final class DelveIcons {
   static const IconData add = Symbols.add_rounded;
   static const IconData edit = Symbols.edit_square_rounded;
   static const IconData link = Symbols.link_rounded;
+  static const IconData lock = Symbols.lock_rounded;
+  static const IconData hourglass = Symbols.hourglass_top_rounded;
+  static const IconData offline = Symbols.wifi_off_rounded;
+  static const IconData error = Symbols.error_rounded;
+  static const IconData info = Symbols.info_rounded;
+  static const IconData ok = Symbols.check_circle_rounded;
+  static const IconData server = Symbols.dns_rounded;
+  static const IconData device = Symbols.smartphone_rounded;
+  static const IconData thinking = Symbols.psychology_rounded;
+  static const IconData app = Symbols.apps_rounded;
+  static const IconData api = Symbols.api_rounded;
+  static const IconData agent = Symbols.smart_toy_rounded;
+  static const IconData unpair = Symbols.link_off_rounded;
+  static const IconData copy = Symbols.content_copy_rounded;
+  static const IconData refresh = Symbols.refresh_rounded;
+  static const IconData updateServer = Symbols.system_update_rounded;
 }

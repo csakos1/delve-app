@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,12 +9,19 @@ import '../ui/screens/chats_screen.dart';
 import '../ui/screens/dashboard_screen.dart';
 import '../ui/screens/more_screen.dart';
 import '../ui/screens/pairing_screen.dart';
+import '../ui/screens/server_too_old_screen.dart';
+import '../ui/screens/settings_screen.dart';
+import '../ui/screens/splash_screen.dart';
 import '../ui/screens/sub_page_placeholder.dart';
 import '../ui/shell/app_shell.dart';
+import 'session.dart';
 
 /// Route paths. Top-level screens live in the shell (bottom nav); Chat and
 /// the More sub-pages are pushed on the root navigator, so they have none.
 abstract final class Routes {
+  static const splash = '/splash';
+  static const pair = '/pair';
+  static const serverTooOld = '/server-too-old';
   static const chats = '/chats';
   static const dashboard = '/dashboard';
   static const approvals = '/approvals';
@@ -24,16 +32,41 @@ abstract final class Routes {
   static const schedules = '/more/schedules';
   static const observability = '/more/observability';
   static const settings = '/more/settings';
-  static const pair = '/pair';
+
+  /// Screens that are only reachable in one session state.
+  static const gates = {splash, pair, serverTooOld};
 }
 
-GoRouter buildRouter({String initialLocation = Routes.chats}) {
+/// Where the session state sends the user; null = stay.
+@visibleForTesting
+String? sessionRedirect(SessionState session, String location) {
+  final target = switch (session) {
+    SessionLoading() => Routes.splash,
+    SessionUnpaired() => Routes.pair,
+    SessionServerTooOld() => Routes.serverTooOld,
+    SessionPaired() => Routes.gates.contains(location) ? Routes.chats : null,
+  };
+  return target == location ? null : target;
+}
+
+GoRouter buildRouter({
+  required ValueListenable<SessionState> session,
+  String initialLocation = Routes.splash,
+}) {
   final rootKey = GlobalKey<NavigatorState>(debugLabel: 'root');
   return GoRouter(
     navigatorKey: rootKey,
     initialLocation: initialLocation,
+    refreshListenable: session,
+    redirect: (context, state) =>
+        sessionRedirect(session.value, state.matchedLocation),
     routes: [
+      GoRoute(path: Routes.splash, builder: (_, _) => const SplashScreen()),
       GoRoute(path: Routes.pair, builder: (_, _) => const PairingScreen()),
+      GoRoute(
+        path: Routes.serverTooOld,
+        builder: (_, _) => const ServerTooOldScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(shell: shell),
         branches: [
@@ -84,7 +117,9 @@ GoRouter buildRouter({String initialLocation = Routes.chats}) {
                     GoRoute(
                       path: page.segment,
                       parentNavigatorKey: rootKey,
-                      builder: (_, _) => SubPagePlaceholder(page: page),
+                      builder: (_, _) => page == MorePage.settings
+                          ? const SettingsScreen()
+                          : SubPagePlaceholder(page: page),
                     ),
                 ],
               ),
@@ -96,9 +131,14 @@ GoRouter buildRouter({String initialLocation = Routes.chats}) {
   );
 }
 
-/// The app's router; tests may override it with another initial location.
+/// The app's router, driven by the session state.
 final routerProvider = Provider<GoRouter>((ref) {
-  final router = buildRouter();
-  ref.onDispose(router.dispose);
+  final session = ValueNotifier<SessionState>(ref.read(sessionProvider));
+  ref.listen(sessionProvider, (_, next) => session.value = next);
+  final router = buildRouter(session: session);
+  ref.onDispose(() {
+    router.dispose();
+    session.dispose();
+  });
   return router;
 });

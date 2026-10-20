@@ -115,4 +115,15 @@ void main() {
     final a = await db.select(db.approvals).getSingle();
     expect(a.choices, ['once', 'session', 'deny']);
   });
+
+  test('wipe empties every table and resets the stream position', () async {
+    await db.into(db.conversations).insert(conv('c_1', t0));
+    await db.into(db.approvals).insert(approval('a1', 'pending'));
+    await db.writeSyncState(epoch: 'e1', lastSeq: 9);
+    await db.wipe();
+    expect(await db.select(db.conversations).get(), isEmpty);
+    expect(await db.select(db.approvals).get(), isEmpty);
+    final s = await db.readSyncState();
+    expect((s.epoch, s.lastSeq), (null, null));
+  });
 }

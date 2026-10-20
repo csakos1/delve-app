@@ -6,8 +6,13 @@ reached over Tailscale only.
 
 ## Status
 
-Skeleton (step A1): theme, models, local database, navigation shell with placeholder screens.
-Pairing, the WebSocket client, chat and approvals follow in A2–A6.
+- A1: theme, models, local database, navigation shell.
+- A2: pairing (server URL + one-time code), session handling (401 → back to pairing,
+  server too old → blocking screen), Settings (server, device, thinking route, versions,
+  unpair).
+
+The WebSocket client, chat and approvals follow in A3–A6. Requires a server with
+API revision 2 or newer (`DELETE /api/v1/devices/me` for unpairing).
 
 ## Stack
 
@@ -36,13 +41,18 @@ lib/
   api/models/                conversation, message, run, approval, tool step, server info
   api/events.dart            WebSocket frames → sealed ServerEvent / ConnectionFrame
   api/protocol.dart          REST routes, client frames, minimum API revision
+  api/rest_client.dart       REST client (dio); api_error.dart maps every failure
+  app/session.dart           paired / unpaired / server-too-old, credentials, 401 handling
+  app/pairing*.dart          pairing flow, URL and code checks
+  data/credentials.dart      token and server URL in Android secure storage
   data/db/                   drift tables and queries
   ui/                        shell (bottom navigation), screens, shared widgets
   l10n/app_en.arb            UI strings (English)
 test/
   contract_test.dart         models and frames against the backend contract
   theme_test.dart            theme against the design tokens
-  database_test.dart, app_test.dart
+  database_test.dart, app_test.dart, session_test.dart, rest_client_test.dart, …
+  support/                   fake server (a dio adapter) and the app harness
   fixtures/contract/         contract.json (from delve-backend), samples.json (generated)
   fixtures/design/           delve_tokens.json (from the design system)
 tool/

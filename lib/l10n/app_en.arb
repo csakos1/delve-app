@@ -7,7 +7,11 @@
   "navMore": "More",
   "approvalsBadge": "{count, plural, =1{1 approval waiting} other{{count} approvals waiting}}",
   "@approvalsBadge": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "moreSystem": "System",
   "moreSystemSub": "llama-server, Hermes, backend",
@@ -19,7 +23,173 @@
   "moreSettingsSub": "Server, device, about",
   "newChat": "New chat",
   "chatTitle": "Chat",
-  "pairingTitle": "Pair with your server",
   "notBuiltYet": "Not built yet",
-  "back": "Back"
+  "back": "Back",
+  "pairTitle": "Pair this phone",
+  "pairIntro": "Connect to your Delve server over Tailscale. Get an 8-digit code on the desktop with: sudo delve pair",
+  "pairServerUrl": "Server URL",
+  "pairServerUrlHint": "https://archlinux.<tailnet>.ts.net",
+  "pairServerUrlHelper": "Your desktop's Tailscale address",
+  "pairUrlInvalid": "Not a valid address",
+  "pairUrlNotHttps": "Use the https:// address",
+  "pairUrlNotTailnet": "Use the desktop's Tailscale name (….ts.net)",
+  "pairCode": "Pairing code",
+  "pairCodeHelper": "8 digits, valid for 10 minutes",
+  "pairCodeInvalid": "Invalid or expired code",
+  "pairButton": "Pair",
+  "pairButtonWait": "Pair · {seconds} s",
+  "@pairButtonWait": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "pairRateLimited": "Too many attempts — try again in {seconds} s",
+  "@pairRateLimited": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "pairUnreachable": "Can't reach the server — is Tailscale on?",
+  "pairFailed": "Pairing failed: {reason}",
+  "@pairFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pairFailedServer": "server error (HTTP {status})",
+  "@pairFailedServer": {
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "pairFailedNotDelve": "unexpected answer — is this the Delve server?",
+  "pairFootnote": "Traffic stays inside your tailnet.",
+  "pairNoteUnpaired": "This phone was unpaired. Pair again with a new code.",
+  "pairNoteUnpairedLocally": "Unpaired on this phone, but the server could not be reached. Revoke the old token there: sudo delve token list, then sudo delve token revoke <id>.",
+  "pairNoteRevoked": "The server no longer accepts this phone's token. Pair again with a new code.",
+  "retry": "Retry",
+  "cancel": "Cancel",
+  "copied": "Copied",
+  "copy": "Copy",
+  "settingsServer": "Server",
+  "settingsServerUrl": "Server URL",
+  "settingsThisDevice": "This device",
+  "settingsPairedSeen": "Paired {date} · last seen {seen}",
+  "@settingsPairedSeen": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "seen": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSeenNow": "now",
+  "settingsSeenMinutes": "{minutes} min ago",
+  "@settingsSeenMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSeenNever": "never",
+  "settingsThinkingRoute": "Thinking route",
+  "settingsStatus": "Status",
+  "settingsRouteOk": "OK",
+  "settingsRouteOkDetail": "Last thinking run at {time} used the thinking model",
+  "@settingsRouteOkDetail": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsRouteFailed": "Check failed",
+  "settingsRouteFailedDetail": "Last thinking run at {time} did not use the thinking model",
+  "@settingsRouteFailedDetail": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsRouteNone": "No data",
+  "settingsRouteNoneDetail": "No thinking run since the server started",
+  "settingsCheckAgain": "Check again",
+  "settingsVersions": "Versions",
+  "settingsApp": "App",
+  "settingsServerVersion": "Server",
+  "settingsApiRevision": "API revision",
+  "settingsHermes": "Hermes Agent",
+  "settingsHermesDown": "down",
+  "settingsUnknown": "—",
+  "settingsLoadFailed": "Couldn't load: {reason}",
+  "@settingsLoadFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsUnpair": "Unpair this device",
+  "settingsUnpairNote": "You will need a new pairing code to connect again.",
+  "unpairDialogTitle": "Unpair this device?",
+  "unpairDialogBody": "The server stops accepting this phone and the local copy of your chats is deleted. You will need a new pairing code to connect again.",
+  "unpairDialogConfirm": "Unpair",
+  "tooOldTitle": "Server version too old for this app",
+  "tooOldBody": "Delve {app} needs API revision {min} or newer. Update the Delve server on your desktop, then try again.",
+  "@tooOldBody": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      },
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "tooOldThisApp": "This app",
+  "tooOldNeeds": "{app} · needs API ≥ {min}",
+  "@tooOldNeeds": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      },
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "tooOldServer": "Server",
+  "tooOldServerValue": "{version} · API {revision}",
+  "@tooOldServerValue": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "tooOldServerUrl": "Server URL",
+  "tooOldStillOld": "The server still reports API revision {revision}",
+  "@tooOldStillOld": {
+    "placeholders": {
+      "revision": {
+        "type": "int"
+      }
+    }
+  },
+  "tooOldPairOther": "Pair with another server"
 }

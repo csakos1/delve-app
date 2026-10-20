@@ -190,12 +190,6 @@ abstract class AppLocalizations {
   /// **'Chat'**
   String get chatTitle;
 
-  /// No description provided for @pairingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Pair with your server'**
-  String get pairingTitle;
-
   /// No description provided for @notBuiltYet.
   ///
   /// In en, this message translates to:
@@ -207,6 +201,390 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back'**
   String get back;
+
+  /// No description provided for @pairTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair this phone'**
+  String get pairTitle;
+
+  /// No description provided for @pairIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to your Delve server over Tailscale. Get an 8-digit code on the desktop with: sudo delve pair'**
+  String get pairIntro;
+
+  /// No description provided for @pairServerUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get pairServerUrl;
+
+  /// No description provided for @pairServerUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://archlinux.<tailnet>.ts.net'**
+  String get pairServerUrlHint;
+
+  /// No description provided for @pairServerUrlHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Your desktop\'s Tailscale address'**
+  String get pairServerUrlHelper;
+
+  /// No description provided for @pairUrlInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a valid address'**
+  String get pairUrlInvalid;
+
+  /// No description provided for @pairUrlNotHttps.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the https:// address'**
+  String get pairUrlNotHttps;
+
+  /// No description provided for @pairUrlNotTailnet.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the desktop\'s Tailscale name (….ts.net)'**
+  String get pairUrlNotTailnet;
+
+  /// No description provided for @pairCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Pairing code'**
+  String get pairCode;
+
+  /// No description provided for @pairCodeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'8 digits, valid for 10 minutes'**
+  String get pairCodeHelper;
+
+  /// No description provided for @pairCodeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid or expired code'**
+  String get pairCodeInvalid;
+
+  /// No description provided for @pairButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair'**
+  String get pairButton;
+
+  /// No description provided for @pairButtonWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair · {seconds} s'**
+  String pairButtonWait(int seconds);
+
+  /// No description provided for @pairRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts — try again in {seconds} s'**
+  String pairRateLimited(int seconds);
+
+  /// No description provided for @pairUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach the server — is Tailscale on?'**
+  String get pairUnreachable;
+
+  /// No description provided for @pairFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Pairing failed: {reason}'**
+  String pairFailed(String reason);
+
+  /// No description provided for @pairFailedServer.
+  ///
+  /// In en, this message translates to:
+  /// **'server error (HTTP {status})'**
+  String pairFailedServer(int status);
+
+  /// No description provided for @pairFailedNotDelve.
+  ///
+  /// In en, this message translates to:
+  /// **'unexpected answer — is this the Delve server?'**
+  String get pairFailedNotDelve;
+
+  /// No description provided for @pairFootnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic stays inside your tailnet.'**
+  String get pairFootnote;
+
+  /// No description provided for @pairNoteUnpaired.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone was unpaired. Pair again with a new code.'**
+  String get pairNoteUnpaired;
+
+  /// No description provided for @pairNoteUnpairedLocally.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaired on this phone, but the server could not be reached. Revoke the old token there: sudo delve token list, then sudo delve token revoke <id>.'**
+  String get pairNoteUnpairedLocally;
+
+  /// No description provided for @pairNoteRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'The server no longer accepts this phone\'s token. Pair again with a new code.'**
+  String get pairNoteRevoked;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get copied;
+
+  /// No description provided for @copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// No description provided for @settingsServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get settingsServer;
+
+  /// No description provided for @settingsServerUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get settingsServerUrl;
+
+  /// No description provided for @settingsThisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get settingsThisDevice;
+
+  /// No description provided for @settingsPairedSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Paired {date} · last seen {seen}'**
+  String settingsPairedSeen(String date, String seen);
+
+  /// No description provided for @settingsSeenNow.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get settingsSeenNow;
+
+  /// No description provided for @settingsSeenMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min ago'**
+  String settingsSeenMinutes(int minutes);
+
+  /// No description provided for @settingsSeenNever.
+  ///
+  /// In en, this message translates to:
+  /// **'never'**
+  String get settingsSeenNever;
+
+  /// No description provided for @settingsThinkingRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking route'**
+  String get settingsThinkingRoute;
+
+  /// No description provided for @settingsStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get settingsStatus;
+
+  /// No description provided for @settingsRouteOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get settingsRouteOk;
+
+  /// No description provided for @settingsRouteOkDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Last thinking run at {time} used the thinking model'**
+  String settingsRouteOkDetail(String time);
+
+  /// No description provided for @settingsRouteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Check failed'**
+  String get settingsRouteFailed;
+
+  /// No description provided for @settingsRouteFailedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Last thinking run at {time} did not use the thinking model'**
+  String settingsRouteFailedDetail(String time);
+
+  /// No description provided for @settingsRouteNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get settingsRouteNone;
+
+  /// No description provided for @settingsRouteNoneDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'No thinking run since the server started'**
+  String get settingsRouteNoneDetail;
+
+  /// No description provided for @settingsCheckAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again'**
+  String get settingsCheckAgain;
+
+  /// No description provided for @settingsVersions.
+  ///
+  /// In en, this message translates to:
+  /// **'Versions'**
+  String get settingsVersions;
+
+  /// No description provided for @settingsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get settingsApp;
+
+  /// No description provided for @settingsServerVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get settingsServerVersion;
+
+  /// No description provided for @settingsApiRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'API revision'**
+  String get settingsApiRevision;
+
+  /// No description provided for @settingsHermes.
+  ///
+  /// In en, this message translates to:
+  /// **'Hermes Agent'**
+  String get settingsHermes;
+
+  /// No description provided for @settingsHermesDown.
+  ///
+  /// In en, this message translates to:
+  /// **'down'**
+  String get settingsHermesDown;
+
+  /// No description provided for @settingsUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get settingsUnknown;
+
+  /// No description provided for @settingsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load: {reason}'**
+  String settingsLoadFailed(String reason);
+
+  /// No description provided for @settingsUnpair.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpair this device'**
+  String get settingsUnpair;
+
+  /// No description provided for @settingsUnpairNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You will need a new pairing code to connect again.'**
+  String get settingsUnpairNote;
+
+  /// No description provided for @unpairDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpair this device?'**
+  String get unpairDialogTitle;
+
+  /// No description provided for @unpairDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The server stops accepting this phone and the local copy of your chats is deleted. You will need a new pairing code to connect again.'**
+  String get unpairDialogBody;
+
+  /// No description provided for @unpairDialogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpair'**
+  String get unpairDialogConfirm;
+
+  /// No description provided for @tooOldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Server version too old for this app'**
+  String get tooOldTitle;
+
+  /// No description provided for @tooOldBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delve {app} needs API revision {min} or newer. Update the Delve server on your desktop, then try again.'**
+  String tooOldBody(String app, int min);
+
+  /// No description provided for @tooOldThisApp.
+  ///
+  /// In en, this message translates to:
+  /// **'This app'**
+  String get tooOldThisApp;
+
+  /// No description provided for @tooOldNeeds.
+  ///
+  /// In en, this message translates to:
+  /// **'{app} · needs API ≥ {min}'**
+  String tooOldNeeds(String app, int min);
+
+  /// No description provided for @tooOldServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get tooOldServer;
+
+  /// No description provided for @tooOldServerValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{version} · API {revision}'**
+  String tooOldServerValue(String version, int revision);
+
+  /// No description provided for @tooOldServerUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get tooOldServerUrl;
+
+  /// No description provided for @tooOldStillOld.
+  ///
+  /// In en, this message translates to:
+  /// **'The server still reports API revision {revision}'**
+  String tooOldStillOld(int revision);
+
+  /// No description provided for @tooOldPairOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair with another server'**
+  String get tooOldPairOther;
 }
 
 class _AppLocalizationsDelegate

@@ -50,6 +50,15 @@ class AppDatabase extends _$AppDatabase {
     ),
   );
 
+  /// Unpairing: everything from the old server goes, the sync state resets.
+  Future<void> wipe() => transaction(() async {
+    for (final table in allTables) {
+      if (table.actualTableName == syncState.actualTableName) continue;
+      await delete(table).go();
+    }
+    await writeSyncState(epoch: null, lastSeq: null);
+  });
+
   /// Conversation list, newest first (the Chats screen).
   Stream<List<ConversationRow>> watchConversations({bool archived = false}) =>
       (select(conversations)

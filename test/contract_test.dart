@@ -234,7 +234,8 @@ void main() {
 
     test('meta and status parse, unknown keys ignored', () {
       final meta = ServerMeta.fromJson(obj(connection['meta']));
-      expect((meta.apiRevision, meta.revision), (1, 'eb4045ed6a94'));
+      expect(meta.apiRevision, contract['api_revision']);
+      expect(meta.revision, 'eb4045ed6a94');
       final status = ServerStatus.fromJson(obj(connection['status']));
       expect((status.hermes, status.thinkingRoute), (null, null));
     });

@@ -65,11 +65,235 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatTitle => 'Chat';
 
   @override
-  String get pairingTitle => 'Pair with your server';
-
-  @override
   String get notBuiltYet => 'Not built yet';
 
   @override
   String get back => 'Back';
+
+  @override
+  String get pairTitle => 'Pair this phone';
+
+  @override
+  String get pairIntro =>
+      'Connect to your Delve server over Tailscale. Get an 8-digit code on the desktop with: sudo delve pair';
+
+  @override
+  String get pairServerUrl => 'Server URL';
+
+  @override
+  String get pairServerUrlHint => 'https://archlinux.<tailnet>.ts.net';
+
+  @override
+  String get pairServerUrlHelper => 'Your desktop\'s Tailscale address';
+
+  @override
+  String get pairUrlInvalid => 'Not a valid address';
+
+  @override
+  String get pairUrlNotHttps => 'Use the https:// address';
+
+  @override
+  String get pairUrlNotTailnet =>
+      'Use the desktop\'s Tailscale name (….ts.net)';
+
+  @override
+  String get pairCode => 'Pairing code';
+
+  @override
+  String get pairCodeHelper => '8 digits, valid for 10 minutes';
+
+  @override
+  String get pairCodeInvalid => 'Invalid or expired code';
+
+  @override
+  String get pairButton => 'Pair';
+
+  @override
+  String pairButtonWait(int seconds) {
+    return 'Pair · $seconds s';
+  }
+
+  @override
+  String pairRateLimited(int seconds) {
+    return 'Too many attempts — try again in $seconds s';
+  }
+
+  @override
+  String get pairUnreachable => 'Can\'t reach the server — is Tailscale on?';
+
+  @override
+  String pairFailed(String reason) {
+    return 'Pairing failed: $reason';
+  }
+
+  @override
+  String pairFailedServer(int status) {
+    return 'server error (HTTP $status)';
+  }
+
+  @override
+  String get pairFailedNotDelve =>
+      'unexpected answer — is this the Delve server?';
+
+  @override
+  String get pairFootnote => 'Traffic stays inside your tailnet.';
+
+  @override
+  String get pairNoteUnpaired =>
+      'This phone was unpaired. Pair again with a new code.';
+
+  @override
+  String get pairNoteUnpairedLocally =>
+      'Unpaired on this phone, but the server could not be reached. Revoke the old token there: sudo delve token list, then sudo delve token revoke <id>.';
+
+  @override
+  String get pairNoteRevoked =>
+      'The server no longer accepts this phone\'s token. Pair again with a new code.';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get settingsServer => 'Server';
+
+  @override
+  String get settingsServerUrl => 'Server URL';
+
+  @override
+  String get settingsThisDevice => 'This device';
+
+  @override
+  String settingsPairedSeen(String date, String seen) {
+    return 'Paired $date · last seen $seen';
+  }
+
+  @override
+  String get settingsSeenNow => 'now';
+
+  @override
+  String settingsSeenMinutes(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String get settingsSeenNever => 'never';
+
+  @override
+  String get settingsThinkingRoute => 'Thinking route';
+
+  @override
+  String get settingsStatus => 'Status';
+
+  @override
+  String get settingsRouteOk => 'OK';
+
+  @override
+  String settingsRouteOkDetail(String time) {
+    return 'Last thinking run at $time used the thinking model';
+  }
+
+  @override
+  String get settingsRouteFailed => 'Check failed';
+
+  @override
+  String settingsRouteFailedDetail(String time) {
+    return 'Last thinking run at $time did not use the thinking model';
+  }
+
+  @override
+  String get settingsRouteNone => 'No data';
+
+  @override
+  String get settingsRouteNoneDetail =>
+      'No thinking run since the server started';
+
+  @override
+  String get settingsCheckAgain => 'Check again';
+
+  @override
+  String get settingsVersions => 'Versions';
+
+  @override
+  String get settingsApp => 'App';
+
+  @override
+  String get settingsServerVersion => 'Server';
+
+  @override
+  String get settingsApiRevision => 'API revision';
+
+  @override
+  String get settingsHermes => 'Hermes Agent';
+
+  @override
+  String get settingsHermesDown => 'down';
+
+  @override
+  String get settingsUnknown => '—';
+
+  @override
+  String settingsLoadFailed(String reason) {
+    return 'Couldn\'t load: $reason';
+  }
+
+  @override
+  String get settingsUnpair => 'Unpair this device';
+
+  @override
+  String get settingsUnpairNote =>
+      'You will need a new pairing code to connect again.';
+
+  @override
+  String get unpairDialogTitle => 'Unpair this device?';
+
+  @override
+  String get unpairDialogBody =>
+      'The server stops accepting this phone and the local copy of your chats is deleted. You will need a new pairing code to connect again.';
+
+  @override
+  String get unpairDialogConfirm => 'Unpair';
+
+  @override
+  String get tooOldTitle => 'Server version too old for this app';
+
+  @override
+  String tooOldBody(String app, int min) {
+    return 'Delve $app needs API revision $min or newer. Update the Delve server on your desktop, then try again.';
+  }
+
+  @override
+  String get tooOldThisApp => 'This app';
+
+  @override
+  String tooOldNeeds(String app, int min) {
+    return '$app · needs API ≥ $min';
+  }
+
+  @override
+  String get tooOldServer => 'Server';
+
+  @override
+  String tooOldServerValue(String version, int revision) {
+    return '$version · API $revision';
+  }
+
+  @override
+  String get tooOldServerUrl => 'Server URL';
+
+  @override
+  String tooOldStillOld(int revision) {
+    return 'The server still reports API revision $revision';
+  }
+
+  @override
+  String get tooOldPairOther => 'Pair with another server';
 }

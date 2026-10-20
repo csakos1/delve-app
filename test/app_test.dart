@@ -1,39 +1,14 @@
-import 'package:delve/app/app.dart';
-import 'package:delve/app/providers.dart';
 import 'package:delve/data/db/database.dart';
-import 'package:drift/drift.dart' show DatabaseConnection;
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/harness.dart';
+
 void main() {
-  late AppDatabase db;
-
-  setUp(() {
-    db = AppDatabase(
-      DatabaseConnection(
-        NativeDatabase.memory(),
-        closeStreamsSynchronously: true,
-      ),
-    );
-  });
-  tearDown(() => db.close());
-
-  Future<void> pumpApp(WidgetTester tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [databaseProvider.overrideWithValue(db)],
-        child: const DelveApp(),
-      ),
-    );
-    await tester.pumpAndSettle();
-  }
-
   testWidgets('starts on Chats with the four top-level destinations', (
     tester,
   ) async {
-    await pumpApp(tester);
+    await pumpDelve(tester);
     expect(find.byType(NavigationBar), findsOneWidget);
     for (final label in ['Chats', 'Dashboard', 'Approvals', 'More']) {
       expect(find.text(label), findsWidgets, reason: label);
@@ -42,7 +17,7 @@ void main() {
   });
 
   testWidgets('More opens sub-pages without bottom navigation', (tester) async {
-    await pumpApp(tester);
+    await pumpDelve(tester);
     await tester.tap(find.text('More'));
     await tester.pumpAndSettle();
     expect(find.text('System'), findsOneWidget);
@@ -61,14 +36,15 @@ void main() {
   testWidgets('new chat is a detail screen without bottom navigation', (
     tester,
   ) async {
-    await pumpApp(tester);
+    await pumpDelve(tester);
     await tester.tap(find.text('New chat'));
     await tester.pumpAndSettle();
     expect(find.byType(NavigationBar), findsNothing);
   });
 
   testWidgets('Approvals badge follows the database', (tester) async {
-    await pumpApp(tester);
+    final env = await pumpDelve(tester);
+    final db = env.db;
     expect(find.byType(Badge), findsNothing);
 
     final t0 = DateTime.utc(2026, 10, 20, 8);
