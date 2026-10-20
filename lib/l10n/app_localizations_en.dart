@@ -740,4 +740,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String approvalBy(String name) {
     return 'by $name';
   }
+
+  @override
+  String get approvalsPending => 'Pending';
+
+  @override
+  String get approvalsExpired => 'Expired in agent — still approvable';
+
+  @override
+  String get approvalsRecent => 'Recent';
+
+  @override
+  String get approvalsNothingWaiting => 'Nothing is waiting for you.';
+
+  @override
+  String get approvalsEmptyTitle => 'Nothing to approve';
+
+  @override
+  String get approvalsEmptyBody =>
+      'Commands the agent wants your OK for show up here.';
+
+  @override
+  String approvalsRefreshFailed(String reason) {
+    return 'Couldn\'t reload: $reason';
+  }
+
+  @override
+  String get approvalsLateStarted => 'Approved — Delve runs it in a follow-up.';
+
+  @override
+  String approvalsExpiredUntil(String time) {
+    return 'Expired in agent · approvable until $time';
+  }
+
+  @override
+  String approvalsClosedAt(String time) {
+    return 'Expired in agent · closed at $time';
+  }
+
+  @override
+  String get approvalsMore => 'More options';
+
+  @override
+  String get approvalsOpenChat => 'Open chat';
+
+  @override
+  String get approvalsWhoYou => 'You';
+
+  @override
+  String get approvalsWhoAuto => 'Delve (follow-up)';
+
+  @override
+  String get chatFollowUp => 'Follow-up run: approved';
 }

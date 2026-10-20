@@ -162,6 +162,57 @@ class SystemLine extends StatelessWidget {
   );
 }
 
+/// The command of a late-approval prompt: what follows its first blank
+/// line (the backend's fixed prompt puts the command last, decision 153).
+String followUpCommand(String prompt) {
+  final at = prompt.indexOf('\n\n');
+  return (at < 0 ? prompt : prompt.substring(at + 2)).trim();
+}
+
+/// 08b: the prompt of a follow-up run after a late approval, shown as
+/// "Follow-up run: approved" and the command as inline code.
+class FollowUpLine extends StatelessWidget {
+  const FollowUpLine({super.key, required this.command});
+
+  final String command;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final cs = context.colors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space6),
+      child: Column(
+        children: [
+          Text(
+            l.chatFollowUp,
+            textAlign: TextAlign.center,
+            style: context.text.bodySmall!.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: DelveTokens.space1),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer,
+              border: Border.all(
+                color: cs.outlineVariant,
+                width: DelveTokens.hairline,
+              ),
+              borderRadius: BorderRadius.circular(DelveTokens.rxs),
+            ),
+            child: Text(
+              displayCommand(command),
+              key: const Key('followUp.command'),
+              textAlign: TextAlign.center,
+              style: DelveText.monoSmall.copyWith(color: cs.onSurface),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// One run: interim remarks, tool steps and the answer on a rail (indent
 /// 20, 2 dp rail, 8 dp nodes). A run that is still going sits in a surface-1
 /// container with an accent rail and a "running · m:ss" footer.

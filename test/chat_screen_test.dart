@@ -661,6 +661,46 @@ void main() {
       expect(button(t, 'approval.deny').onPressed, isNotNull);
     });
 
+    testWidgets('a follow-up run after a late approval reads as one', (
+      t,
+    ) async {
+      await pumpDelve(
+        t,
+        actions: fake,
+        settle: false,
+        before: (env) async {
+          fake.db = env.db;
+          final db = env.db;
+          await db.putConversation(conversation('c_1'));
+          await db.batch(
+            (b) => b
+              ..insertAll(db.messages, [
+                message(
+                  1,
+                  'system',
+                  'A felhasználó utólag jóváhagyta …:\n\n$restartCommand',
+                  runId: 'run_f',
+                ),
+                message(2, 'assistant', 'Restarted.', runId: 'run_f'),
+              ])
+              ..insertAll(db.runs, [
+                run(
+                  'run_f',
+                  'completed',
+                ).copyWith(origin: const Value('late_approval')),
+              ]),
+          );
+        },
+      );
+      await openChat(t, settle: false);
+      expect(find.text('Follow-up run: approved'), findsOneWidget);
+      expect(
+        t.widget<Text>(find.byKey(const Key('followUp.command'))).data,
+        displayCommand(restartCommand),
+      );
+      expect(find.textContaining('utólag'), findsNothing);
+    });
+
     test('countdown, clock time and class labels', () {
       expect(countdownText(const Duration(seconds: 252)), '4:12');
       expect(countdownText(const Duration(seconds: 45)), '0:45');
@@ -672,6 +712,8 @@ void main() {
       expect(approvalClassLabel(l, 'pkg_upgrade'), 'package upgrade');
       expect(approvalClassLabel(l, 'delete_kill'), 'delete / kill');
       expect(approvalClassLabel(l, 'whatever'), 'command');
+      expect(followUpCommand('Prompt:\n\nrm -r /tmp/x'), 'rm -r /tmp/x');
+      expect(followUpCommand('only text'), 'only text');
     });
   });
 

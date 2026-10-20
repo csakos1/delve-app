@@ -484,5 +484,41 @@
         "type": "String"
       }
     }
-  }
+  },
+  "approvalsPending": "Pending",
+  "approvalsExpired": "Expired in agent — still approvable",
+  "approvalsRecent": "Recent",
+  "approvalsNothingWaiting": "Nothing is waiting for you.",
+  "approvalsEmptyTitle": "Nothing to approve",
+  "approvalsEmptyBody": "Commands the agent wants your OK for show up here.",
+  "approvalsRefreshFailed": "Couldn't reload: {reason}",
+  "@approvalsRefreshFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "approvalsLateStarted": "Approved — Delve runs it in a follow-up.",
+  "approvalsExpiredUntil": "Expired in agent · approvable until {time}",
+  "@approvalsExpiredUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "approvalsClosedAt": "Expired in agent · closed at {time}",
+  "@approvalsClosedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "approvalsMore": "More options",
+  "approvalsOpenChat": "Open chat",
+  "approvalsWhoYou": "You",
+  "approvalsWhoAuto": "Delve (follow-up)",
+  "chatFollowUp": "Follow-up run: approved"
 }

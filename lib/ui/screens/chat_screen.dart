@@ -350,7 +350,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           );
         default:
-          out.add(SystemLine(key: key, text: m.content));
+          final run = m.runId == null ? null : data.runs[m.runId];
+          if (run?.origin == 'late_approval') {
+            out.add(
+              FollowUpLine(key: key, command: followUpCommand(m.content)),
+            );
+          } else {
+            out.add(SystemLine(key: key, text: m.content));
+          }
       }
     }
     for (final o in data.outbox) {

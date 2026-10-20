@@ -12,6 +12,9 @@ import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import 'tool_step_card.dart' show displayCommand;
 
+/// `decided_by` of the answer Delve gave itself to a follow-up run.
+const String lateApprovalDecider = 'late_approval';
+
 /// Whether [a] is still answerable: shown as an [ApprovalCard] in place of
 /// its tool step.
 bool isAnswerable(ApprovalRow a) =>
@@ -106,7 +109,7 @@ class _ApprovalCardState extends State<ApprovalCard> {
           ),
         ),
         const SizedBox(width: DelveTokens.space2),
-        _ClassChip(label: approvalClassLabel(l, a.actionClass)),
+        ApprovalClassChip(label: approvalClassLabel(l, a.actionClass)),
       ],
     );
 
@@ -139,7 +142,7 @@ class _ApprovalCardState extends State<ApprovalCard> {
         ),
       const SizedBox(height: DelveTokens.space3),
       if (waiting)
-        _Countdown(
+        ApprovalCountdown(
           remaining: a.hermesDeadline.difference(now),
           total: a.hermesDeadline.difference(a.createdAt),
         )
@@ -231,9 +234,9 @@ class _ApprovalCardState extends State<ApprovalCard> {
   }
 }
 
-/// Class chip: h 28 · radius-full · surface-4 · labelMedium.
-class _ClassChip extends StatelessWidget {
-  const _ClassChip({required this.label});
+/// Class chip (`action_class`): h 28 · radius-full · surface-4 · labelMedium.
+class ApprovalClassChip extends StatelessWidget {
+  const ApprovalClassChip({super.key, required this.label});
 
   final String label;
 
@@ -255,8 +258,12 @@ class _ClassChip extends StatelessWidget {
 }
 
 /// "Agent waits m:ss" with a 20 dp ring: warn above a minute, alert below.
-class _Countdown extends StatelessWidget {
-  const _Countdown({required this.remaining, required this.total});
+class ApprovalCountdown extends StatelessWidget {
+  const ApprovalCountdown({
+    super.key,
+    required this.remaining,
+    required this.total,
+  });
 
   final Duration remaining;
   final Duration total;
@@ -285,11 +292,13 @@ class _Countdown extends StatelessWidget {
           ),
         ),
         const SizedBox(width: DelveTokens.space2),
-        Text(
-          l.approvalWaits(countdownText(left)),
-          style: context.text.labelMedium!.copyWith(
-            color: c.fg,
-            fontFeatures: const [FontFeature.tabularFigures()],
+        Flexible(
+          child: Text(
+            l.approvalWaits(countdownText(left)),
+            style: context.text.labelMedium!.copyWith(
+              color: c.fg,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
         ),
       ],
@@ -334,6 +343,22 @@ class _LateBody extends StatelessWidget {
   }
 }
 
+/// Status chip of an answered (or lapsed) approval: kind, icon, word.
+(StatusKind, IconData, String) approvalOutcomeLook(
+  AppLocalizations l,
+  String status,
+) => switch (status) {
+  'approved_once' ||
+  'approved_session' => (StatusKind.ok, DelveIcons.ok, l.approvalApproved),
+  'late_approved' ||
+  'followup_started' => (StatusKind.ok, DelveIcons.ok, l.approvalApprovedLate),
+  'executed' => (StatusKind.ok, DelveIcons.ok, l.approvalRanLater),
+  'superseded' => (StatusKind.info, DelveIcons.info, l.approvalSuperseded),
+  'denied' => (StatusKind.info, DelveIcons.block, l.approvalDenied),
+  'expired' => (StatusKind.info, DelveIcons.timerOff, l.approvalExpired),
+  _ => (StatusKind.info, DelveIcons.cancel, l.approvalCancelled),
+};
+
 /// How an approval ended, for the line under its tool step (resolved
 /// state): status chip, who and when.
 class ApprovalOutcome extends StatelessWidget {
@@ -348,23 +373,10 @@ class ApprovalOutcome extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final a = approval;
-    final (kind, icon, label) = switch (a.status) {
-      'approved_once' ||
-      'approved_session' => (StatusKind.ok, DelveIcons.ok, l.approvalApproved),
-      'late_approved' || 'followup_started' => (
-        StatusKind.ok,
-        DelveIcons.ok,
-        l.approvalApprovedLate,
-      ),
-      'executed' => (StatusKind.ok, DelveIcons.ok, l.approvalRanLater),
-      'superseded' => (StatusKind.info, DelveIcons.info, l.approvalSuperseded),
-      'denied' => (StatusKind.info, DelveIcons.block, l.approvalDenied),
-      'expired' => (StatusKind.info, DelveIcons.timerOff, l.approvalExpired),
-      _ => (StatusKind.info, DelveIcons.cancel, l.approvalCancelled),
-    };
+    final (kind, icon, label) = approvalOutcomeLook(l, a.status);
     final by = a.decidedBy;
     final parts = <String>[
-      if (by != null && by != 'late_approval')
+      if (by != null && by != lateApprovalDecider)
         by == selfDevice ? l.approvalByYou : l.approvalBy(by),
       if (a.choice == ApprovalChoice.once.wire && a.status != 'denied')
         l.approvalAllowOnce,

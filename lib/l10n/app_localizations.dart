@@ -1359,6 +1359,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'by {name}'**
   String approvalBy(String name);
+
+  /// No description provided for @approvalsPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get approvalsPending;
+
+  /// No description provided for @approvalsExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired in agent — still approvable'**
+  String get approvalsExpired;
+
+  /// No description provided for @approvalsRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get approvalsRecent;
+
+  /// No description provided for @approvalsNothingWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is waiting for you.'**
+  String get approvalsNothingWaiting;
+
+  /// No description provided for @approvalsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to approve'**
+  String get approvalsEmptyTitle;
+
+  /// No description provided for @approvalsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Commands the agent wants your OK for show up here.'**
+  String get approvalsEmptyBody;
+
+  /// No description provided for @approvalsRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reload: {reason}'**
+  String approvalsRefreshFailed(String reason);
+
+  /// No description provided for @approvalsLateStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved — Delve runs it in a follow-up.'**
+  String get approvalsLateStarted;
+
+  /// No description provided for @approvalsExpiredUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired in agent · approvable until {time}'**
+  String approvalsExpiredUntil(String time);
+
+  /// No description provided for @approvalsClosedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired in agent · closed at {time}'**
+  String approvalsClosedAt(String time);
+
+  /// No description provided for @approvalsMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get approvalsMore;
+
+  /// No description provided for @approvalsOpenChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get approvalsOpenChat;
+
+  /// No description provided for @approvalsWhoYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get approvalsWhoYou;
+
+  /// No description provided for @approvalsWhoAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Delve (follow-up)'**
+  String get approvalsWhoAuto;
+
+  /// No description provided for @chatFollowUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow-up run: approved'**
+  String get chatFollowUp;
 }
 
 class _AppLocalizationsDelegate

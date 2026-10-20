@@ -23,9 +23,13 @@ reached over Tailscale only.
   session), the late-approval card once the agent stopped waiting, how an answered
   approval ended on its step. Answers go over the socket and are never queued: without
   a live connection the buttons are off.
+- A5b: the Approvals tab — pending (nearest deadline first), expired in the agent but
+  still approvable (late approval starts a follow-up run), recent answers with who and
+  when; Allow once / Deny / ⋯ (Allow for session, Open chat), reloaded on open and on
+  pull. The inbox answers over REST. In the chat, a follow-up run's prompt reads as
+  "Follow-up run: approved" with its command.
 
-The approvals inbox and late approval from it follow in A5b, thinking and the usage
-line in A6. Requires a server with
+Thinking and the usage line follow in A6. Requires a server with
 API revision 2 or newer (`DELETE /api/v1/devices/me` for unpairing).
 
 ## Stack
