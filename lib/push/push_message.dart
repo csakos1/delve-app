@@ -46,6 +46,20 @@ sealed class PushMessage {
           requestId: requestId,
           status: s('status') ?? '',
         );
+      case 'card' when s('type') == 'brief':
+        final cardId = s('card_id');
+        if (cardId == null) return null;
+        return BriefPush(
+          cardId: cardId,
+          uptimeS: int.tryParse(s('uptime_s') ?? ''),
+          updatesCount: int.tryParse(s('updates_count') ?? ''),
+          openIncidents: int.tryParse(s('open_incidents') ?? ''),
+          llamaState: switch (s('llama_state')) {
+            null || '' => null,
+            final v => v,
+          },
+          levelCm: double.tryParse(s('level_cm') ?? ''),
+        );
       case 'card':
         final cardId = s('card_id');
         final level = double.tryParse(s('level_cm') ?? '');
@@ -150,6 +164,27 @@ final class WaterPush extends PushMessage {
 
   /// Change at the station over 24 h, cm.
   final double? trendCm;
+}
+
+/// A new morning brief (`card`, type `brief`, B4); empty fields are null.
+final class BriefPush extends PushMessage {
+  const BriefPush({
+    required this.cardId,
+    this.uptimeS,
+    this.updatesCount,
+    this.openIncidents,
+    this.llamaState,
+    this.levelCm,
+  });
+
+  final String cardId;
+  final int? uptimeS;
+  final int? updatesCount;
+  final int? openIncidents;
+  final String? llamaState;
+
+  /// Siófok's level, cm.
+  final double? levelCm;
 }
 
 /// Notification id for a key (request id, run id): FNV-1a, positive 31 bit.

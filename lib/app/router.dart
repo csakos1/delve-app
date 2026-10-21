@@ -11,6 +11,8 @@ import '../ui/screens/connection_log_screen.dart';
 import '../ui/screens/dashboard_screen.dart';
 import '../ui/screens/more_screen.dart';
 import '../ui/screens/pairing_screen.dart';
+import '../ui/screens/schedule_editor_screen.dart';
+import '../ui/screens/schedules_screen.dart';
 import '../ui/screens/server_too_old_screen.dart';
 import '../ui/screens/settings_screen.dart';
 import '../ui/screens/splash_screen.dart';
@@ -33,6 +35,9 @@ abstract final class Routes {
   static String chat(String id) => '/chats/c/${Uri.encodeComponent(id)}';
   static const system = '/more/system';
   static const schedules = '/more/schedules';
+  static const newSchedule = '/more/schedules/new';
+  static String editSchedule(String id) =>
+      '/more/schedules/edit/${Uri.encodeComponent(id)}';
   static const observability = '/more/observability';
   static const settings = '/more/settings';
   static const connectionLog = '/more/settings/log';
@@ -126,6 +131,7 @@ GoRouter buildRouter({
                         MorePage.settings => const SettingsScreen(),
                         MorePage.archived => const ArchivedChatsScreen(),
                         MorePage.system => const SystemScreen(),
+                        MorePage.schedules => const SchedulesScreen(),
                         _ => SubPagePlaceholder(page: page),
                       },
                       routes: [
@@ -135,6 +141,20 @@ GoRouter buildRouter({
                             parentNavigatorKey: rootKey,
                             builder: (_, _) => const ConnectionLogScreen(),
                           ),
+                        if (page == MorePage.schedules) ...[
+                          GoRoute(
+                            path: 'new',
+                            parentNavigatorKey: rootKey,
+                            builder: (_, _) => const ScheduleEditorScreen(),
+                          ),
+                          GoRoute(
+                            path: 'edit/:id',
+                            parentNavigatorKey: rootKey,
+                            builder: (_, state) => ScheduleEditorScreen(
+                              scheduleId: state.pathParameters['id'],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                 ],

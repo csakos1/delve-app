@@ -1017,7 +1017,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsNotifyBrief => 'Morning brief';
 
   @override
-  String get settingsNotifyLaterSchedules => 'Comes with schedules';
+  String get settingsNotifyBriefSub => 'After each morning brief';
 
   @override
   String get settingsNotifyPermissionOff =>
@@ -1301,5 +1301,285 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String systemLoadFailed(String reason) {
     return 'Couldn\'t load the system view: $reason';
+  }
+
+  @override
+  String get schedulesNew => 'New schedule';
+
+  @override
+  String get schedulesEmptyBody =>
+      'A schedule sends a prompt to the agent at set times, in a new chat each time or always in the same one.';
+
+  @override
+  String get schedulesRunNow => 'Run now';
+
+  @override
+  String get schedulesPaused => 'Paused';
+
+  @override
+  String schedulesNextRun(String when) {
+    return 'Next run $when';
+  }
+
+  @override
+  String schedulesNextRunIn(String wait, String when) {
+    return 'Next run in $wait · $when';
+  }
+
+  @override
+  String schedulesLastRun(String when, String status) {
+    return 'Last run $when · $status';
+  }
+
+  @override
+  String get schedulesNotRunYet => 'Not run yet';
+
+  @override
+  String get schedulesStatusOk => 'OK';
+
+  @override
+  String get schedulesStatusFailed => 'Failed';
+
+  @override
+  String get schedulesStatusStopped => 'Stopped';
+
+  @override
+  String get schedulesStatusRunning => 'Running';
+
+  @override
+  String get schedulesStatusQueued => 'Queued';
+
+  @override
+  String schedulesToday(String time) {
+    return 'today $time';
+  }
+
+  @override
+  String schedulesTomorrow(String time) {
+    return 'tomorrow $time';
+  }
+
+  @override
+  String schedulesLoadFailed(String reason) {
+    return 'Couldn\'t load schedules: $reason';
+  }
+
+  @override
+  String schedulesSaveFailed(String reason) {
+    return 'Couldn\'t save: $reason';
+  }
+
+  @override
+  String schedulesRunFailed(String reason) {
+    return 'Couldn\'t run it: $reason';
+  }
+
+  @override
+  String get schedulesRunQueued => 'Queued — the answer arrives in its chat.';
+
+  @override
+  String get schedulesBriefWritten =>
+      'Morning brief written — it\'s on the dashboard.';
+
+  @override
+  String schedulesEveryDay(String times) {
+    return 'Every day at $times';
+  }
+
+  @override
+  String schedulesWeekdays(String time) {
+    return 'Weekdays at $time';
+  }
+
+  @override
+  String schedulesWeekends(String time) {
+    return 'Weekends at $time';
+  }
+
+  @override
+  String schedulesEveryWeek(String day, String time) {
+    return '${day}s at $time';
+  }
+
+  @override
+  String schedulesOnDays(String days, String time) {
+    return '$days at $time';
+  }
+
+  @override
+  String schedulesListAnd(String head, String last) {
+    return '$head and $last';
+  }
+
+  @override
+  String get schedEditTitle => 'Edit schedule';
+
+  @override
+  String get schedNewTitle => 'New schedule';
+
+  @override
+  String get schedSave => 'Save';
+
+  @override
+  String get schedName => 'Name';
+
+  @override
+  String get schedRepeats => 'Repeats';
+
+  @override
+  String get schedDaily => 'Daily';
+
+  @override
+  String get schedWeekly => 'Weekly';
+
+  @override
+  String get schedCron => 'Cron';
+
+  @override
+  String get schedAddTime => 'Add time';
+
+  @override
+  String schedRemoveTime(String time) {
+    return 'Remove $time';
+  }
+
+  @override
+  String get schedSameMinute =>
+      'Several times a day must share the minute past the hour (a cron limit). Use Cron for anything else.';
+
+  @override
+  String get schedNoTime => 'Add a time.';
+
+  @override
+  String get schedNoDay => 'Pick at least one day.';
+
+  @override
+  String get schedCronHelp =>
+      'minute · hour · day · month · weekday, in Budapest time';
+
+  @override
+  String get schedCronInvalid => 'Five fields: minute hour day month weekday.';
+
+  @override
+  String get schedPrompt => 'Prompt';
+
+  @override
+  String get schedPostTo => 'Post results to';
+
+  @override
+  String get schedNewChat => 'New chat for each run';
+
+  @override
+  String get schedFixedChat => 'Fixed chat';
+
+  @override
+  String get schedPickChat => 'Pick a chat';
+
+  @override
+  String get schedNoChats => 'No chats yet. Start one first.';
+
+  @override
+  String get schedThinking => 'Thinking';
+
+  @override
+  String get schedThinkingSub => 'Off is faster for short, routine prompts';
+
+  @override
+  String get schedDelete => 'Delete schedule';
+
+  @override
+  String schedDeleteTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get schedDeleteBody => 'Its past runs stay in their chats.';
+
+  @override
+  String get schedDeleteConfirm => 'Delete';
+
+  @override
+  String get schedBriefNote =>
+      'The morning brief is written by the server without the model: uptime, package updates, open incidents, llama-server and the water level.';
+
+  @override
+  String get schedMissing => 'This schedule no longer exists.';
+
+  @override
+  String get schedErrInvalidCron => 'Not a valid cron expression.';
+
+  @override
+  String get schedErrTooFrequent =>
+      'A schedule may run at most every 10 minutes.';
+
+  @override
+  String get schedErrName => 'Give it a name (at most 64 characters).';
+
+  @override
+  String get schedErrPrompt => 'Write a prompt.';
+
+  @override
+  String get schedErrChat => 'Pick a chat that still exists.';
+
+  @override
+  String get dashBriefTitle => 'Morning brief';
+
+  @override
+  String get dashBriefUptime => 'Uptime';
+
+  @override
+  String get dashBriefUpdates => 'Package updates';
+
+  @override
+  String get dashBriefIncidents => 'Open incidents';
+
+  @override
+  String get dashBriefLastBoot => 'Last boot';
+
+  @override
+  String dashBriefMissing(String sources) {
+    return 'Not available this morning: $sources';
+  }
+
+  @override
+  String notifyBriefTitle(String uptime) {
+    return 'Morning brief · up $uptime';
+  }
+
+  @override
+  String get notifyBriefTitlePlain => 'Morning brief';
+
+  @override
+  String notifyBriefUpdates(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count updates',
+      one: '1 update',
+      zero: 'no updates',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifyBriefIncidents(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count open incidents',
+      one: '1 open incident',
+      zero: 'no open incidents',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String notifyBriefLlama(String state) {
+    return 'llama-server $state';
+  }
+
+  @override
+  String notifyBriefWater(String level) {
+    return 'water $level cm';
   }
 }

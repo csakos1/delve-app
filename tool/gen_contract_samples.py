@@ -6,10 +6,12 @@ Run from a delve-backend checkout with its venv active:
 import json, sys, uuid
 from datetime import datetime, timedelta, timezone
 from delve import API_REVISION, protocol
-from delve.db.models import Approval, Card, Conversation, Message, Run, ToolStep
+from delve.db.models import Approval, Card, Conversation, Message, Run, Schedule, ToolStep
 from delve.serialize import approval_out, card_out, conversation_out, message_out, run_out, step_out
 from delve.llama import Props
 from delve.system import Parts, system_out
+from delve.brief import brief_payload
+from delve.schedules import schedule_out
 
 t0 = datetime(2026, 10, 19, 21, 39, 0, 123456, tzinfo=timezone.utc)
 conv = Conversation(id="c_5f2a9e1b7c3d4e6f", title="Kernel and CPU count", created_at=t0,
@@ -64,6 +66,28 @@ system_stopped = system_out(Parts(checked_at=t0, hermes_ok=True, hermes_version=
     known_slots=1, intent="stopped", queued_runs=2,
     gpus=[{**gpus[0], "mem_used_mib": 1266}, {**gpus[1], "mem_used_mib": 15}]))
 
+# B4: schedules and the morning brief
+brief_sched = Schedule(id=uuid.UUID("7c1e9d2a-4b3f-4e5a-9c8d-1f2e3a4b5c6d"), kind="brief",
+    name="Morning brief", cron="30 7 * * *", prompt=None, conversation_mode="new",
+    conversation_id=None, thinking=False, enabled=True, next_run_at=t0 + timedelta(hours=8),
+    last_run_at=t0 - timedelta(hours=16), last_status="ok", last_error=None,
+    created_at=t0 - timedelta(days=2), updated_at=t0 - timedelta(hours=16))
+prompt_sched = Schedule(id=uuid.UUID("2b4d6f8a-1c3e-4a5b-8d7f-9e0a1b2c3d4e"), kind="prompt",
+    name="Arch news digest", cron="52 8,12,20 * * *", prompt="Summarize today's Arch news in three lines.",
+    conversation_mode="fixed", conversation_id=conv.id, thinking=False, enabled=True,
+    next_run_at=t0 + timedelta(hours=11), last_run_at=t0 - timedelta(minutes=47), last_status=None,
+    last_error=None, created_at=t0 - timedelta(days=1), updated_at=t0 - timedelta(minutes=47))
+updates_card = Card(id="5d0c9b8a7f6e4d3c2b1a0f9e8d7c6b5a", v=1, type="updates", severity="info",
+    ts=t0 - timedelta(hours=2), origin="script", payload={"count": 44, "packages": ["clang"],
+    "checked_at": "2026-10-19T19:39:00Z"}, received_at=t0 - timedelta(hours=2))
+brief = brief_payload(now=t0, host={"uptime_s": 275400, "booted_at": 1792443359},
+    incidents=[{"id": "98de85_009110dce5cf", "state": "detected", "job": "98de85fe6a1f",
+                "error": "Script exited with code 2 stderr: cron_failtest: simulated parse_failed",
+                "last_seen": "2026-10-19T21:35:16.146881+02:00"}],
+    updates=updates_card, water=card, system=system_running)
+brief_card = Card(id="3e69fb78e25c4d45bfdbe18b3e3da170", v=1, type="brief", severity="warn",
+    ts=t0, origin="backend", session_id=None, payload=brief, received_at=t0)
+
 shapes = {
     "conversation": conversation_out(conv),
     "message": message_out(msg),
@@ -78,6 +102,11 @@ shapes = {
     "system": system_running,
     "gpu": system_running["gpus"][0],
     "hermes_issue": system_running["hermes"]["issues"][0],
+    "schedule": schedule_out(brief_sched),
+    "schedule_prompt": schedule_out(prompt_sched),
+    "brief_payload": brief,
+    "brief_incident": brief["incidents"][0],
+    "card_brief": card_out(brief_card),
     "tool_step_plain": step_out(ToolStep(id=98, run_id=run.run_id, tool="terminal", status="running",
         preview_start="nproc", result=None, result_raw=None, user_summary=None, duration_s=None,
         seq_started=9, seq_completed=None, approval_request_id=None)),
@@ -104,6 +133,8 @@ events = {
     "health.status": {"hermes": "ok", "hermes_version": "0.22.2"},
     "card.new": card_out(card),
     "system.updated": system_stopped,
+    "schedule.updated": schedule_out(prompt_sched),
+    "schedule.deleted": {"id": str(prompt_sched.id)},
     "error": {"code": "thinking_route_not_applied", "ref_id": run.run_id, "message": "The thinking run did not use the thinking provider."},
 }
 for k, v in events.items():

@@ -18,8 +18,8 @@ import '../widgets/status_ui.dart';
 import '../widgets/system_ui.dart';
 import '../widgets/water_chart.dart';
 
-/// 12 Dashboard: connection, the Lake Balaton water level with its week (B2)
-/// and the System card (B3). The morning brief arrives with B4.
+/// 12 Dashboard: connection, the Lake Balaton water level with its week (B2),
+/// the morning brief (B4) and the System card (B3).
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -104,6 +104,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               AsyncData() || AsyncError() => const _WaterEmpty(),
               _ => const SizedBox(height: 320),
             },
+            const BriefCard(),
             const SizedBox(height: DelveTokens.space3),
             const SystemCard(),
           ],
@@ -440,6 +441,192 @@ class SystemCard extends ConsumerWidget {
           LlamaButton(info: info),
         ],
       ),
+    );
+  }
+}
+
+/// Morning brief (design 12): uptime, package updates and open incidents in a
+/// recessed row, then llama-server and the last boot. Written by the backend
+/// each morning; nothing shows before the first one.
+class BriefCard extends ConsumerWidget {
+  const BriefCard({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reading = ref.watch(latestBriefProvider).value;
+    if (reading == null) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
+    final b = reading.brief;
+    final now = DateTime.now();
+    final open = b.openIncidents;
+    final booted = b.bootedAt;
+    final firstIncident = b.incidents.isEmpty ? null : b.incidents.first;
+    return Padding(
+      padding: const EdgeInsets.only(top: DelveTokens.space3),
+      child: SurfaceCard(
+        key: const Key('dashboard.brief'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            CardHeader(
+              title: l.dashBriefTitle,
+              note: clockTime(reading.card.ts, now),
+            ),
+            _BriefTiles(
+              uptime: b.uptimeS == null
+                  ? null
+                  : uptimeText(Duration(seconds: b.uptimeS!)),
+              updates: b.updatesCount,
+              incidents: open,
+            ),
+            const SizedBox(height: DelveTokens.space2),
+            if (b.llamaState case final state?)
+              InfoRow(label: l.systemLlama, trailing: llamaChip(l, state)),
+            if (booted != null)
+              InfoRow(
+                label: l.dashBriefLastBoot,
+                value: DateFormat('EEE d MMM HH:mm').format(booted.toLocal()),
+              ),
+            if (firstIncident != null) ...[
+              const SizedBox(height: DelveTokens.space2),
+              StatusBanner(
+                key: const Key('brief.incident'),
+                kind: StatusKind.warn,
+                icon: DelveIcons.warning,
+                text: [
+                  firstIncident.job ?? firstIncident.id,
+                  ?firstIncident.error,
+                ].join(' · '),
+              ),
+            ],
+            if (b.missing.isNotEmpty) ...[
+              const SizedBox(height: DelveTokens.space2),
+              Text(
+                l.dashBriefMissing(b.missing.join(', ')),
+                key: const Key('brief.missing'),
+                style: context.text.bodyMedium!.copyWith(
+                  color: context.delve.textMuted,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The three figures of the brief side by side in a recessed well.
+class _BriefTiles extends StatelessWidget {
+  const _BriefTiles({this.uptime, this.updates, this.incidents});
+  final String? uptime;
+  final int? updates;
+  final int? incidents;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final divider = VerticalDivider(
+      width: DelveTokens.space4,
+      thickness: DelveTokens.hairline,
+      color: context.colors.outlineVariant,
+    );
+    final inc = incidents;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DelveTokens.space4,
+        vertical: DelveTokens.space3,
+      ),
+      decoration: BoxDecoration(
+        color: context.colors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(DelveTokens.rmd),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: _Tile(
+                key: const Key('brief.uptime'),
+                label: l.dashBriefUptime,
+                value: uptime ?? '—',
+              ),
+            ),
+            divider,
+            Expanded(
+              child: _Tile(
+                key: const Key('brief.updates'),
+                label: l.dashBriefUpdates,
+                value: updates?.toString() ?? '—',
+              ),
+            ),
+            divider,
+            Expanded(
+              child: _Tile(
+                key: const Key('brief.incidents'),
+                label: l.dashBriefIncidents,
+                value: inc?.toString() ?? '—',
+                status: inc == null
+                    ? null
+                    : inc == 0
+                    ? StatusKind.ok
+                    : StatusKind.warn,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Tile extends StatelessWidget {
+  const _Tile({
+    super.key,
+    required this.label,
+    required this.value,
+    this.status,
+  });
+  final String label;
+  final String value;
+  final StatusKind? status;
+
+  @override
+  Widget build(BuildContext context) {
+    final kind = status;
+    final c = kind == null ? null : context.status(kind);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: context.text.bodyMedium!.copyWith(
+            color: context.colors.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: DelveTokens.space1),
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                value,
+                style: context.text.titleLarge!.copyWith(
+                  color: kind == StatusKind.warn ? c!.fg : null,
+                ),
+              ),
+            ),
+            if (c != null) ...[
+              const SizedBox(width: DelveTokens.space2),
+              SymbolIcon(
+                kind == StatusKind.ok ? DelveIcons.ok : DelveIcons.warning,
+                size: DelveTokens.iconMd,
+                filled: true,
+                color: c.fg,
+              ),
+            ],
+          ],
+        ),
+      ],
     );
   }
 }

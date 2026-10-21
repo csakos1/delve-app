@@ -140,6 +140,11 @@ class SyncEngine {
   /// stop or start, or when the held queue is let go.
   Stream<SystemInfo> get systemUpdates => _systemController.stream;
 
+  final _scheduleController = StreamController<ScheduleChange>.broadcast();
+
+  /// `schedule.updated` / `schedule.deleted` events (B4).
+  Stream<ScheduleChange> get scheduleChanges => _scheduleController.stream;
+
   Uri get webSocketUrl => webSocketUri(credentials.server, ApiRoutes.ws.$2);
 
   bool _started = false;
@@ -261,6 +266,7 @@ class SyncEngine {
     await _applying;
     await _statusController.close();
     await _systemController.close();
+    await _scheduleController.close();
   }
 
   // ---------------------------------------------------------------------------
@@ -595,6 +601,11 @@ class SyncEngine {
         }
         if (outcome.system case final system? when !_disposed) {
           _systemController.add(system);
+        }
+        if (!_disposed) {
+          for (final change in outcome.schedules) {
+            _scheduleController.add(change);
+          }
         }
         for (final err in outcome.errors) {
           _log(

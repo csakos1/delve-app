@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:delve/api/events.dart';
 import 'package:delve/api/protocol.dart';
 import 'package:delve/api/rest_client.dart';
 import 'package:delve/data/credentials.dart';
@@ -194,6 +195,18 @@ void main() {
     final s = await next.timeout(const Duration(seconds: 5));
     expect((s.llama.status, s.hermes.status), ('running', 'degraded'));
     await eventually(() async => (await db.readSyncState()).lastSeq == 1);
+  });
+
+  test('schedule changes are handed on, not stored (B4)', () async {
+    await engine.start();
+    await live();
+    final changes = engine.scheduleChanges.take(2).toList();
+    ws.broadcast('schedule.updated', sample('schedule_prompt'));
+    ws.broadcast('schedule.deleted', {'id': sample('schedule_prompt')['id']});
+    final got = await changes.timeout(const Duration(seconds: 5));
+    expect((got[0] as ScheduleUpdated).schedule.name, 'Arch news digest');
+    expect((got[1] as ScheduleDeleted).id, sample('schedule_prompt')['id']);
+    await eventually(() async => (await db.readSyncState()).lastSeq == 2);
   });
 
   test('events up to the stored position are not applied twice', () async {

@@ -1804,11 +1804,11 @@ abstract class AppLocalizations {
   /// **'Morning brief'**
   String get settingsNotifyBrief;
 
-  /// No description provided for @settingsNotifyLaterSchedules.
+  /// No description provided for @settingsNotifyBriefSub.
   ///
   /// In en, this message translates to:
-  /// **'Comes with schedules'**
-  String get settingsNotifyLaterSchedules;
+  /// **'After each morning brief'**
+  String get settingsNotifyBriefSub;
 
   /// No description provided for @settingsNotifyPermissionOff.
   ///
@@ -2223,6 +2223,438 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load the system view: {reason}'**
   String systemLoadFailed(String reason);
+
+  /// No description provided for @schedulesNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New schedule'**
+  String get schedulesNew;
+
+  /// No description provided for @schedulesEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A schedule sends a prompt to the agent at set times, in a new chat each time or always in the same one.'**
+  String get schedulesEmptyBody;
+
+  /// No description provided for @schedulesRunNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Run now'**
+  String get schedulesRunNow;
+
+  /// No description provided for @schedulesPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get schedulesPaused;
+
+  /// No description provided for @schedulesNextRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Next run {when}'**
+  String schedulesNextRun(String when);
+
+  /// No description provided for @schedulesNextRunIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Next run in {wait} · {when}'**
+  String schedulesNextRunIn(String wait, String when);
+
+  /// No description provided for @schedulesLastRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Last run {when} · {status}'**
+  String schedulesLastRun(String when, String status);
+
+  /// No description provided for @schedulesNotRunYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not run yet'**
+  String get schedulesNotRunYet;
+
+  /// No description provided for @schedulesStatusOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get schedulesStatusOk;
+
+  /// No description provided for @schedulesStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get schedulesStatusFailed;
+
+  /// No description provided for @schedulesStatusStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get schedulesStatusStopped;
+
+  /// No description provided for @schedulesStatusRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get schedulesStatusRunning;
+
+  /// No description provided for @schedulesStatusQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get schedulesStatusQueued;
+
+  /// No description provided for @schedulesToday.
+  ///
+  /// In en, this message translates to:
+  /// **'today {time}'**
+  String schedulesToday(String time);
+
+  /// No description provided for @schedulesTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'tomorrow {time}'**
+  String schedulesTomorrow(String time);
+
+  /// No description provided for @schedulesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load schedules: {reason}'**
+  String schedulesLoadFailed(String reason);
+
+  /// No description provided for @schedulesSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save: {reason}'**
+  String schedulesSaveFailed(String reason);
+
+  /// No description provided for @schedulesRunFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t run it: {reason}'**
+  String schedulesRunFailed(String reason);
+
+  /// No description provided for @schedulesRunQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued — the answer arrives in its chat.'**
+  String get schedulesRunQueued;
+
+  /// No description provided for @schedulesBriefWritten.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning brief written — it\'s on the dashboard.'**
+  String get schedulesBriefWritten;
+
+  /// No description provided for @schedulesEveryDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Every day at {times}'**
+  String schedulesEveryDay(String times);
+
+  /// No description provided for @schedulesWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekdays at {time}'**
+  String schedulesWeekdays(String time);
+
+  /// No description provided for @schedulesWeekends.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekends at {time}'**
+  String schedulesWeekends(String time);
+
+  /// No description provided for @schedulesEveryWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{day}s at {time}'**
+  String schedulesEveryWeek(String day, String time);
+
+  /// No description provided for @schedulesOnDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} at {time}'**
+  String schedulesOnDays(String days, String time);
+
+  /// No description provided for @schedulesListAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'{head} and {last}'**
+  String schedulesListAnd(String head, String last);
+
+  /// No description provided for @schedEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit schedule'**
+  String get schedEditTitle;
+
+  /// No description provided for @schedNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New schedule'**
+  String get schedNewTitle;
+
+  /// No description provided for @schedSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get schedSave;
+
+  /// No description provided for @schedName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get schedName;
+
+  /// No description provided for @schedRepeats.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeats'**
+  String get schedRepeats;
+
+  /// No description provided for @schedDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get schedDaily;
+
+  /// No description provided for @schedWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get schedWeekly;
+
+  /// No description provided for @schedCron.
+  ///
+  /// In en, this message translates to:
+  /// **'Cron'**
+  String get schedCron;
+
+  /// No description provided for @schedAddTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Add time'**
+  String get schedAddTime;
+
+  /// No description provided for @schedRemoveTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {time}'**
+  String schedRemoveTime(String time);
+
+  /// No description provided for @schedSameMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'Several times a day must share the minute past the hour (a cron limit). Use Cron for anything else.'**
+  String get schedSameMinute;
+
+  /// No description provided for @schedNoTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a time.'**
+  String get schedNoTime;
+
+  /// No description provided for @schedNoDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least one day.'**
+  String get schedNoDay;
+
+  /// No description provided for @schedCronHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'minute · hour · day · month · weekday, in Budapest time'**
+  String get schedCronHelp;
+
+  /// No description provided for @schedCronInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Five fields: minute hour day month weekday.'**
+  String get schedCronInvalid;
+
+  /// No description provided for @schedPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt'**
+  String get schedPrompt;
+
+  /// No description provided for @schedPostTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Post results to'**
+  String get schedPostTo;
+
+  /// No description provided for @schedNewChat.
+  ///
+  /// In en, this message translates to:
+  /// **'New chat for each run'**
+  String get schedNewChat;
+
+  /// No description provided for @schedFixedChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed chat'**
+  String get schedFixedChat;
+
+  /// No description provided for @schedPickChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a chat'**
+  String get schedPickChat;
+
+  /// No description provided for @schedNoChats.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats yet. Start one first.'**
+  String get schedNoChats;
+
+  /// No description provided for @schedThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking'**
+  String get schedThinking;
+
+  /// No description provided for @schedThinkingSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Off is faster for short, routine prompts'**
+  String get schedThinkingSub;
+
+  /// No description provided for @schedDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete schedule'**
+  String get schedDelete;
+
+  /// No description provided for @schedDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String schedDeleteTitle(String name);
+
+  /// No description provided for @schedDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Its past runs stay in their chats.'**
+  String get schedDeleteBody;
+
+  /// No description provided for @schedDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get schedDeleteConfirm;
+
+  /// No description provided for @schedBriefNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The morning brief is written by the server without the model: uptime, package updates, open incidents, llama-server and the water level.'**
+  String get schedBriefNote;
+
+  /// No description provided for @schedMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This schedule no longer exists.'**
+  String get schedMissing;
+
+  /// No description provided for @schedErrInvalidCron.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a valid cron expression.'**
+  String get schedErrInvalidCron;
+
+  /// No description provided for @schedErrTooFrequent.
+  ///
+  /// In en, this message translates to:
+  /// **'A schedule may run at most every 10 minutes.'**
+  String get schedErrTooFrequent;
+
+  /// No description provided for @schedErrName.
+  ///
+  /// In en, this message translates to:
+  /// **'Give it a name (at most 64 characters).'**
+  String get schedErrName;
+
+  /// No description provided for @schedErrPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a prompt.'**
+  String get schedErrPrompt;
+
+  /// No description provided for @schedErrChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a chat that still exists.'**
+  String get schedErrChat;
+
+  /// No description provided for @dashBriefTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning brief'**
+  String get dashBriefTitle;
+
+  /// No description provided for @dashBriefUptime.
+  ///
+  /// In en, this message translates to:
+  /// **'Uptime'**
+  String get dashBriefUptime;
+
+  /// No description provided for @dashBriefUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Package updates'**
+  String get dashBriefUpdates;
+
+  /// No description provided for @dashBriefIncidents.
+  ///
+  /// In en, this message translates to:
+  /// **'Open incidents'**
+  String get dashBriefIncidents;
+
+  /// No description provided for @dashBriefLastBoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Last boot'**
+  String get dashBriefLastBoot;
+
+  /// No description provided for @dashBriefMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available this morning: {sources}'**
+  String dashBriefMissing(String sources);
+
+  /// No description provided for @notifyBriefTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning brief · up {uptime}'**
+  String notifyBriefTitle(String uptime);
+
+  /// No description provided for @notifyBriefTitlePlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning brief'**
+  String get notifyBriefTitlePlain;
+
+  /// No description provided for @notifyBriefUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{no updates} =1{1 update} other{{count} updates}}'**
+  String notifyBriefUpdates(int count);
+
+  /// No description provided for @notifyBriefIncidents.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{no open incidents} =1{1 open incident} other{{count} open incidents}}'**
+  String notifyBriefIncidents(int count);
+
+  /// No description provided for @notifyBriefLlama.
+  ///
+  /// In en, this message translates to:
+  /// **'llama-server {state}'**
+  String notifyBriefLlama(String state);
+
+  /// No description provided for @notifyBriefWater.
+  ///
+  /// In en, this message translates to:
+  /// **'water {level} cm'**
+  String notifyBriefWater(String level);
 }
 
 class _AppLocalizationsDelegate

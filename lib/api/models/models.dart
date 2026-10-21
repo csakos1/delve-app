@@ -1,8 +1,10 @@
 export 'agent_card.dart';
 export 'approval.dart';
+export 'brief.dart';
 export 'conversation.dart';
 export 'message.dart';
 export 'run.dart';
+export 'schedule.dart';
 export 'server_info.dart';
 export 'system_info.dart';
 export 'tool_step.dart';

@@ -71,6 +71,8 @@ Future<void> handlePush(
     case final WaterPush p:
       // in the foreground the dashboard has it already (card.new)
       if (!foreground) await notifications.show(waterNotification(l, p));
+    case final BriefPush p:
+      if (!foreground) await notifications.show(briefNotification(l, p));
     case null:
       break;
   }

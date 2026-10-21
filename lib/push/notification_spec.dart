@@ -132,6 +132,28 @@ NotificationSpec runDoneNotification(AppLocalizations l, RunDonePush p) {
 
 /// "Water level · Siófok 98 cm", "Lake average 101 cm · −2 cm vs yesterday";
 /// Open (the dashboard). One notification: the next reading replaces it.
+/// "Morning brief · up 3 d 4 h" / "44 updates · no open incidents ·
+/// llama-server running · water 98 cm"; replaces yesterday's.
+NotificationSpec briefNotification(AppLocalizations l, BriefPush p) {
+  final up = p.uptimeS;
+  final parts = [
+    if (p.updatesCount case final n?) l.notifyBriefUpdates(n),
+    if (p.openIncidents case final n?) l.notifyBriefIncidents(n),
+    if (p.llamaState case final s?) l.notifyBriefLlama(s),
+    if (p.levelCm case final cm?) l.notifyBriefWater('${cm.round()}'),
+  ];
+  return NotificationSpec(
+    id: notificationId('card:brief'),
+    channel: NotifyChannel.cards,
+    title: up == null
+        ? l.notifyBriefTitlePlain
+        : l.notifyBriefTitle(uptimeText(Duration(seconds: up))),
+    body: parts.join(' · '),
+    payload: const PushTarget(kind: 'card').encode(),
+    actions: [NotifyAction(NotifyActions.open, l.notifyOpen, opensApp: true)],
+  );
+}
+
 NotificationSpec waterNotification(AppLocalizations l, WaterPush p) {
   final parts = [
     if (p.lakeAvgCm case final avg?) l.notifyWaterLake('${avg.round()}'),

@@ -287,6 +287,52 @@ class DelveApi {
         SystemInfo.fromJson,
       );
 
+  /// Every schedule, the morning brief first (B4).
+  Future<List<Schedule>> schedules() async {
+    final json = await _json(ApiRoutes.schedules);
+    return _parse(
+      json,
+      (j) => [for (final s in _list(j, 'data')) Schedule.fromJson(s)],
+    );
+  }
+
+  /// A new prompt schedule; 422 with a code (`invalid_cron`, `too_frequent`,
+  /// `conversation_not_found`, …) when the server does not take it.
+  Future<Schedule> createSchedule(ScheduleDraft draft) async => _parse(
+    await _json(ApiRoutes.createSchedule, body: draft.toJson()),
+    Schedule.fromJson,
+  );
+
+  /// Changes the given [fields] (`name`, `cron`, `prompt`,
+  /// `conversation_mode`, `conversation_id`, `thinking`, `enabled`); the
+  /// brief takes only `cron` and `enabled`.
+  Future<Schedule> patchSchedule(
+    String id,
+    Map<String, Object?> fields,
+  ) async => _parse(
+    await _json(
+      ApiRoutes.patchSchedule,
+      params: {'schedule_id': id},
+      body: fields,
+    ),
+    Schedule.fromJson,
+  );
+
+  Future<void> deleteSchedule(String id) async {
+    await _json(ApiRoutes.deleteSchedule, params: {'schedule_id': id});
+  }
+
+  /// Fires a schedule once now; the brief may take a while (the server asks
+  /// the desktop for its incidents).
+  Future<ScheduleRun> runSchedule(String id) async => _parse(
+    await _json(
+      ApiRoutes.runSchedule,
+      params: {'schedule_id': id},
+      receiveTimeout: const Duration(seconds: 60),
+    ),
+    ScheduleRun.fromJson,
+  );
+
   static List<Map<String, Object?>> _list(
     Map<String, Object?> json,
     String key,
@@ -322,4 +368,51 @@ class ConversationUsage {
   final TokenTotals totals;
   final ContextFill context;
   final List<Run> runs;
+}
+
+/// What `POST /schedules` takes.
+class ScheduleDraft {
+  const ScheduleDraft({
+    required this.name,
+    required this.cron,
+    required this.prompt,
+    this.conversationId,
+    this.thinking = false,
+    this.enabled = true,
+  });
+
+  final String name;
+  final String cron;
+  final String prompt;
+
+  /// null: a new chat for each run (`conversation_mode: new`).
+  final String? conversationId;
+  final bool thinking;
+  final bool enabled;
+
+  Map<String, Object?> toJson() => {
+    'name': name,
+    'cron': cron,
+    'prompt': prompt,
+    'conversation_mode': conversationId == null ? 'new' : 'fixed',
+    'conversation_id': ?conversationId,
+    'thinking': thinking,
+    'enabled': enabled,
+  };
+}
+
+/// `POST /schedules/{id}/run`: the schedule after firing, and what it made
+/// (a run for a prompt, a card for the brief).
+class ScheduleRun {
+  const ScheduleRun({required this.schedule, this.runId, this.cardId});
+
+  factory ScheduleRun.fromJson(Map<String, Object?> json) => ScheduleRun(
+    schedule: Schedule.fromJson(json['schedule']! as Map<String, Object?>),
+    runId: json['run_id'] as String?,
+    cardId: json['card_id'] as String?,
+  );
+
+  final Schedule schedule;
+  final String? runId;
+  final String? cardId;
 }

@@ -241,6 +241,118 @@
       "status": "degraded",
       "detail": "96% used"
     },
+    "schedule": {
+      "id": "7c1e9d2a-4b3f-4e5a-9c8d-1f2e3a4b5c6d",
+      "kind": "brief",
+      "name": "Morning brief",
+      "cron": "30 7 * * *",
+      "description": "At 07:30 every day",
+      "prompt": null,
+      "conversation_mode": "new",
+      "conversation_id": null,
+      "conversation_title": null,
+      "thinking": false,
+      "enabled": true,
+      "next_run_at": "2026-10-20T05:39:00.123456+00:00",
+      "last_run_at": "2026-10-19T05:39:00.123456+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_run_id": null,
+      "created_at": "2026-10-17T21:39:00.123456+00:00",
+      "updated_at": "2026-10-19T05:39:00.123456+00:00"
+    },
+    "schedule_prompt": {
+      "id": "2b4d6f8a-1c3e-4a5b-8d7f-9e0a1b2c3d4e",
+      "kind": "prompt",
+      "name": "Arch news digest",
+      "cron": "52 8,12,20 * * *",
+      "description": "At 08:52, 12:52, and 20:52 every day",
+      "prompt": "Summarize today's Arch news in three lines.",
+      "conversation_mode": "fixed",
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "conversation_title": null,
+      "thinking": false,
+      "enabled": true,
+      "next_run_at": "2026-10-20T08:39:00.123456+00:00",
+      "last_run_at": "2026-10-19T20:52:00.123456+00:00",
+      "last_status": null,
+      "last_error": null,
+      "last_run_id": null,
+      "created_at": "2026-10-18T21:39:00.123456+00:00",
+      "updated_at": "2026-10-19T20:52:00.123456+00:00"
+    },
+    "brief_payload": {
+      "date": "2026-10-19",
+      "uptime_s": 275400,
+      "booted_at": "2026-10-19T20:55:59+00:00",
+      "open_incidents": 1,
+      "incidents": [
+        {
+          "id": "98de85_009110dce5cf",
+          "state": "detected",
+          "job": "98de85fe6a1f",
+          "error": "Script exited with code 2 stderr: cron_failtest: simulated parse_failed",
+          "last_seen": "2026-10-19T21:35:16.146881+02:00"
+        }
+      ],
+      "updates_count": 44,
+      "updates_checked_at": "2026-10-19T19:39:00.123456+00:00",
+      "water": {
+        "station": "Siófok",
+        "level_cm": 98.0,
+        "lake_avg_cm": 101.0,
+        "trend_cm_24h": -2.0,
+        "lake_avg_trend_cm_24h": -1.0,
+        "measured_at": "2026-10-19T18:52:00Z"
+      },
+      "llama_state": "running",
+      "hermes_state": "degraded",
+      "missing": []
+    },
+    "brief_incident": {
+      "id": "98de85_009110dce5cf",
+      "state": "detected",
+      "job": "98de85fe6a1f",
+      "error": "Script exited with code 2 stderr: cron_failtest: simulated parse_failed",
+      "last_seen": "2026-10-19T21:35:16.146881+02:00"
+    },
+    "card_brief": {
+      "id": "3e69fb78e25c4d45bfdbe18b3e3da170",
+      "type": "brief",
+      "severity": "warn",
+      "ts": "2026-10-19T21:39:00.123456+00:00",
+      "origin": "backend",
+      "session_id": null,
+      "payload": {
+        "date": "2026-10-19",
+        "uptime_s": 275400,
+        "booted_at": "2026-10-19T20:55:59+00:00",
+        "open_incidents": 1,
+        "incidents": [
+          {
+            "id": "98de85_009110dce5cf",
+            "state": "detected",
+            "job": "98de85fe6a1f",
+            "error": "Script exited with code 2 stderr: cron_failtest: simulated parse_failed",
+            "last_seen": "2026-10-19T21:35:16.146881+02:00"
+          }
+        ],
+        "updates_count": 44,
+        "updates_checked_at": "2026-10-19T19:39:00.123456+00:00",
+        "water": {
+          "station": "Siófok",
+          "level_cm": 98.0,
+          "lake_avg_cm": 101.0,
+          "trend_cm_24h": -2.0,
+          "lake_avg_trend_cm_24h": -1.0,
+          "measured_at": "2026-10-19T18:52:00Z"
+        },
+        "llama_state": "running",
+        "hermes_state": "degraded",
+        "missing": []
+      },
+      "received_at": "2026-10-19T21:39:00.123456+00:00"
+    },
     "tool_step_plain": {
       "id": 98,
       "run_id": "run_8e4b1c2d3a4f5e6b",
@@ -582,6 +694,29 @@
         }
       ]
     },
+    "schedule.updated": {
+      "id": "2b4d6f8a-1c3e-4a5b-8d7f-9e0a1b2c3d4e",
+      "kind": "prompt",
+      "name": "Arch news digest",
+      "cron": "52 8,12,20 * * *",
+      "description": "At 08:52, 12:52, and 20:52 every day",
+      "prompt": "Summarize today's Arch news in three lines.",
+      "conversation_mode": "fixed",
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "conversation_title": null,
+      "thinking": false,
+      "enabled": true,
+      "next_run_at": "2026-10-20T08:39:00.123456+00:00",
+      "last_run_at": "2026-10-19T20:52:00.123456+00:00",
+      "last_status": null,
+      "last_error": null,
+      "last_run_id": null,
+      "created_at": "2026-10-18T21:39:00.123456+00:00",
+      "updated_at": "2026-10-19T20:52:00.123456+00:00"
+    },
+    "schedule.deleted": {
+      "id": "2b4d6f8a-1c3e-4a5b-8d7f-9e0a1b2c3d4e"
+    },
     "error": {
       "code": "thinking_route_not_applied",
       "ref_id": "run_8e4b1c2d3a4f5e6b",
@@ -591,7 +726,7 @@
   "connection": {
     "hello.ok": {
       "server_version": "0.1.0",
-      "api_revision": 5,
+      "api_revision": 6,
       "revision": "eb4045ed6a94",
       "hermes": "ok",
       "hermes_version": "0.22.2",
@@ -606,7 +741,7 @@
     },
     "meta": {
       "server_version": "0.1.0",
-      "api_revision": 5,
+      "api_revision": 6,
       "revision": "eb4045ed6a94",
       "python": "3.14.8",
       "hermes_expected_version": "0.22.2",
@@ -614,7 +749,7 @@
     },
     "status": {
       "server_version": "0.1.0",
-      "api_revision": 5,
+      "api_revision": 6,
       "revision": null,
       "hermes": null,
       "hermes_version": null,

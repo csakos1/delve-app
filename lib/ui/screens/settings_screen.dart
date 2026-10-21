@@ -281,8 +281,8 @@ class _ThinkingRoute extends ConsumerWidget {
 }
 
 /// Notification switches (design 16): stored on the server per device
-/// (`PATCH /devices/me`). The morning brief arrives with schedules (B4). A
-/// banner says when this phone or the server cannot push.
+/// (`PATCH /devices/me`). A banner says when this phone or the server cannot
+/// push.
 class _Notifications extends ConsumerStatefulWidget {
   const _Notifications({required this.device});
 
@@ -305,6 +305,7 @@ class _NotificationsState extends ConsumerState<_Notifications> {
         approvals: key == 'approvals' ? value : null,
         runDone: key == 'run_done' ? value : null,
         water: key == 'water' ? value : null,
+        brief: key == 'brief' ? value : null,
       );
       ref.invalidate(deviceInfoProvider);
       await ref.read(deviceInfoProvider.future);
@@ -357,11 +358,10 @@ class _NotificationsState extends ConsumerState<_Notifications> {
       IconData icon,
       String title,
       String subtitle,
-      bool? value, {
-      bool enabled = true,
-    }) {
+      bool? value,
+    ) {
       final on = _pending[key] ?? value ?? false;
-      final canChange = enabled && value != null && !_pending.containsKey(key);
+      final canChange = value != null && !_pending.containsKey(key);
       return InkWell(
         onTap: canChange ? () => unawaited(_set(key, !on)) : null,
         child: _Item(
@@ -415,9 +415,8 @@ class _NotificationsState extends ConsumerState<_Notifications> {
           'brief',
           DelveIcons.brief,
           l.settingsNotifyBrief,
-          l.settingsNotifyLaterSchedules,
+          l.settingsNotifyBriefSub,
           notify?.brief,
-          enabled: false,
         ),
       ],
     );

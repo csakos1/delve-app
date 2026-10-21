@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../api/models/models.dart';
 import '../api/rest_client.dart';
 import '../data/db/database.dart';
 import '../data/db/store.dart';
@@ -113,6 +114,44 @@ final waterReadingsProvider = StreamProvider.autoDispose<List<WaterReading>>((
       .map((rows) => [for (final r in rows) ?WaterReading.of(r)]);
 });
 
+/// How far back the dashboard looks for the morning brief.
+const Duration kBriefWindow = Duration(days: 3);
+
+/// A stored `brief` card with its payload.
+class BriefReading {
+  const BriefReading(this.card, this.brief);
+
+  /// null when the card is not a readable brief.
+  static BriefReading? of(CardRow card) {
+    if (card.type != 'brief') return null;
+    try {
+      return BriefReading(card, Brief.fromJson(card.payload));
+    } on Object {
+      return null;
+    }
+  }
+
+  final CardRow card;
+  final Brief brief;
+}
+
+/// The latest morning brief the backend wrote (null: none in [kBriefWindow]).
+final latestBriefProvider = StreamProvider.autoDispose<BriefReading?>((ref) {
+  final db = ref.watch(databaseProvider);
+  return db
+      .watchCards(
+        type: 'brief',
+        origin: 'backend',
+        since: DateTime.now().subtract(kBriefWindow),
+      )
+      .map((rows) {
+        for (final r in rows.reversed) {
+          if (BriefReading.of(r) case final b?) return b;
+        }
+        return null;
+      });
+});
+
 /// Loads the dashboard's cards over REST into the database (the screen shows
 /// the database). Live cards arrive as `card.new` meanwhile.
 class DashboardService {
@@ -121,13 +160,19 @@ class DashboardService {
   final AppDatabase db;
 
   Future<void> refresh({DateTime? now}) async {
+    final at = now ?? DateTime.now();
     final cards = await api.cards(
       type: 'water',
-      since: waterSince(now ?? DateTime.now()),
+      since: waterSince(at),
       limit: 200,
     );
+    final briefs = await api.cards(
+      type: 'brief',
+      since: at.subtract(kBriefWindow),
+      limit: 5,
+    );
     await db.transaction(() async {
-      for (final c in cards) {
+      for (final c in [...cards, ...briefs]) {
         await db.putCard(c);
       }
     });

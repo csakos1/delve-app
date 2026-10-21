@@ -115,6 +115,8 @@ sealed class ServerEvent extends IncomingFrame {
     'health.status',
     'card.new',
     'system.updated',
+    'schedule.updated',
+    'schedule.deleted',
     'error',
   };
 
@@ -224,6 +226,8 @@ sealed class ServerEvent extends IncomingFrame {
     ),
     'card.new' => CardNew(seq, AgentCard.fromJson(d)),
     'system.updated' => SystemUpdated(seq, SystemInfo.fromJson(d)),
+    'schedule.updated' => ScheduleUpdated(seq, Schedule.fromJson(d)),
+    'schedule.deleted' => ScheduleDeleted(seq, _str(d, 'id')),
     'error' => ServerError(
       seq,
       code: _str(d, 'code'),
@@ -451,6 +455,22 @@ final class CardNew extends ServerEvent {
 final class SystemUpdated extends ServerEvent {
   const SystemUpdated(super.seq, this.system);
   final SystemInfo system;
+}
+
+/// A change of the schedule list (B4); kept in memory like the system view.
+sealed class ScheduleChange extends ServerEvent {
+  const ScheduleChange(super.seq);
+}
+
+/// A schedule was created, changed or fired.
+final class ScheduleUpdated extends ScheduleChange {
+  const ScheduleUpdated(super.seq, this.schedule);
+  final Schedule schedule;
+}
+
+final class ScheduleDeleted extends ScheduleChange {
+  const ScheduleDeleted(super.seq, this.id);
+  final String id;
 }
 
 final class UnknownEvent extends ServerEvent {

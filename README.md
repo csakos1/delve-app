@@ -59,9 +59,18 @@ reached over Tailscale only.
   asks again every 10 s while open; `system.updated` arrives over the socket. Without the
   server's privileged helper the view says so and offers no stop/start.
 
-With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view;
-schedules, observability, attachments and the home widget follow (B4–B7). Requires a
-server with API revision 5 or newer (`GET /api/v1/system`, `POST /api/v1/system/llama`).
+- B4: Schedules (More → Schedules) — the morning brief and the prompt schedules, each with
+  its timing in words, next and last run, an on/off switch and Run now. The editor sets
+  the timing as daily times, weekdays at a time, or plain cron (Budapest time; several
+  daily times share the minute past the hour), the prompt, a new or a fixed chat and
+  thinking; the brief takes only its timing. The list is kept in memory, loaded when the
+  screen opens and kept current by `schedule.updated` / `schedule.deleted`. The Dashboard
+  shows the latest morning brief (uptime, package updates, open incidents, llama-server,
+  last boot); Settings → Morning brief turns on its notification.
+
+With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
+B4 schedules and the morning brief; observability, attachments and the home widget follow
+(B5–B7). Requires a server with API revision 6 or newer (`/api/v1/schedules`).
 
 ## Stack
 
@@ -99,6 +108,8 @@ lib/
   app/chat.dart              one chat: database query, ChatActions (send, stop, open)
   app/dashboard.dart         water readings from the cards, the week, REST reload
   app/system.dart            the system view in memory: REST, system.updated, stop/start
+  app/schedules.dart         the schedule list in memory: REST, schedule.* events
+  app/cron_preset.dart       cron ↔ daily times / weekdays at a time / plain cron
   sync/                      WebSocket client: engine (connection, outbox, requests),
                              reducer (events → database), resync, live runs, transport
   push/                      notifications: FCM transport, controller (token, taps),
@@ -117,7 +128,8 @@ test/
   chat_screen_test.dart      the chat with a fake ChatActions: runs, steps, composer
   reducer_test.dart          recorded WebSocket conversations replayed into the database
   sync_engine_test.dart      the connection against a local fake WebSocket server
-  dashboard_test.dart        water readings, the week, the Dashboard screen
+  dashboard_test.dart        water readings, the week, the brief, the Dashboard screen
+  schedules_test.dart        cron presets and texts, the Schedules list and editor
   push_test.dart             pushes → notifications, Deny in the background, the
                              controller with fakes, Settings → Notifications
   support/                   fake REST server (a dio adapter), fake WebSocket server,

@@ -13,6 +13,9 @@ class ReduceOutcome {
 
   /// The last `system.updated` in the batch (kept in memory, not stored).
   SystemInfo? system;
+
+  /// `schedule.updated` / `schedule.deleted` in order (kept in memory).
+  final List<ScheduleChange> schedules = [];
   final List<ServerError> errors = [];
   final List<UnknownEvent> unknown = [];
 }
@@ -251,6 +254,9 @@ class EventReducer {
 
       case SystemUpdated(:final system):
         outcome.system = system;
+
+      case final ScheduleChange change:
+        outcome.schedules.add(change);
 
       case final ServerError error:
         outcome.errors.add(error);

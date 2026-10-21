@@ -66,6 +66,9 @@ void main() {
           'system': (j) => SystemInfo.fromJson(j).toJson(),
           'gpu': (j) => GpuInfo.fromJson(j).toJson(),
           'hermes_issue': (j) => HermesIssue.fromJson(j).toJson(),
+          'schedule': (j) => Schedule.fromJson(j).toJson(),
+          'brief_payload': (j) => Brief.fromJson(j).toJson(),
+          'brief_incident': (j) => BriefIncident.fromJson(j).toJson(),
         };
 
     test('every contract shape has a model', () {
@@ -134,6 +137,33 @@ void main() {
       expect((s.queue.active, s.queue.queued), (1, 1));
       final g = s.gpus!.first;
       expect((g.memUsedMib, g.memTotalMib, g.powerW), (11381, 12282, 40.39));
+    });
+
+    test('schedules and the brief keep their values', () {
+      final s = Schedule.fromJson(obj(sampleShapes['schedule']));
+      expect(
+        Schedule.fromJson(
+          jsonDecode(jsonEncode(s.toJson())) as Map<String, Object?>,
+        ),
+        s,
+      );
+      expect((s.kind, s.cron, s.prompt), ('brief', '30 7 * * *', null));
+      expect((s.description, s.lastStatus), ('At 07:30 every day', 'ok'));
+      final p = Schedule.fromJson(obj(sampleShapes['schedule_prompt']));
+      expect(
+        (p.conversationMode, p.conversationId),
+        ('fixed', 'c_5f2a9e1b7c3d4e6f'),
+      );
+      expect(p.lastStatus, isNull);
+
+      final card = AgentCard.fromJson(obj(sampleShapes['card_brief']));
+      final b = Brief.fromJson(card.payload);
+      expect((b.uptimeS, b.openIncidents, b.updatesCount), (275400, 1, 44));
+      expect(b.bootedAt!.isUtc, isTrue);
+      expect(b.incidents.single.state, 'detected');
+      expect((b.water!.levelCm, b.water!.trendCm24h), (98.0, -2.0));
+      expect((b.llamaState, b.hermesState), ('running', 'degraded'));
+      expect(b.missing, isEmpty);
     });
 
     test('REST/sync history messages carry their tool steps', () {

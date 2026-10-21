@@ -560,9 +560,7 @@ void main() {
         t.widget<Switch>(find.byKey(Key('settings.notify.$key'))).onChanged !=
         null;
 
-    testWidgets('four switches from the server; the brief arrives later', (
-      t,
-    ) async {
+    testWidgets('four switches from the server', (t) async {
       await openSettings(t);
       expect(find.text('NOTIFICATIONS'), findsOneWidget);
       expect(switchOn(t, 'approvals'), isTrue);
@@ -570,9 +568,10 @@ void main() {
       expect(switchOn(t, 'water'), isFalse);
       expect(switchEnabled(t, 'approvals'), isTrue);
       expect(switchEnabled(t, 'water'), isTrue);
-      expect(switchEnabled(t, 'brief'), isFalse);
+      expect(switchEnabled(t, 'brief'), isTrue);
+      expect(switchOn(t, 'brief'), isFalse);
       expect(find.text('After each scheduled reading'), findsOneWidget);
-      expect(find.text('Comes with schedules'), findsOneWidget);
+      expect(find.text('After each morning brief'), findsOneWidget);
       expect(find.byType(StatusBanner), findsNothing);
     });
 
@@ -713,6 +712,79 @@ void main() {
       expect(n.shown, isEmpty);
       await handlePush(waterData(), n, now: now);
       expect(n.shown.single.channel, NotifyChannel.cards);
+    });
+  });
+
+  group('morning brief', () {
+    Map<String, Object?> briefData({String incidents = '0'}) => {
+      'kind': 'card',
+      'card_id': 'b1',
+      'type': 'brief',
+      'severity': 'info',
+      'date': '2026-10-22',
+      'uptime_s': '275400',
+      'updates_count': '44',
+      'open_incidents': incidents,
+      'llama_state': 'running',
+      'level_cm': '98',
+      'lake_avg_cm': '101',
+    };
+
+    test('parses; empty fields are null', () {
+      final b = PushMessage.parse(briefData())! as BriefPush;
+      expect(
+        (b.uptimeS, b.updatesCount, b.openIncidents, b.llamaState, b.levelCm),
+        (275400, 44, 0, 'running', 98.0),
+      );
+      final bare =
+          PushMessage.parse({
+                ...briefData(),
+                'uptime_s': '',
+                'updates_count': '',
+                'llama_state': '',
+                'level_cm': '',
+              })!
+              as BriefPush;
+      expect(
+        (bare.uptimeS, bare.updatesCount, bare.llamaState),
+        (null, null, null),
+      );
+      expect(PushMessage.parse({...briefData(), 'card_id': null}), isNull);
+    });
+
+    test('one notification a day, replaced by the next brief', () {
+      final n = briefNotification(
+        l,
+        PushMessage.parse(briefData(incidents: '1'))! as BriefPush,
+      );
+      expect(n.title, 'Morning brief · up 3 d 4 h');
+      expect(
+        n.body,
+        '44 updates · 1 open incident · llama-server running · water 98 cm',
+      );
+      expect(
+        (n.channel, n.id),
+        (NotifyChannel.cards, notificationId('card:brief')),
+      );
+      expect(PushTarget.decode(n.payload)!.kind, 'card');
+      final bare = briefNotification(
+        l,
+        PushMessage.parse({...briefData(), 'uptime_s': '', 'level_cm': ''})!
+            as BriefPush,
+      );
+      expect(bare.title, 'Morning brief');
+      expect(
+        bare.body,
+        '44 updates · no open incidents · llama-server running',
+      );
+    });
+
+    test('shown in the background only', () async {
+      final n = FakeNotifications();
+      await handlePush(briefData(), n, now: now, foreground: true);
+      expect(n.shown, isEmpty);
+      await handlePush(briefData(), n, now: now);
+      expect(n.shown.single.title, startsWith('Morning brief'));
     });
   });
 }

@@ -125,9 +125,16 @@ void main() {
     }) async {
       final env = await pumpDelve(
         t,
-        before: (env) async => env.server.json('GET', '/api/v1/cards', {
-          'data': [for (final c in cards.reversed) json(c)],
-        }),
+        before: (env) async => env.server.on(
+          'GET',
+          '/api/v1/cards',
+          (r) => FakeReply(200, {
+            'data': [
+              for (final c in cards.reversed)
+                if (c.type == r.queryParameters['type']) json(c),
+            ],
+          }),
+        ),
       );
       await t.tap(find.text('Dashboard').last);
       await t.pumpAndSettle();
@@ -143,11 +150,15 @@ void main() {
           water('t', today, level: 98.4, lake: 101.2, trend: -2),
         ],
       );
-      final call = env.server.requests.lastWhere(
-        (r) => r.uri.path == '/api/v1/cards',
-      );
-      expect(call.uri.queryParameters['type'], 'water');
-      expect(call.uri.queryParameters['since'], isNotNull);
+      final calls = [
+        for (final r in env.server.requests)
+          if (r.uri.path == '/api/v1/cards') r.uri.queryParameters,
+      ];
+      expect([
+        for (final q in calls) q['type'],
+      ], containsAll(['water', 'brief']));
+      expect(calls.every((q) => q['since'] != null), isTrue);
+      expect(find.byKey(const Key('dashboard.brief')), findsNothing);
 
       expect(find.text('Lake Balaton water level'), findsOneWidget);
       expect(find.text('98 cm', findRichText: true), findsOneWidget);
@@ -165,6 +176,74 @@ void main() {
       expect(find.byType(WaterChart), findsOneWidget);
       expect(find.byKey(const Key('dashboard.updated')), findsOneWidget);
       expect(find.text('Offline'), findsOneWidget); // no socket in widget tests
+    });
+
+    testWidgets('the morning brief: figures, llama-server, last boot', (
+      t,
+    ) async {
+      final sample = AgentCard.fromJson(FakeServer.sample('card_brief'));
+      final brief = sample.copyWith(ts: DateTime.now().toUtc());
+      await openDashboard(t, cards: [brief]);
+      await t.scrollUntilVisible(find.byKey(const Key('dashboard.brief')), 200);
+      expect(find.text('Morning brief'), findsOneWidget);
+      String tile(String key) => t
+          .widgetList<Text>(
+            find.descendant(
+              of: find.byKey(Key(key)),
+              matching: find.byType(Text),
+            ),
+          )
+          .map((w) => w.data)
+          .join('|');
+      expect(tile('brief.uptime'), 'Uptime|3 d 4 h');
+      expect(tile('brief.updates'), 'Package updates|44');
+      expect(tile('brief.incidents'), 'Open incidents|1');
+      expect(find.text('Last boot'), findsOneWidget);
+      expect(
+        find.text(
+          DateFormat(
+            'EEE d MMM HH:mm',
+          ).format(DateTime.fromMillisecondsSinceEpoch(1792443359 * 1000)),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('dashboard.brief')),
+          matching: find.text('running'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('98de85fe6a1f · Script exited'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('brief.missing')), findsNothing);
+    });
+
+    testWidgets('a brief with gaps says what is missing', (t) async {
+      final sample = AgentCard.fromJson(FakeServer.sample('card_brief'));
+      final brief = sample.copyWith(
+        ts: DateTime.now().toUtc(),
+        payload: {
+          ...sample.payload,
+          'uptime_s': null,
+          'open_incidents': 0,
+          'incidents': <Object?>[],
+          'missing': ['host'],
+        },
+      );
+      await openDashboard(t, cards: [brief]);
+      await t.scrollUntilVisible(find.byKey(const Key('dashboard.brief')), 200);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('brief.uptime')),
+          matching: find.text('—'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('brief.incident')), findsNothing);
+      expect(find.text('Not available this morning: host'), findsOneWidget);
     });
 
     testWidgets('the agent\'s own water cards stay out', (t) async {

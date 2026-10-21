@@ -712,7 +712,7 @@
   "settingsNotifyRunDoneSub": "Only when the app is in the background",
   "settingsNotifyWater": "Water level",
   "settingsNotifyBrief": "Morning brief",
-  "settingsNotifyLaterSchedules": "Comes with schedules",
+  "settingsNotifyBriefSub": "After each morning brief",
   "settingsNotifyPermissionOff": "Notifications are off for Delve on this phone.",
   "settingsNotifyAllow": "Allow",
   "settingsNotifyNoServer": "The server can't send notifications yet (no Firebase key).",
@@ -941,6 +941,247 @@
   "@systemLoadFailed": {
     "placeholders": {
       "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesNew": "New schedule",
+  "schedulesEmptyBody": "A schedule sends a prompt to the agent at set times, in a new chat each time or always in the same one.",
+  "schedulesRunNow": "Run now",
+  "schedulesPaused": "Paused",
+  "schedulesNextRun": "Next run {when}",
+  "@schedulesNextRun": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesNextRunIn": "Next run in {wait} · {when}",
+  "@schedulesNextRunIn": {
+    "placeholders": {
+      "wait": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesLastRun": "Last run {when} · {status}",
+  "@schedulesLastRun": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesNotRunYet": "Not run yet",
+  "schedulesStatusOk": "OK",
+  "schedulesStatusFailed": "Failed",
+  "schedulesStatusStopped": "Stopped",
+  "schedulesStatusRunning": "Running",
+  "schedulesStatusQueued": "Queued",
+  "schedulesToday": "today {time}",
+  "@schedulesToday": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesTomorrow": "tomorrow {time}",
+  "@schedulesTomorrow": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesLoadFailed": "Couldn't load schedules: {reason}",
+  "@schedulesLoadFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesSaveFailed": "Couldn't save: {reason}",
+  "@schedulesSaveFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesRunFailed": "Couldn't run it: {reason}",
+  "@schedulesRunFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesRunQueued": "Queued — the answer arrives in its chat.",
+  "schedulesBriefWritten": "Morning brief written — it's on the dashboard.",
+  "schedulesEveryDay": "Every day at {times}",
+  "@schedulesEveryDay": {
+    "placeholders": {
+      "times": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesWeekdays": "Weekdays at {time}",
+  "@schedulesWeekdays": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesWeekends": "Weekends at {time}",
+  "@schedulesWeekends": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesEveryWeek": "{day}s at {time}",
+  "@schedulesEveryWeek": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesOnDays": "{days} at {time}",
+  "@schedulesOnDays": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedulesListAnd": "{head} and {last}",
+  "@schedulesListAnd": {
+    "placeholders": {
+      "head": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "schedEditTitle": "Edit schedule",
+  "schedNewTitle": "New schedule",
+  "schedSave": "Save",
+  "schedName": "Name",
+  "schedRepeats": "Repeats",
+  "schedDaily": "Daily",
+  "schedWeekly": "Weekly",
+  "schedCron": "Cron",
+  "schedAddTime": "Add time",
+  "schedRemoveTime": "Remove {time}",
+  "@schedRemoveTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedSameMinute": "Several times a day must share the minute past the hour (a cron limit). Use Cron for anything else.",
+  "schedNoTime": "Add a time.",
+  "schedNoDay": "Pick at least one day.",
+  "schedCronHelp": "minute · hour · day · month · weekday, in Budapest time",
+  "schedCronInvalid": "Five fields: minute hour day month weekday.",
+  "schedPrompt": "Prompt",
+  "schedPostTo": "Post results to",
+  "schedNewChat": "New chat for each run",
+  "schedFixedChat": "Fixed chat",
+  "schedPickChat": "Pick a chat",
+  "schedNoChats": "No chats yet. Start one first.",
+  "schedThinking": "Thinking",
+  "schedThinkingSub": "Off is faster for short, routine prompts",
+  "schedDelete": "Delete schedule",
+  "schedDeleteTitle": "Delete “{name}”?",
+  "@schedDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "schedDeleteBody": "Its past runs stay in their chats.",
+  "schedDeleteConfirm": "Delete",
+  "schedBriefNote": "The morning brief is written by the server without the model: uptime, package updates, open incidents, llama-server and the water level.",
+  "schedMissing": "This schedule no longer exists.",
+  "schedErrInvalidCron": "Not a valid cron expression.",
+  "schedErrTooFrequent": "A schedule may run at most every 10 minutes.",
+  "schedErrName": "Give it a name (at most 64 characters).",
+  "schedErrPrompt": "Write a prompt.",
+  "schedErrChat": "Pick a chat that still exists.",
+  "dashBriefTitle": "Morning brief",
+  "dashBriefUptime": "Uptime",
+  "dashBriefUpdates": "Package updates",
+  "dashBriefIncidents": "Open incidents",
+  "dashBriefLastBoot": "Last boot",
+  "dashBriefMissing": "Not available this morning: {sources}",
+  "@dashBriefMissing": {
+    "placeholders": {
+      "sources": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyBriefTitle": "Morning brief · up {uptime}",
+  "@notifyBriefTitle": {
+    "placeholders": {
+      "uptime": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyBriefTitlePlain": "Morning brief",
+  "notifyBriefUpdates": "{count, plural, =0{no updates} =1{1 update} other{{count} updates}}",
+  "@notifyBriefUpdates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifyBriefIncidents": "{count, plural, =0{no open incidents} =1{1 open incident} other{{count} open incidents}}",
+  "@notifyBriefIncidents": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifyBriefLlama": "llama-server {state}",
+  "@notifyBriefLlama": {
+    "placeholders": {
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyBriefWater": "water {level} cm",
+  "@notifyBriefWater": {
+    "placeholders": {
+      "level": {
         "type": "String"
       }
     }
