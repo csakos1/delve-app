@@ -258,14 +258,6 @@
   },
   "chatsEmptyTitle": "No chats yet",
   "chatsEmptyBody": "Ask your agent anything. Runs happen on your desktop; this phone only talks to it over Tailscale.",
-  "chatsApprovalPreview": "Approval needed: {command}",
-  "@chatsApprovalPreview": {
-    "placeholders": {
-      "command": {
-        "type": "String"
-      }
-    }
-  },
   "chatsMarkerApproval": "approval needed",
   "chatsMarkerRunning": "running",
   "chatsMarkerRunningQueued": "running · {count} queued",

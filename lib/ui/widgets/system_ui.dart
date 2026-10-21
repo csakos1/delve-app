@@ -36,23 +36,28 @@ class CardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: DelveTokens.space2),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: Text(title, style: context.text.titleLarge)),
-        if (note case final n?) ...[
-          const SizedBox(width: DelveTokens.space2),
-          Flexible(
-            child: Text(
-              n,
-              textAlign: TextAlign.end,
-              style: context.text.bodyMedium!.copyWith(
-                color: context.delve.textMuted,
+    child: LayoutBuilder(
+      builder: (context, box) => Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: Text(title, style: context.text.titleLarge)),
+          if (note case final n?) ...[
+            const SizedBox(width: DelveTokens.space2),
+            // No flex here: a loose Flexible would leave its unused share
+            // empty after the note, so the note would not reach the edge.
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: box.maxWidth / 2),
+              child: Text(
+                n,
+                textAlign: TextAlign.end,
+                style: context.text.bodyMedium!.copyWith(
+                  color: context.delve.textMuted,
+                ),
               ),
             ),
-          ),
+          ],
         ],
-      ],
+      ),
     ),
   );
 }
@@ -78,32 +83,38 @@ class InfoRow extends StatelessWidget {
     constraints: const BoxConstraints(minHeight: DelveTokens.chip),
     child: Padding(
       padding: const EdgeInsets.symmetric(vertical: DelveTokens.space1),
-      child: Row(
-        children: [
-          Flexible(
-            child: Text(
-              label,
-              style: context.text.bodyLarge!.copyWith(
-                color: context.colors.onSurfaceVariant,
+      child: LayoutBuilder(
+        builder: (context, box) => Row(
+          children: [
+            // The label keeps its natural width (at most half the row) and
+            // the value gets everything right of it, so the value always
+            // ends on the right edge.
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: box.maxWidth / 2),
+              child: Text(
+                label,
+                style: context.text.bodyLarge!.copyWith(
+                  color: context.colors.onSurfaceVariant,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: DelveTokens.space3),
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerRight,
-              child:
-                  trailing ??
-                  Text(
-                    value!,
-                    textAlign: TextAlign.end,
-                    style: DelveText.mono.copyWith(
-                      color: valueColor ?? context.colors.onSurface,
+            const SizedBox(width: DelveTokens.space3),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child:
+                    trailing ??
+                    Text(
+                      value!,
+                      textAlign: TextAlign.end,
+                      style: DelveText.mono.copyWith(
+                        color: valueColor ?? context.colors.onSurface,
+                      ),
                     ),
-                  ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     ),
   );
@@ -178,26 +189,32 @@ class GpuRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  gpuName(gpu.name),
-                  style: context.text.titleSmall,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: DelveTokens.space3),
-              Expanded(
-                child: Text(
-                  parts.join(' · '),
-                  textAlign: TextAlign.end,
-                  style: DelveText.mono.copyWith(
-                    color: context.colors.onSurfaceVariant,
+          LayoutBuilder(
+            builder: (context, box) => Row(
+              children: [
+                // Same split as InfoRow: the name at most half, the figures
+                // the rest, ending on the right edge.
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: box.maxWidth / 2),
+                  child: Text(
+                    gpuName(gpu.name),
+                    style: context.text.titleSmall,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: DelveTokens.space3),
+                Expanded(
+                  child: Text(
+                    parts.join(' · '),
+                    key: Key('gpu.${gpu.index}.figures'),
+                    textAlign: TextAlign.end,
+                    style: DelveText.mono.copyWith(
+                      color: context.colors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           if (fill != null) ...[
             const SizedBox(height: DelveTokens.space2),

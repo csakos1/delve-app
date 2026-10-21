@@ -1,9 +1,11 @@
 import 'package:delve/ui/format.dart';
+import 'package:delve/ui/widgets/system_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fake_server.dart';
 import 'support/harness.dart';
+import 'support/layout.dart';
 
 /// The system view with llama-server stopped from Delve ([queued] waiting).
 Map<String, Object?> stopped({int queued = 2}) {
@@ -121,11 +123,35 @@ void main() {
       expect(find.text('21.4 tok/s'), findsOneWidget);
       expect(find.byKey(const Key('system.waiting')), findsNothing);
 
+      // values, notes and chips end on the card's right edge
+      Finder cardOf(Finder f) =>
+          find.ancestor(of: f, matching: find.byType(SurfaceCard)).first;
+      for (final f in [
+        find.textContaining('checked '),
+        find.byKey(const Key('system.hermes.chip')),
+        find.text('96% used'),
+        find.text('v0.22.2'),
+        find.text('1 run active · 1 queued'),
+        find.textContaining('since '),
+        find.text('Qwen3.8-27B · IQ4_XS'),
+        find.text('1 / 1 busy'),
+        find.text('21.4 tok/s'),
+      ]) {
+        expectOnRightEdge(t, f, cardOf(f));
+      }
+
       await t.scrollUntilVisible(find.text('RTX 3050'), 200);
       expect(find.text('GPUs'), findsOneWidget);
       expect(find.text('RTX 4070 SUPER'), findsOneWidget);
       expect(find.text('51 °C · 40 W · 11.1 / 12 GB'), findsOneWidget);
       expect(find.text('49 °C · 15 W · 6.5 / 8 GB'), findsOneWidget);
+      for (final f in [
+        find.textContaining('nvidia-smi'),
+        find.text('51 °C · 40 W · 11.1 / 12 GB'),
+        find.text('49 °C · 15 W · 6.5 / 8 GB'),
+      ]) {
+        expectOnRightEdge(t, f, cardOf(f));
+      }
       expect(find.byKey(const Key('system.helper')), findsNothing);
     });
 
@@ -338,6 +364,14 @@ void main() {
       expect(inCard(find.text('running')), findsOneWidget);
       expect(inCard(find.text('Qwen3.8-27B')), findsOneWidget);
       expect(inCard(find.text('51 °C · 11.1 / 12 GB')), findsOneWidget);
+      for (final f in [
+        find.text('2 GPUs'),
+        find.text('v0.22.2'),
+        find.text('Qwen3.8-27B'),
+        find.text('51 °C · 11.1 / 12 GB'),
+      ]) {
+        expectOnRightEdge(t, inCard(f), card);
+      }
 
       env.server.on(
         'POST',

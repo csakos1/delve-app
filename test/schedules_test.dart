@@ -135,6 +135,17 @@ void main() {
         t.getTopLeft(find.text('Morning brief')).dy,
         lessThan(t.getTopLeft(find.text('Arch news digest')).dy),
       );
+      // Run now ends on the row's right edge, like the switch above it
+      for (final id in [briefId, promptId]) {
+        expect(
+          t.getTopRight(find.byKey(Key('schedule.$id.run'))).dx,
+          448 - 16.0,
+        );
+        expect(
+          t.getTopRight(find.byKey(Key('schedule.$id.switch'))).dx,
+          448 - 16.0,
+        );
+      }
     });
 
     testWidgets('the switch turns a schedule off on the server', (t) async {

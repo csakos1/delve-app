@@ -198,74 +198,93 @@ class ScheduleRow extends StatelessWidget {
           DelveTokens.space4,
           DelveTokens.space1,
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SymbolIcon(
-              s.kind == 'brief' ? DelveIcons.brief : DelveIcons.schedules,
-              color: secondary,
-            ),
-            const SizedBox(width: DelveTokens.space4),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    s.name,
-                    style: context.text.titleSmall!.copyWith(
-                      color: enabled ? null : secondary,
-                    ),
-                  ),
-                  const SizedBox(height: DelveTokens.space1),
-                  Text(
-                    scheduleTimingText(l, s),
-                    key: Key('schedule.${s.id}.timing'),
-                    style: context.text.bodyLarge!.copyWith(color: secondary),
-                  ),
-                  const SizedBox(height: DelveTokens.space1),
-                  Text(
-                    enabled ? nextRunText(l, s, now) : l.schedulesPaused,
-                    key: Key('schedule.${s.id}.next'),
-                    style: context.text.bodyMedium!.copyWith(color: muted),
-                  ),
-                  Row(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SymbolIcon(
+                  s.kind == 'brief' ? DelveIcons.brief : DelveIcons.schedules,
+                  color: secondary,
+                ),
+                const SizedBox(width: DelveTokens.space4),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          lastRunText(l, s, now),
-                          key: Key('schedule.${s.id}.last'),
-                          style: context.text.bodyMedium!.copyWith(
-                            color: failed ? context.delve.alertFg : muted,
-                          ),
+                      Text(
+                        s.name,
+                        style: context.text.titleSmall!.copyWith(
+                          color: enabled ? null : secondary,
                         ),
                       ),
-                      TextButton.icon(
-                        key: Key('schedule.${s.id}.run'),
-                        onPressed: running ? null : onRunNow,
-                        icon: running
-                            ? const SizedBox.square(
-                                dimension: DelveTokens.iconSm,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const SymbolIcon(
-                                DelveIcons.play,
-                                size: DelveTokens.iconMd,
-                                filled: true,
-                              ),
-                        label: Text(l.schedulesRunNow),
+                      const SizedBox(height: DelveTokens.space1),
+                      Text(
+                        scheduleTimingText(l, s),
+                        key: Key('schedule.${s.id}.timing'),
+                        style: context.text.bodyLarge!.copyWith(
+                          color: secondary,
+                        ),
+                      ),
+                      const SizedBox(height: DelveTokens.space1),
+                      Text(
+                        enabled ? nextRunText(l, s, now) : l.schedulesPaused,
+                        key: Key('schedule.${s.id}.next'),
+                        style: context.text.bodyMedium!.copyWith(color: muted),
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(width: DelveTokens.space2),
+                Switch(
+                  key: Key('schedule.${s.id}.switch'),
+                  value: enabled,
+                  onChanged: switching ? null : onToggle,
+                ),
+              ],
+            ),
+            // Spans under the switch too, so Run now ends on the right edge,
+            // in line with the switch track.
+            Padding(
+              padding: const EdgeInsets.only(
+                left: DelveTokens.iconLg + DelveTokens.space4,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      lastRunText(l, s, now),
+                      key: Key('schedule.${s.id}.last'),
+                      style: context.text.bodyMedium!.copyWith(
+                        color: failed ? context.delve.alertFg : muted,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: DelveTokens.space2),
+                  TextButton.icon(
+                    key: Key('schedule.${s.id}.run'),
+                    onPressed: running ? null : onRunNow,
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsetsDirectional.only(
+                        start: DelveTokens.space3,
+                        end: DelveTokens.space1,
+                      ),
+                    ),
+                    icon: running
+                        ? const SizedBox.square(
+                            dimension: DelveTokens.iconSm,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const SymbolIcon(
+                            DelveIcons.play,
+                            size: DelveTokens.iconMd,
+                            filled: true,
+                          ),
+                    label: Text(l.schedulesRunNow),
+                  ),
                 ],
               ),
-            ),
-            const SizedBox(width: DelveTokens.space2),
-            Switch(
-              key: Key('schedule.${s.id}.switch'),
-              value: enabled,
-              onChanged: switching ? null : onToggle,
             ),
           ],
         ),

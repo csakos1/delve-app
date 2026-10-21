@@ -432,11 +432,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Ask your agent anything. Runs happen on your desktop; this phone only talks to it over Tailscale.';
 
   @override
-  String chatsApprovalPreview(String command) {
-    return 'Approval needed: $command';
-  }
-
-  @override
   String get chatsMarkerApproval => 'approval needed';
 
   @override

@@ -354,22 +354,23 @@ void main() {
       );
     }
 
-    testWidgets('rows: title, preview, context, markers', (t) async {
+    testWidgets('rows: title, context, markers, no message preview', (t) async {
       await pumpDelve(t, before: seed);
       expect(find.text('llama-server memory after update'), findsOneWidget);
-      expect(find.text('Why is llama using more memory?'), findsOneWidget);
+      // the last message is not shown under the title
+      expect(find.text('Why is llama using more memory?'), findsNothing);
       expect(find.text('64%'), findsOneWidget);
       expect(find.text('running · 1 queued'), findsOneWidget);
       expect(find.byKey(const Key('chats.thinking')), findsOneWidget);
 
       // untitled: the first user message stands in
       expect(find.text('Clean up the LoRA dataset'), findsOneWidget);
-      expect(find.text('Approval needed: rm ~/out/tmp_*.png'), findsOneWidget);
+      expect(find.textContaining('rm ~/out/tmp_*.png'), findsNothing);
       expect(find.byKey(const Key('chats.marker.approval')), findsOneWidget);
       expect(find.text('82%'), findsOneWidget);
 
       expect(find.text('Balaton water'), findsOneWidget);
-      expect(find.text('Siófok 98 cm'), findsOneWidget);
+      expect(find.text('Siófok 98 cm'), findsNothing);
       expect(find.byKey(const Key('chats.banner')), findsNothing);
       expect(find.byType(FloatingActionButton), findsOneWidget);
 

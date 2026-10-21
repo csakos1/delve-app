@@ -244,13 +244,25 @@ class WaterCard extends StatelessWidget {
           ),
           const SizedBox(height: DelveTokens.space3),
           Row(
+            // The readings keep their width and the trend ends on the right
+            // edge: the unused share of the loose readings block goes between
+            // them, not after the trend.
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Flexible(child: big(last.station, last.levelCm)),
-              if (last.lakeAvgCm case final avg?) ...[
-                const SizedBox(width: DelveTokens.space6),
-                Flexible(child: big(l.dashLakeAverage, avg)),
-              ],
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Flexible(child: big(last.station, last.levelCm)),
+                    if (last.lakeAvgCm case final avg?) ...[
+                      const SizedBox(width: DelveTokens.space6),
+                      Flexible(child: big(l.dashLakeAverage, avg)),
+                    ],
+                  ],
+                ),
+              ),
               if (trend != null) ...[
                 const SizedBox(width: DelveTokens.space3),
                 Expanded(

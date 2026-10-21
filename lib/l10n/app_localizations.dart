@@ -838,12 +838,6 @@ abstract class AppLocalizations {
   /// **'Ask your agent anything. Runs happen on your desktop; this phone only talks to it over Tailscale.'**
   String get chatsEmptyBody;
 
-  /// No description provided for @chatsApprovalPreview.
-  ///
-  /// In en, this message translates to:
-  /// **'Approval needed: {command}'**
-  String chatsApprovalPreview(String command);
-
   /// No description provided for @chatsMarkerApproval.
   ///
   /// In en, this message translates to:

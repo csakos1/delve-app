@@ -3,6 +3,8 @@ import 'package:delve/app/dashboard.dart';
 import 'package:delve/data/db/database.dart';
 import 'package:delve/data/db/store.dart';
 import 'package:delve/ui/format.dart';
+import 'package:delve/ui/screens/dashboard_screen.dart';
+import 'package:delve/ui/widgets/system_ui.dart';
 import 'package:delve/ui/widgets/water_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +12,7 @@ import 'package:intl/intl.dart';
 
 import 'support/fake_server.dart';
 import 'support/harness.dart';
+import 'support/layout.dart';
 
 AgentCard water(
   String id,
@@ -173,6 +176,11 @@ void main() {
         t.widget<Text>(find.byKey(const Key('water.time'))).data,
         'today ${DateFormat('HH:mm').format(today)}',
       );
+      // the change against yesterday ends on the card's right edge
+      final waterCard = find.byType(WaterCard);
+      expectOnRightEdge(t, find.byKey(const Key('water.trend')), waterCard);
+      expectOnRightEdge(t, find.text('vs yesterday'), waterCard);
+      expectOnRightEdge(t, find.byKey(const Key('water.time')), waterCard);
       expect(find.byType(WaterChart), findsOneWidget);
       expect(find.byKey(const Key('dashboard.updated')), findsOneWidget);
       expect(find.text('Offline'), findsOneWidget); // no socket in widget tests
@@ -219,6 +227,30 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const Key('brief.missing')), findsNothing);
+
+      // the time, the chip and the boot time end on the card's right edge
+      final card = find.byKey(const Key('dashboard.brief'));
+      Finder inCard(Finder f) => find.descendant(of: card, matching: f);
+      final header = inCard(find.byType(CardHeader));
+      expectOnRightEdge(
+        t,
+        find.descendant(of: header, matching: find.byType(Text)).last,
+        card,
+      );
+      expectOnRightEdge(
+        t,
+        inCard(find.byKey(const Key('system.llama.chip'))),
+        card,
+      );
+      expectOnRightEdge(
+        t,
+        find.text(
+          DateFormat(
+            'EEE d MMM HH:mm',
+          ).format(DateTime.fromMillisecondsSinceEpoch(1792443359 * 1000)),
+        ),
+        card,
+      );
     });
 
     testWidgets('a brief with gaps says what is missing', (t) async {

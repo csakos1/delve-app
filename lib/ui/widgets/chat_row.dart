@@ -8,8 +8,9 @@ import '../../theme/delve_theme.dart';
 import '../format.dart';
 import 'page_scaffolds.dart';
 
-/// One conversation (List row · chat): title, time, preview, context bar and
-/// the run / approval marker. Used by Chats and Archived chats.
+/// One conversation (List row · chat): title, time, context bar and the
+/// run / approval marker – no message preview. Used by Chats and Archived
+/// chats.
 class ChatRow extends StatelessWidget {
   const ChatRow({super.key, required this.item, required this.onTap});
 
@@ -32,11 +33,6 @@ class ChatRow extends StatelessWidget {
     final d = context.delve;
     final c = item.conversation;
 
-    final approval = item.approvalCommand;
-    final last = item.lastText;
-    final preview = approval != null
-        ? l.chatsApprovalPreview(approval)
-        : (last == null ? '' : previewText(last));
     final marker = _marker(context, l);
     final pct = c.contextPct;
 
@@ -102,17 +98,6 @@ class ChatRow extends StatelessWidget {
                   ),
                 ],
               ),
-              if (preview.isNotEmpty) ...[
-                const SizedBox(height: DelveTokens.space1),
-                Text(
-                  preview,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.text.bodyMedium!.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-              ],
               if (pct != null || marker != null) ...[
                 const SizedBox(height: DelveTokens.space2),
                 Wrap(
