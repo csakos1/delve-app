@@ -181,6 +181,16 @@ void main() {
       expectOnRightEdge(t, find.byKey(const Key('water.trend')), waterCard);
       expectOnRightEdge(t, find.text('vs yesterday'), waterCard);
       expectOnRightEdge(t, find.byKey(const Key('water.time')), waterCard);
+      // both legend marks are drawn: the solid line and the two dashes
+      expect(t.getSize(find.byKey(const Key('water.legend.solid'))).height, 2);
+      final dashes = find.descendant(
+        of: find.byKey(const Key('water.legend.dashed')),
+        matching: find.byType(ColoredBox),
+      );
+      expect(dashes, findsNWidgets(2));
+      for (final d in dashes.evaluate()) {
+        expect(d.size, const Size(8, 2));
+      }
       expect(find.byType(WaterChart), findsOneWidget);
       expect(find.byKey(const Key('dashboard.updated')), findsOneWidget);
       expect(find.text('Offline'), findsOneWidget); // no socket in widget tests

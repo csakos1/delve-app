@@ -287,6 +287,12 @@ class DelveApi {
         SystemInfo.fromJson,
       );
 
+  /// The Observability view for [range] (`24h`, `7d`, `30d`; B5).
+  Future<Stats> stats(String range) async => _parse(
+    await _json(ApiRoutes.stats, query: {'range': range}),
+    Stats.fromJson,
+  );
+
   /// Every schedule, the morning brief first (B4).
   Future<List<Schedule>> schedules() async {
     final json = await _json(ApiRoutes.schedules);

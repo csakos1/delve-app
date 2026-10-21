@@ -69,6 +69,11 @@ void main() {
           'schedule': (j) => Schedule.fromJson(j).toJson(),
           'brief_payload': (j) => Brief.fromJson(j).toJson(),
           'brief_incident': (j) => BriefIncident.fromJson(j).toJson(),
+          'stats': (j) => Stats.fromJson(j).toJson(),
+          'stats_series': (j) => StatsSeries.fromJson(j).toJson(),
+          'stats_point': (j) => StatsPoint.fromJson(j).toJson(),
+          'stats_day': (j) => StatsDay.fromJson(j).toJson(),
+          'stats_gpu': (j) => StatsGpu.fromJson(j).toJson(),
         };
 
     test('every contract shape has a model', () {
@@ -164,6 +169,29 @@ void main() {
       expect((b.water!.levelCm, b.water!.trendCm24h), (98.0, -2.0));
       expect((b.llamaState, b.hermesState), ('running', 'degraded'));
       expect(b.missing, isEmpty);
+    });
+
+    test('the stats view keeps its values', () {
+      final s = Stats.fromJson(obj(sampleShapes['stats']));
+      expect(
+        Stats.fromJson(
+          jsonDecode(jsonEncode(s.toJson())) as Map<String, Object?>,
+        ),
+        s,
+      );
+      expect((s.range, s.bucketS, s.gpuBucketS), ('24h', 3600, 600));
+      expect(s.from.isUtc, isTrue);
+      expect(s.generation.points, hasLength(24));
+      expect(s.generation.value, 20.8);
+      expect(s.generation.points[3].v, isNull); // an idle hour
+      expect((s.queue.value, s.approvalLatency.value), (2.0, 30.0));
+      expect(s.prefillMinPromptTokens, 500);
+      expect(s.tokensPerDay.days, hasLength(7));
+      expect(s.tokensPerDay.days.last.date, '2026-10-19');
+      expect(s.gpus.map((g) => g.index), [0, 1]);
+      expect(s.gpus.first.temp.points, hasLength(144));
+      expect((s.gpus.first.temp.value, s.gpus.first.power.value), (71, 187));
+      expect(s.sampling.ok, isTrue);
     });
 
     test('REST/sync history messages carry their tool steps', () {

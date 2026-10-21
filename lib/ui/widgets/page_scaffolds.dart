@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 
 /// Top-level screen (inside the bottom-nav shell): a Jost headline instead of
@@ -73,35 +72,6 @@ class SubPage extends StatelessWidget {
         actions: actions,
       ),
       body: child,
-    );
-  }
-}
-
-/// Body of a screen that a later step fills in.
-class NotBuiltYet extends StatelessWidget {
-  const NotBuiltYet({super.key, required this.icon, this.step});
-
-  final IconData icon;
-
-  /// Plan step that builds the screen, e.g. "A4".
-  final String? step;
-
-  @override
-  Widget build(BuildContext context) {
-    final muted = context.delve.textMuted;
-    final label = AppLocalizations.of(context).notBuiltYet;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 40, color: muted),
-          const SizedBox(height: DelveTokens.space3),
-          Text(
-            step == null ? label : '$label · $step',
-            style: context.text.bodyMedium!.copyWith(color: muted),
-          ),
-        ],
-      ),
     );
   }
 }

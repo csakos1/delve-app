@@ -374,6 +374,11 @@ void main() {
       expect(find.byKey(const Key('chats.banner')), findsNothing);
       expect(find.byType(FloatingActionButton), findsOneWidget);
 
+      // the title is 16 sp (a step above titleSmall)
+      for (final e in find.byKey(const Key('chats.title')).evaluate()) {
+        expect((e.widget as Text).style!.fontSize, 16);
+      }
+
       // the time sits on the right edge whatever the title length
       final edges = {
         for (final e in find.byKey(const Key('chats.time')).evaluate())

@@ -12,6 +12,8 @@ from delve.llama import Props
 from delve.system import Parts, system_out
 from delve.brief import brief_payload
 from delve.schedules import schedule_out
+from delve.stats import RANGES, GpuBucket, RunRow, bucket_edges, edges_between, stats_out
+import math
 
 t0 = datetime(2026, 10, 19, 21, 39, 0, 123456, tzinfo=timezone.utc)
 conv = Conversation(id="c_5f2a9e1b7c3d4e6f", title="Kernel and CPU count", created_at=t0,
@@ -88,6 +90,39 @@ brief = brief_payload(now=t0, host={"uptime_s": 275400, "booted_at": 1792443359}
 brief_card = Card(id="3e69fb78e25c4d45bfdbe18b3e3da170", v=1, type="brief", severity="warn",
     ts=t0, origin="backend", session_id=None, payload=brief, received_at=t0)
 
+# B5: GET /api/v1/stats?range=24h, a day in the shape of design 15 (deterministic)
+spec = RANGES["24h"]
+hours = bucket_edges(t0, spec.bucket, spec.count)
+stat_runs = []
+for h in range(24):
+    if h % 4 == 3:
+        continue  # an idle hour: gaps in the speed lines
+    end = hours[h] + timedelta(minutes=40)
+    if end > t0:
+        end = t0 - timedelta(minutes=5)
+    wait = 2 if h in (9, 12, 23) else 0
+    stat_runs.append(RunRow(status="completed", queued_at=end - timedelta(minutes=2 + wait),
+        started_at=end - timedelta(minutes=2), ended_at=end,
+        usage={"input_tokens": 12000 + 400 * h, "output_tokens": 300, "total_tokens": 12300 + 400 * h,
+               "cache_read_tokens": int((12000 + 400 * h) * (0.72 + 0.005 * h))},
+        perf={"gen_tps": round(21.4 + 0.6 * math.sin(h / 2), 1),
+              "prefill_tps": round(640 + 30 * math.sin(h / 3), 1), "prompt_tokens": 900}))
+stat_lat = [(hours[h] + timedelta(minutes=30), s) for h, s in ((8, 30.0), (11, 12.0), (12, 95.0), (17, 25.0), (22, 118.0))]
+fine = edges_between(hours[0], hours[-1], spec.gpu_bucket)
+stat_gpus = [
+    GpuBucket(index=0, name="NVIDIA GeForce RTX 4070 SUPER",
+              temp=[round(45 + 26 * max(0.0, math.sin(i / 14)), 1) for i in range(len(fine) - 1)],
+              power=[round(20 + 167 * max(0.0, math.sin(i / 14)), 1) for i in range(len(fine) - 1)],
+              last_temp=71.0, last_power=187.0),
+    GpuBucket(index=1, name="NVIDIA GeForce RTX 3050",
+              temp=[None] * 6 + [round(40 + 18 * max(0.0, math.sin(i / 14)), 1) for i in range(6, len(fine) - 1)],
+              power=[None] * 6 + [round(8 + 54 * max(0.0, math.sin(i / 14)), 1) for i in range(6, len(fine) - 1)],
+              last_temp=58.0, last_power=62.0),
+]
+stats_day = stats_out(range_key="24h", now=t0, runs=stat_runs, latencies=stat_lat, queued_now=2,
+    gpus=stat_gpus, gpu_edges=fine,
+    sampling={"interval_s": 60, "ok": True, "error": None, "last_at": (t0 - timedelta(seconds=20)).isoformat()})
+
 shapes = {
     "conversation": conversation_out(conv),
     "message": message_out(msg),
@@ -107,6 +142,11 @@ shapes = {
     "brief_payload": brief,
     "brief_incident": brief["incidents"][0],
     "card_brief": card_out(brief_card),
+    "stats": stats_day,
+    "stats_series": stats_day["generation"],
+    "stats_point": stats_day["generation"]["points"][-1],
+    "stats_day": stats_day["tokens_per_day"]["days"][-1],
+    "stats_gpu": stats_day["gpus"][0],
     "tool_step_plain": step_out(ToolStep(id=98, run_id=run.run_id, tool="terminal", status="running",
         preview_start="nproc", result=None, result_raw=None, user_summary=None, duration_s=None,
         seq_started=9, seq_completed=None, approval_request_id=None)),

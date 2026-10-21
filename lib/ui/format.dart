@@ -108,3 +108,11 @@ String gbText(int mib, {bool total = false}) {
 String gpuName(String name) => name
     .replaceFirst(RegExp(r'^NVIDIA\s+'), '')
     .replaceFirst(RegExp(r'^GeForce\s+'), '');
+
+/// A wait in seconds, as the Observability header shows it: `42 s`,
+/// `4 min`, `1.5 h`.
+String secondsText(double s) {
+  if (s < 90) return '${s.round()} s';
+  if (s < 5400) return '${(s / 60).round()} min';
+  return '${(s / 3600).toStringAsFixed(1)} h';
+}

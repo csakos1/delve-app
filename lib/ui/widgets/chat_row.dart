@@ -71,9 +71,15 @@ class ChatRow extends StatelessWidget {
                         Flexible(
                           child: Text(
                             titleOf(item, l.newChat),
+                            key: const Key('chats.title'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: context.text.titleSmall,
+                            // The title is the whole row now (no preview),
+                            // so it is a step above titleSmall.
+                            style: context.text.titleSmall!.copyWith(
+                              fontSize: 16,
+                              height: 22 / 16,
+                            ),
                           ),
                         ),
                         if (c.thinking) ...[

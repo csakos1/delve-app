@@ -23,7 +23,6 @@
   "moreSettingsSub": "Server, device, about",
   "newChat": "New chat",
   "chatTitle": "Chat",
-  "notBuiltYet": "Not built yet",
   "back": "Back",
   "pairTitle": "Pair this phone",
   "pairIntro": "Connect to your Delve server over Tailscale. Get an 8-digit code on the desktop with: sudo delve pair",
@@ -1174,6 +1173,64 @@
   "@notifyBriefWater": {
     "placeholders": {
       "level": {
+        "type": "String"
+      }
+    }
+  },
+  "obsRange24h": "24 h",
+  "obsRange7d": "7 d",
+  "obsRange30d": "30 d",
+  "obsGeneration": "Generation",
+  "obsPrefill": "Prefill",
+  "obsPrefillNote": "prompts ≥ {tokens} tok",
+  "@obsPrefillNote": {
+    "placeholders": {
+      "tokens": {
+        "type": "int"
+      }
+    }
+  },
+  "obsQueue": "Queue length",
+  "obsApprovalLatency": "Approval latency",
+  "obsMedianPerHour": "median per hour",
+  "obsMedianPer6h": "median per 6 h",
+  "obsMedianPerDay": "median per day",
+  "obsCacheHit": "Cache hit ratio",
+  "obsTokensPerDay": "Tokens per day",
+  "obsLastDays": "last {days} d",
+  "@obsLastDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "obsGpuTemp": "GPU temperature",
+  "obsGpuPower": "GPU power",
+  "obsTokPerS": "{value} tok/s",
+  "@obsTokPerS": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "obsNoRuns": "No runs in this range",
+  "obsNoApprovals": "No answered approvals",
+  "obsNoSamples": "No GPU samples yet",
+  "obsSamplingFailed": "GPU sampling fails: {reason}",
+  "@obsSamplingFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "obsSamplingOff": "GPU sampling is off on the server",
+  "obsLoadFailed": "Couldn't load the statistics: {reason}",
+  "@obsLoadFailed": {
+    "placeholders": {
+      "reason": {
         "type": "String"
       }
     }

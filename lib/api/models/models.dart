@@ -6,5 +6,6 @@ export 'message.dart';
 export 'run.dart';
 export 'schedule.dart';
 export 'server_info.dart';
+export 'stats.dart';
 export 'system_info.dart';
 export 'tool_step.dart';

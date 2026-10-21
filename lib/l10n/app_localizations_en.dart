@@ -65,9 +65,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatTitle => 'Chat';
 
   @override
-  String get notBuiltYet => 'Not built yet';
-
-  @override
   String get back => 'Back';
 
   @override
@@ -1576,5 +1573,84 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String notifyBriefWater(String level) {
     return 'water $level cm';
+  }
+
+  @override
+  String get obsRange24h => '24 h';
+
+  @override
+  String get obsRange7d => '7 d';
+
+  @override
+  String get obsRange30d => '30 d';
+
+  @override
+  String get obsGeneration => 'Generation';
+
+  @override
+  String get obsPrefill => 'Prefill';
+
+  @override
+  String obsPrefillNote(int tokens) {
+    return 'prompts ≥ $tokens tok';
+  }
+
+  @override
+  String get obsQueue => 'Queue length';
+
+  @override
+  String get obsApprovalLatency => 'Approval latency';
+
+  @override
+  String get obsMedianPerHour => 'median per hour';
+
+  @override
+  String get obsMedianPer6h => 'median per 6 h';
+
+  @override
+  String get obsMedianPerDay => 'median per day';
+
+  @override
+  String get obsCacheHit => 'Cache hit ratio';
+
+  @override
+  String get obsTokensPerDay => 'Tokens per day';
+
+  @override
+  String obsLastDays(int days) {
+    return 'last $days d';
+  }
+
+  @override
+  String get obsGpuTemp => 'GPU temperature';
+
+  @override
+  String get obsGpuPower => 'GPU power';
+
+  @override
+  String obsTokPerS(String value) {
+    return '$value tok/s';
+  }
+
+  @override
+  String get obsNoRuns => 'No runs in this range';
+
+  @override
+  String get obsNoApprovals => 'No answered approvals';
+
+  @override
+  String get obsNoSamples => 'No GPU samples yet';
+
+  @override
+  String obsSamplingFailed(String reason) {
+    return 'GPU sampling fails: $reason';
+  }
+
+  @override
+  String get obsSamplingOff => 'GPU sampling is off on the server';
+
+  @override
+  String obsLoadFailed(String reason) {
+    return 'Couldn\'t load the statistics: $reason';
   }
 }

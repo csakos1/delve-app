@@ -3,7 +3,7 @@
 /// Oldest backend contract this build works with (`/meta` `api_revision`).
 /// Raise it together with the models when the app starts relying on a newer
 /// contract; a smaller server revision shows the "server too old" screen.
-const int kMinApiRevision = 6; // 6: schedules, the morning brief
+const int kMinApiRevision = 7; // 7: observability (GET /stats)
 
 /// REST routes the app calls (method + path template); checked against the
 /// backend contract in `test/contract_test.dart`.
@@ -43,6 +43,7 @@ abstract final class ApiRoutes {
   static const patchSchedule = ('PATCH', '/api/v1/schedules/{schedule_id}');
   static const deleteSchedule = ('DELETE', '/api/v1/schedules/{schedule_id}');
   static const runSchedule = ('POST', '/api/v1/schedules/{schedule_id}/run');
+  static const stats = ('GET', '/api/v1/stats');
   static const ws = ('WS', '/api/v1/ws');
 
   static const List<(String, String)> all = <(String, String)>[
@@ -70,6 +71,7 @@ abstract final class ApiRoutes {
     patchSchedule,
     deleteSchedule,
     runSchedule,
+    stats,
     ws,
   ];
 

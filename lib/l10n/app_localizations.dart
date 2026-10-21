@@ -190,12 +190,6 @@ abstract class AppLocalizations {
   /// **'Chat'**
   String get chatTitle;
 
-  /// No description provided for @notBuiltYet.
-  ///
-  /// In en, this message translates to:
-  /// **'Not built yet'**
-  String get notBuiltYet;
-
   /// No description provided for @back.
   ///
   /// In en, this message translates to:
@@ -2649,6 +2643,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'water {level} cm'**
   String notifyBriefWater(String level);
+
+  /// No description provided for @obsRange24h.
+  ///
+  /// In en, this message translates to:
+  /// **'24 h'**
+  String get obsRange24h;
+
+  /// No description provided for @obsRange7d.
+  ///
+  /// In en, this message translates to:
+  /// **'7 d'**
+  String get obsRange7d;
+
+  /// No description provided for @obsRange30d.
+  ///
+  /// In en, this message translates to:
+  /// **'30 d'**
+  String get obsRange30d;
+
+  /// No description provided for @obsGeneration.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation'**
+  String get obsGeneration;
+
+  /// No description provided for @obsPrefill.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefill'**
+  String get obsPrefill;
+
+  /// No description provided for @obsPrefillNote.
+  ///
+  /// In en, this message translates to:
+  /// **'prompts ≥ {tokens} tok'**
+  String obsPrefillNote(int tokens);
+
+  /// No description provided for @obsQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue length'**
+  String get obsQueue;
+
+  /// No description provided for @obsApprovalLatency.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval latency'**
+  String get obsApprovalLatency;
+
+  /// No description provided for @obsMedianPerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'median per hour'**
+  String get obsMedianPerHour;
+
+  /// No description provided for @obsMedianPer6h.
+  ///
+  /// In en, this message translates to:
+  /// **'median per 6 h'**
+  String get obsMedianPer6h;
+
+  /// No description provided for @obsMedianPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'median per day'**
+  String get obsMedianPerDay;
+
+  /// No description provided for @obsCacheHit.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache hit ratio'**
+  String get obsCacheHit;
+
+  /// No description provided for @obsTokensPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Tokens per day'**
+  String get obsTokensPerDay;
+
+  /// No description provided for @obsLastDays.
+  ///
+  /// In en, this message translates to:
+  /// **'last {days} d'**
+  String obsLastDays(int days);
+
+  /// No description provided for @obsGpuTemp.
+  ///
+  /// In en, this message translates to:
+  /// **'GPU temperature'**
+  String get obsGpuTemp;
+
+  /// No description provided for @obsGpuPower.
+  ///
+  /// In en, this message translates to:
+  /// **'GPU power'**
+  String get obsGpuPower;
+
+  /// No description provided for @obsTokPerS.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} tok/s'**
+  String obsTokPerS(String value);
+
+  /// No description provided for @obsNoRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'No runs in this range'**
+  String get obsNoRuns;
+
+  /// No description provided for @obsNoApprovals.
+  ///
+  /// In en, this message translates to:
+  /// **'No answered approvals'**
+  String get obsNoApprovals;
+
+  /// No description provided for @obsNoSamples.
+  ///
+  /// In en, this message translates to:
+  /// **'No GPU samples yet'**
+  String get obsNoSamples;
+
+  /// No description provided for @obsSamplingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'GPU sampling fails: {reason}'**
+  String obsSamplingFailed(String reason);
+
+  /// No description provided for @obsSamplingOff.
+  ///
+  /// In en, this message translates to:
+  /// **'GPU sampling is off on the server'**
+  String get obsSamplingOff;
+
+  /// No description provided for @obsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the statistics: {reason}'**
+  String obsLoadFailed(String reason);
 }
 
 class _AppLocalizationsDelegate

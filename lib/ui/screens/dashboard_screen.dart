@@ -12,6 +12,7 @@ import '../../sync/connection_status.dart';
 import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
 import '../format.dart';
+import '../widgets/chart_paint.dart';
 import '../widgets/connection_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
@@ -307,53 +308,23 @@ class WaterCard extends StatelessWidget {
           Wrap(
             spacing: DelveTokens.space4,
             children: [
-              _Legend(label: last.station, dashed: false),
+              ChartLegend(
+                label: last.station,
+                color: context.colors.primary,
+                dashed: false,
+                markKey: const Key('water.legend.solid'),
+              ),
               if (last.lakeAvgCm != null)
-                _Legend(label: l.dashLakeAverage, dashed: true),
+                ChartLegend(
+                  label: l.dashLakeAverage,
+                  color: context.colors.onSurfaceVariant,
+                  dashed: true,
+                  markKey: const Key('water.legend.dashed'),
+                ),
             ],
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Legend extends StatelessWidget {
-  const _Legend({required this.label, required this.dashed});
-  final String label;
-  final bool dashed;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = dashed
-        ? context.colors.onSurfaceVariant
-        : context.colors.primary;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: 20,
-          height: 2,
-          child: dashed
-              ? Row(
-                  children: [
-                    Expanded(child: ColoredBox(color: color)),
-                    const SizedBox(width: 4),
-                    Expanded(child: ColoredBox(color: color)),
-                  ],
-                )
-              : ColoredBox(color: color),
-        ),
-        const SizedBox(width: DelveTokens.space2),
-        Flexible(
-          child: Text(
-            label,
-            style: context.text.bodyMedium!.copyWith(
-              color: context.colors.onSurfaceVariant,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

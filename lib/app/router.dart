@@ -10,13 +10,13 @@ import '../ui/screens/chats_screen.dart';
 import '../ui/screens/connection_log_screen.dart';
 import '../ui/screens/dashboard_screen.dart';
 import '../ui/screens/more_screen.dart';
+import '../ui/screens/observability_screen.dart';
 import '../ui/screens/pairing_screen.dart';
 import '../ui/screens/schedule_editor_screen.dart';
 import '../ui/screens/schedules_screen.dart';
 import '../ui/screens/server_too_old_screen.dart';
 import '../ui/screens/settings_screen.dart';
 import '../ui/screens/splash_screen.dart';
-import '../ui/screens/sub_page_placeholder.dart';
 import '../ui/screens/system_screen.dart';
 import '../ui/shell/app_shell.dart';
 import 'session.dart';
@@ -132,7 +132,7 @@ GoRouter buildRouter({
                         MorePage.archived => const ArchivedChatsScreen(),
                         MorePage.system => const SystemScreen(),
                         MorePage.schedules => const SchedulesScreen(),
-                        _ => SubPagePlaceholder(page: page),
+                        MorePage.observability => const ObservabilityScreen(),
                       },
                       routes: [
                         if (page == MorePage.settings)

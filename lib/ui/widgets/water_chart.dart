@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../app/dashboard.dart';
 import '../../theme/delve_theme.dart';
+import 'chart_paint.dart';
 
 /// The week of water levels (design 12): the station as an accent line with a
 /// filled area and a dot on the latest day, the lake average dashed, three
@@ -104,18 +105,18 @@ class WaterChartPainter extends CustomPainter {
     for (final v in [scale.lo, (scale.lo + scale.hi) / 2, scale.hi]) {
       final gy = y(v);
       canvas.drawLine(Offset(plot.left, gy), Offset(plot.right, gy), gridPaint);
-      _text(
+      paintChartText(
         canvas,
         v.round().toString(),
         labelStyle,
         Offset(0, gy),
-        center: true,
+        vCenter: true,
       );
     }
 
     // weekday labels
     for (var i = 0; i < days.length; i++) {
-      _text(
+      paintChartText(
         canvas,
         DateFormat('E').format(days[i].day),
         dayStyle,
@@ -152,7 +153,7 @@ class WaterChartPainter extends CustomPainter {
       );
     }
     if (lake.length >= 2) {
-      _dashed(
+      drawDashedPolyline(
         canvas,
         lake,
         Paint()
@@ -174,55 +175,6 @@ class WaterChartPainter extends CustomPainter {
     if (station.isNotEmpty) {
       canvas.drawCircle(station.last, 4, Paint()..color = accent);
     }
-  }
-
-  void _dashed(Canvas canvas, List<Offset> points, Paint paint) {
-    const dash = 6.0;
-    const gap = 5.0;
-    var on = true;
-    var left = dash;
-    for (var i = 0; i < points.length - 1; i++) {
-      var a = points[i];
-      final b = points[i + 1];
-      var segment = (b - a).distance;
-      if (segment == 0) continue;
-      final dir = (b - a) / segment;
-      while (segment > 0) {
-        final step = math.min(left, segment);
-        final next = a + dir * step;
-        if (on) canvas.drawLine(a, next, paint);
-        a = next;
-        segment -= step;
-        left -= step;
-        if (left <= 0) {
-          on = !on;
-          left = on ? dash : gap;
-        }
-      }
-    }
-  }
-
-  void _text(
-    Canvas canvas,
-    String text,
-    TextStyle style,
-    Offset at, {
-    bool center = false,
-    bool hCenter = false,
-  }) {
-    final tp = TextPainter(
-      text: TextSpan(text: text, style: style),
-      textDirection: ui.TextDirection.ltr,
-    )..layout();
-    tp
-      ..paint(
-        canvas,
-        Offset(
-          hCenter ? at.dx - tp.width / 2 : at.dx,
-          center ? at.dy - tp.height / 2 : at.dy,
-        ),
-      )
-      ..dispose();
   }
 
   @override

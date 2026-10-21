@@ -8,25 +8,21 @@ import '../widgets/page_scaffolds.dart';
 
 /// The sub-pages reachable from More.
 enum MorePage {
-  system('system', DelveIcons.system, Routes.system, 'B3'),
-  schedules('schedules', DelveIcons.schedules, Routes.schedules, 'B4'),
+  system('system', DelveIcons.system, Routes.system),
+  schedules('schedules', DelveIcons.schedules, Routes.schedules),
   observability(
     'observability',
     DelveIcons.observability,
     Routes.observability,
-    'B',
   ),
-  settings('settings', DelveIcons.settings, Routes.settings, 'A2'),
-  archived('archived', DelveIcons.archive, Routes.archived, 'A4');
+  settings('settings', DelveIcons.settings, Routes.settings),
+  archived('archived', DelveIcons.archive, Routes.archived);
 
-  const MorePage(this.segment, this.icon, this.route, this.step);
+  const MorePage(this.segment, this.icon, this.route);
 
   final String segment;
   final IconData icon;
   final String route;
-
-  /// Plan step that builds the page.
-  final String step;
 
   String title(AppLocalizations l) => switch (this) {
     MorePage.system => l.moreSystem,

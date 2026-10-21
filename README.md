@@ -68,9 +68,16 @@ reached over Tailscale only.
   shows the latest morning brief (uptime, package updates, open incidents, llama-server,
   last boot); Settings → Morning brief turns on its notification.
 
+- B5: Observability (More → Observability) — for 24 h, 7 d or 30 d: generation and prefill
+  speed (prefill only for prompts of 500 tokens or more), queue length, approval latency
+  (median per bucket), cache hit ratio, tokens per day, GPU temperature and power (from the
+  server's 60 s samples, kept 30 days). The server computes the buckets (Budapest time);
+  the charts are drawn by hand like the water week. Loaded when the screen opens, on a
+  range chip and on pull; a failing GPU sampling is shown as a banner.
+
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
-B4 schedules and the morning brief; observability, attachments and the home widget follow
-(B5–B7). Requires a server with API revision 6 or newer (`/api/v1/schedules`).
+B4 schedules and the morning brief, B5 observability; attachments and the home widget
+follow (B6–B7). Requires a server with API revision 7 or newer (`/api/v1/stats`).
 
 ## Stack
 
