@@ -53,10 +53,16 @@ class TopLevelPage extends StatelessWidget {
 
 /// Sub-page (pushed on the root navigator, no bottom nav): app bar with back.
 class SubPage extends StatelessWidget {
-  const SubPage({super.key, required this.title, required this.child});
+  const SubPage({
+    super.key,
+    required this.title,
+    required this.child,
+    this.actions = const [],
+  });
 
   final String title;
   final Widget child;
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +70,7 @@ class SubPage extends StatelessWidget {
       appBar: AppBar(
         leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
         title: Text(title),
+        actions: actions,
       ),
       body: child,
     );
@@ -186,4 +193,6 @@ abstract final class DelveIcons {
   static const IconData arrowFlat = Symbols.trending_flat_rounded;
   static const IconData brief = Symbols.wb_twilight_rounded;
   static const IconData notificationsOff = Symbols.notifications_off_rounded;
+  static const IconData power = Symbols.power_settings_new_rounded;
+  static const IconData play = Symbols.play_arrow_rounded;
 }

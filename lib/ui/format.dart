@@ -76,3 +76,35 @@ String signedCm(double v) {
   if (r > 0) return '+$r';
   return '0';
 }
+
+/// An uptime: `3 d 20 h`, `5 h 12 min`, `12 min`, `< 1 min`.
+String uptimeText(Duration d) {
+  if (d.inMinutes < 1) return '< 1 min';
+  if (d.inHours < 1) return '${d.inMinutes} min';
+  if (d.inDays < 1) {
+    final m = d.inMinutes % 60;
+    return m == 0 ? '${d.inHours} h' : '${d.inHours} h $m min';
+  }
+  final h = d.inHours % 24;
+  return h == 0 ? '${d.inDays} d' : '${d.inDays} d $h h';
+}
+
+/// How old a reading is: `5 s`, `3 min`, `2 h`.
+String ageText(Duration d) {
+  final s = d.isNegative ? 0 : d.inSeconds;
+  if (s < 60) return '$s s';
+  if (s < 3600) return '${s ~/ 60} min';
+  return '${s ~/ 3600} h';
+}
+
+/// MiB as GB: one decimal (`11.1`), or whole for a [total] that is one (`12`).
+String gbText(int mib, {bool total = false}) {
+  final gb = mib / 1024;
+  if (total && (gb - gb.round()).abs() < 0.05) return '${gb.round()}';
+  return gb.toStringAsFixed(1);
+}
+
+/// `NVIDIA GeForce RTX 4070 SUPER` -> `RTX 4070 SUPER`.
+String gpuName(String name) => name
+    .replaceFirst(RegExp(r'^NVIDIA\s+'), '')
+    .replaceFirst(RegExp(r'^GeForce\s+'), '');

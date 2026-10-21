@@ -170,6 +170,77 @@
       },
       "received_at": "2026-10-19T20:39:01.123456+00:00"
     },
+    "system": {
+      "checked_at": "2026-10-19T21:39:00.123456+00:00",
+      "helper": {
+        "ok": true,
+        "error": null
+      },
+      "hermes": {
+        "status": "degraded",
+        "version": "0.22.2",
+        "since": "2026-10-20T22:31:58+00:00",
+        "issues": [
+          {
+            "check": "disk",
+            "status": "degraded",
+            "detail": "96% used"
+          }
+        ]
+      },
+      "llama": {
+        "status": "running",
+        "intent": null,
+        "since": "2026-10-20T23:03:54+00:00",
+        "model": "Qwen3.8-27B",
+        "quant": "IQ4_XS",
+        "ctx": 65536,
+        "slots": 1,
+        "slots_busy": 1,
+        "gen_tps": 21.4
+      },
+      "queue": {
+        "active": 1,
+        "queued": 1
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 4070 SUPER",
+          "temp_c": 51.0,
+          "mem_used_mib": 11381,
+          "mem_total_mib": 12282,
+          "util_pct": 6.0,
+          "power_w": 40.39,
+          "power_limit_w": 220.0
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3050",
+          "temp_c": 49.0,
+          "mem_used_mib": 6693,
+          "mem_total_mib": 8192,
+          "util_pct": 0.0,
+          "power_w": 14.52,
+          "power_limit_w": 130.0
+        }
+      ]
+    },
+    "gpu": {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 4070 SUPER",
+      "temp_c": 51.0,
+      "mem_used_mib": 11381,
+      "mem_total_mib": 12282,
+      "util_pct": 6.0,
+      "power_w": 40.39,
+      "power_limit_w": 220.0
+    },
+    "hermes_issue": {
+      "check": "disk",
+      "status": "degraded",
+      "detail": "96% used"
+    },
     "tool_step_plain": {
       "id": 98,
       "run_id": "run_8e4b1c2d3a4f5e6b",
@@ -455,6 +526,62 @@
       },
       "received_at": "2026-10-19T20:39:01.123456+00:00"
     },
+    "system.updated": {
+      "checked_at": "2026-10-19T21:39:00.123456+00:00",
+      "helper": {
+        "ok": true,
+        "error": null
+      },
+      "hermes": {
+        "status": "degraded",
+        "version": "0.22.2",
+        "since": "2026-10-20T22:31:58+00:00",
+        "issues": [
+          {
+            "check": "disk",
+            "status": "degraded",
+            "detail": "96% used"
+          }
+        ]
+      },
+      "llama": {
+        "status": "stopped",
+        "intent": "stopped",
+        "since": "2026-10-20T22:34:28+00:00",
+        "model": null,
+        "quant": null,
+        "ctx": null,
+        "slots": 1,
+        "slots_busy": 0,
+        "gen_tps": null
+      },
+      "queue": {
+        "active": 0,
+        "queued": 2
+      },
+      "gpus": [
+        {
+          "index": 0,
+          "name": "NVIDIA GeForce RTX 4070 SUPER",
+          "temp_c": 51.0,
+          "mem_used_mib": 1266,
+          "mem_total_mib": 12282,
+          "util_pct": 6.0,
+          "power_w": 40.39,
+          "power_limit_w": 220.0
+        },
+        {
+          "index": 1,
+          "name": "NVIDIA GeForce RTX 3050",
+          "temp_c": 49.0,
+          "mem_used_mib": 15,
+          "mem_total_mib": 8192,
+          "util_pct": 0.0,
+          "power_w": 14.52,
+          "power_limit_w": 130.0
+        }
+      ]
+    },
     "error": {
       "code": "thinking_route_not_applied",
       "ref_id": "run_8e4b1c2d3a4f5e6b",
@@ -464,7 +591,7 @@
   "connection": {
     "hello.ok": {
       "server_version": "0.1.0",
-      "api_revision": 4,
+      "api_revision": 5,
       "revision": "eb4045ed6a94",
       "hermes": "ok",
       "hermes_version": "0.22.2",
@@ -479,7 +606,7 @@
     },
     "meta": {
       "server_version": "0.1.0",
-      "api_revision": 4,
+      "api_revision": 5,
       "revision": "eb4045ed6a94",
       "python": "3.14.8",
       "hermes_expected_version": "0.22.2",
@@ -487,7 +614,7 @@
     },
     "status": {
       "server_version": "0.1.0",
-      "api_revision": 4,
+      "api_revision": 5,
       "revision": null,
       "hermes": null,
       "hermes_version": null,

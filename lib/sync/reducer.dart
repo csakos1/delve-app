@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../api/events.dart';
+import '../api/models/models.dart';
 import '../data/db/database.dart';
 import '../data/db/store.dart';
 import 'live_runs.dart';
@@ -9,6 +10,9 @@ import 'live_runs.dart';
 class ReduceOutcome {
   /// The last `health.status` in the batch.
   HealthStatus? health;
+
+  /// The last `system.updated` in the batch (kept in memory, not stored).
+  SystemInfo? system;
   final List<ServerError> errors = [];
   final List<UnknownEvent> unknown = [];
 }
@@ -244,6 +248,9 @@ class EventReducer {
 
       case final HealthStatus health:
         outcome.health = health;
+
+      case SystemUpdated(:final system):
+        outcome.system = system;
 
       case final ServerError error:
         outcome.errors.add(error);

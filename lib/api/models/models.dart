@@ -4,4 +4,5 @@ export 'conversation.dart';
 export 'message.dart';
 export 'run.dart';
 export 'server_info.dart';
+export 'system_info.dart';
 export 'tool_step.dart';

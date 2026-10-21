@@ -3,7 +3,7 @@
 /// Oldest backend contract this build works with (`/meta` `api_revision`).
 /// Raise it together with the models when the app starts relying on a newer
 /// contract; a smaller server revision shows the "server too old" screen.
-const int kMinApiRevision = 4; // 4: GET /cards, card.new
+const int kMinApiRevision = 5; // 5: GET /system, POST /system/llama
 
 /// REST routes the app calls (method + path template); checked against the
 /// backend contract in `test/contract_test.dart`.
@@ -36,6 +36,8 @@ abstract final class ApiRoutes {
   static const answerApproval = ('POST', '/api/v1/approvals/{request_id}');
   static const openRuns = ('GET', '/api/v1/runs/open');
   static const cards = ('GET', '/api/v1/cards');
+  static const system = ('GET', '/api/v1/system');
+  static const llama = ('POST', '/api/v1/system/llama');
   static const ws = ('WS', '/api/v1/ws');
 
   static const List<(String, String)> all = <(String, String)>[
@@ -56,6 +58,8 @@ abstract final class ApiRoutes {
     answerApproval,
     openRuns,
     cards,
+    system,
+    llama,
     ws,
   ];
 
@@ -167,3 +171,6 @@ abstract final class WsClose {
   static const int unauthorized = 4401;
   static const int timeoutOrSlow = 4408;
 }
+
+/// `POST /system/llama` actions.
+enum LlamaAction { start, stop }

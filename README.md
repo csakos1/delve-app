@@ -51,9 +51,17 @@ reached over Tailscale only.
   the agent's own water cards stay out of the chart. Settings → Water level turns on a
   notification after each scheduled reading.
 
-With A6 the MVP is complete; B1 adds notifications, B2 the dashboard; system, schedules,
-observability, attachments and the home widget follow (B3–B7). Requires a server with
-API revision 4 or newer (`GET /api/v1/cards`, `card.new`).
+- B3: System (More → System, and a System card on the Dashboard) — Hermes (degraded with
+  the reason, e.g. the disk), llama-server (state since when, model, context, slots, last
+  generation speed), the run queue and the GPUs (temperature, power, memory). Stop asks
+  first and says what happens: the active run is stopped, queued messages wait until
+  llama-server is started again (from here, or anywhere - the server notices). The screen
+  asks again every 10 s while open; `system.updated` arrives over the socket. Without the
+  server's privileged helper the view says so and offers no stop/start.
+
+With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view;
+schedules, observability, attachments and the home widget follow (B4–B7). Requires a
+server with API revision 5 or newer (`GET /api/v1/system`, `POST /api/v1/system/llama`).
 
 ## Stack
 
@@ -90,6 +98,7 @@ lib/
   app/chat_list.dart         conversation list: database query, paging, archive
   app/chat.dart              one chat: database query, ChatActions (send, stop, open)
   app/dashboard.dart         water readings from the cards, the week, REST reload
+  app/system.dart            the system view in memory: REST, system.updated, stop/start
   sync/                      WebSocket client: engine (connection, outbox, requests),
                              reducer (events → database), resync, live runs, transport
   push/                      notifications: FCM transport, controller (token, taps),

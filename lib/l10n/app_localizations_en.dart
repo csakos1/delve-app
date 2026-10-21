@@ -1091,4 +1091,215 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsNotifyWaterSub => 'After each scheduled reading';
+
+  @override
+  String systemChecked(String time) {
+    return 'checked $time';
+  }
+
+  @override
+  String get systemHermes => 'Hermes Agent';
+
+  @override
+  String get systemStatus => 'Status';
+
+  @override
+  String get systemVersion => 'Version';
+
+  @override
+  String get systemUptime => 'Uptime';
+
+  @override
+  String get systemQueue => 'Queue';
+
+  @override
+  String systemQueueActive(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count runs active',
+      one: '1 run active',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String systemQueueQueued(int count) {
+    return '$count queued';
+  }
+
+  @override
+  String get systemLlama => 'llama-server';
+
+  @override
+  String get systemModel => 'Model';
+
+  @override
+  String get systemContext => 'Context';
+
+  @override
+  String get systemSlots => 'Slots';
+
+  @override
+  String get systemGeneration => 'Generation';
+
+  @override
+  String systemSince(String time) {
+    return 'since $time';
+  }
+
+  @override
+  String systemTokens(String tokens) {
+    return '$tokens tok';
+  }
+
+  @override
+  String systemSlotsBusy(int busy, int total) {
+    return '$busy / $total busy';
+  }
+
+  @override
+  String systemSlotsIdle(int busy, int total) {
+    return '$busy / $total';
+  }
+
+  @override
+  String systemTps(String tps) {
+    return '$tps tok/s';
+  }
+
+  @override
+  String get systemStop => 'Stop llama-server';
+
+  @override
+  String get systemStart => 'Start llama-server';
+
+  @override
+  String get systemStopping => 'Stopping…';
+
+  @override
+  String get systemStarting => 'Starting…';
+
+  @override
+  String get systemGpus => 'GPUs';
+
+  @override
+  String systemGpuSource(String age) {
+    return 'nvidia-smi · $age';
+  }
+
+  @override
+  String systemGpuCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count GPUs',
+      one: '1 GPU',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get systemTitle => 'System';
+
+  @override
+  String get systemHermesShort => 'Hermes';
+
+  @override
+  String get systemStateRunning => 'running';
+
+  @override
+  String get systemStateLoading => 'loading';
+
+  @override
+  String get systemStateStarting => 'starting';
+
+  @override
+  String get systemStateStopping => 'stopping';
+
+  @override
+  String get systemStateStopped => 'stopped';
+
+  @override
+  String get systemStateFailed => 'failed';
+
+  @override
+  String get systemStateDown => 'unreachable';
+
+  @override
+  String get systemStateUnknown => 'unknown';
+
+  @override
+  String get systemStateOk => 'ok';
+
+  @override
+  String get systemStateDegraded => 'degraded';
+
+  @override
+  String get systemHelperMissing =>
+      'The server can\'t reach its system helper: no GPU data, and llama-server can\'t be stopped or started from here.';
+
+  @override
+  String systemHelperProblem(String reason) {
+    return 'Part of the system view is missing: $reason';
+  }
+
+  @override
+  String systemHeldQueue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages wait until llama-server is back.',
+      one: '1 message waits until llama-server is back.',
+      zero: 'Messages you send wait until llama-server is back.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get systemLoadingNote =>
+      'Waiting messages start once the model is loaded.';
+
+  @override
+  String get systemStopTitle => 'Stop llama-server?';
+
+  @override
+  String get systemStopActive => 'The active run will be stopped.';
+
+  @override
+  String systemStopQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queued messages wait until you start it again.',
+      one: '1 queued message waits until you start it again.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get systemStopBody =>
+      'Hermes keeps running, and you can start llama-server again from here.';
+
+  @override
+  String get systemStopConfirm => 'Stop';
+
+  @override
+  String get systemRunStarted =>
+      'A run just started. Check the queue and try again.';
+
+  @override
+  String systemStopFailed(String reason) {
+    return 'Couldn\'t stop llama-server: $reason';
+  }
+
+  @override
+  String systemStartFailed(String reason) {
+    return 'Couldn\'t start llama-server: $reason';
+  }
+
+  @override
+  String systemLoadFailed(String reason) {
+    return 'Couldn\'t load the system view: $reason';
+  }
 }

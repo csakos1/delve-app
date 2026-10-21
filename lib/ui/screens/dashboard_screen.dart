@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../api/models/models.dart';
 import '../../app/dashboard.dart';
+import '../../app/system.dart';
 import '../../l10n/app_localizations.dart';
 import '../../sync/connection_status.dart';
 import '../../sync/sync_providers.dart';
@@ -13,10 +15,11 @@ import '../format.dart';
 import '../widgets/connection_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
+import '../widgets/system_ui.dart';
 import '../widgets/water_chart.dart';
 
-/// 12 Dashboard (B2): connection and the Lake Balaton water level with its
-/// week. The System card arrives with B3, the morning brief with B4.
+/// 12 Dashboard: connection, the Lake Balaton water level with its week (B2)
+/// and the System card (B3). The morning brief arrives with B4.
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -34,6 +37,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Future<void> _refresh({bool quiet = false}) async {
+    unawaited(_refreshSystem());
     final service = ref.read(dashboardServiceProvider);
     if (service == null) return;
     try {
@@ -45,6 +49,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l.approvalsRefreshFailed(apiErrorText(l, e)))),
       );
+    }
+  }
+
+  /// The System card shows its own failure; no snackbar for it.
+  Future<void> _refreshSystem() async {
+    try {
+      await ref.read(systemProvider.notifier).refresh();
+    } on Object {
+      // kept in SystemView.error
     }
   }
 
@@ -91,6 +104,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               AsyncData() || AsyncError() => const _WaterEmpty(),
               _ => const SizedBox(height: 320),
             },
+            const SizedBox(height: DelveTokens.space3),
+            const SystemCard(),
           ],
         ),
       ),
@@ -347,6 +362,82 @@ class _WaterEmpty extends StatelessWidget {
             icon: DelveIcons.water,
             text: l.dashWaterEmpty,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// System (design 12): Hermes and llama-server with their state, the GPUs
+/// (without power), and the stop/start button with the same dialog as 13b.
+class SystemCard extends ConsumerWidget {
+  const SystemCard({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final view = ref.watch(systemProvider);
+    final info = view.info;
+    if (info == null) {
+      final error = view.error;
+      if (error == null) return const SizedBox.shrink();
+      return SurfaceCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            CardHeader(title: l.systemTitle),
+            StatusBanner(
+              kind: StatusKind.warn,
+              icon: DelveIcons.syncProblem,
+              text: l.systemLoadFailed(apiErrorText(l, error)),
+            ),
+          ],
+        ),
+      );
+    }
+    final gpus = info.gpus;
+    final muted = DelveText.mono.copyWith(color: context.delve.textMuted);
+    Widget pair(Widget chip, String? text) => Wrap(
+      alignment: WrapAlignment.end,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: DelveTokens.space3,
+      children: [
+        chip,
+        if (text != null) Text(text, style: muted),
+      ],
+    );
+    return SurfaceCard(
+      key: const Key('dashboard.system'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          CardHeader(
+            title: l.systemTitle,
+            note: gpus == null ? null : l.systemGpuCount(gpus.length),
+          ),
+          InfoRow(
+            label: l.systemHermesShort,
+            trailing: pair(
+              hermesChip(l, info.hermes.status),
+              info.hermes.version == null ? null : 'v${info.hermes.version}',
+            ),
+          ),
+          InfoRow(
+            label: l.systemLlama,
+            trailing: pair(llamaChip(l, info.llama.status), info.llama.model),
+          ),
+          for (final g in gpus ?? const <GpuInfo>[])
+            GpuRow(gpu: g, showPower: false),
+          if (info.llama.intent == 'stopped') ...[
+            const SizedBox(height: DelveTokens.space2),
+            StatusBanner(
+              kind: StatusKind.info,
+              icon: DelveIcons.hourglass,
+              text: l.systemHeldQueue(info.queue.queued),
+            ),
+          ],
+          const SizedBox(height: DelveTokens.space3),
+          LlamaButton(info: info),
         ],
       ),
     );

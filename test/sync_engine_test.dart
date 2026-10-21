@@ -186,6 +186,16 @@ void main() {
     },
   );
 
+  test('system.updated is handed on, not stored (B3)', () async {
+    await engine.start();
+    await live();
+    final next = engine.systemUpdates.first;
+    ws.broadcast('system.updated', sample('system'));
+    final s = await next.timeout(const Duration(seconds: 5));
+    expect((s.llama.status, s.hermes.status), ('running', 'degraded'));
+    await eventually(() async => (await db.readSyncState()).lastSeq == 1);
+  });
+
   test('events up to the stored position are not applied twice', () async {
     await engine.start();
     await live();

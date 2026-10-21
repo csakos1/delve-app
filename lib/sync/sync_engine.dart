@@ -134,6 +134,12 @@ class SyncEngine {
   ConnectionStatus get status => _status;
   Stream<ConnectionStatus> get statusChanges => _statusController.stream;
 
+  final _systemController = StreamController<SystemInfo>.broadcast();
+
+  /// `system.updated` events (B3): the system view after a llama-server
+  /// stop or start, or when the held queue is let go.
+  Stream<SystemInfo> get systemUpdates => _systemController.stream;
+
   Uri get webSocketUrl => webSocketUri(credentials.server, ApiRoutes.ws.$2);
 
   bool _started = false;
@@ -254,6 +260,7 @@ class SyncEngine {
     _failRequests(const NoAnswer());
     await _applying;
     await _statusController.close();
+    await _systemController.close();
   }
 
   // ---------------------------------------------------------------------------
@@ -585,6 +592,9 @@ class SyncEngine {
           if (!_disposed) {
             _setStatus(_status.copyWith(hermes: health.hermes));
           }
+        }
+        if (outcome.system case final system? when !_disposed) {
+          _systemController.add(system);
         }
         for (final err in outcome.errors) {
           _log(

@@ -8,7 +8,7 @@ import '../widgets/page_scaffolds.dart';
 
 /// The sub-pages reachable from More.
 enum MorePage {
-  system('system', DelveIcons.system, Routes.system, 'B'),
+  system('system', DelveIcons.system, Routes.system, 'B3'),
   schedules('schedules', DelveIcons.schedules, Routes.schedules, 'B'),
   observability(
     'observability',

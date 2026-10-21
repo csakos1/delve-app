@@ -114,6 +114,7 @@ sealed class ServerEvent extends IncomingFrame {
     'context.updated',
     'health.status',
     'card.new',
+    'system.updated',
     'error',
   };
 
@@ -222,6 +223,7 @@ sealed class ServerEvent extends IncomingFrame {
       hermesVersion: _strOrNull(d, 'hermes_version'),
     ),
     'card.new' => CardNew(seq, AgentCard.fromJson(d)),
+    'system.updated' => SystemUpdated(seq, SystemInfo.fromJson(d)),
     'error' => ServerError(
       seq,
       code: _str(d, 'code'),
@@ -443,6 +445,12 @@ final class ServerError extends ServerEvent {
 final class CardNew extends ServerEvent {
   const CardNew(super.seq, this.card);
   final AgentCard card;
+}
+
+/// The system view changed (llama-server stopped, started, ready again).
+final class SystemUpdated extends ServerEvent {
+  const SystemUpdated(super.seq, this.system);
+  final SystemInfo system;
 }
 
 final class UnknownEvent extends ServerEvent {

@@ -42,6 +42,7 @@ class DelveApi {
     Map<String, String> params = const {},
     Map<String, Object?> query = const {},
     Object? body,
+    Duration? receiveTimeout,
   }) async {
     try {
       final res = await _dio.request<Object?>(
@@ -51,7 +52,7 @@ class DelveApi {
           for (final e in query.entries)
             if (e.value != null) e.key: e.value.toString(),
         },
-        options: Options(method: route.$1),
+        options: Options(method: route.$1, receiveTimeout: receiveTimeout),
       );
       final data = res.data;
       if (res.statusCode == 204 || data == null || data == '') {
@@ -268,6 +269,23 @@ class DelveApi {
       (j) => [for (final c in _list(j, 'data')) AgentCard.fromJson(c)],
     );
   }
+
+  /// The system view: Hermes, llama-server, the queue, the GPUs (B3).
+  Future<SystemInfo> system() async =>
+      _parse(await _json(ApiRoutes.system), SystemInfo.fromJson);
+
+  /// Starts or stops llama-server; answers with the new system view. A stop
+  /// while a run is active needs [force] (else 409 `run_active`). The server
+  /// waits for systemctl, so this may take longer than other calls.
+  Future<SystemInfo> llama(LlamaAction action, {bool force = false}) async =>
+      _parse(
+        await _json(
+          ApiRoutes.llama,
+          body: {'action': action.name, if (force) 'force': true},
+          receiveTimeout: const Duration(seconds: 60),
+        ),
+        SystemInfo.fromJson,
+      );
 
   static List<Map<String, Object?>> _list(
     Map<String, Object?> json,

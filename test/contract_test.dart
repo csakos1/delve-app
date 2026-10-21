@@ -63,6 +63,9 @@ void main() {
           'approval': (j) => Approval.fromJson(j).toJson(),
           'tool_step': (j) => ToolStep.fromJson(j).toJson(),
           'card': (j) => AgentCard.fromJson(j).toJson(),
+          'system': (j) => SystemInfo.fromJson(j).toJson(),
+          'gpu': (j) => GpuInfo.fromJson(j).toJson(),
+          'hermes_issue': (j) => HermesIssue.fromJson(j).toJson(),
         };
 
     test('every contract shape has a model', () {
@@ -110,6 +113,27 @@ void main() {
 
       final s = ToolStep.fromJson(obj(sampleShapes['tool_step_plain']));
       expect((s.status, s.approval, s.durationS), ('running', null, null));
+    });
+
+    test('the system view keeps its values', () {
+      final s = SystemInfo.fromJson(obj(sampleShapes['system']));
+      expect(
+        SystemInfo.fromJson(
+          jsonDecode(jsonEncode(s.toJson())) as Map<String, Object?>,
+        ),
+        s,
+      );
+      expect((s.helper.ok, s.hermes.status), (true, 'degraded'));
+      expect(s.hermes.issues.single.detail, '96% used');
+      expect(s.hermes.since!.isUtc, isTrue);
+      expect(
+        (s.llama.model, s.llama.quant, s.llama.ctx, s.llama.slotsBusy),
+        ('Qwen3.8-27B', 'IQ4_XS', 65536, 1),
+      );
+      expect(s.llama.genTps, 21.4);
+      expect((s.queue.active, s.queue.queued), (1, 1));
+      final g = s.gpus!.first;
+      expect((g.memUsedMib, g.memTotalMib, g.powerW), (11381, 12282, 40.39));
     });
 
     test('REST/sync history messages carry their tool steps', () {
@@ -186,6 +210,12 @@ void main() {
       final req = ev('approval.request') as ApprovalRequested;
       expect(req.stepId, 97);
       expect(req.approval.choices, ['once', 'session', 'deny']);
+      final sys = ev('system.updated') as SystemUpdated;
+      expect(
+        (sys.system.llama.status, sys.system.llama.intent),
+        ('stopped', 'stopped'),
+      );
+      expect(sys.system.queue.queued, 2);
       final err = ev('error') as ServerError;
       expect(err.code, 'thinking_route_not_applied');
       final upd = ev('conversation.updated') as ConversationUpdated;

@@ -776,5 +776,173 @@
   },
   "notifyChannelCards": "Water level",
   "notifyChannelCardsDesc": "After each scheduled reading",
-  "settingsNotifyWaterSub": "After each scheduled reading"
+  "settingsNotifyWaterSub": "After each scheduled reading",
+  "systemChecked": "checked {time}",
+  "@systemChecked": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "systemHermes": "Hermes Agent",
+  "systemStatus": "Status",
+  "systemVersion": "Version",
+  "systemUptime": "Uptime",
+  "systemQueue": "Queue",
+  "systemQueueActive": "{count, plural, =1{1 run active} other{{count} runs active}}",
+  "@systemQueueActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "systemQueueQueued": "{count} queued",
+  "@systemQueueQueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "systemLlama": "llama-server",
+  "systemModel": "Model",
+  "systemContext": "Context",
+  "systemSlots": "Slots",
+  "systemGeneration": "Generation",
+  "systemSince": "since {time}",
+  "@systemSince": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "systemTokens": "{tokens} tok",
+  "@systemTokens": {
+    "placeholders": {
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
+  "systemSlotsBusy": "{busy} / {total} busy",
+  "@systemSlotsBusy": {
+    "placeholders": {
+      "busy": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "systemSlotsIdle": "{busy} / {total}",
+  "@systemSlotsIdle": {
+    "placeholders": {
+      "busy": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "systemTps": "{tps} tok/s",
+  "@systemTps": {
+    "placeholders": {
+      "tps": {
+        "type": "String"
+      }
+    }
+  },
+  "systemStop": "Stop llama-server",
+  "systemStart": "Start llama-server",
+  "systemStopping": "Stopping…",
+  "systemStarting": "Starting…",
+  "systemGpus": "GPUs",
+  "systemGpuSource": "nvidia-smi · {age}",
+  "@systemGpuSource": {
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "systemGpuCount": "{count, plural, =1{1 GPU} other{{count} GPUs}}",
+  "@systemGpuCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "systemTitle": "System",
+  "systemHermesShort": "Hermes",
+  "systemStateRunning": "running",
+  "systemStateLoading": "loading",
+  "systemStateStarting": "starting",
+  "systemStateStopping": "stopping",
+  "systemStateStopped": "stopped",
+  "systemStateFailed": "failed",
+  "systemStateDown": "unreachable",
+  "systemStateUnknown": "unknown",
+  "systemStateOk": "ok",
+  "systemStateDegraded": "degraded",
+  "systemHelperMissing": "The server can't reach its system helper: no GPU data, and llama-server can't be stopped or started from here.",
+  "systemHelperProblem": "Part of the system view is missing: {reason}",
+  "@systemHelperProblem": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "systemHeldQueue": "{count, plural, =0{Messages you send wait until llama-server is back.} =1{1 message waits until llama-server is back.} other{{count} messages wait until llama-server is back.}}",
+  "@systemHeldQueue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "systemLoadingNote": "Waiting messages start once the model is loaded.",
+  "systemStopTitle": "Stop llama-server?",
+  "systemStopActive": "The active run will be stopped.",
+  "systemStopQueued": "{count, plural, =1{1 queued message waits until you start it again.} other{{count} queued messages wait until you start it again.}}",
+  "@systemStopQueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "systemStopBody": "Hermes keeps running, and you can start llama-server again from here.",
+  "systemStopConfirm": "Stop",
+  "systemRunStarted": "A run just started. Check the queue and try again.",
+  "systemStopFailed": "Couldn't stop llama-server: {reason}",
+  "@systemStopFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "systemStartFailed": "Couldn't start llama-server: {reason}",
+  "@systemStartFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "systemLoadFailed": "Couldn't load the system view: {reason}",
+  "@systemLoadFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -8,6 +8,8 @@ from datetime import datetime, timedelta, timezone
 from delve import API_REVISION, protocol
 from delve.db.models import Approval, Card, Conversation, Message, Run, ToolStep
 from delve.serialize import approval_out, card_out, conversation_out, message_out, run_out, step_out
+from delve.llama import Props
+from delve.system import Parts, system_out
 
 t0 = datetime(2026, 10, 19, 21, 39, 0, 123456, tzinfo=timezone.utc)
 conv = Conversation(id="c_5f2a9e1b7c3d4e6f", title="Kernel and CPU count", created_at=t0,
@@ -41,6 +43,27 @@ card = Card(id="643692effbf845d9b4a0594509b03157", v=1, type="water", severity="
              "data_source": "vizugy.hu"},
     received_at=t0 - timedelta(hours=1) + timedelta(seconds=1))
 
+# B3: the system view (values from delve-infra tests/fixtures/system)
+gpus = [
+    {"index": 0, "name": "NVIDIA GeForce RTX 4070 SUPER", "temp_c": 51.0, "mem_used_mib": 11381,
+     "mem_total_mib": 12282, "util_pct": 6.0, "power_w": 40.39, "power_limit_w": 220.0},
+    {"index": 1, "name": "NVIDIA GeForce RTX 3050", "temp_c": 49.0, "mem_used_mib": 6693,
+     "mem_total_mib": 8192, "util_pct": 0.0, "power_w": 14.52, "power_limit_w": 130.0},
+]
+detail = {"status": "degraded", "readiness": {"checks": {
+    "disk": {"status": "degraded", "used_percent": 96.4, "free_bytes": 15779127296},
+    "gateway": {"status": "ok"}}}}
+system_running = system_out(Parts(checked_at=t0, hermes_ok=True, hermes_version="0.22.2",
+    hermes_detail=detail, hermes_unit={"active_state": "active", "active_since": 1792535518},
+    llama_unit={"active_state": "active", "active_since": 1792537434, "inactive_since": 1792535668},
+    llama_healthy=True, props=Props("Qwen3.8-27B", "IQ4_XS", 65536, 1), slot_busy=True,
+    gen_tps=21.4, active_runs=1, queued_runs=1, gpus=gpus))
+system_stopped = system_out(Parts(checked_at=t0, hermes_ok=True, hermes_version="0.22.2",
+    hermes_detail=detail, hermes_unit={"active_state": "active", "active_since": 1792535518},
+    llama_unit={"active_state": "inactive", "active_since": 1792535325, "inactive_since": 1792535668},
+    known_slots=1, intent="stopped", queued_runs=2,
+    gpus=[{**gpus[0], "mem_used_mib": 1266}, {**gpus[1], "mem_used_mib": 15}]))
+
 shapes = {
     "conversation": conversation_out(conv),
     "message": message_out(msg),
@@ -52,6 +75,9 @@ shapes = {
     "approval": approval_out(appr),
     "tool_step": step_out(step, appr),
     "card": card_out(card),
+    "system": system_running,
+    "gpu": system_running["gpus"][0],
+    "hermes_issue": system_running["hermes"]["issues"][0],
     "tool_step_plain": step_out(ToolStep(id=98, run_id=run.run_id, tool="terminal", status="running",
         preview_start="nproc", result=None, result_raw=None, user_summary=None, duration_s=None,
         seq_started=9, seq_completed=None, approval_request_id=None)),
@@ -77,6 +103,7 @@ events = {
     "context.updated": {**base, "tokens": 8728, "max": 65536, "pct": 13.3, "warn": False, "source": "final_read", "measured_at": t0.isoformat(), "final": True},
     "health.status": {"hermes": "ok", "hermes_version": "0.22.2"},
     "card.new": card_out(card),
+    "system.updated": system_stopped,
     "error": {"code": "thinking_route_not_applied", "ref_id": run.run_id, "message": "The thinking run did not use the thinking provider."},
 }
 for k, v in events.items():

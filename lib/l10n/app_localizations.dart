@@ -1923,6 +1923,306 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'After each scheduled reading'**
   String get settingsNotifyWaterSub;
+
+  /// No description provided for @systemChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'checked {time}'**
+  String systemChecked(String time);
+
+  /// No description provided for @systemHermes.
+  ///
+  /// In en, this message translates to:
+  /// **'Hermes Agent'**
+  String get systemHermes;
+
+  /// No description provided for @systemStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get systemStatus;
+
+  /// No description provided for @systemVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get systemVersion;
+
+  /// No description provided for @systemUptime.
+  ///
+  /// In en, this message translates to:
+  /// **'Uptime'**
+  String get systemUptime;
+
+  /// No description provided for @systemQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get systemQueue;
+
+  /// No description provided for @systemQueueActive.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 run active} other{{count} runs active}}'**
+  String systemQueueActive(int count);
+
+  /// No description provided for @systemQueueQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} queued'**
+  String systemQueueQueued(int count);
+
+  /// No description provided for @systemLlama.
+  ///
+  /// In en, this message translates to:
+  /// **'llama-server'**
+  String get systemLlama;
+
+  /// No description provided for @systemModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get systemModel;
+
+  /// No description provided for @systemContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Context'**
+  String get systemContext;
+
+  /// No description provided for @systemSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'Slots'**
+  String get systemSlots;
+
+  /// No description provided for @systemGeneration.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation'**
+  String get systemGeneration;
+
+  /// No description provided for @systemSince.
+  ///
+  /// In en, this message translates to:
+  /// **'since {time}'**
+  String systemSince(String time);
+
+  /// No description provided for @systemTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{tokens} tok'**
+  String systemTokens(String tokens);
+
+  /// No description provided for @systemSlotsBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'{busy} / {total} busy'**
+  String systemSlotsBusy(int busy, int total);
+
+  /// No description provided for @systemSlotsIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'{busy} / {total}'**
+  String systemSlotsIdle(int busy, int total);
+
+  /// No description provided for @systemTps.
+  ///
+  /// In en, this message translates to:
+  /// **'{tps} tok/s'**
+  String systemTps(String tps);
+
+  /// No description provided for @systemStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop llama-server'**
+  String get systemStop;
+
+  /// No description provided for @systemStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start llama-server'**
+  String get systemStart;
+
+  /// No description provided for @systemStopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping…'**
+  String get systemStopping;
+
+  /// No description provided for @systemStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting…'**
+  String get systemStarting;
+
+  /// No description provided for @systemGpus.
+  ///
+  /// In en, this message translates to:
+  /// **'GPUs'**
+  String get systemGpus;
+
+  /// No description provided for @systemGpuSource.
+  ///
+  /// In en, this message translates to:
+  /// **'nvidia-smi · {age}'**
+  String systemGpuSource(String age);
+
+  /// No description provided for @systemGpuCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 GPU} other{{count} GPUs}}'**
+  String systemGpuCount(int count);
+
+  /// No description provided for @systemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get systemTitle;
+
+  /// No description provided for @systemHermesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Hermes'**
+  String get systemHermesShort;
+
+  /// No description provided for @systemStateRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'running'**
+  String get systemStateRunning;
+
+  /// No description provided for @systemStateLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'loading'**
+  String get systemStateLoading;
+
+  /// No description provided for @systemStateStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'starting'**
+  String get systemStateStarting;
+
+  /// No description provided for @systemStateStopping.
+  ///
+  /// In en, this message translates to:
+  /// **'stopping'**
+  String get systemStateStopping;
+
+  /// No description provided for @systemStateStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'stopped'**
+  String get systemStateStopped;
+
+  /// No description provided for @systemStateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'failed'**
+  String get systemStateFailed;
+
+  /// No description provided for @systemStateDown.
+  ///
+  /// In en, this message translates to:
+  /// **'unreachable'**
+  String get systemStateDown;
+
+  /// No description provided for @systemStateUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'unknown'**
+  String get systemStateUnknown;
+
+  /// No description provided for @systemStateOk.
+  ///
+  /// In en, this message translates to:
+  /// **'ok'**
+  String get systemStateOk;
+
+  /// No description provided for @systemStateDegraded.
+  ///
+  /// In en, this message translates to:
+  /// **'degraded'**
+  String get systemStateDegraded;
+
+  /// No description provided for @systemHelperMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The server can\'t reach its system helper: no GPU data, and llama-server can\'t be stopped or started from here.'**
+  String get systemHelperMissing;
+
+  /// No description provided for @systemHelperProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'Part of the system view is missing: {reason}'**
+  String systemHelperProblem(String reason);
+
+  /// No description provided for @systemHeldQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Messages you send wait until llama-server is back.} =1{1 message waits until llama-server is back.} other{{count} messages wait until llama-server is back.}}'**
+  String systemHeldQueue(int count);
+
+  /// No description provided for @systemLoadingNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting messages start once the model is loaded.'**
+  String get systemLoadingNote;
+
+  /// No description provided for @systemStopTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop llama-server?'**
+  String get systemStopTitle;
+
+  /// No description provided for @systemStopActive.
+  ///
+  /// In en, this message translates to:
+  /// **'The active run will be stopped.'**
+  String get systemStopActive;
+
+  /// No description provided for @systemStopQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 queued message waits until you start it again.} other{{count} queued messages wait until you start it again.}}'**
+  String systemStopQueued(int count);
+
+  /// No description provided for @systemStopBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Hermes keeps running, and you can start llama-server again from here.'**
+  String get systemStopBody;
+
+  /// No description provided for @systemStopConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get systemStopConfirm;
+
+  /// No description provided for @systemRunStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'A run just started. Check the queue and try again.'**
+  String get systemRunStarted;
+
+  /// No description provided for @systemStopFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t stop llama-server: {reason}'**
+  String systemStopFailed(String reason);
+
+  /// No description provided for @systemStartFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start llama-server: {reason}'**
+  String systemStartFailed(String reason);
+
+  /// No description provided for @systemLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the system view: {reason}'**
+  String systemLoadFailed(String reason);
 }
 
 class _AppLocalizationsDelegate

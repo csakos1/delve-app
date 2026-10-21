@@ -15,6 +15,7 @@ import '../ui/screens/server_too_old_screen.dart';
 import '../ui/screens/settings_screen.dart';
 import '../ui/screens/splash_screen.dart';
 import '../ui/screens/sub_page_placeholder.dart';
+import '../ui/screens/system_screen.dart';
 import '../ui/shell/app_shell.dart';
 import 'session.dart';
 
@@ -124,6 +125,7 @@ GoRouter buildRouter({
                       builder: (_, _) => switch (page) {
                         MorePage.settings => const SettingsScreen(),
                         MorePage.archived => const ArchivedChatsScreen(),
+                        MorePage.system => const SystemScreen(),
                         _ => SubPagePlaceholder(page: page),
                       },
                       routes: [

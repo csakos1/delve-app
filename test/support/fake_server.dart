@@ -35,7 +35,7 @@ class FakeServer implements HttpClientAdapter {
 
   static const meta = {
     'server_version': '0.1.0',
-    'api_revision': 4,
+    'api_revision': 5,
     'revision': 'eb4045ed6a94',
     'python': '3.14.8',
     'hermes_expected_version': '0.22.2',
@@ -44,7 +44,7 @@ class FakeServer implements HttpClientAdapter {
 
   static const status = {
     'server_version': '0.1.0',
-    'api_revision': 4,
+    'api_revision': 5,
     'revision': 'eb4045ed6a94',
     'hermes': 'ok',
     'hermes_version': '0.22.2',
@@ -86,6 +86,21 @@ class FakeServer implements HttpClientAdapter {
     json('GET', '/api/v1/runs/open', {'data': <Object?>[]});
     json('GET', '/api/v1/approvals', {'data': <Object?>[]});
     json('GET', '/api/v1/cards', {'data': <Object?>[]});
+    json('GET', '/api/v1/system', system);
+  }
+
+  /// The system view of `samples.json` (llama running, Hermes degraded).
+  static final Map<String, Object?> system = sample('system');
+
+  /// A shape from `test/fixtures/contract/samples.json`.
+  static Map<String, Object?> sample(String shape) {
+    final all =
+        jsonDecode(
+              File('test/fixtures/contract/samples.json').readAsStringSync(),
+            )
+            as Map<String, Object?>;
+    final shapes = all['shapes']! as Map<String, Object?>;
+    return Map<String, Object?>.from(shapes[shape]! as Map<String, Object?>);
   }
 
   void on(String method, String path, FakeHandler handler) =>
