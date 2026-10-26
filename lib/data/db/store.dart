@@ -56,6 +56,10 @@ extension Store on AppDatabase {
       status: m.status,
       clientMsgId: Value(m.clientMsgId),
       createdAt: m.createdAt,
+      // events that carry no attachments (message.updated) keep the stored ones
+      attachments: m.attachments.isEmpty
+          ? const Value.absent()
+          : Value(m.attachments),
     ),
   );
 

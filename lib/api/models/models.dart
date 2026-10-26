@@ -1,5 +1,6 @@
 export 'agent_card.dart';
 export 'approval.dart';
+export 'attachment.dart';
 export 'brief.dart';
 export 'conversation.dart';
 export 'message.dart';

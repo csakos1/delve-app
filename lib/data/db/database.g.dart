@@ -1139,6 +1139,16 @@ class $MessagesTable extends Messages
     requiredDuringInsert: true,
   );
   @override
+  late final GeneratedColumnWithTypeConverter<List<Attachment>, String>
+  attachments = GeneratedColumn<String>(
+    'attachments',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  ).withConverter<List<Attachment>>($MessagesTable.$converterattachments);
+  @override
   List<GeneratedColumn> get $columns => [
     id,
     conversationId,
@@ -1150,6 +1160,7 @@ class $MessagesTable extends Messages
     status,
     clientMsgId,
     createdAt,
+    attachments,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1285,6 +1296,12 @@ class $MessagesTable extends Messages
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      attachments: $MessagesTable.$converterattachments.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}attachments'],
+        )!,
+      ),
     );
   }
 
@@ -1292,6 +1309,9 @@ class $MessagesTable extends Messages
   $MessagesTable createAlias(String alias) {
     return $MessagesTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<List<Attachment>, String> $converterattachments =
+      const AttachmentListConverter();
 }
 
 class MessageRow extends DataClass implements Insertable<MessageRow> {
@@ -1305,6 +1325,9 @@ class MessageRow extends DataClass implements Insertable<MessageRow> {
   final String status;
   final String? clientMsgId;
   final DateTime createdAt;
+
+  /// The user's photos and files (schema 5, B6).
+  final List<Attachment> attachments;
   const MessageRow({
     required this.id,
     required this.conversationId,
@@ -1316,6 +1339,7 @@ class MessageRow extends DataClass implements Insertable<MessageRow> {
     required this.status,
     this.clientMsgId,
     required this.createdAt,
+    required this.attachments,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1338,6 +1362,11 @@ class MessageRow extends DataClass implements Insertable<MessageRow> {
       map['client_msg_id'] = Variable<String>(clientMsgId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    {
+      map['attachments'] = Variable<String>(
+        $MessagesTable.$converterattachments.toSql(attachments),
+      );
+    }
     return map;
   }
 
@@ -1361,6 +1390,7 @@ class MessageRow extends DataClass implements Insertable<MessageRow> {
           ? const Value.absent()
           : Value(clientMsgId),
       createdAt: Value(createdAt),
+      attachments: Value(attachments),
     );
   }
 
@@ -1380,6 +1410,7 @@ class MessageRow extends DataClass implements Insertable<MessageRow> {
       status: serializer.fromJson<String>(json['status']),
       clientMsgId: serializer.fromJson<String?>(json['clientMsgId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      attachments: serializer.fromJson<List<Attachment>>(json['attachments']),
     );
   }
   @override
@@ -1396,6 +1427,7 @@ class MessageRow extends DataClass implements Insertable<MessageRow> {
       'status': serializer.toJson<String>(status),
       'clientMsgId': serializer.toJson<String?>(clientMsgId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'attachments': serializer.toJson<List<Attachment>>(attachments),
     };
   }
 
@@ -1410,6 +1442,7 @@ class MessageRow extends DataClass implements Insertable<MessageRow> {
     String? status,
     Value<String?> clientMsgId = const Value.absent(),
     DateTime? createdAt,
+    List<Attachment>? attachments,
   }) => MessageRow(
     id: id ?? this.id,
     conversationId: conversationId ?? this.conversationId,
@@ -1421,6 +1454,7 @@ class MessageRow extends DataClass implements Insertable<MessageRow> {
     status: status ?? this.status,
     clientMsgId: clientMsgId.present ? clientMsgId.value : this.clientMsgId,
     createdAt: createdAt ?? this.createdAt,
+    attachments: attachments ?? this.attachments,
   );
   MessageRow copyWithCompanion(MessagesCompanion data) {
     return MessageRow(
@@ -1438,6 +1472,9 @@ class MessageRow extends DataClass implements Insertable<MessageRow> {
           ? data.clientMsgId.value
           : this.clientMsgId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      attachments: data.attachments.present
+          ? data.attachments.value
+          : this.attachments,
     );
   }
 
@@ -1453,7 +1490,8 @@ class MessageRow extends DataClass implements Insertable<MessageRow> {
           ..write('reasoning: $reasoning, ')
           ..write('status: $status, ')
           ..write('clientMsgId: $clientMsgId, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('attachments: $attachments')
           ..write(')'))
         .toString();
   }
@@ -1470,6 +1508,7 @@ class MessageRow extends DataClass implements Insertable<MessageRow> {
     status,
     clientMsgId,
     createdAt,
+    attachments,
   );
   @override
   bool operator ==(Object other) =>
@@ -1484,7 +1523,8 @@ class MessageRow extends DataClass implements Insertable<MessageRow> {
           other.reasoning == this.reasoning &&
           other.status == this.status &&
           other.clientMsgId == this.clientMsgId &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.attachments == this.attachments);
 }
 
 class MessagesCompanion extends UpdateCompanion<MessageRow> {
@@ -1498,6 +1538,7 @@ class MessagesCompanion extends UpdateCompanion<MessageRow> {
   final Value<String> status;
   final Value<String?> clientMsgId;
   final Value<DateTime> createdAt;
+  final Value<List<Attachment>> attachments;
   const MessagesCompanion({
     this.id = const Value.absent(),
     this.conversationId = const Value.absent(),
@@ -1509,6 +1550,7 @@ class MessagesCompanion extends UpdateCompanion<MessageRow> {
     this.status = const Value.absent(),
     this.clientMsgId = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.attachments = const Value.absent(),
   });
   MessagesCompanion.insert({
     this.id = const Value.absent(),
@@ -1521,6 +1563,7 @@ class MessagesCompanion extends UpdateCompanion<MessageRow> {
     required String status,
     this.clientMsgId = const Value.absent(),
     required DateTime createdAt,
+    this.attachments = const Value.absent(),
   }) : conversationId = Value(conversationId),
        role = Value(role),
        content = Value(content),
@@ -1537,6 +1580,7 @@ class MessagesCompanion extends UpdateCompanion<MessageRow> {
     Expression<String>? status,
     Expression<String>? clientMsgId,
     Expression<DateTime>? createdAt,
+    Expression<String>? attachments,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1549,6 +1593,7 @@ class MessagesCompanion extends UpdateCompanion<MessageRow> {
       if (status != null) 'status': status,
       if (clientMsgId != null) 'client_msg_id': clientMsgId,
       if (createdAt != null) 'created_at': createdAt,
+      if (attachments != null) 'attachments': attachments,
     });
   }
 
@@ -1563,6 +1608,7 @@ class MessagesCompanion extends UpdateCompanion<MessageRow> {
     Value<String>? status,
     Value<String?>? clientMsgId,
     Value<DateTime>? createdAt,
+    Value<List<Attachment>>? attachments,
   }) {
     return MessagesCompanion(
       id: id ?? this.id,
@@ -1575,6 +1621,7 @@ class MessagesCompanion extends UpdateCompanion<MessageRow> {
       status: status ?? this.status,
       clientMsgId: clientMsgId ?? this.clientMsgId,
       createdAt: createdAt ?? this.createdAt,
+      attachments: attachments ?? this.attachments,
     );
   }
 
@@ -1611,6 +1658,11 @@ class MessagesCompanion extends UpdateCompanion<MessageRow> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (attachments.present) {
+      map['attachments'] = Variable<String>(
+        $MessagesTable.$converterattachments.toSql(attachments.value),
+      );
+    }
     return map;
   }
 
@@ -1626,7 +1678,8 @@ class MessagesCompanion extends UpdateCompanion<MessageRow> {
           ..write('reasoning: $reasoning, ')
           ..write('status: $status, ')
           ..write('clientMsgId: $clientMsgId, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('attachments: $attachments')
           ..write(')'))
         .toString();
   }
@@ -4130,6 +4183,16 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
     requiredDuringInsert: false,
   );
   @override
+  late final GeneratedColumnWithTypeConverter<List<Attachment>, String>
+  attachments = GeneratedColumn<String>(
+    'attachments',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  ).withConverter<List<Attachment>>($OutboxTable.$converterattachments);
+  @override
   List<GeneratedColumn> get $columns => [
     clientMsgId,
     conversationId,
@@ -4139,6 +4202,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
     state,
     attempts,
     lastError,
+    attachments,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4253,6 +4317,12 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
         DriftSqlType.string,
         data['${effectivePrefix}last_error'],
       ),
+      attachments: $OutboxTable.$converterattachments.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}attachments'],
+        )!,
+      ),
     );
   }
 
@@ -4260,6 +4330,9 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
   $OutboxTable createAlias(String alias) {
     return $OutboxTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<List<Attachment>, String> $converterattachments =
+      const AttachmentListConverter();
 }
 
 class OutboxRow extends DataClass implements Insertable<OutboxRow> {
@@ -4273,6 +4346,9 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
   final String state;
   final int attempts;
   final String? lastError;
+
+  /// Uploaded photos and files sent with the message (schema 5, B6).
+  final List<Attachment> attachments;
   const OutboxRow({
     required this.clientMsgId,
     this.conversationId,
@@ -4282,6 +4358,7 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
     required this.state,
     required this.attempts,
     this.lastError,
+    required this.attachments,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4299,6 +4376,11 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
     map['attempts'] = Variable<int>(attempts);
     if (!nullToAbsent || lastError != null) {
       map['last_error'] = Variable<String>(lastError);
+    }
+    {
+      map['attachments'] = Variable<String>(
+        $OutboxTable.$converterattachments.toSql(attachments),
+      );
     }
     return map;
   }
@@ -4319,6 +4401,7 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
       lastError: lastError == null && nullToAbsent
           ? const Value.absent()
           : Value(lastError),
+      attachments: Value(attachments),
     );
   }
 
@@ -4336,6 +4419,7 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
       state: serializer.fromJson<String>(json['state']),
       attempts: serializer.fromJson<int>(json['attempts']),
       lastError: serializer.fromJson<String?>(json['lastError']),
+      attachments: serializer.fromJson<List<Attachment>>(json['attachments']),
     );
   }
   @override
@@ -4350,6 +4434,7 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
       'state': serializer.toJson<String>(state),
       'attempts': serializer.toJson<int>(attempts),
       'lastError': serializer.toJson<String?>(lastError),
+      'attachments': serializer.toJson<List<Attachment>>(attachments),
     };
   }
 
@@ -4362,6 +4447,7 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
     String? state,
     int? attempts,
     Value<String?> lastError = const Value.absent(),
+    List<Attachment>? attachments,
   }) => OutboxRow(
     clientMsgId: clientMsgId ?? this.clientMsgId,
     conversationId: conversationId.present
@@ -4373,6 +4459,7 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
     state: state ?? this.state,
     attempts: attempts ?? this.attempts,
     lastError: lastError.present ? lastError.value : this.lastError,
+    attachments: attachments ?? this.attachments,
   );
   OutboxRow copyWithCompanion(OutboxCompanion data) {
     return OutboxRow(
@@ -4388,6 +4475,9 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
       state: data.state.present ? data.state.value : this.state,
       attempts: data.attempts.present ? data.attempts.value : this.attempts,
       lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      attachments: data.attachments.present
+          ? data.attachments.value
+          : this.attachments,
     );
   }
 
@@ -4401,7 +4491,8 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
           ..write('createdAt: $createdAt, ')
           ..write('state: $state, ')
           ..write('attempts: $attempts, ')
-          ..write('lastError: $lastError')
+          ..write('lastError: $lastError, ')
+          ..write('attachments: $attachments')
           ..write(')'))
         .toString();
   }
@@ -4416,6 +4507,7 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
     state,
     attempts,
     lastError,
+    attachments,
   );
   @override
   bool operator ==(Object other) =>
@@ -4428,7 +4520,8 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
           other.createdAt == this.createdAt &&
           other.state == this.state &&
           other.attempts == this.attempts &&
-          other.lastError == this.lastError);
+          other.lastError == this.lastError &&
+          other.attachments == this.attachments);
 }
 
 class OutboxCompanion extends UpdateCompanion<OutboxRow> {
@@ -4440,6 +4533,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
   final Value<String> state;
   final Value<int> attempts;
   final Value<String?> lastError;
+  final Value<List<Attachment>> attachments;
   final Value<int> rowid;
   const OutboxCompanion({
     this.clientMsgId = const Value.absent(),
@@ -4450,6 +4544,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
     this.state = const Value.absent(),
     this.attempts = const Value.absent(),
     this.lastError = const Value.absent(),
+    this.attachments = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   OutboxCompanion.insert({
@@ -4461,6 +4556,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
     this.state = const Value.absent(),
     this.attempts = const Value.absent(),
     this.lastError = const Value.absent(),
+    this.attachments = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : clientMsgId = Value(clientMsgId),
        body = Value(body),
@@ -4474,6 +4570,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
     Expression<String>? state,
     Expression<int>? attempts,
     Expression<String>? lastError,
+    Expression<String>? attachments,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4485,6 +4582,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
       if (state != null) 'state': state,
       if (attempts != null) 'attempts': attempts,
       if (lastError != null) 'last_error': lastError,
+      if (attachments != null) 'attachments': attachments,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4498,6 +4596,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
     Value<String>? state,
     Value<int>? attempts,
     Value<String?>? lastError,
+    Value<List<Attachment>>? attachments,
     Value<int>? rowid,
   }) {
     return OutboxCompanion(
@@ -4509,6 +4608,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
       state: state ?? this.state,
       attempts: attempts ?? this.attempts,
       lastError: lastError ?? this.lastError,
+      attachments: attachments ?? this.attachments,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4540,6 +4640,11 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
     if (lastError.present) {
       map['last_error'] = Variable<String>(lastError.value);
     }
+    if (attachments.present) {
+      map['attachments'] = Variable<String>(
+        $OutboxTable.$converterattachments.toSql(attachments.value),
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4557,6 +4662,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
           ..write('state: $state, ')
           ..write('attempts: $attempts, ')
           ..write('lastError: $lastError, ')
+          ..write('attachments: $attachments, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6134,6 +6240,7 @@ typedef $$MessagesTableCreateCompanionBuilder =
       required String status,
       Value<String?> clientMsgId,
       required DateTime createdAt,
+      Value<List<Attachment>> attachments,
     });
 typedef $$MessagesTableUpdateCompanionBuilder =
     MessagesCompanion Function({
@@ -6147,6 +6254,7 @@ typedef $$MessagesTableUpdateCompanionBuilder =
       Value<String> status,
       Value<String?> clientMsgId,
       Value<DateTime> createdAt,
+      Value<List<Attachment>> attachments,
     });
 
 class $$MessagesTableFilterComposer
@@ -6206,6 +6314,12 @@ class $$MessagesTableFilterComposer
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<List<Attachment>, List<Attachment>, String>
+  get attachments => $composableBuilder(
+    column: $table.attachments,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 }
 
@@ -6267,6 +6381,11 @@ class $$MessagesTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get attachments => $composableBuilder(
+    column: $table.attachments,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MessagesTableAnnotationComposer
@@ -6311,6 +6430,12 @@ class $$MessagesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<List<Attachment>, String> get attachments =>
+      $composableBuilder(
+        column: $table.attachments,
+        builder: (column) => column,
+      );
 }
 
 class $$MessagesTableTableManager
@@ -6354,6 +6479,7 @@ class $$MessagesTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String?> clientMsgId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<List<Attachment>> attachments = const Value.absent(),
               }) => MessagesCompanion(
                 id: id,
                 conversationId: conversationId,
@@ -6365,6 +6491,7 @@ class $$MessagesTableTableManager
                 status: status,
                 clientMsgId: clientMsgId,
                 createdAt: createdAt,
+                attachments: attachments,
               ),
           createCompanionCallback:
               ({
@@ -6378,6 +6505,7 @@ class $$MessagesTableTableManager
                 required String status,
                 Value<String?> clientMsgId = const Value.absent(),
                 required DateTime createdAt,
+                Value<List<Attachment>> attachments = const Value.absent(),
               }) => MessagesCompanion.insert(
                 id: id,
                 conversationId: conversationId,
@@ -6389,6 +6517,7 @@ class $$MessagesTableTableManager
                 status: status,
                 clientMsgId: clientMsgId,
                 createdAt: createdAt,
+                attachments: attachments,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -7542,6 +7671,7 @@ typedef $$OutboxTableCreateCompanionBuilder =
       Value<String> state,
       Value<int> attempts,
       Value<String?> lastError,
+      Value<List<Attachment>> attachments,
       Value<int> rowid,
     });
 typedef $$OutboxTableUpdateCompanionBuilder =
@@ -7554,6 +7684,7 @@ typedef $$OutboxTableUpdateCompanionBuilder =
       Value<String> state,
       Value<int> attempts,
       Value<String?> lastError,
+      Value<List<Attachment>> attachments,
       Value<int> rowid,
     });
 
@@ -7605,6 +7736,12 @@ class $$OutboxTableFilterComposer
     column: $table.lastError,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnWithTypeConverterFilters<List<Attachment>, List<Attachment>, String>
+  get attachments => $composableBuilder(
+    column: $table.attachments,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
 }
 
 class $$OutboxTableOrderingComposer
@@ -7655,6 +7792,11 @@ class $$OutboxTableOrderingComposer
     column: $table.lastError,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get attachments => $composableBuilder(
+    column: $table.attachments,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$OutboxTableAnnotationComposer
@@ -7693,6 +7835,12 @@ class $$OutboxTableAnnotationComposer
 
   GeneratedColumn<String> get lastError =>
       $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<List<Attachment>, String> get attachments =>
+      $composableBuilder(
+        column: $table.attachments,
+        builder: (column) => column,
+      );
 }
 
 class $$OutboxTableTableManager
@@ -7731,6 +7879,7 @@ class $$OutboxTableTableManager
                 Value<String> state = const Value.absent(),
                 Value<int> attempts = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
+                Value<List<Attachment>> attachments = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => OutboxCompanion(
                 clientMsgId: clientMsgId,
@@ -7741,6 +7890,7 @@ class $$OutboxTableTableManager
                 state: state,
                 attempts: attempts,
                 lastError: lastError,
+                attachments: attachments,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7753,6 +7903,7 @@ class $$OutboxTableTableManager
                 Value<String> state = const Value.absent(),
                 Value<int> attempts = const Value.absent(),
                 Value<String?> lastError = const Value.absent(),
+                Value<List<Attachment>> attachments = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => OutboxCompanion.insert(
                 clientMsgId: clientMsgId,
@@ -7763,6 +7914,7 @@ class $$OutboxTableTableManager
                 state: state,
                 attempts: attempts,
                 lastError: lastError,
+                attachments: attachments,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

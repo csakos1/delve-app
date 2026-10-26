@@ -116,3 +116,13 @@ String secondsText(double s) {
   if (s < 5400) return '${(s / 60).round()} min';
   return '${(s / 3600).toStringAsFixed(1)} h';
 }
+
+/// A file size: `812 B`, `64 KB`, `1.4 MB` (1024-based, like the phone's
+/// file manager).
+String byteSize(int bytes) {
+  if (bytes < 1024) return '$bytes B';
+  final kb = bytes / 1024;
+  if (kb < 1024) return '${kb < 10 ? kb.toStringAsFixed(1) : kb.round()} KB';
+  final mb = kb / 1024;
+  return '${mb < 10 ? mb.toStringAsFixed(1) : mb.round()} MB';
+}

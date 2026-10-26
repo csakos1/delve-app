@@ -153,7 +153,13 @@ final chatProvider = StreamProvider.autoDispose.family<ChatData, String>(
 abstract class ChatActions {
   /// Queues [text] (outbox) and returns its `client_msg_id`. [thinking] is
   /// for a new chat only: an existing chat runs with its own setting.
-  Future<String> send(String text, {String? conversationId, bool? thinking});
+  /// [attachments] are uploads (`POST /attachments`) to send with it.
+  Future<String> send(
+    String text, {
+    String? conversationId,
+    bool? thinking,
+    List<Attachment> attachments = const [],
+  });
 
   /// Thinking on/off for [conversationId] (from its next run on). Over REST,
   /// so it works whether or not the socket is live; the change comes back
@@ -198,12 +204,17 @@ class EngineChatActions implements ChatActions {
   SyncEngine get _engine => engine ?? (throw const NotConnected());
 
   @override
-  Future<String> send(String text, {String? conversationId, bool? thinking}) =>
-      _engine.sendMessage(
-        text,
-        conversationId: conversationId,
-        thinking: conversationId == null ? thinking : null,
-      );
+  Future<String> send(
+    String text, {
+    String? conversationId,
+    bool? thinking,
+    List<Attachment> attachments = const [],
+  }) => _engine.sendMessage(
+    text,
+    conversationId: conversationId,
+    thinking: conversationId == null ? thinking : null,
+    attachments: attachments,
+  );
 
   @override
   Future<void> setThinking(

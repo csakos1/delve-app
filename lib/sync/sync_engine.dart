@@ -764,10 +764,13 @@ class SyncEngine {
 
   /// Queues a message and sends it as soon as the socket is live. Returns the
   /// `client_msg_id`; the message itself arrives as `message.created`.
+  /// [attachments] are already uploaded (the server keeps an unsent upload
+  /// for an hour, so a short wait in the outbox is fine).
   Future<String> sendMessage(
     String text, {
     String? conversationId,
     bool? thinking,
+    List<Attachment> attachments = const [],
   }) async {
     final clientMsgId = const Uuid().v4();
     await db
@@ -779,6 +782,7 @@ class SyncEngine {
             body: text,
             thinking: Value(thinking),
             createdAt: _now().toUtc(),
+            attachments: Value(attachments),
           ),
         );
     unawaited(_flushOutbox());
@@ -828,6 +832,7 @@ class SyncEngine {
               clientMsgId: row.clientMsgId,
               conversationId: row.conversationId,
               thinking: row.thinking,
+              attachmentIds: [for (final a in row.attachments) a.id],
             ),
           );
           await db.forgetOutbox(row.clientMsgId);

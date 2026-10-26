@@ -58,6 +58,7 @@ void main() {
         <String, Map<String, Object?> Function(Map<String, Object?>)>{
           'conversation': (j) => Conversation.fromJson(j).toJson(),
           'message': (j) => Message.fromJson(j).toJson(),
+          'attachment': (j) => Attachment.fromJson(j).toJson(),
           'run': (j) => Run.fromJson(j).toJson(),
           'open_run': (j) => OpenRun.fromJson(j).toJson(),
           'approval': (j) => Approval.fromJson(j).toJson(),
@@ -115,6 +116,16 @@ void main() {
 
       final m = Message.fromJson(obj(sampleShapes['message_user']));
       expect(m.clientMsgId, '0b8f3c52-7a1e-4d2b-9c61-2f5e8a7d3b10');
+      final a = m.attachments.single;
+      expect(
+        (a.kind, a.filename, a.sizeBytes, a.messageId, a.available),
+        ('image', 'screen.jpg', 64895, 411, true),
+      );
+      expect(a.isImage, isTrue);
+      expect(
+        Message.fromJson(obj(sampleShapes['message'])).attachments,
+        isEmpty,
+      );
 
       final r = Run.fromJson(obj(sampleShapes['run']));
       expect(r.perf!['gen_tps'], 20.6);
@@ -376,6 +387,7 @@ void main() {
           clientMsgId: 'u',
           conversationId: 'c',
           thinking: true,
+          attachmentIds: ['a'],
         ),
         'conversation.set': ClientFrames.conversationSet(
           id: '3',

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../api/models/approval.dart' show answerableApprovalStatuses;
+import '../../api/models/attachment.dart';
 import '../../api/models/run.dart' show openRunStatuses;
 import 'converters.dart';
 import 'tables.dart';
@@ -27,9 +28,10 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'delve'));
 
-  /// 1: A1 tables. 2: connection log (A3).
+  /// 1: A1 tables. 2: connection log (A3). 3: list preview. 4: cards.
+  /// 5: attachments of messages and outbox rows (B6).
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   /// Entries the connection log keeps.
   static const int connectionLogLimit = 500;
@@ -44,6 +46,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) await m.createTable(connectionLog);
       if (from < 3) await m.addColumn(conversations, conversations.preview);
       if (from < 4) await m.createTable(cards);
+      if (from < 5) {
+        await m.addColumn(messages, messages.attachments);
+        await m.addColumn(outbox, outbox.attachments);
+      }
     },
   );
 

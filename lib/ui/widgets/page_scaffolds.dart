@@ -165,4 +165,10 @@ abstract final class DelveIcons {
   static const IconData notificationsOff = Symbols.notifications_off_rounded;
   static const IconData power = Symbols.power_settings_new_rounded;
   static const IconData play = Symbols.play_arrow_rounded;
+  static const IconData photos = Symbols.photo_library_rounded;
+  static const IconData camera = Symbols.photo_camera_rounded;
+  static const IconData file = Symbols.description_rounded;
+  static const IconData attachFile = Symbols.attach_file_rounded;
+  static const IconData imageGone = Symbols.hide_image_rounded;
+  static const IconData sendAgain = Symbols.redo_rounded;
 }

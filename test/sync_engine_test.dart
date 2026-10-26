@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:delve/api/events.dart';
+import 'package:delve/api/models/models.dart';
 import 'package:delve/api/protocol.dart';
 import 'package:delve/api/rest_client.dart';
 import 'package:delve/data/credentials.dart';
@@ -429,6 +430,28 @@ void main() {
         ],
         ['one', 'two'],
       );
+    });
+
+    test('attachments: kept in the outbox, sent as attachment_ids', () async {
+      ws.refuse = true;
+      await engine.start();
+      final photo = Attachment.fromJson(FakeServer.sample('attachment'));
+      final file = photo.copyWith(id: 'a_2', kind: 'file', filename: 'x.log');
+      await engine.sendMessage(
+        '',
+        conversationId: 'c_1',
+        attachments: [photo, file],
+      );
+      final row = await db.select(db.outbox).getSingle();
+      expect([for (final a in row.attachments) a.id], [photo.id, 'a_2']);
+      ws.refuse = false;
+      final send = await (await ws.nextConnection()).next('chat.send');
+      expect((send['data']! as Map<String, Object?>)['attachment_ids'], [
+        photo.id,
+        'a_2',
+      ]);
+      expect((send['data']! as Map<String, Object?>)['text'], '');
+      await eventually(() async => (await db.select(db.outbox).get()).isEmpty);
     });
 
     test('a refused message is marked failed, and can be retried', () async {

@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Message {
 
- int get id; String get conversationId; String? get runId; String get role; String get content; String? get interim; String? get reasoning; String get status; String? get clientMsgId; DateTime get createdAt;
+ int get id; String get conversationId; String? get runId; String get role; String get content; String? get interim; String? get reasoning; String get status; String? get clientMsgId; DateTime get createdAt;/// The user's photos and files (API 8); empty for other messages.
+ List<Attachment> get attachments;
 /// Create a copy of Message
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +29,16 @@ $MessageCopyWith<Message> get copyWith => _$MessageCopyWithImpl<Message>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Message&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.interim, interim) || other.interim == interim)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.status, status) || other.status == status)&&(identical(other.clientMsgId, clientMsgId) || other.clientMsgId == clientMsgId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Message&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.interim, interim) || other.interim == interim)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.status, status) || other.status == status)&&(identical(other.clientMsgId, clientMsgId) || other.clientMsgId == clientMsgId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other.attachments, attachments));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,conversationId,runId,role,content,interim,reasoning,status,clientMsgId,createdAt);
+int get hashCode => Object.hash(runtimeType,id,conversationId,runId,role,content,interim,reasoning,status,clientMsgId,createdAt,const DeepCollectionEquality().hash(attachments));
 
 @override
 String toString() {
-  return 'Message(id: $id, conversationId: $conversationId, runId: $runId, role: $role, content: $content, interim: $interim, reasoning: $reasoning, status: $status, clientMsgId: $clientMsgId, createdAt: $createdAt)';
+  return 'Message(id: $id, conversationId: $conversationId, runId: $runId, role: $role, content: $content, interim: $interim, reasoning: $reasoning, status: $status, clientMsgId: $clientMsgId, createdAt: $createdAt, attachments: $attachments)';
 }
 
 
@@ -48,7 +49,7 @@ abstract mixin class $MessageCopyWith<$Res>  {
   factory $MessageCopyWith(Message value, $Res Function(Message) _then) = _$MessageCopyWithImpl;
 @useResult
 $Res call({
- int id, String conversationId, String? runId, String role, String content, String? interim, String? reasoning, String status, String? clientMsgId, DateTime createdAt
+ int id, String conversationId, String? runId, String role, String content, String? interim, String? reasoning, String status, String? clientMsgId, DateTime createdAt, List<Attachment> attachments
 });
 
 
@@ -65,7 +66,7 @@ class _$MessageCopyWithImpl<$Res>
 
 /// Create a copy of Message
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? conversationId = null,Object? runId = freezed,Object? role = null,Object? content = null,Object? interim = freezed,Object? reasoning = freezed,Object? status = null,Object? clientMsgId = freezed,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? conversationId = null,Object? runId = freezed,Object? role = null,Object? content = null,Object? interim = freezed,Object? reasoning = freezed,Object? status = null,Object? clientMsgId = freezed,Object? createdAt = null,Object? attachments = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,conversationId: null == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
@@ -77,7 +78,8 @@ as String?,reasoning: freezed == reasoning ? _self.reasoning : reasoning // igno
 as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,clientMsgId: freezed == clientMsgId ? _self.clientMsgId : clientMsgId // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,attachments: null == attachments ? _self.attachments : attachments // ignore: cast_nullable_to_non_nullable
+as List<Attachment>,
   ));
 }
 
@@ -162,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String conversationId,  String? runId,  String role,  String content,  String? interim,  String? reasoning,  String status,  String? clientMsgId,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String conversationId,  String? runId,  String role,  String content,  String? interim,  String? reasoning,  String status,  String? clientMsgId,  DateTime createdAt,  List<Attachment> attachments)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Message() when $default != null:
-return $default(_that.id,_that.conversationId,_that.runId,_that.role,_that.content,_that.interim,_that.reasoning,_that.status,_that.clientMsgId,_that.createdAt);case _:
+return $default(_that.id,_that.conversationId,_that.runId,_that.role,_that.content,_that.interim,_that.reasoning,_that.status,_that.clientMsgId,_that.createdAt,_that.attachments);case _:
   return orElse();
 
 }
@@ -183,10 +185,10 @@ return $default(_that.id,_that.conversationId,_that.runId,_that.role,_that.conte
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String conversationId,  String? runId,  String role,  String content,  String? interim,  String? reasoning,  String status,  String? clientMsgId,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String conversationId,  String? runId,  String role,  String content,  String? interim,  String? reasoning,  String status,  String? clientMsgId,  DateTime createdAt,  List<Attachment> attachments)  $default,) {final _that = this;
 switch (_that) {
 case _Message():
-return $default(_that.id,_that.conversationId,_that.runId,_that.role,_that.content,_that.interim,_that.reasoning,_that.status,_that.clientMsgId,_that.createdAt);case _:
+return $default(_that.id,_that.conversationId,_that.runId,_that.role,_that.content,_that.interim,_that.reasoning,_that.status,_that.clientMsgId,_that.createdAt,_that.attachments);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +205,10 @@ return $default(_that.id,_that.conversationId,_that.runId,_that.role,_that.conte
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String conversationId,  String? runId,  String role,  String content,  String? interim,  String? reasoning,  String status,  String? clientMsgId,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String conversationId,  String? runId,  String role,  String content,  String? interim,  String? reasoning,  String status,  String? clientMsgId,  DateTime createdAt,  List<Attachment> attachments)?  $default,) {final _that = this;
 switch (_that) {
 case _Message() when $default != null:
-return $default(_that.id,_that.conversationId,_that.runId,_that.role,_that.content,_that.interim,_that.reasoning,_that.status,_that.clientMsgId,_that.createdAt);case _:
+return $default(_that.id,_that.conversationId,_that.runId,_that.role,_that.content,_that.interim,_that.reasoning,_that.status,_that.clientMsgId,_that.createdAt,_that.attachments);case _:
   return null;
 
 }
@@ -218,7 +220,7 @@ return $default(_that.id,_that.conversationId,_that.runId,_that.role,_that.conte
 @JsonSerializable()
 
 class _Message implements Message {
-  const _Message({required this.id, required this.conversationId, this.runId, required this.role, required this.content, this.interim, this.reasoning, required this.status, this.clientMsgId, required this.createdAt});
+  const _Message({required this.id, required this.conversationId, this.runId, required this.role, required this.content, this.interim, this.reasoning, required this.status, this.clientMsgId, required this.createdAt, final  List<Attachment> attachments = const <Attachment>[]}): _attachments = attachments;
   factory _Message.fromJson(Map<String, dynamic> json) => _$MessageFromJson(json);
 
 @override final  int id;
@@ -231,6 +233,15 @@ class _Message implements Message {
 @override final  String status;
 @override final  String? clientMsgId;
 @override final  DateTime createdAt;
+/// The user's photos and files (API 8); empty for other messages.
+ final  List<Attachment> _attachments;
+/// The user's photos and files (API 8); empty for other messages.
+@override@JsonKey() List<Attachment> get attachments {
+  if (_attachments is EqualUnmodifiableListView) return _attachments;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_attachments);
+}
+
 
 /// Create a copy of Message
 /// with the given fields replaced by the non-null parameter values.
@@ -245,16 +256,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Message&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.interim, interim) || other.interim == interim)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.status, status) || other.status == status)&&(identical(other.clientMsgId, clientMsgId) || other.clientMsgId == clientMsgId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Message&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.interim, interim) || other.interim == interim)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.status, status) || other.status == status)&&(identical(other.clientMsgId, clientMsgId) || other.clientMsgId == clientMsgId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other._attachments, _attachments));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,conversationId,runId,role,content,interim,reasoning,status,clientMsgId,createdAt);
+int get hashCode => Object.hash(runtimeType,id,conversationId,runId,role,content,interim,reasoning,status,clientMsgId,createdAt,const DeepCollectionEquality().hash(_attachments));
 
 @override
 String toString() {
-  return 'Message(id: $id, conversationId: $conversationId, runId: $runId, role: $role, content: $content, interim: $interim, reasoning: $reasoning, status: $status, clientMsgId: $clientMsgId, createdAt: $createdAt)';
+  return 'Message(id: $id, conversationId: $conversationId, runId: $runId, role: $role, content: $content, interim: $interim, reasoning: $reasoning, status: $status, clientMsgId: $clientMsgId, createdAt: $createdAt, attachments: $attachments)';
 }
 
 
@@ -265,7 +276,7 @@ abstract mixin class _$MessageCopyWith<$Res> implements $MessageCopyWith<$Res> {
   factory _$MessageCopyWith(_Message value, $Res Function(_Message) _then) = __$MessageCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String conversationId, String? runId, String role, String content, String? interim, String? reasoning, String status, String? clientMsgId, DateTime createdAt
+ int id, String conversationId, String? runId, String role, String content, String? interim, String? reasoning, String status, String? clientMsgId, DateTime createdAt, List<Attachment> attachments
 });
 
 
@@ -282,7 +293,7 @@ class __$MessageCopyWithImpl<$Res>
 
 /// Create a copy of Message
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? conversationId = null,Object? runId = freezed,Object? role = null,Object? content = null,Object? interim = freezed,Object? reasoning = freezed,Object? status = null,Object? clientMsgId = freezed,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? conversationId = null,Object? runId = freezed,Object? role = null,Object? content = null,Object? interim = freezed,Object? reasoning = freezed,Object? status = null,Object? clientMsgId = freezed,Object? createdAt = null,Object? attachments = null,}) {
   return _then(_Message(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,conversationId: null == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
@@ -294,7 +305,8 @@ as String?,reasoning: freezed == reasoning ? _self.reasoning : reasoning // igno
 as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,clientMsgId: freezed == clientMsgId ? _self.clientMsgId : clientMsgId // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,attachments: null == attachments ? _self._attachments : attachments // ignore: cast_nullable_to_non_nullable
+as List<Attachment>,
   ));
 }
 

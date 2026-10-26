@@ -1060,6 +1060,120 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 more message queued} other{{count} more messages queued}}'**
   String composerQueued(int count);
 
+  /// No description provided for @attachPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get attachPhotos;
+
+  /// No description provided for @attachCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get attachCamera;
+
+  /// No description provided for @attachFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get attachFile;
+
+  /// No description provided for @attachLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {max} attachments per message'**
+  String attachLimit(int max);
+
+  /// No description provided for @attachLeftOut.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 was left out: up to {max} per message} other{{count} were left out: up to {max} per message}}'**
+  String attachLeftOut(int count, int max);
+
+  /// No description provided for @attachNeedsConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments need a live connection'**
+  String get attachNeedsConnection;
+
+  /// No description provided for @attachUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading {name}'**
+  String attachUploading(String name);
+
+  /// No description provided for @attachFailedRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: not uploaded, tap to retry'**
+  String attachFailedRetry(String name);
+
+  /// No description provided for @attachFailedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Not uploaded · tap to retry'**
+  String get attachFailedShort;
+
+  /// No description provided for @attachTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Too large (max {size})'**
+  String attachTooLarge(String size);
+
+  /// No description provided for @attachUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a readable image'**
+  String get attachUnreadable;
+
+  /// No description provided for @attachRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}'**
+  String attachRemove(String name);
+
+  /// No description provided for @attachImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image {name}'**
+  String attachImage(String name);
+
+  /// No description provided for @attachGone.
+  ///
+  /// In en, this message translates to:
+  /// **'No longer available'**
+  String get attachGone;
+
+  /// No description provided for @attachSendAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get attachSendAgain;
+
+  /// No description provided for @attachAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to your message'**
+  String get attachAdded;
+
+  /// No description provided for @attachPickFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the picker: {reason}'**
+  String attachPickFailed(String reason);
+
+  /// No description provided for @attachCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add it again: {reason}'**
+  String attachCopyFailed(String reason);
+
+  /// No description provided for @attachLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the image'**
+  String get attachLoadFailed;
+
   /// No description provided for @outboxWaiting.
   ///
   /// In en, this message translates to:

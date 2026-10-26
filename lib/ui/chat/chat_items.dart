@@ -12,6 +12,7 @@ import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import 'approval_card.dart';
+import 'attachments.dart';
 import 'markdown.dart';
 import 'thinking_block.dart';
 import 'tool_step_card.dart';
@@ -26,14 +27,22 @@ void _copyWithNote(BuildContext context, String text) {
 }
 
 /// The user's message: surface-2 bubble on the right (radius 16/16/4/16),
-/// at most 86 % wide. Long press copies.
+/// at most 86 % wide, its photos and files above it. Long press copies.
 class UserBubble extends StatelessWidget {
-  const UserBubble({super.key, required this.text, this.footer});
+  const UserBubble({
+    super.key,
+    required this.text,
+    this.footer,
+    this.attachments = const [],
+    this.onOpenAttachment,
+  });
 
   final String text;
 
   /// Under the bubble (outbox state).
   final Widget? footer;
+  final List<Attachment> attachments;
+  final void Function(Attachment)? onOpenAttachment;
 
   @override
   Widget build(BuildContext context) {
@@ -41,32 +50,43 @@ class UserBubble extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        FractionallySizedBox(
-          widthFactor: 0.86,
-          alignment: Alignment.centerRight,
-          child: Align(
+        if (attachments.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: text.isEmpty ? 0 : DelveTokens.space2,
+            ),
+            child: MessageAttachments(
+              attachments: attachments,
+              onOpen: onOpenAttachment,
+            ),
+          ),
+        if (text.isNotEmpty)
+          FractionallySizedBox(
+            widthFactor: 0.86,
             alignment: Alignment.centerRight,
-            child: GestureDetector(
-              onLongPress: () => _copyWithNote(context, text),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainer,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(DelveTokens.rlg),
-                    topRight: Radius.circular(DelveTokens.rlg),
-                    bottomLeft: Radius.circular(DelveTokens.rlg),
-                    bottomRight: Radius.circular(4),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: GestureDetector(
+                onLongPress: () => _copyWithNote(context, text),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
                   ),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainer,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(DelveTokens.rlg),
+                      topRight: Radius.circular(DelveTokens.rlg),
+                      bottomLeft: Radius.circular(DelveTokens.rlg),
+                      bottomRight: Radius.circular(4),
+                    ),
+                  ),
+                  child: Text(text, style: context.text.bodyLarge),
                 ),
-                child: Text(text, style: context.text.bodyLarge),
               ),
             ),
           ),
-        ),
         if (footer != null)
           Padding(
             padding: const EdgeInsets.only(top: DelveTokens.space1),
@@ -85,11 +105,13 @@ class OutboxBubble extends StatelessWidget {
     required this.row,
     required this.onRetry,
     required this.onDiscard,
+    this.onOpenAttachment,
   });
 
   final OutboxRow row;
   final VoidCallback onRetry;
   final VoidCallback onDiscard;
+  final void Function(Attachment)? onOpenAttachment;
 
   @override
   Widget build(BuildContext context) {
@@ -140,6 +162,8 @@ class OutboxBubble extends StatelessWidget {
       key: ValueKey('outbox.${row.clientMsgId}'),
       text: row.body,
       footer: footer,
+      attachments: row.attachments,
+      onOpenAttachment: onOpenAttachment,
     );
   }
 }

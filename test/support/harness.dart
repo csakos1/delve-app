@@ -2,6 +2,9 @@ import 'package:delve/app/app.dart';
 import 'package:delve/app/chat.dart';
 import 'package:delve/app/providers.dart';
 import 'package:delve/app/session.dart';
+import 'package:delve/attachments/attachment_store.dart';
+import 'package:delve/attachments/image_prep.dart';
+import 'package:delve/attachments/picker.dart';
 import 'package:delve/data/credentials.dart';
 import 'package:delve/data/db/database.dart';
 import 'package:delve/push/push_controller.dart';
@@ -34,10 +37,15 @@ const testAppInfo = AppInfo('0.1.0', '1');
 
 /// Everything a test needs to drive the app and look behind it.
 class TestEnv {
-  TestEnv({Credentials? credentials, this.status, this.actions, this.push})
-    : db = memoryDb(),
-      store = MemoryCredentialStore(credentials),
-      server = FakeServer();
+  TestEnv({
+    Credentials? credentials,
+    this.status,
+    this.actions,
+    this.push,
+    this.attachments,
+  }) : db = memoryDb(),
+       store = MemoryCredentialStore(credentials),
+       server = FakeServer();
 
   final AppDatabase db;
   final MemoryCredentialStore store;
@@ -51,6 +59,9 @@ class TestEnv {
 
   /// Push on this phone as Settings sees it (push itself is off in tests).
   final PushState? push;
+
+  /// Pickers, resizing and uploads of attachments (plugins are off in tests).
+  final AttachmentFakes? attachments;
 
   // (The override list is written out twice: its element type lives in a
   // different library across Riverpod versions.)
@@ -67,6 +78,11 @@ class TestEnv {
       if (status case final s?)
         connectionStatusProvider.overrideWith((ref) => Stream.value(s)),
       if (actions case final a?) chatActionsProvider.overrideWithValue(a),
+      if (attachments case final f?) ...[
+        attachmentApiProvider.overrideWithValue(f.api),
+        attachmentPickerProvider.overrideWithValue(f.picker),
+        imagePrepProvider.overrideWithValue(f.prep),
+      ],
     ],
     child: child,
   );
@@ -85,6 +101,11 @@ class TestEnv {
         if (status case final s?)
           connectionStatusProvider.overrideWith((ref) => Stream.value(s)),
         if (actions case final a?) chatActionsProvider.overrideWithValue(a),
+        if (attachments case final f?) ...[
+          attachmentApiProvider.overrideWithValue(f.api),
+          attachmentPickerProvider.overrideWithValue(f.picker),
+          imagePrepProvider.overrideWithValue(f.prep),
+        ],
       ],
     );
     addTearDown(c.dispose);
@@ -108,6 +129,7 @@ Future<TestEnv> pumpDelve(
   ConnectionStatus? status,
   ChatActions? actions,
   PushState? push,
+  AttachmentFakes? attachments,
   Future<void> Function(TestEnv env)? before,
   bool settle = true,
 }) async {
@@ -116,6 +138,7 @@ Future<TestEnv> pumpDelve(
     status: status,
     actions: actions,
     push: push,
+    attachments: attachments,
   );
   addTearDown(env.dispose);
   setDesignSize(tester);
@@ -129,4 +152,16 @@ Future<TestEnv> pumpDelve(
     }
   }
   return env;
+}
+
+/// The attachment plugins and uploads for a test.
+class AttachmentFakes {
+  AttachmentFakes({
+    required this.api,
+    required this.picker,
+    required this.prep,
+  });
+  final AttachmentApi api;
+  final AttachmentPicker picker;
+  final ImagePrep prep;
 }

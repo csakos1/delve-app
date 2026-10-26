@@ -4,12 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../api/models/models.dart';
 import '../../api/protocol.dart';
 import '../../app/chat.dart';
 import '../../app/chat_list.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../app/session.dart';
+import '../../attachments/attachment_store.dart';
+import '../../attachments/composer_attachments.dart';
+import '../../attachments/image_prep.dart';
+import '../../attachments/picker.dart';
 import '../../data/db/database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../sync/connection_status.dart';
@@ -17,6 +22,7 @@ import '../../sync/live_runs.dart';
 import '../../sync/sync_engine.dart';
 import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
+import '../chat/attachments.dart';
 import '../chat/chat_items.dart';
 import '../chat/composer.dart';
 import '../chat/usage.dart';
@@ -68,9 +74,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Timer? _captionTimer;
   bool _caption = false;
 
+  /// The photos and files of the next message (kept when a new chat moves to
+  /// its conversation: same state).
+  late final ComposerAttachments _attachments;
+
   @override
   void initState() {
     super.initState();
+    _attachments = ComposerAttachments(
+      api: () => mounted ? ref.read(attachmentApiProvider) : null,
+      prep: ref.read(imagePrepProvider),
+      cache: ref.read(attachmentCacheProvider),
+    );
     final id = widget.conversationId;
     if (id != null) _openAfterFrame(id);
   }
@@ -99,6 +114,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void dispose() {
     _captionTimer?.cancel();
     _opened?.close();
+    _attachments.dispose();
     super.dispose();
   }
 
@@ -153,17 +169,123 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _ => '$e',
   };
 
-  Future<void> _send(String text) async {
+  /// The composer's text and uploaded attachments.
+  Future<void> _sendComposer(String text) async {
+    await _send(text, attachments: _attachments.ready);
+    _attachments.clear();
+  }
+
+  Future<void> _send(
+    String text, {
+    List<Attachment> attachments = const [],
+  }) async {
     final actions = ref.read(chatActionsProvider);
     if (actions == null) return;
     final id = await actions.send(
       text,
       conversationId: widget.conversationId,
       thinking: widget.conversationId == null ? _newThinking : null,
+      attachments: attachments,
     );
     if (widget.conversationId == null && mounted) {
       setState(() => _firstClientMsgId = id);
     }
+  }
+
+  /// Retry of a failed run: its message again, with copies of its
+  /// attachments (an id can be sent once); deleted ones are left out.
+  Future<void> _resend(MessageRow asked) async {
+    final l = AppLocalizations.of(context);
+    final api = ref.read(attachmentApiProvider);
+    final copies = <Attachment>[];
+    if (api != null) {
+      try {
+        for (final a in asked.attachments) {
+          if (a.available) copies.add(await api.copy(a.id));
+        }
+      } on Exception catch (e) {
+        if (mounted) _snack(l.attachCopyFailed(apiErrorText(l, e)));
+        return;
+      }
+    }
+    if (asked.content.trim().isEmpty && copies.isEmpty) return;
+    await _send(asked.content, attachments: copies);
+  }
+
+  // --- attachments --------------------------------------------------------------
+
+  /// "+": Photos, Camera or File; what is picked starts uploading at once.
+  Future<void> _addAttachments() async {
+    final l = AppLocalizations.of(context);
+    final room = _attachments.room;
+    if (room <= 0) {
+      _snack(l.attachLimit(kMaxAttachments));
+      return;
+    }
+    final source = await showAttachSourceSheet(context);
+    if (source == null || !mounted) return;
+    final picker = ref.read(attachmentPickerProvider);
+    final List<PickedAttachment> picked;
+    try {
+      picked = switch (source) {
+        AttachSource.photos => await picker.photos(limit: room),
+        AttachSource.camera => [?await picker.camera()],
+        AttachSource.file => await picker.files(limit: room),
+      };
+    } on Exception catch (e) {
+      if (mounted) _snack(l.attachPickFailed('$e'));
+      return;
+    }
+    if (!mounted || picked.isEmpty) return;
+    final left = _attachments.addAll(picked);
+    if (left > 0) _snack(l.attachLeftOut(left, kMaxAttachments));
+  }
+
+  /// A photo full screen, a file's details; both offer "Send again".
+  void _openAttachment(Attachment a) {
+    void again() => _sendAgain(a);
+    final canAgain = a.available;
+    if (a.isImage && a.available) {
+      unawaited(
+        AttachmentViewer.open(context, a, onSendAgain: canAgain ? again : null),
+      );
+    } else {
+      unawaited(
+        showFileSheet(context, a, onSendAgain: canAgain ? again : null),
+      );
+    }
+  }
+
+  void _sendAgain(Attachment a) {
+    final l = AppLocalizations.of(context);
+    final preview = a.isImage
+        ? ref.read(attachmentCacheProvider).get(a.id)
+        : null;
+    if (_attachments.addCopy(a, preview: preview)) {
+      _snack(l.attachAdded);
+    } else {
+      _snack(l.attachLimit(kMaxAttachments));
+    }
+  }
+
+  Widget _composer({
+    required bool connected,
+    VoidCallback? onStop,
+    int queued = 0,
+    required bool thinking,
+  }) {
+    final l = AppLocalizations.of(context);
+    final canAttach = connected && ref.watch(attachmentApiProvider) != null;
+    return Composer(
+      onSend: _sendComposer,
+      onStop: onStop,
+      queued: queued,
+      leading: [_pill(on: thinking)],
+      caption: _caption ? l.composerThinkingCaption : null,
+      attachments: _attachments,
+      onAdd: canAttach ? () => unawaited(_addAttachments()) : null,
+      attachmentsAllowed: connected,
+    );
   }
 
   Future<void> _stop(String runId) async {
@@ -230,6 +352,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final host =
         ref.watch(sessionProvider.select((s) => s.credentials?.server.host)) ??
         '';
+    final connected = ref.watch(
+      connectionStatusProvider.select(
+        (s) => s.value?.phase == ConnectionPhase.live,
+      ),
+    );
 
     return Scaffold(
       appBar: _ChatAppBar(title: l.newChat),
@@ -244,6 +371,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     children: [
                       OutboxBubble(
                         row: outbox,
+                        onOpenAttachment: _openAttachment,
                         onRetry: () => unawaited(
                           ref
                               .read(chatActionsProvider)
@@ -261,11 +389,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ],
                   ),
           ),
-          Composer(
-            onSend: _send,
-            leading: [_pill(on: _newThinking)],
-            caption: _caption ? l.composerThinkingCaption : null,
-          ),
+          _composer(connected: connected, thinking: _newThinking),
         ],
       ),
     );
@@ -363,16 +487,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 onAction: () => context.pushReplacement(Routes.newChat),
               ),
             ),
-          Composer(
-            onSend: _send,
+          _composer(
+            connected: connected,
             onStop: stopTarget == null
                 ? null
                 : () => unawaited(_stop(stopTarget.runId)),
             queued: data?.queuedCount ?? 0,
-            leading: [
-              _pill(on: _thinkingPending ?? conversation?.thinking ?? false),
-            ],
-            caption: _caption ? l.composerThinkingCaption : null,
+            thinking: _thinkingPending ?? conversation?.thinking ?? false,
           ),
         ],
       ),
@@ -392,7 +513,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final key = ValueKey('msg.${m.id}');
       switch (m.role) {
         case 'user':
-          out.add(UserBubble(key: key, text: m.content));
+          out.add(
+            UserBubble(
+              key: key,
+              text: m.content,
+              attachments: m.attachments,
+              onOpenAttachment: _openAttachment,
+            ),
+          );
         case 'assistant':
           final runId = m.runId;
           final run = runId == null ? null : data.runs[runId];
@@ -411,9 +539,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   : data.steps[runId] ?? const <ToolStepRow>[],
               approvals: data.approvals,
               live: live != null && live.runId == runId ? live : null,
-              onRetry: asked == null
-                  ? null
-                  : () => unawaited(_send(asked.content)),
+              onRetry: asked == null ? null : () => unawaited(_resend(asked)),
               onAnswer: connected ? _answer : null,
               selfDevice: selfDevice,
             ),
@@ -433,6 +559,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       out.add(
         OutboxBubble(
           row: o,
+          onOpenAttachment: _openAttachment,
           onRetry: () =>
               unawaited(ref.read(chatActionsProvider)?.retry(o.clientMsgId)),
           onDiscard: () =>

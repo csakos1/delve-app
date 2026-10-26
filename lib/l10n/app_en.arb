@@ -379,6 +379,91 @@
       }
     }
   },
+  "attachPhotos": "Photos",
+  "attachCamera": "Camera",
+  "attachFile": "File",
+  "attachLimit": "Up to {max} attachments per message",
+  "@attachLimit": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "attachLeftOut": "{count, plural, =1{1 was left out: up to {max} per message} other{{count} were left out: up to {max} per message}}",
+  "@attachLeftOut": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "attachNeedsConnection": "Attachments need a live connection",
+  "attachUploading": "Uploading {name}",
+  "@attachUploading": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "attachFailedRetry": "{name}: not uploaded, tap to retry",
+  "@attachFailedRetry": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "attachFailedShort": "Not uploaded · tap to retry",
+  "attachTooLarge": "Too large (max {size})",
+  "@attachTooLarge": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "attachUnreadable": "Not a readable image",
+  "attachRemove": "Remove {name}",
+  "@attachRemove": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "attachImage": "Image {name}",
+  "@attachImage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "attachGone": "No longer available",
+  "attachSendAgain": "Send again",
+  "attachAdded": "Added to your message",
+  "attachPickFailed": "Could not open the picker: {reason}",
+  "@attachPickFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "attachCopyFailed": "Could not add it again: {reason}",
+  "@attachCopyFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "attachLoadFailed": "Could not load the image",
   "outboxWaiting": "Waiting for the connection",
   "outboxSending": "Sending…",
   "outboxFailed": "Not sent",

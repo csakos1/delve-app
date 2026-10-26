@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
-/// A canned answer.
+/// A canned answer; a [Uint8List] as [json] is sent as raw bytes.
 class FakeReply {
   const FakeReply(this.status, [this.json, this.headers = const {}]);
   final int status;
@@ -35,7 +35,7 @@ class FakeServer implements HttpClientAdapter {
 
   static const meta = {
     'server_version': '0.1.0',
-    'api_revision': 7,
+    'api_revision': 8,
     'revision': 'eb4045ed6a94',
     'python': '3.14.8',
     'hermes_expected_version': '0.22.2',
@@ -44,7 +44,7 @@ class FakeServer implements HttpClientAdapter {
 
   static const status = {
     'server_version': '0.1.0',
-    'api_revision': 7,
+    'api_revision': 8,
     'revision': 'eb4045ed6a94',
     'hermes': 'ok',
     'hermes_version': '0.22.2',
@@ -138,6 +138,9 @@ class FakeServer implements HttpClientAdapter {
     };
     if (reply.json == null) {
       return ResponseBody.fromString('', reply.status, headers: headers);
+    }
+    if (reply.json case final Uint8List bytes) {
+      return ResponseBody.fromBytes(bytes, reply.status, headers: headers);
     }
     headers[Headers.contentTypeHeader] = [Headers.jsonContentType];
     return ResponseBody.fromString(

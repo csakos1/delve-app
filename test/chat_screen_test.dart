@@ -39,9 +39,14 @@ class FakeChatActions implements ChatActions {
     String text, {
     String? conversationId,
     bool? thinking,
+    List<Attachment> attachments = const [],
   }) async {
+    final files = attachments.isEmpty
+        ? ''
+        : ' [${attachments.map((a) => a.id).join(',')}]';
     calls.add(
-      'send $text $conversationId${thinking ?? false ? ' thinking' : ''}',
+      'send $text $conversationId${thinking ?? false ? ' thinking' : ''}'
+      '$files',
     );
     final id = 'cm_${++_n}';
     await db
@@ -52,6 +57,7 @@ class FakeChatActions implements ChatActions {
             conversationId: Value(conversationId),
             body: text,
             createdAt: t0,
+            attachments: Value(attachments),
           ),
         );
     return id;

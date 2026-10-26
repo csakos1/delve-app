@@ -48,6 +48,11 @@ class Messages extends Table {
   TextColumn get clientMsgId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
 
+  /// The user's photos and files (schema 5, B6).
+  TextColumn get attachments => text()
+      .map(const AttachmentListConverter())
+      .withDefault(const Constant('[]'))();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -133,6 +138,11 @@ class Outbox extends Table {
   TextColumn get state => text().withDefault(const Constant('pending'))();
   IntColumn get attempts => integer().withDefault(const Constant(0))();
   TextColumn get lastError => text().nullable()();
+
+  /// Uploaded photos and files sent with the message (schema 5, B6).
+  TextColumn get attachments => text()
+      .map(const AttachmentListConverter())
+      .withDefault(const Constant('[]'))();
 
   @override
   Set<Column<Object>> get primaryKey => {clientMsgId};

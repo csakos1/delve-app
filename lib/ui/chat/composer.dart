@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../../attachments/composer_attachments.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
+import 'attachments.dart';
 
 /// The floating composer: a surface-1 container (radius 24, elevation-1) with
-/// the message field on top and a row of [+], the Thinking pill and
-/// Send / Stop below. Send shows whenever there is text (a message
-/// typed during a run is queued); otherwise Stop while a run is active.
+/// the attachment chips and the message field on top and a row of [+], the
+/// Thinking pill and Send / Stop below. Send shows whenever there is text or
+/// an uploaded attachment (a message typed during a run is queued);
+/// otherwise Stop while a run is active.
 class Composer extends StatefulWidget {
   const Composer({
     super.key,
@@ -16,10 +19,23 @@ class Composer extends StatefulWidget {
     this.queued = 0,
     this.leading = const [],
     this.caption,
+    this.attachments,
+    this.onAdd,
+    this.attachmentsAllowed = true,
   });
 
-  /// Returns once the message is queued; the field clears then.
+  /// Returns once the message is queued; the field clears then (the caller
+  /// clears [attachments]).
   final Future<void> Function(String text) onSend;
+
+  /// The photos and files of the next message; null: none can be added.
+  final ComposerAttachments? attachments;
+
+  /// "+": asks where the next attachment comes from; null disables it.
+  final VoidCallback? onAdd;
+
+  /// Attachments are only sent over a live connection (decision 334).
+  final bool attachmentsAllowed;
 
   /// Non-null while a run of this chat is active.
   final VoidCallback? onStop;
@@ -44,18 +60,42 @@ class _ComposerState extends State<Composer> {
   @override
   void initState() {
     super.initState();
-    _controller.addListener(() => setState(() {}));
+    _controller.addListener(_changed);
+    widget.attachments?.addListener(_changed);
+  }
+
+  @override
+  void didUpdateWidget(Composer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.attachments != widget.attachments) {
+      oldWidget.attachments?.removeListener(_changed);
+      widget.attachments?.addListener(_changed);
+    }
+  }
+
+  void _changed() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    widget.attachments?.removeListener(_changed);
     _controller.dispose();
     super.dispose();
   }
 
+  /// Text or uploaded attachments, nothing still uploading or failed, and
+  /// attachments only while connected.
+  bool get _canSend {
+    final a = widget.attachments;
+    final hasText = _controller.text.trim().isNotEmpty;
+    if (a == null || a.isEmpty) return hasText;
+    return !a.busy && !a.hasFailed && widget.attachmentsAllowed;
+  }
+
   Future<void> _send() async {
     final text = _controller.text.trim();
-    if (text.isEmpty || _sending) return;
+    if (!_canSend || _sending) return;
     setState(() => _sending = true);
     try {
       await widget.onSend(text);
@@ -70,8 +110,16 @@ class _ComposerState extends State<Composer> {
     final l = AppLocalizations.of(context);
     final cs = context.colors;
     final d = context.delve;
-    final hasText = _controller.text.trim().isNotEmpty;
-    final stop = !hasText && widget.onStop != null;
+    final attachments = widget.attachments;
+    final hasContent =
+        _controller.text.trim().isNotEmpty ||
+        (attachments != null && !attachments.isEmpty);
+    final stop = !hasContent && widget.onStop != null;
+    final blocked =
+        attachments != null &&
+        !attachments.isEmpty &&
+        !widget.attachmentsAllowed;
+    final caption = blocked ? l.attachNeedsConnection : widget.caption;
 
     final Widget action;
     if (stop) {
@@ -87,7 +135,7 @@ class _ComposerState extends State<Composer> {
         key: const Key('composer.send'),
         semantics: l.composerSend,
         icon: DelveIcons.send,
-        onPressed: hasText && !_sending ? _send : null,
+        onPressed: _canSend && !_sending ? _send : null,
       );
     }
 
@@ -150,6 +198,8 @@ class _ComposerState extends State<Composer> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (attachments != null)
+                  DraftAttachmentStrip(controller: attachments),
                 TextField(
                   key: const Key('composer.field'),
                   controller: _controller,
@@ -178,8 +228,7 @@ class _ComposerState extends State<Composer> {
                       semantics: l.composerAttach,
                       icon: DelveIcons.add,
                       tonal: true,
-                      // attachments arrive with B6
-                      onPressed: null,
+                      onPressed: widget.onAdd,
                     ),
                     for (final w in widget.leading) ...[
                       const SizedBox(width: DelveTokens.space2),
@@ -192,7 +241,7 @@ class _ComposerState extends State<Composer> {
                 AnimatedSize(
                   duration: DelveTokens.short,
                   alignment: Alignment.topLeft,
-                  child: widget.caption == null
+                  child: caption == null
                       ? const SizedBox(width: double.infinity)
                       : Padding(
                           padding: const EdgeInsets.only(
@@ -200,7 +249,7 @@ class _ComposerState extends State<Composer> {
                             bottom: DelveTokens.space1,
                           ),
                           child: Text(
-                            widget.caption!,
+                            caption,
                             key: const Key('composer.caption'),
                             style: context.text.labelSmall!.copyWith(
                               color: d.textMuted,

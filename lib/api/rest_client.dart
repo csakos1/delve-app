@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 
 import 'api_error.dart';
@@ -43,6 +45,8 @@ class DelveApi {
     Map<String, Object?> query = const {},
     Object? body,
     Duration? receiveTimeout,
+    Duration? sendTimeout,
+    String? contentType,
   }) async {
     try {
       final res = await _dio.request<Object?>(
@@ -52,7 +56,12 @@ class DelveApi {
           for (final e in query.entries)
             if (e.value != null) e.key: e.value.toString(),
         },
-        options: Options(method: route.$1, receiveTimeout: receiveTimeout),
+        options: Options(
+          method: route.$1,
+          receiveTimeout: receiveTimeout,
+          sendTimeout: sendTimeout,
+          contentType: contentType,
+        ),
       );
       final data = res.data;
       if (res.statusCode == 204 || data == null || data == '') {
@@ -337,6 +346,54 @@ class DelveApi {
       receiveTimeout: const Duration(seconds: 60),
     ),
     ScheduleRun.fromJson,
+  );
+
+  // --- attachments (B6) ---------------------------------------------------
+
+  /// Uploads one photo or file (the raw bytes, the type in `Content-Type`);
+  /// unbound until `chat.send` lists its id. 413 `too_large`, 415
+  /// `unsupported_image`.
+  Future<Attachment> uploadAttachment({
+    required String kind,
+    required String filename,
+    required String mime,
+    required Uint8List bytes,
+  }) async => _parse(
+    await _json(
+      ApiRoutes.uploadAttachment,
+      query: {'kind': kind, 'filename': filename},
+      body: bytes,
+      contentType: mime,
+      sendTimeout: const Duration(seconds: 120),
+      receiveTimeout: const Duration(seconds: 60),
+    ),
+    Attachment.fromJson,
+  );
+
+  /// The bytes of an attachment; 410 `attachment_gone` once deleted.
+  Future<Uint8List> attachmentBytes(String id) async {
+    try {
+      final res = await _dio.request<List<int>>(
+        ApiRoutes.path(ApiRoutes.attachment.$2, {'attachment_id': id}),
+        options: Options(
+          method: ApiRoutes.attachment.$1,
+          responseType: ResponseType.bytes,
+          receiveTimeout: const Duration(seconds: 60),
+        ),
+      );
+      final data = res.data ?? const <int>[];
+      return data is Uint8List ? data : Uint8List.fromList(data);
+    } on DioException catch (e) {
+      final err = ApiError.fromDio(e);
+      if (err is ApiUnauthorized && token != null) onUnauthorized?.call();
+      throw err;
+    }
+  }
+
+  /// A new, unsent upload with the same content ("Send again").
+  Future<Attachment> copyAttachment(String id) async => _parse(
+    await _json(ApiRoutes.copyAttachment, params: {'attachment_id': id}),
+    Attachment.fromJson,
   );
 
   static List<Map<String, Object?>> _list(

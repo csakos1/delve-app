@@ -75,9 +75,20 @@ reached over Tailscale only.
   the charts are drawn by hand like the water week. Loaded when the screen opens, on a
   range chip and on pull; a failing GPU sampling is shown as a banner.
 
+- B6: attachments — the composer's "+" (Photos, Camera, File), up to four per message.
+  Photos are resized on the phone (longer side 1536 px, JPEG 85; a photo picked as a file
+  counts as one) and the model sees them; other files go to the agent's inbox (≤ 20 MB).
+  Each one uploads as soon as it is picked (a chip with a thumbnail, a spinner, or the
+  reason it failed – a tap retries); Send binds the uploads, and only over a live
+  connection. Photos show in the chat as tiles, files as chips; a tap opens a photo full
+  screen or a file's details, both with "Send again" (the server copies it; the model no
+  longer sees earlier photos). After 14 days the server deletes them: "No longer
+  available". Sharing into Delve from other apps follows.
+
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
-B4 schedules and the morning brief, B5 observability; attachments and the home widget
-follow (B6–B7). Requires a server with API revision 7 or newer (`/api/v1/stats`).
+B4 schedules and the morning brief, B5 observability, B6 attachments; the share target
+and the home widget follow. Requires a server with API revision 8 or newer
+(`/api/v1/attachments`).
 
 ## Stack
 
@@ -117,13 +128,16 @@ lib/
   app/system.dart            the system view in memory: REST, system.updated, stop/start
   app/schedules.dart         the schedule list in memory: REST, schedule.* events
   app/cron_preset.dart       cron ↔ daily times / weekdays at a time / plain cron
+  attachments/               pickers, photo resizing, uploads (ComposerAttachments),
+                             the image cache
   sync/                      WebSocket client: engine (connection, outbox, requests),
                              reducer (events → database), resync, live runs, transport
   push/                      notifications: FCM transport, controller (token, taps),
                              background handlers, notification texts (design 18)
   data/credentials.dart      token and server URL in Android secure storage
   data/db/                   drift tables and queries; store.dart: server objects → rows
-  ui/chat/                   chat pieces: run rail, tool step card, composer, Markdown
+  ui/chat/                   chat pieces: run rail, tool step card, composer, Markdown,
+                             attachments (chips, tiles, viewer)
   ui/                        shell (bottom navigation), screens, shared widgets;
                              format.dart: list times, previews, error texts
   l10n/app_en.arb            UI strings (English)
@@ -137,6 +151,8 @@ test/
   sync_engine_test.dart      the connection against a local fake WebSocket server
   dashboard_test.dart        water readings, the week, the brief, the Dashboard screen
   schedules_test.dart        cron presets and texts, the Schedules list and editor
+  attachments_test.dart      resizing bounds, uploads and retries, REST, the chat's "+",
+                             tiles and "Send again"
   push_test.dart             pushes → notifications, Deny in the background, the
                              controller with fakes, Settings → Notifications
   support/                   fake REST server (a dio adapter), fake WebSocket server,

@@ -6,7 +6,8 @@ Run from a delve-backend checkout with its venv active:
 import json, sys, uuid
 from datetime import datetime, timedelta, timezone
 from delve import API_REVISION, protocol
-from delve.db.models import Approval, Card, Conversation, Message, Run, Schedule, ToolStep
+from delve.attachments import attachment_out
+from delve.db.models import Approval, Attachment, Card, Conversation, Message, Run, Schedule, ToolStep
 from delve.serialize import approval_out, card_out, conversation_out, message_out, run_out, step_out
 from delve.llama import Props
 from delve.system import Parts, system_out
@@ -27,6 +28,9 @@ msg = Message(id=412, conversation_id=conv.id, run_id="run_8e4b1c2d3a4f5e6b", ro
 umsg = Message(id=411, conversation_id=conv.id, run_id="run_8e4b1c2d3a4f5e6b", role="user",
     content="uname -r && nproc", interim=None, reasoning=None,
     client_msg_id=uuid.UUID("0b8f3c52-7a1e-4d2b-9c61-2f5e8a7d3b10"), status="final", created_at=t0)
+att = Attachment(id=uuid.UUID("5d0c7e2a-41b9-4c8e-9f3a-6b2d1e0f9a87"), kind="image", mime="image/jpeg",
+    filename="screen.jpg", size_bytes=64895, sha256="0" * 64, conversation_id=conv.id, message_id=411,
+    created_at=t0 - timedelta(seconds=20))
 run = Run(run_id="run_8e4b1c2d3a4f5e6b", conversation_id=conv.id, status="completed", thinking=False,
     origin="app", queued_at=t0, started_at=t0 + timedelta(seconds=1), ended_at=t0 + timedelta(seconds=3),
     usage={"input_tokens": 17315, "output_tokens": 63, "cache_read_tokens": 17152},
@@ -126,7 +130,8 @@ stats_day = stats_out(range_key="24h", now=t0, runs=stat_runs, latencies=stat_la
 shapes = {
     "conversation": conversation_out(conv),
     "message": message_out(msg),
-    "message_user": message_out(umsg),
+    "message_user": message_out(umsg, [attachment_out(att)]),
+    "attachment": attachment_out(att),
     "run": run_out(run),
     "open_run": {**run_out(Run(**{**{c: getattr(run, c) for c in ("run_id","conversation_id","thinking","origin","queued_at")},
                                     "status": "running", "started_at": t0, "ended_at": None,

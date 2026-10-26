@@ -574,6 +574,87 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get attachPhotos => 'Photos';
+
+  @override
+  String get attachCamera => 'Camera';
+
+  @override
+  String get attachFile => 'File';
+
+  @override
+  String attachLimit(int max) {
+    return 'Up to $max attachments per message';
+  }
+
+  @override
+  String attachLeftOut(int count, int max) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count were left out: up to $max per message',
+      one: '1 was left out: up to $max per message',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get attachNeedsConnection => 'Attachments need a live connection';
+
+  @override
+  String attachUploading(String name) {
+    return 'Uploading $name';
+  }
+
+  @override
+  String attachFailedRetry(String name) {
+    return '$name: not uploaded, tap to retry';
+  }
+
+  @override
+  String get attachFailedShort => 'Not uploaded · tap to retry';
+
+  @override
+  String attachTooLarge(String size) {
+    return 'Too large (max $size)';
+  }
+
+  @override
+  String get attachUnreadable => 'Not a readable image';
+
+  @override
+  String attachRemove(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String attachImage(String name) {
+    return 'Image $name';
+  }
+
+  @override
+  String get attachGone => 'No longer available';
+
+  @override
+  String get attachSendAgain => 'Send again';
+
+  @override
+  String get attachAdded => 'Added to your message';
+
+  @override
+  String attachPickFailed(String reason) {
+    return 'Could not open the picker: $reason';
+  }
+
+  @override
+  String attachCopyFailed(String reason) {
+    return 'Could not add it again: $reason';
+  }
+
+  @override
+  String get attachLoadFailed => 'Could not load the image';
+
+  @override
   String get outboxWaiting => 'Waiting for the connection';
 
   @override

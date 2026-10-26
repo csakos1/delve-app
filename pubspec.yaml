@@ -37,6 +37,11 @@ dependencies:
   firebase_messaging: ^17.0.0
   flutter_local_notifications: ^22.3.2
 
+  # attachments (B6): gallery/camera, files, resizing on the phone (1536 px JPEG 85)
+  image_picker: ^1.2.0
+  file_picker: ^13.2.0
+  flutter_image_compress: ^2.5.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -35,7 +35,8 @@
       "reasoning": null,
       "status": "final",
       "client_msg_id": null,
-      "created_at": "2026-10-19T21:39:02.123456+00:00"
+      "created_at": "2026-10-19T21:39:02.123456+00:00",
+      "attachments": []
     },
     "message_user": {
       "id": 411,
@@ -47,7 +48,29 @@
       "reasoning": null,
       "status": "final",
       "client_msg_id": "0b8f3c52-7a1e-4d2b-9c61-2f5e8a7d3b10",
-      "created_at": "2026-10-19T21:39:00.123456+00:00"
+      "created_at": "2026-10-19T21:39:00.123456+00:00",
+      "attachments": [
+        {
+          "id": "5d0c7e2a-41b9-4c8e-9f3a-6b2d1e0f9a87",
+          "kind": "image",
+          "mime": "image/jpeg",
+          "filename": "screen.jpg",
+          "size_bytes": 64895,
+          "message_id": 411,
+          "available": true,
+          "created_at": "2026-10-19T21:38:40.123456+00:00"
+        }
+      ]
+    },
+    "attachment": {
+      "id": "5d0c7e2a-41b9-4c8e-9f3a-6b2d1e0f9a87",
+      "kind": "image",
+      "mime": "image/jpeg",
+      "filename": "screen.jpg",
+      "size_bytes": 64895,
+      "message_id": 411,
+      "available": true,
+      "created_at": "2026-10-19T21:38:40.123456+00:00"
     },
     "run": {
       "run_id": "run_8e4b1c2d3a4f5e6b",
@@ -4593,7 +4616,8 @@
         "reasoning": null,
         "status": "final",
         "client_msg_id": null,
-        "created_at": "2026-10-19T21:39:02.123456+00:00"
+        "created_at": "2026-10-19T21:39:02.123456+00:00",
+        "attachments": []
       }
     },
     "message.updated": {
@@ -4608,7 +4632,8 @@
         "reasoning": null,
         "status": "streaming",
         "client_msg_id": null,
-        "created_at": "2026-10-19T21:39:02.123456+00:00"
+        "created_at": "2026-10-19T21:39:02.123456+00:00",
+        "attachments": []
       }
     },
     "message.delta": {
@@ -4889,7 +4914,7 @@
   "connection": {
     "hello.ok": {
       "server_version": "0.1.0",
-      "api_revision": 7,
+      "api_revision": 8,
       "revision": "eb4045ed6a94",
       "hermes": "ok",
       "hermes_version": "0.22.2",
@@ -4904,7 +4929,7 @@
     },
     "meta": {
       "server_version": "0.1.0",
-      "api_revision": 7,
+      "api_revision": 8,
       "revision": "eb4045ed6a94",
       "python": "3.14.8",
       "hermes_expected_version": "0.22.2",
@@ -4912,7 +4937,7 @@
     },
     "status": {
       "server_version": "0.1.0",
-      "api_revision": 7,
+      "api_revision": 8,
       "revision": null,
       "hermes": null,
       "hermes_version": null,
@@ -4929,6 +4954,7 @@
       "status": "final",
       "client_msg_id": null,
       "created_at": "2026-10-19T21:39:02.123456+00:00",
+      "attachments": [],
       "tool_steps": [
         {
           "id": 97,

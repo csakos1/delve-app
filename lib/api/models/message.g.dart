@@ -17,6 +17,11 @@ _Message _$MessageFromJson(Map<String, dynamic> json) => _Message(
   status: json['status'] as String,
   clientMsgId: json['client_msg_id'] as String?,
   createdAt: DateTime.parse(json['created_at'] as String),
+  attachments:
+      (json['attachments'] as List<dynamic>?)
+          ?.map((e) => Attachment.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <Attachment>[],
 );
 
 Map<String, dynamic> _$MessageToJson(_Message instance) => <String, dynamic>{
@@ -30,4 +35,5 @@ Map<String, dynamic> _$MessageToJson(_Message instance) => <String, dynamic>{
   'status': instance.status,
   'client_msg_id': instance.clientMsgId,
   'created_at': instance.createdAt.toIso8601String(),
+  'attachments': instance.attachments.map((e) => e.toJson()).toList(),
 };

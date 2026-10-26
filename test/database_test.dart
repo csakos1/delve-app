@@ -1,15 +1,27 @@
 import 'dart:io';
 
+import 'package:delve/api/models/models.dart';
 import 'package:delve/data/db/database.dart';
+import 'package:delve/data/db/store.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'support/fake_server.dart';
 
 AppDatabase memoryDb() => AppDatabase(
   DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true),
 );
 
+/// What a database before schema 5 lacks.
+Future<void> dropAttachments(AppDatabase db) async {
+  await db.customStatement('ALTER TABLE messages DROP COLUMN attachments');
+  await db.customStatement('ALTER TABLE outbox DROP COLUMN attachments');
+}
+
 void main() {
+  // the upgrade tests reopen a closed file on purpose
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
   late AppDatabase db;
   setUp(() => db = memoryDb());
   tearDown(() => db.close());
@@ -184,6 +196,7 @@ void main() {
       await v1.customStatement('DROP TABLE connection_log');
       await v1.customStatement('ALTER TABLE conversations DROP COLUMN preview');
       await v1.customStatement('DROP TABLE cards');
+      await dropAttachments(v1);
       await v1.customStatement('PRAGMA user_version = 1');
       await v1.close();
 
@@ -202,6 +215,7 @@ void main() {
     final v2 = AppDatabase(NativeDatabase(file));
     await v2.customStatement('ALTER TABLE conversations DROP COLUMN preview');
     await v2.customStatement('DROP TABLE cards');
+    await dropAttachments(v2);
     await v2.customStatement(
       "INSERT INTO conversations (id, created_at, updated_at) VALUES ('c_old', 0, 0)",
     );
@@ -220,12 +234,53 @@ void main() {
     final file = File('${dir.path}/delve.sqlite');
     final v3 = AppDatabase(NativeDatabase(file));
     await v3.customStatement('DROP TABLE cards');
+    await dropAttachments(v3);
     await v3.customStatement('PRAGMA user_version = 3');
     await v3.close();
 
     final v4 = AppDatabase(NativeDatabase(file));
     addTearDown(v4.close);
     expect(await v4.select(v4.cards).get(), isEmpty);
+  });
+
+  test('a version 4 database gets the attachment columns on upgrade', () async {
+    final dir = await Directory.systemTemp.createTemp('delve-db');
+    addTearDown(() => dir.delete(recursive: true));
+    final file = File('${dir.path}/delve.sqlite');
+    final v4 = AppDatabase(NativeDatabase(file));
+    await dropAttachments(v4);
+    await v4.customStatement(
+      'INSERT INTO messages (id, conversation_id, role, content, status, created_at) '
+      "VALUES (7, 'c_old', 'user', 'hi', 'final', 0)",
+    );
+    await v4.customStatement('PRAGMA user_version = 4');
+    await v4.close();
+
+    final v5 = AppDatabase(NativeDatabase(file));
+    addTearDown(v5.close);
+    final row = await v5.select(v5.messages).getSingle();
+    expect(row.content, 'hi');
+    expect(row.attachments, isEmpty);
+    await v5.putMessage(
+      Message.fromJson(
+        FakeServer.sample('message_user')
+          ..['conversation_id'] = 'c_old'
+          ..['id'] = 7,
+      ),
+    );
+    final updated = await v5.select(v5.messages).getSingle();
+    expect(updated.attachments.single.filename, 'screen.jpg');
+  });
+
+  test('an event without attachments keeps the stored ones', () async {
+    final user = Message.fromJson(FakeServer.sample('message_user'));
+    await db.putMessage(user);
+    await db.putMessage(user.copyWith(content: 'edited', attachments: []));
+    final row = await db.select(db.messages).getSingle();
+    expect(
+      (row.content, row.attachments.single.id),
+      ('edited', user.attachments.single.id),
+    );
   });
 
   test('pending outbox rows come oldest first', () async {

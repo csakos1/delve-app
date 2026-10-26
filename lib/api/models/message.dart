@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'attachment.dart';
 import 'tool_step.dart';
 
 part 'message.freezed.dart';
@@ -20,6 +21,9 @@ abstract class Message with _$Message {
     required String status,
     String? clientMsgId,
     required DateTime createdAt,
+
+    /// The user's photos and files (API 8); empty for other messages.
+    @Default(<Attachment>[]) List<Attachment> attachments,
   }) = _Message;
 
   factory Message.fromJson(Map<String, Object?> json) =>
