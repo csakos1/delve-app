@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resources the code only names as strings (flutter_local_notifications takes
+     the notification icon by name): keep them when release builds shrink. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_delve" />

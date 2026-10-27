@@ -94,9 +94,17 @@ reached over Tailscale only.
   Dart takes it, and copies the shared content into the app's cache (files over 20 MB are
   not copied). Before pairing the share waits.
 
+- Icon and signing — the design's "App icon" (concept B, "D of depth": a D cut into four
+  contour layers with the cyan cursor at the deepest point): adaptive launcher icon with
+  a monochrome layer for themed icons, legacy PNGs, a white notification icon tinted with
+  the accent, a dark launch window, and the mark next to "Delve" on the new chat
+  (`DelveMark`, drawn from the same geometry). Release builds are signed with the key
+  from `android/key.properties` when it is there (see Development); otherwise with the
+  debug key.
+
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share
-target; the home widget follows. Requires a server with API revision 8 or newer
+target. (A home-screen widget was planned and dropped.) Requires a server with API revision 8 or newer
 (`/api/v1/attachments`).
 
 ## Stack
@@ -204,6 +212,24 @@ flutter run                                                # device or emulator
 
 Generated files (`*.g.dart`, `*.freezed.dart`, `lib/l10n/app_localizations*.dart`) and
 `pubspec.lock` are committed; CI regenerates them and fails on any difference.
+
+### Release signing
+
+Release builds use the key named in `android/key.properties` (outside the repository, like
+the keystore itself – both are in `.gitignore`):
+
+```properties
+storeFile=/home/<user>/keys/delve-release.jks
+storePassword=…
+keyAlias=delve
+keyPassword=…          # the same as storePassword for a PKCS12 keystore
+```
+
+Without the file (CI, a fresh clone) the release build is signed with the debug key. Check
+the signer with `apksigner verify --print-certs <apk>` (the `keytool -printcert -jarfile`
+check sees no v1 signature and prints nothing). An app signed with one key cannot be
+updated by an APK signed with another: switching keys means uninstalling (and pairing
+again). Keep a backup of the keystore and its password.
 
 ### Push (Firebase)
 

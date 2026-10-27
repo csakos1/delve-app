@@ -28,6 +28,7 @@ import '../chat/composer.dart';
 import '../chat/usage.dart';
 import '../format.dart';
 import '../widgets/chat_row.dart';
+import '../widgets/delve_mark.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 
@@ -608,7 +609,14 @@ class _NewChatIntro extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Delve', style: context.text.displaySmall),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const DelveMark(height: 36),
+                const SizedBox(width: DelveTokens.space3),
+                Text('Delve', style: context.text.displaySmall),
+              ],
+            ),
             const SizedBox(height: DelveTokens.space2),
             Text(
               host.isEmpty ? l.newChatIntroNoHost : l.newChatIntro(host),

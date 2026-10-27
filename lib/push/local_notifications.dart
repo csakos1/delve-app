@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../l10n/app_localizations.dart';
+import '../theme/delve_colors.dart';
 import 'background.dart';
 import 'notification_spec.dart';
 
@@ -53,7 +54,9 @@ class LocalNotifications implements PhoneNotifications {
   Future<void> _init() async {
     await _plugin.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        // white D on transparent (res/drawable/ic_stat_delve.xml): Android
+        // tints the small icon, a full-colour one would show as a square
+        android: AndroidInitializationSettings('@drawable/ic_stat_delve'),
       ),
       onDidReceiveNotificationResponse: (r) =>
           _taps.add(NotificationTap(actionId: r.actionId, payload: r.payload)),
@@ -120,6 +123,8 @@ class LocalNotifications implements PhoneNotifications {
       importance: approvals ? Importance.high : Importance.defaultImportance,
       priority: approvals ? Priority.high : Priority.defaultPriority,
       styleInformation: BigTextStyleInformation(spec.body),
+      // the small icon's tint (the design's cyan accent)
+      color: delveColorScheme.primary,
       // an approval's update (agent stopped waiting) stays quiet; a new
       // reading or answer replacing an older one alerts again
       onlyAlertOnce: approvals,

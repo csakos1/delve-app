@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed icon (Android 13+): single-colour silhouette of the foreground; the launcher tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- optical centring: the D's bounding box is centred, but its mass (the
+         straight stem) sits left of the bowl; its centroid is at x 51.9 -->
+    <group android:translateX="2">
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillType="evenOdd"
+            android:pathData="M36.00,31.00H52.00A23.00,23.00 0 0 1 52.00,77.00H36.00A3.00,3.00 0 0 1 33.00,74.00V34.00A3.00,3.00 0 0 1 36.00,31.00Z M42.50,37.50H53.00A17.50,17.50 0 0 1 53.00,72.50H42.50A3.00,3.00 0 0 1 39.50,69.50V40.50A3.00,3.00 0 0 1 42.50,37.50Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillType="evenOdd"
+            android:pathData="M48.00,44.00H54.00A12.00,12.00 0 0 1 54.00,68.00H48.00A2.00,2.00 0 0 1 46.00,66.00V46.00A2.00,2.00 0 0 1 48.00,44.00Z M54.00,50.50H55.00A6.50,6.50 0 0 1 55.00,63.50H54.00A2.00,2.00 0 0 1 52.00,61.50V52.50A2.00,2.00 0 0 1 54.00,50.50Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M54.5,58.0H58.0A1.5,1.5 0 0 1 59.5,59.5V59.5A1.5,1.5 0 0 1 58.0,61.0H54.5A1.5,1.5 0 0 1 53.0,59.5V59.5A1.5,1.5 0 0 1 54.5,58.0Z" />
+    </group>
+</vector>
