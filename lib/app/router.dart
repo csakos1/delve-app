@@ -16,6 +16,7 @@ import '../ui/screens/schedule_editor_screen.dart';
 import '../ui/screens/schedules_screen.dart';
 import '../ui/screens/server_too_old_screen.dart';
 import '../ui/screens/settings_screen.dart';
+import '../ui/screens/share_screen.dart';
 import '../ui/screens/splash_screen.dart';
 import '../ui/screens/system_screen.dart';
 import '../ui/shell/app_shell.dart';
@@ -42,6 +43,9 @@ abstract final class Routes {
   static const settings = '/more/settings';
   static const connectionLog = '/more/settings/log';
   static const archived = '/more/archived';
+
+  /// Share to Delve (design 17), on the root navigator.
+  static const share = '/share';
 
   /// Screens that are only reachable in one session state.
   static const gates = {splash, pair, serverTooOld};
@@ -77,6 +81,7 @@ GoRouter buildRouter({
         path: Routes.serverTooOld,
         builder: (_, _) => const ServerTooOldScreen(),
       ),
+      GoRoute(path: Routes.share, builder: (_, _) => const ShareScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(shell: shell),
         branches: [
@@ -89,7 +94,15 @@ GoRouter buildRouter({
                   GoRoute(
                     path: 'new',
                     parentNavigatorKey: rootKey,
-                    builder: (_, _) => const ChatScreen(conversationId: null),
+                    // `extra`: the first message's outbox id when it was
+                    // sent from Share to Delve
+                    builder: (_, state) => ChatScreen(
+                      conversationId: null,
+                      firstClientMsgId: switch (state.extra) {
+                        final String id => id,
+                        _ => null,
+                      },
+                    ),
                   ),
                   GoRoute(
                     path: 'c/:id',

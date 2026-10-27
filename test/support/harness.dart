@@ -9,6 +9,7 @@ import 'package:delve/data/credentials.dart';
 import 'package:delve/data/db/database.dart';
 import 'package:delve/push/push_controller.dart';
 import 'package:delve/push/push_providers.dart';
+import 'package:delve/share/share_channel.dart';
 import 'package:delve/sync/connection_status.dart';
 import 'package:delve/sync/sync_providers.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
@@ -43,6 +44,7 @@ class TestEnv {
     this.actions,
     this.push,
     this.attachments,
+    this.share,
   }) : db = memoryDb(),
        store = MemoryCredentialStore(credentials),
        server = FakeServer();
@@ -63,6 +65,9 @@ class TestEnv {
   /// Pickers, resizing and uploads of attachments (plugins are off in tests).
   final AttachmentFakes? attachments;
 
+  /// Shares from other apps (the platform channel is off in tests).
+  final ShareSource? share;
+
   // (The override list is written out twice: its element type lives in a
   // different library across Riverpod versions.)
   ProviderScope app(Widget child) => ProviderScope(
@@ -73,6 +78,7 @@ class TestEnv {
       appInfoProvider.overrideWith((ref) async => testAppInfo),
       syncEnabledProvider.overrideWithValue(false), // no socket here
       pushEnabledProvider.overrideWithValue(false), // no Firebase here
+      shareSourceProvider.overrideWithValue(share), // no platform channel
       if (push case final p?)
         pushStateProvider.overrideWith((ref) => Stream.value(p)),
       if (status case final s?)
@@ -96,6 +102,7 @@ class TestEnv {
         appInfoProvider.overrideWith((ref) async => testAppInfo),
         syncEnabledProvider.overrideWithValue(false), // no socket here
         pushEnabledProvider.overrideWithValue(false), // no Firebase here
+        shareSourceProvider.overrideWithValue(share), // no platform channel
         if (push case final p?)
           pushStateProvider.overrideWith((ref) => Stream.value(p)),
         if (status case final s?)
@@ -130,6 +137,7 @@ Future<TestEnv> pumpDelve(
   ChatActions? actions,
   PushState? push,
   AttachmentFakes? attachments,
+  ShareSource? share,
   Future<void> Function(TestEnv env)? before,
   bool settle = true,
 }) async {
@@ -139,6 +147,7 @@ Future<TestEnv> pumpDelve(
     actions: actions,
     push: push,
     attachments: attachments,
+    share: share,
   );
   addTearDown(env.dispose);
   setDesignSize(tester);

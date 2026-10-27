@@ -1734,4 +1734,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String obsLoadFailed(String reason) {
     return 'Couldn\'t load the statistics: $reason';
   }
+
+  @override
+  String get shareTitle => 'Share to Delve';
+
+  @override
+  String get shareSendTo => 'Send to';
+
+  @override
+  String get shareExisting => 'Existing chats';
+
+  @override
+  String get shareNewChatThinkingOn =>
+      'Thinking on · starts a new conversation';
+
+  @override
+  String get shareNewChatThinkingOff =>
+      'Thinking off · starts a new conversation';
+
+  @override
+  String shareUnreadable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count shared items could not be read',
+      one: '1 shared item could not be read',
+    );
+    return '$_temp0';
+  }
 }

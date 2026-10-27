@@ -1319,5 +1319,18 @@
         "type": "String"
       }
     }
+  },
+  "shareTitle": "Share to Delve",
+  "shareSendTo": "Send to",
+  "shareExisting": "Existing chats",
+  "shareNewChatThinkingOn": "Thinking on · starts a new conversation",
+  "shareNewChatThinkingOff": "Thinking off · starts a new conversation",
+  "shareUnreadable": "{count, plural, =1{1 shared item could not be read} other{{count} shared items could not be read}}",
+  "@shareUnreadable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

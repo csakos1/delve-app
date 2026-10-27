@@ -47,9 +47,18 @@ final _outboxRowProvider = StreamProvider.autoDispose
 /// chat: its first message creates the conversation, and the screen moves to
 /// it once the server has made a message of the outbox entry.
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({super.key, required this.conversationId});
+  const ChatScreen({
+    super.key,
+    required this.conversationId,
+    this.firstClientMsgId,
+  });
 
   final String? conversationId;
+
+  /// A new chat whose first message was sent elsewhere (Share to Delve): the
+  /// screen shows its outbox entry and moves to the conversation like after
+  /// its own Send.
+  final String? firstClientMsgId;
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -86,6 +95,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       prep: ref.read(imagePrepProvider),
       cache: ref.read(attachmentCacheProvider),
     );
+    _firstClientMsgId = widget.firstClientMsgId;
     final id = widget.conversationId;
     if (id != null) _openAfterFrame(id);
   }
@@ -98,6 +108,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.didUpdateWidget(oldWidget);
     final id = widget.conversationId;
     if (id != null && id != oldWidget.conversationId) _openAfterFrame(id);
+    // a share sent to a new chat while this new chat was open
+    final first = widget.firstClientMsgId;
+    if (id == null && first != null && first != oldWidget.firstClientMsgId) {
+      _firstClientMsgId = first;
+      _moving = false;
+    }
   }
 
   void _openAfterFrame(String id) {
@@ -215,31 +231,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   // --- attachments --------------------------------------------------------------
 
   /// "+": Photos, Camera or File; what is picked starts uploading at once.
-  Future<void> _addAttachments() async {
-    final l = AppLocalizations.of(context);
-    final room = _attachments.room;
-    if (room <= 0) {
-      _snack(l.attachLimit(kMaxAttachments));
-      return;
-    }
-    final source = await showAttachSourceSheet(context);
-    if (source == null || !mounted) return;
-    final picker = ref.read(attachmentPickerProvider);
-    final List<PickedAttachment> picked;
-    try {
-      picked = switch (source) {
-        AttachSource.photos => await picker.photos(limit: room),
-        AttachSource.camera => [?await picker.camera()],
-        AttachSource.file => await picker.files(limit: room),
-      };
-    } on Exception catch (e) {
-      if (mounted) _snack(l.attachPickFailed('$e'));
-      return;
-    }
-    if (!mounted || picked.isEmpty) return;
-    final left = _attachments.addAll(picked);
-    if (left > 0) _snack(l.attachLeftOut(left, kMaxAttachments));
-  }
+  Future<void> _addAttachments() => pickAttachmentsInto(
+    context,
+    ref.read(attachmentPickerProvider),
+    _attachments,
+  );
 
   /// A photo full screen, a file's details; both offer "Send again".
   void _openAttachment(Attachment a) {

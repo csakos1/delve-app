@@ -83,11 +83,20 @@ reached over Tailscale only.
   connection. Photos show in the chat as tiles, files as chips; a tap opens a photo full
   screen or a file's details, both with "Send again" (the server copies it; the model no
   longer sees earlier photos). After 14 days the server deletes them: "No longer
-  available". Sharing into Delve from other apps follows.
+  available".
+
+- B6: Share to Delve — photos, files and text shared from other apps open a screen with
+  the composer already filled (design 17): the shared items as chips that upload at once,
+  the text or link (with its title) in the field. It sends to a new chat by default
+  (Thinking off, as elsewhere) or to an existing one; Send opens that chat. Up to four
+  items; the rest are left out with a note. The Android side is a small method channel in
+  `MainActivity.kt` (no plugin): the activity is `singleTask`, keeps the share intent until
+  Dart takes it, and copies the shared content into the app's cache (files over 20 MB are
+  not copied). Before pairing the share waits.
 
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
-B4 schedules and the morning brief, B5 observability, B6 attachments; the share target
-and the home widget follow. Requires a server with API revision 8 or newer
+B4 schedules and the morning brief, B5 observability, B6 attachments and the share
+target; the home widget follows. Requires a server with API revision 8 or newer
 (`/api/v1/attachments`).
 
 ## Stack
@@ -130,6 +139,8 @@ lib/
   app/cron_preset.dart       cron ↔ daily times / weekdays at a time / plain cron
   attachments/               pickers, photo resizing, uploads (ComposerAttachments),
                              the image cache
+  share/                     Share to Delve: the method channel (share_channel.dart), the
+                             waiting share, ShareHost (opens the screen)
   sync/                      WebSocket client: engine (connection, outbox, requests),
                              reducer (events → database), resync, live runs, transport
   push/                      notifications: FCM transport, controller (token, taps),
@@ -153,6 +164,7 @@ test/
   schedules_test.dart        cron presets and texts, the Schedules list and editor
   attachments_test.dart      resizing bounds, uploads and retries, REST, the chat's "+",
                              tiles and "Send again"
+  share_test.dart            shared payloads, the method channel, the Share to Delve screen
   push_test.dart             pushes → notifications, Deny in the background, the
                              controller with fakes, Settings → Notifications
   support/                   fake REST server (a dio adapter), fake WebSocket server,

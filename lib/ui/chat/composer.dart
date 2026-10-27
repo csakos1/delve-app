@@ -22,6 +22,7 @@ class Composer extends StatefulWidget {
     this.attachments,
     this.onAdd,
     this.attachmentsAllowed = true,
+    this.controller,
   });
 
   /// Returns once the message is queued; the field clears then (the caller
@@ -49,17 +50,24 @@ class Composer extends StatefulWidget {
   /// A short note under the row ("Applies to your next message"); fades.
   final String? caption;
 
+  /// The message field's text, when the caller fills it (a shared link);
+  /// otherwise the composer keeps its own.
+  final TextEditingController? controller;
+
   @override
   State<Composer> createState() => _ComposerState();
 }
 
 class _ComposerState extends State<Composer> {
-  final _controller = TextEditingController();
+  TextEditingController? _own;
   bool _sending = false;
+
+  TextEditingController get _controller => widget.controller ?? _own!;
 
   @override
   void initState() {
     super.initState();
+    if (widget.controller == null) _own = TextEditingController();
     _controller.addListener(_changed);
     widget.attachments?.addListener(_changed);
   }
@@ -71,6 +79,16 @@ class _ComposerState extends State<Composer> {
       oldWidget.attachments?.removeListener(_changed);
       widget.attachments?.addListener(_changed);
     }
+    if (oldWidget.controller != widget.controller) {
+      (oldWidget.controller ?? _own)?.removeListener(_changed);
+      if (widget.controller == null) {
+        _own ??= TextEditingController();
+      } else {
+        _own?.dispose();
+        _own = null;
+      }
+      _controller.addListener(_changed);
+    }
   }
 
   void _changed() {
@@ -80,7 +98,8 @@ class _ComposerState extends State<Composer> {
   @override
   void dispose() {
     widget.attachments?.removeListener(_changed);
-    _controller.dispose();
+    widget.controller?.removeListener(_changed);
+    _own?.dispose();
     super.dispose();
   }
 

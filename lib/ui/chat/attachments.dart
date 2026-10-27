@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../api/models/models.dart';
 import '../../attachments/attachment_store.dart';
 import '../../attachments/composer_attachments.dart';
+import '../../attachments/picker.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../format.dart';
@@ -576,3 +577,41 @@ Future<AttachSource?> showAttachSourceSheet(BuildContext context) =>
         );
       },
     );
+
+/// The composer's "+": asks for Photos, Camera or File and adds what is
+/// picked (it starts uploading at once); a snackbar says what did not fit.
+Future<void> pickAttachmentsInto(
+  BuildContext context,
+  AttachmentPicker picker,
+  ComposerAttachments attachments,
+) async {
+  final l = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  void snack(String text) {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  final room = attachments.room;
+  if (room <= 0) {
+    snack(l.attachLimit(kMaxAttachments));
+    return;
+  }
+  final source = await showAttachSourceSheet(context);
+  if (source == null || !context.mounted) return;
+  final List<PickedAttachment> picked;
+  try {
+    picked = switch (source) {
+      AttachSource.photos => await picker.photos(limit: room),
+      AttachSource.camera => [?await picker.camera()],
+      AttachSource.file => await picker.files(limit: room),
+    };
+  } on Exception catch (e) {
+    if (context.mounted) snack(l.attachPickFailed('$e'));
+    return;
+  }
+  if (!context.mounted || picked.isEmpty) return;
+  final left = attachments.addAll(picked);
+  if (left > 0) snack(l.attachLeftOut(left, kMaxAttachments));
+}

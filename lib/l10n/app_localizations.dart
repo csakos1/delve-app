@@ -2895,6 +2895,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load the statistics: {reason}'**
   String obsLoadFailed(String reason);
+
+  /// No description provided for @shareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share to Delve'**
+  String get shareTitle;
+
+  /// No description provided for @shareSendTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to'**
+  String get shareSendTo;
+
+  /// No description provided for @shareExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing chats'**
+  String get shareExisting;
+
+  /// No description provided for @shareNewChatThinkingOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking on · starts a new conversation'**
+  String get shareNewChatThinkingOn;
+
+  /// No description provided for @shareNewChatThinkingOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking off · starts a new conversation'**
+  String get shareNewChatThinkingOff;
+
+  /// No description provided for @shareUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 shared item could not be read} other{{count} shared items could not be read}}'**
+  String shareUnreadable(int count);
 }
 
 class _AppLocalizationsDelegate
