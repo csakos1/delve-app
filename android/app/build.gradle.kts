@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -10,6 +12,14 @@ plugins {
 // builds and runs, and Settings says it cannot receive notifications.
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
+}
+
+// Release signing: android/key.properties (storeFile, storePassword, keyAlias,
+// keyPassword) and the keystore stay out of the repository (.gitignore). Without
+// them (CI, a fresh clone) the release build is signed with the debug key.
+val releaseKeys = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
 }
 
 android {
@@ -40,11 +50,22 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (!releaseKeys.isEmpty()) {
+            create("release") {
+                storeFile = file(releaseKeys.getProperty("storeFile"))
+                storePassword = releaseKeys.getProperty("storePassword")
+                keyAlias = releaseKeys.getProperty("keyAlias")
+                keyPassword = releaseKeys.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(
+                if (releaseKeys.isEmpty()) "debug" else "release",
+            )
         }
     }
 }
