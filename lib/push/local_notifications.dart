@@ -101,6 +101,7 @@ class LocalNotifications implements PhoneNotifications {
     await init();
     final l = _l;
     final approvals = spec.channel == NotifyChannel.approvals;
+    final high = approvals || spec.channel == NotifyChannel.watches;
     final now = DateTime.now();
     final timeout = spec.timeoutAt?.difference(now).inMilliseconds;
     if (timeout != null && timeout <= 0) {
@@ -115,13 +116,17 @@ class LocalNotifications implements PhoneNotifications {
       ),
       NotifyChannel.runs => (l.notifyChannelRuns, l.notifyChannelRunsDesc),
       NotifyChannel.cards => (l.notifyChannelCards, l.notifyChannelCardsDesc),
+      NotifyChannel.watches => (
+        l.notifyChannelWatches,
+        l.notifyChannelWatchesDesc,
+      ),
     };
     final android = AndroidNotificationDetails(
       spec.channel.name,
       name,
       channelDescription: description,
-      importance: approvals ? Importance.high : Importance.defaultImportance,
-      priority: approvals ? Priority.high : Priority.defaultPriority,
+      importance: high ? Importance.high : Importance.defaultImportance,
+      priority: high ? Priority.high : Priority.defaultPriority,
       styleInformation: BigTextStyleInformation(spec.body),
       // the small icon's tint (the design's cyan accent)
       color: delveColorScheme.primary,

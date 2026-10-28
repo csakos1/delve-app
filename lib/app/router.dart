@@ -19,6 +19,8 @@ import '../ui/screens/settings_screen.dart';
 import '../ui/screens/share_screen.dart';
 import '../ui/screens/splash_screen.dart';
 import '../ui/screens/system_screen.dart';
+import '../ui/screens/watch_detail_screen.dart';
+import '../ui/screens/watches_screen.dart';
 import '../ui/shell/app_shell.dart';
 import 'session.dart';
 
@@ -40,6 +42,9 @@ abstract final class Routes {
   static String editSchedule(String id) =>
       '/more/schedules/edit/${Uri.encodeComponent(id)}';
   static const observability = '/more/observability';
+  static const watches = '/more/watches';
+  static String watch(String slug) =>
+      '/more/watches/${Uri.encodeComponent(slug)}';
   static const settings = '/more/settings';
   static const connectionLog = '/more/settings/log';
   static const archived = '/more/archived';
@@ -95,11 +100,16 @@ GoRouter buildRouter({
                     path: 'new',
                     parentNavigatorKey: rootKey,
                     // `extra`: the first message's outbox id when it was
-                    // sent from Share to Delve
+                    // sent from Share to Delve, or a draft (New watch,
+                    // Change in chat)
                     builder: (_, state) => ChatScreen(
                       conversationId: null,
                       firstClientMsgId: switch (state.extra) {
                         final String id => id,
+                        _ => null,
+                      },
+                      draft: switch (state.extra) {
+                        final NewChatDraft d => d,
                         _ => null,
                       },
                     ),
@@ -146,6 +156,7 @@ GoRouter buildRouter({
                         MorePage.system => const SystemScreen(),
                         MorePage.schedules => const SchedulesScreen(),
                         MorePage.observability => const ObservabilityScreen(),
+                        MorePage.watches => const WatchesScreen(),
                       },
                       routes: [
                         if (page == MorePage.settings)
@@ -153,6 +164,14 @@ GoRouter buildRouter({
                             path: 'log',
                             parentNavigatorKey: rootKey,
                             builder: (_, _) => const ConnectionLogScreen(),
+                          ),
+                        if (page == MorePage.watches)
+                          GoRoute(
+                            path: ':slug',
+                            parentNavigatorKey: rootKey,
+                            builder: (_, state) => WatchDetailScreen(
+                              slug: state.pathParameters['slug']!,
+                            ),
                           ),
                         if (page == MorePage.schedules) ...[
                           GoRoute(

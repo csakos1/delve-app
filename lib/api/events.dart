@@ -117,6 +117,8 @@ sealed class ServerEvent extends IncomingFrame {
     'system.updated',
     'schedule.updated',
     'schedule.deleted',
+    'watch.updated',
+    'watch.item',
     'error',
   };
 
@@ -228,6 +230,8 @@ sealed class ServerEvent extends IncomingFrame {
     'system.updated' => SystemUpdated(seq, SystemInfo.fromJson(d)),
     'schedule.updated' => ScheduleUpdated(seq, Schedule.fromJson(d)),
     'schedule.deleted' => ScheduleDeleted(seq, _str(d, 'id')),
+    'watch.updated' => WatchUpdated(seq, Watch.fromJson(d)),
+    'watch.item' => WatchItemSeen(seq, WatchItem.fromJson(d)),
     'error' => ServerError(
       seq,
       code: _str(d, 'code'),
@@ -471,6 +475,23 @@ final class ScheduleUpdated extends ScheduleChange {
 final class ScheduleDeleted extends ScheduleChange {
   const ScheduleDeleted(super.seq, this.id);
   final String id;
+}
+
+/// A change of a watch or its items (W2); kept in memory like schedules.
+sealed class WatchChange extends ServerEvent {
+  const WatchChange(super.seq);
+}
+
+/// A watch was defined, checked, paused, resumed or deleted.
+final class WatchUpdated extends WatchChange {
+  const WatchUpdated(super.seq, this.watch);
+  final Watch watch;
+}
+
+/// A listing was seen, judged, sent or freed from hold.
+final class WatchItemSeen extends WatchChange {
+  const WatchItemSeen(super.seq, this.item);
+  final WatchItem item;
 }
 
 final class UnknownEvent extends ServerEvent {

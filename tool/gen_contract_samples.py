@@ -7,13 +7,14 @@ import json, sys, uuid
 from datetime import datetime, timedelta, timezone
 from delve import API_REVISION, protocol
 from delve.attachments import attachment_out
-from delve.db.models import Approval, Attachment, Card, Conversation, Message, Run, Schedule, ToolStep
+from delve.db.models import Approval, Attachment, Card, Conversation, Message, Run, Schedule, ToolStep, Watch, WatchItem
 from delve.serialize import approval_out, card_out, conversation_out, message_out, run_out, step_out
 from delve.llama import Props
 from delve.system import Parts, system_out
 from delve.brief import brief_payload
 from delve.schedules import schedule_out
 from delve.stats import RANGES, GpuBucket, RunRow, bucket_edges, edges_between, stats_out
+from delve.watches import item_out, watch_out
 import math
 
 t0 = datetime(2026, 10, 19, 21, 39, 0, 123456, tzinfo=timezone.utc)
@@ -127,7 +128,29 @@ stats_day = stats_out(range_key="24h", now=t0, runs=stat_runs, latencies=stat_la
     gpus=stat_gpus, gpu_edges=fine,
     sampling={"interval_s": 60, "ok": True, "error": None, "last_at": (t0 - timedelta(seconds=20)).isoformat()})
 
+# W2/W3: a watch with its counters, a judged hit and a reserved one
+watch = Watch(slug="rtx-4070-super-180k", name="RTX 4070 Super ≤180k", source="hardverapro",
+    url="https://hardverapro.hu/aprok/hardver/videokartya/keres.php?stext=rtx+4070+super",
+    criteria="Semmi nem utal rá, hogy a videokártyát bányászásra használták.",
+    filters={"include": ["4070 super"], "any": [], "exclude": ["bánya"], "min_price": None,
+             "max_price": 180000, "fetch_details": True, "notify_existing": False},
+    stop_after_hit=False, schedule="15 8,13,19 * * *", def_hash="0" * 16, defined_at=t0 - timedelta(days=1),
+    job_id="12abb4a038c0", job_state="scheduled", next_run_at=t0 + timedelta(hours=1),
+    last_check_at=t0 - timedelta(minutes=20), last_status="ok", last_error_code=None, last_error=None,
+    last_items=27, last_matched=1, errors_in_row=0, stopped_at=None,
+    created_at=t0 - timedelta(days=1), updated_at=t0 - timedelta(minutes=20), deleted_at=None)
+watch_counts = {"hits": 3, "hits_24h": 2, "pending": 1, "rejected": 2, "last_hit_at": t0 - timedelta(minutes=20)}
+hit = WatchItem(id=17, slug=watch.slug, item_id="ha:8231467", card_id="a" * 32,
+    title="Gigabyte RTX 4070 Super Gaming OC 12G – garanciális",
+    url="https://hardverapro.hu/apro/gigabyte_rtx_4070_super_gaming_oc/friss.html", price="165 000 Ft",
+    price_value=165000, location="Budapest XI.", posted="ma 13:02", excerpt="Garanciális, számlával.",
+    reserved=False, verdict="match", reason="Nem említ bányászást; garanciális, számlával.", notify=True,
+    attempts=1, seen_at=t0 - timedelta(minutes=20), judged_at=t0 - timedelta(minutes=19),
+    notified_at=t0 - timedelta(minutes=19), available_at=None)
+
 shapes = {
+    "watch": watch_out(watch, watch_counts),
+    "watch_item": item_out(hit),
     "conversation": conversation_out(conv),
     "message": message_out(msg),
     "message_user": message_out(umsg, [attachment_out(att)]),
@@ -180,6 +203,8 @@ events = {
     "system.updated": system_stopped,
     "schedule.updated": schedule_out(prompt_sched),
     "schedule.deleted": {"id": str(prompt_sched.id)},
+    "watch.updated": watch_out(watch, watch_counts),
+    "watch.item": item_out(hit),
     "error": {"code": "thinking_route_not_applied", "ref_id": run.run_id, "message": "The thinking run did not use the thinking provider."},
 }
 for k, v in events.items():
@@ -198,7 +223,7 @@ connection = {
     # GET/PATCH /api/v1/devices/me (api/devices.py _device_out; no shared serializer)
     "device_me": {"id": "4f1c2b3a-9d8e-4f7a-8b6c-5d4e3f2a1b0c", "name": "pixel", "created_at": t0.isoformat(),
                   "last_seen_at": (t0 + timedelta(minutes=1)).isoformat(), "fcm": True, "push": True,
-                  "notify": {"approvals": True, "run_done": False, "water": False, "brief": False}},
+                  "notify": {"approvals": True, "run_done": False, "water": False, "brief": False, "watches": True}},
 }
 out = {"_note": "Generated from delve-backend serializers (decision 176); keys must equal contract.json.",
        "shapes": shapes, "events": events, "connection": connection}

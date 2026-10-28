@@ -83,19 +83,38 @@ class StatusBanner extends StatelessWidget {
 /// is a state (system: Hermes, llama-server). Mono, like the values beside
 /// it; still a word, so the state is never told by colour alone.
 class StatusText extends StatelessWidget {
-  const StatusText({super.key, required this.kind, required this.label});
+  const StatusText({
+    super.key,
+    required this.kind,
+    required this.label,
+    this.icon,
+  });
 
   final StatusKind kind;
   final String label;
 
+  /// Optional 16 dp filled icon in the same colour (design 21c markers).
+  final IconData? icon;
+
   @override
-  Widget build(BuildContext context) => Text(
-    label,
-    style: DelveText.mono.copyWith(
-      color: context.status(kind).fg,
-      fontWeight: FontWeight.w500,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final fg = context.status(kind).fg;
+    final text = Text(
+      label,
+      softWrap: false,
+      style: DelveText.mono.copyWith(color: fg, fontWeight: FontWeight.w500),
+    );
+    final i = icon;
+    if (i == null) return text;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SymbolIcon(i, size: DelveTokens.iconSm, filled: true, color: fg),
+        const SizedBox(width: DelveTokens.space1),
+        text,
+      ],
+    );
+  }
 }
 
 /// Status chip: h 22, radius 6, status bg/fg/border, filled 15 dp icon + word.

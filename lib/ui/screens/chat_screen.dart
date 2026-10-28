@@ -43,6 +43,16 @@ final _outboxRowProvider = StreamProvider.autoDispose
           ref.watch(databaseProvider).watchOutboxRow(clientMsgId),
     );
 
+/// A new chat opened with something to say (design 21g): [text] fills the
+/// composer ("Change the watch …"), [watchHint] shows how to describe a
+/// watch with two examples that fill it.
+@immutable
+class NewChatDraft {
+  const NewChatDraft({this.text = '', this.watchHint = false});
+  final String text;
+  final bool watchHint;
+}
+
 /// 03–10 Chat (detail, no bottom nav). [conversationId] is null for a new
 /// chat: its first message creates the conversation, and the screen moves to
 /// it once the server has made a message of the outbox entry.
@@ -51,9 +61,13 @@ class ChatScreen extends ConsumerStatefulWidget {
     super.key,
     required this.conversationId,
     this.firstClientMsgId,
+    this.draft,
   });
 
   final String? conversationId;
+
+  /// A new chat's starting text and hint (New watch, Change in chat).
+  final NewChatDraft? draft;
 
   /// A new chat whose first message was sent elsewhere (Share to Delve): the
   /// screen shows its outbox entry and moves to the conversation like after
@@ -91,9 +105,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   /// its conversation: same state).
   late final ComposerAttachments _attachments;
 
+  /// The message field (filled from [ChatScreen.draft]).
+  late final TextEditingController _text;
+
   @override
   void initState() {
     super.initState();
+    _text = TextEditingController(text: widget.draft?.text ?? '');
     _attachments = ComposerAttachments(
       api: () => mounted ? ref.read(attachmentApiProvider) : null,
       prep: ref.read(imagePrepProvider),
@@ -136,6 +154,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _captionTimer?.cancel();
     _opened?.close();
     _attachments.dispose();
+    _text.dispose();
     super.dispose();
   }
 
@@ -289,6 +308,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       attachments: _attachments,
       onAdd: canAttach ? () => unawaited(_addAttachments()) : null,
       attachmentsAllowed: connected,
+      controller: _text,
     );
   }
 
@@ -402,7 +422,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: _UnderBarFade(
+            child: UnderBarFade(
+              fadeKey: const Key('chat.fade'),
               child: sent == null
                   ? _NewChatIntro(host: host.split('.').first)
                   : ListView(
@@ -412,9 +433,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
             ),
           ),
+          if (widget.draft?.watchHint ?? false)
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _text,
+              // gone once something is typed or sent
+              builder: (_, value, _) => value.text.isEmpty && sent == null
+                  ? _WatchHint(onPick: _fillExample)
+                  : const SizedBox.shrink(),
+            ),
           _composer(connected: connected, thinking: _newThinking),
         ],
       ),
+    );
+  }
+
+  /// An example fills the composer; a `<film>` placeholder is selected.
+  void _fillExample(String text) {
+    final at = text.indexOf('<');
+    final end = at < 0 ? -1 : text.indexOf('>', at);
+    _text.value = TextEditingValue(
+      text: text,
+      selection: at >= 0 && end > at
+          ? TextSelection(baseOffset: at, extentOffset: end + 1)
+          : TextSelection.collapsed(offset: text.length),
     );
   }
 
@@ -473,7 +514,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: _UnderBarFade(
+            child: UnderBarFade(
+              fadeKey: const Key('chat.fade'),
               child: ListView.separated(
                 key: const Key('chat.list'),
                 reverse: true,
@@ -592,49 +634,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 /// oldest item is clear of it when scrolled to the top.
 const _listPadding = EdgeInsets.fromLTRB(
   DelveTokens.space4,
-  _UnderBarFade.height,
+  UnderBarFade.height,
   DelveTokens.space4,
   DelveTokens.space4,
 );
-
-/// The chat under its top bar: the bar has the page colour, and right under
-/// it the page colour fades out over [height], so text scrolling up dims out
-/// under the bar instead of being cut at a line. Taps go through the fade.
-class _UnderBarFade extends StatelessWidget {
-  const _UnderBarFade({required this.child});
-
-  static const double height = DelveTokens.space6;
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final page = context.colors.surface;
-    return Stack(
-      children: [
-        Positioned.fill(child: child),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: height,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              key: const Key('chat.fade'),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [page, page.withValues(alpha: 0)],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 /// Top bar: the page colour (it does not change when the chat scrolls under
 /// it), back, title (titleMedium, one line) and the context chip on the
@@ -663,6 +666,96 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     ),
     actions: actions,
   );
+}
+
+/// 21g: how to describe a watch, and two examples that fill the composer.
+class _WatchHint extends StatelessWidget {
+  const _WatchHint({required this.onPick});
+
+  final ValueChanged<String> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final muted = context.delve.textMuted;
+    return Padding(
+      key: const Key('chat.watchHint'),
+      padding: const EdgeInsets.fromLTRB(
+        DelveTokens.space4,
+        0,
+        DelveTokens.space4,
+        DelveTokens.space3,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              SymbolIcon(
+                DelveIcons.info,
+                size: DelveTokens.iconSm,
+                color: muted,
+              ),
+              const SizedBox(width: DelveTokens.space2),
+              Expanded(
+                child: Text(
+                  l.watchHint,
+                  style: context.text.bodySmall!.copyWith(
+                    color: context.colors.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          for (final (i, example) in [
+            l.watchExampleHardverapro,
+            l.watchExampleCinema,
+          ].indexed) ...[
+            const SizedBox(height: DelveTokens.space2),
+            Material(
+              color: context.colors.surfaceContainerLow,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(color: context.colors.outlineVariant),
+                borderRadius: BorderRadius.circular(DelveTokens.rmd),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                key: Key('chat.watchExample.$i'),
+                onTap: () => onPick(example),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: DelveTokens.touchTarget,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(DelveTokens.space3),
+                    child: Row(
+                      children: [
+                        SymbolIcon(
+                          DelveIcons.watches,
+                          size: 18,
+                          color: context.colors.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: DelveTokens.space2),
+                        Expanded(
+                          child: Text(example, style: context.text.bodySmall),
+                        ),
+                        const SizedBox(width: DelveTokens.space2),
+                        SymbolIcon(
+                          DelveIcons.fillIn,
+                          size: DelveTokens.iconSm,
+                          color: muted,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 /// 03: the empty new chat.

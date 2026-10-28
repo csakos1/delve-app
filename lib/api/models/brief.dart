@@ -21,6 +21,9 @@ abstract class Brief with _$Brief {
     String? llamaState,
     String? hermesState,
     @Default(<String>[]) List<String> missing,
+
+    /// Written this long after its time: the desktop was off then (N74).
+    int? lateByS,
   }) = _Brief;
 
   factory Brief.fromJson(Map<String, Object?> json) => _$BriefFromJson(json);

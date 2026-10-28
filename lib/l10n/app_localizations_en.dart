@@ -1759,4 +1759,338 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String dashBriefLate(String time, String late) {
+    return '$time · $late late';
+  }
+
+  @override
+  String dashWatchesActive(int count) {
+    return '$count active';
+  }
+
+  @override
+  String dashWatchesNext(String when) {
+    return 'Next check $when';
+  }
+
+  @override
+  String get dashWatchesTitle => 'Watches';
+
+  @override
+  String get linkOpenFailed => 'Couldn\'t open the link — it\'s copied';
+
+  @override
+  String get moreWatches => 'Watches';
+
+  @override
+  String get moreWatchesSub => 'Listings and tickets the agent checks for you';
+
+  @override
+  String notifyBriefLate(String late) {
+    return '$late late';
+  }
+
+  @override
+  String get notifyChannelWatches => 'Watches';
+
+  @override
+  String get notifyChannelWatchesDesc => 'When a watch finds something new';
+
+  @override
+  String get notifyOpenLink => 'Open link';
+
+  @override
+  String notifyWatchAvailable(String name) {
+    return 'Now available · $name';
+  }
+
+  @override
+  String notifyWatchTitle(String name) {
+    return 'Watch · $name';
+  }
+
+  @override
+  String get runFailedCutOff =>
+      'The answer was cut off: the agent ran out of room. Try a new chat or a shorter request.';
+
+  @override
+  String get settingsNotifyWatches => 'Watch hits';
+
+  @override
+  String get settingsNotifyWatchesSub => 'When a watch finds something new';
+
+  @override
+  String watchActionFailed(String reason) {
+    return 'Couldn\'t change the watch: $reason';
+  }
+
+  @override
+  String watchChangeDraft(String name) {
+    return 'Change the watch “$name”: ';
+  }
+
+  @override
+  String get watchChangeInChat => 'Change in chat';
+
+  @override
+  String get watchCondition => 'Condition';
+
+  @override
+  String get watchCopyLink => 'Copy link';
+
+  @override
+  String get watchDetailsOn => 'On — opens each new listing';
+
+  @override
+  String get watchDetailsPages => 'Details pages';
+
+  @override
+  String watchErrorsInRow(int count) {
+    return '$count errors in a row';
+  }
+
+  @override
+  String watchEveryHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Every $count hours',
+      one: 'Every hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String watchEveryMinutes(int count) {
+    return 'Every $count minutes';
+  }
+
+  @override
+  String get watchExampleCinema =>
+      'Tell me when tickets for <film> are on sale at Cinema City.';
+
+  @override
+  String get watchExampleHardverapro =>
+      'Watch Hardverapró for RTX 4070 Supers under 180 000 Ft, not used for mining, three times a day.';
+
+  @override
+  String watchFixDraft(String name, String error) {
+    return 'The watch “$name” keeps failing ($error). Check it and fix it.';
+  }
+
+  @override
+  String get watchFixInChat => 'Fix in chat';
+
+  @override
+  String get watchGone =>
+      'This watch is gone: it was deleted in a chat, or the desktop no longer has it.';
+
+  @override
+  String get watchHint =>
+      'Describe what to watch, where, how often, and what counts.';
+
+  @override
+  String watchHits(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hits · $count',
+      zero: 'Hits',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String watchHits24h(int count) {
+    return '$count in the last 24 h';
+  }
+
+  @override
+  String get watchItemAvailable => 'Now available';
+
+  @override
+  String get watchItemByFilters => 'Matched by filters · no judge';
+
+  @override
+  String get watchItemCouldntJudge => 'Couldn\'t judge';
+
+  @override
+  String get watchItemOnHold => 'On hold';
+
+  @override
+  String get watchItemWaiting => 'Waiting for judge';
+
+  @override
+  String get watchKeywords => 'Keywords';
+
+  @override
+  String watchKeywordsAny(String words) {
+    return 'any of $words';
+  }
+
+  @override
+  String watchKeywordsNot(String words) {
+    return 'not $words';
+  }
+
+  @override
+  String get watchLastCheck => 'Last check';
+
+  @override
+  String watchListings(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count listings',
+      one: '1 listing',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get watchLoadMore => 'Load more';
+
+  @override
+  String watchMatches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count matches',
+      one: '1 match',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String watchNew(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new',
+      one: '1 new',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get watchNextCheck => 'Next check';
+
+  @override
+  String watchNextIn(String when, String wait) {
+    return '$when · in $wait';
+  }
+
+  @override
+  String get watchNextPaused => '— paused';
+
+  @override
+  String get watchNoCondition => 'No condition — filters only';
+
+  @override
+  String get watchNoHits => 'No hits yet.';
+
+  @override
+  String get watchNoHitsYet => 'No hits yet';
+
+  @override
+  String get watchOff => 'Off';
+
+  @override
+  String get watchOn => 'On';
+
+  @override
+  String get watchOpenLink => 'Open link';
+
+  @override
+  String get watchPause => 'Pause';
+
+  @override
+  String watchPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count listings wait for the judge',
+      one: '1 listing waits for the judge',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get watchPrice => 'Price';
+
+  @override
+  String watchRejected(int count) {
+    return 'Rejected ($count)';
+  }
+
+  @override
+  String get watchResume => 'Resume';
+
+  @override
+  String get watchRunNow => 'Run now';
+
+  @override
+  String get watchRunStarted =>
+      'Checking now — new hits show up here in a minute';
+
+  @override
+  String get watchSchedule => 'Schedule';
+
+  @override
+  String get watchSearch => 'Search';
+
+  @override
+  String get watchSource => 'Source';
+
+  @override
+  String get watchSourcePage => 'Web page';
+
+  @override
+  String get watchStateActive => 'Active';
+
+  @override
+  String get watchStateError => 'Error';
+
+  @override
+  String get watchStatePaused => 'Paused';
+
+  @override
+  String get watchStateStopped => 'Stopped after hit';
+
+  @override
+  String get watchStateUnknown => 'Setting up';
+
+  @override
+  String get watchStopAfterHit => 'Stop after hit';
+
+  @override
+  String watchStoppedAfterHit(String when) {
+    return 'Paused after its first hit · $when';
+  }
+
+  @override
+  String watchYesterday(String time) {
+    return 'yesterday $time';
+  }
+
+  @override
+  String get watchesEmptyBody =>
+      'Watches are made in a chat: describe what to watch, where, how often and what counts. They run on a schedule without the model.';
+
+  @override
+  String get watchesEmptyTitle => 'No watches yet';
+
+  @override
+  String watchesLoadFailed(String reason) {
+    return 'Couldn\'t load watches: $reason';
+  }
+
+  @override
+  String get watchesNew => 'New watch';
+
+  @override
+  String get watchesNote =>
+      'Watches run on a schedule without the model. New ones and changes are made in a chat.';
 }

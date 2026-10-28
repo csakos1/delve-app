@@ -2925,6 +2925,486 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 shared item could not be read} other{{count} shared items could not be read}}'**
   String shareUnreadable(int count);
+
+  /// No description provided for @dashBriefLate.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} · {late} late'**
+  String dashBriefLate(String time, String late);
+
+  /// No description provided for @dashWatchesActive.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active'**
+  String dashWatchesActive(int count);
+
+  /// No description provided for @dashWatchesNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next check {when}'**
+  String dashWatchesNext(String when);
+
+  /// No description provided for @dashWatchesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Watches'**
+  String get dashWatchesTitle;
+
+  /// No description provided for @linkOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the link — it\'s copied'**
+  String get linkOpenFailed;
+
+  /// No description provided for @moreWatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Watches'**
+  String get moreWatches;
+
+  /// No description provided for @moreWatchesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Listings and tickets the agent checks for you'**
+  String get moreWatchesSub;
+
+  /// No description provided for @notifyBriefLate.
+  ///
+  /// In en, this message translates to:
+  /// **'{late} late'**
+  String notifyBriefLate(String late);
+
+  /// No description provided for @notifyChannelWatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Watches'**
+  String get notifyChannelWatches;
+
+  /// No description provided for @notifyChannelWatchesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'When a watch finds something new'**
+  String get notifyChannelWatchesDesc;
+
+  /// No description provided for @notifyOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Open link'**
+  String get notifyOpenLink;
+
+  /// No description provided for @notifyWatchAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Now available · {name}'**
+  String notifyWatchAvailable(String name);
+
+  /// No description provided for @notifyWatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch · {name}'**
+  String notifyWatchTitle(String name);
+
+  /// No description provided for @runFailedCutOff.
+  ///
+  /// In en, this message translates to:
+  /// **'The answer was cut off: the agent ran out of room. Try a new chat or a shorter request.'**
+  String get runFailedCutOff;
+
+  /// No description provided for @settingsNotifyWatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch hits'**
+  String get settingsNotifyWatches;
+
+  /// No description provided for @settingsNotifyWatchesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'When a watch finds something new'**
+  String get settingsNotifyWatchesSub;
+
+  /// No description provided for @watchActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change the watch: {reason}'**
+  String watchActionFailed(String reason);
+
+  /// No description provided for @watchChangeDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the watch “{name}”: '**
+  String watchChangeDraft(String name);
+
+  /// No description provided for @watchChangeInChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Change in chat'**
+  String get watchChangeInChat;
+
+  /// No description provided for @watchCondition.
+  ///
+  /// In en, this message translates to:
+  /// **'Condition'**
+  String get watchCondition;
+
+  /// No description provided for @watchCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get watchCopyLink;
+
+  /// No description provided for @watchDetailsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On — opens each new listing'**
+  String get watchDetailsOn;
+
+  /// No description provided for @watchDetailsPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Details pages'**
+  String get watchDetailsPages;
+
+  /// No description provided for @watchErrorsInRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} errors in a row'**
+  String watchErrorsInRow(int count);
+
+  /// No description provided for @watchEveryHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Every hour} other{Every {count} hours}}'**
+  String watchEveryHours(int count);
+
+  /// No description provided for @watchEveryMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {count} minutes'**
+  String watchEveryMinutes(int count);
+
+  /// No description provided for @watchExampleCinema.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me when tickets for <film> are on sale at Cinema City.'**
+  String get watchExampleCinema;
+
+  /// No description provided for @watchExampleHardverapro.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch Hardverapró for RTX 4070 Supers under 180 000 Ft, not used for mining, three times a day.'**
+  String get watchExampleHardverapro;
+
+  /// No description provided for @watchFixDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'The watch “{name}” keeps failing ({error}). Check it and fix it.'**
+  String watchFixDraft(String name, String error);
+
+  /// No description provided for @watchFixInChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix in chat'**
+  String get watchFixInChat;
+
+  /// No description provided for @watchGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This watch is gone: it was deleted in a chat, or the desktop no longer has it.'**
+  String get watchGone;
+
+  /// No description provided for @watchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe what to watch, where, how often, and what counts.'**
+  String get watchHint;
+
+  /// No description provided for @watchHits.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Hits} other{Hits · {count}}}'**
+  String watchHits(int count);
+
+  /// No description provided for @watchHits24h.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} in the last 24 h'**
+  String watchHits24h(int count);
+
+  /// No description provided for @watchItemAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Now available'**
+  String get watchItemAvailable;
+
+  /// No description provided for @watchItemByFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Matched by filters · no judge'**
+  String get watchItemByFilters;
+
+  /// No description provided for @watchItemCouldntJudge.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t judge'**
+  String get watchItemCouldntJudge;
+
+  /// No description provided for @watchItemOnHold.
+  ///
+  /// In en, this message translates to:
+  /// **'On hold'**
+  String get watchItemOnHold;
+
+  /// No description provided for @watchItemWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for judge'**
+  String get watchItemWaiting;
+
+  /// No description provided for @watchKeywords.
+  ///
+  /// In en, this message translates to:
+  /// **'Keywords'**
+  String get watchKeywords;
+
+  /// No description provided for @watchKeywordsAny.
+  ///
+  /// In en, this message translates to:
+  /// **'any of {words}'**
+  String watchKeywordsAny(String words);
+
+  /// No description provided for @watchKeywordsNot.
+  ///
+  /// In en, this message translates to:
+  /// **'not {words}'**
+  String watchKeywordsNot(String words);
+
+  /// No description provided for @watchLastCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Last check'**
+  String get watchLastCheck;
+
+  /// No description provided for @watchListings.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 listing} other{{count} listings}}'**
+  String watchListings(int count);
+
+  /// No description provided for @watchLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get watchLoadMore;
+
+  /// No description provided for @watchMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 match} other{{count} matches}}'**
+  String watchMatches(int count);
+
+  /// No description provided for @watchNew.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 new} other{{count} new}}'**
+  String watchNew(int count);
+
+  /// No description provided for @watchNextCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Next check'**
+  String get watchNextCheck;
+
+  /// No description provided for @watchNextIn.
+  ///
+  /// In en, this message translates to:
+  /// **'{when} · in {wait}'**
+  String watchNextIn(String when, String wait);
+
+  /// No description provided for @watchNextPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'— paused'**
+  String get watchNextPaused;
+
+  /// No description provided for @watchNoCondition.
+  ///
+  /// In en, this message translates to:
+  /// **'No condition — filters only'**
+  String get watchNoCondition;
+
+  /// No description provided for @watchNoHits.
+  ///
+  /// In en, this message translates to:
+  /// **'No hits yet.'**
+  String get watchNoHits;
+
+  /// No description provided for @watchNoHitsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No hits yet'**
+  String get watchNoHitsYet;
+
+  /// No description provided for @watchOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get watchOff;
+
+  /// No description provided for @watchOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get watchOn;
+
+  /// No description provided for @watchOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Open link'**
+  String get watchOpenLink;
+
+  /// No description provided for @watchPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get watchPause;
+
+  /// No description provided for @watchPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 listing waits for the judge} other{{count} listings wait for the judge}}'**
+  String watchPending(int count);
+
+  /// No description provided for @watchPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get watchPrice;
+
+  /// No description provided for @watchRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected ({count})'**
+  String watchRejected(int count);
+
+  /// No description provided for @watchResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get watchResume;
+
+  /// No description provided for @watchRunNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Run now'**
+  String get watchRunNow;
+
+  /// No description provided for @watchRunStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking now — new hits show up here in a minute'**
+  String get watchRunStarted;
+
+  /// No description provided for @watchSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get watchSchedule;
+
+  /// No description provided for @watchSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get watchSearch;
+
+  /// No description provided for @watchSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get watchSource;
+
+  /// No description provided for @watchSourcePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Web page'**
+  String get watchSourcePage;
+
+  /// No description provided for @watchStateActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get watchStateActive;
+
+  /// No description provided for @watchStateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get watchStateError;
+
+  /// No description provided for @watchStatePaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get watchStatePaused;
+
+  /// No description provided for @watchStateStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped after hit'**
+  String get watchStateStopped;
+
+  /// No description provided for @watchStateUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up'**
+  String get watchStateUnknown;
+
+  /// No description provided for @watchStopAfterHit.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop after hit'**
+  String get watchStopAfterHit;
+
+  /// No description provided for @watchStoppedAfterHit.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused after its first hit · {when}'**
+  String watchStoppedAfterHit(String when);
+
+  /// No description provided for @watchYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'yesterday {time}'**
+  String watchYesterday(String time);
+
+  /// No description provided for @watchesEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Watches are made in a chat: describe what to watch, where, how often and what counts. They run on a schedule without the model.'**
+  String get watchesEmptyBody;
+
+  /// No description provided for @watchesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No watches yet'**
+  String get watchesEmptyTitle;
+
+  /// No description provided for @watchesLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load watches: {reason}'**
+  String watchesLoadFailed(String reason);
+
+  /// No description provided for @watchesNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New watch'**
+  String get watchesNew;
+
+  /// No description provided for @watchesNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Watches run on a schedule without the model. New ones and changes are made in a chat.'**
+  String get watchesNote;
 }
 
 class _AppLocalizationsDelegate

@@ -10,6 +10,7 @@ import '../widgets/page_scaffolds.dart';
 enum MorePage {
   system('system', DelveIcons.system, Routes.system),
   schedules('schedules', DelveIcons.schedules, Routes.schedules),
+  watches('watches', DelveIcons.watches, Routes.watches),
   observability(
     'observability',
     DelveIcons.observability,
@@ -27,6 +28,7 @@ enum MorePage {
   String title(AppLocalizations l) => switch (this) {
     MorePage.system => l.moreSystem,
     MorePage.schedules => l.moreSchedules,
+    MorePage.watches => l.moreWatches,
     MorePage.observability => l.moreObservability,
     MorePage.settings => l.moreSettings,
     MorePage.archived => l.moreArchived,
@@ -35,6 +37,7 @@ enum MorePage {
   String subtitle(AppLocalizations l) => switch (this) {
     MorePage.system => l.moreSystemSub,
     MorePage.schedules => l.moreSchedulesSub,
+    MorePage.watches => l.moreWatchesSub,
     MorePage.observability => l.moreObservabilitySub,
     MorePage.settings => l.moreSettingsSub,
     MorePage.archived => l.moreArchivedSub,

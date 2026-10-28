@@ -3,8 +3,8 @@ import '../ui/chat/approval_card.dart' show approvalClassLabel;
 import '../ui/format.dart';
 import 'push_message.dart';
 
-/// The two Android notification channels (design 18).
-enum NotifyChannel { approvals, runs, cards }
+/// The Android notification channels (design 18, 21e).
+enum NotifyChannel { approvals, runs, cards, watches }
 
 /// Action ids on a notification.
 abstract final class NotifyActions {
@@ -14,6 +14,9 @@ abstract final class NotifyActions {
   /// Answered in the background, also from the lock screen.
   static const deny = 'deny';
   static const open = 'open';
+
+  /// A watch hit: opens the app, which opens the listing in the browser.
+  static const openLink = 'open_link';
 }
 
 class NotifyAction {
@@ -137,6 +140,8 @@ NotificationSpec runDoneNotification(AppLocalizations l, RunDonePush p) {
 NotificationSpec briefNotification(AppLocalizations l, BriefPush p) {
   final up = p.uptimeS;
   final parts = [
+    if (p.lateByS case final s? when s > 0)
+      l.notifyBriefLate(uptimeText(Duration(seconds: s))),
     if (p.updatesCount case final n?) l.notifyBriefUpdates(n),
     if (p.openIncidents case final n?) l.notifyBriefIncidents(n),
     if (p.llamaState case final s?) l.notifyBriefLlama(s),
@@ -151,6 +156,26 @@ NotificationSpec briefNotification(AppLocalizations l, BriefPush p) {
     body: parts.join(' · '),
     payload: const PushTarget(kind: 'card').encode(),
     actions: [NotifyAction(NotifyActions.open, l.notifyOpen, opensApp: true)],
+  );
+}
+
+/// "Watch · RTX 4070 Super ≤180k" (or "Now available · …"), the listing's
+/// title and price, the judge's reason under it; Open link / Open. One per
+/// listing: its "now available" replaces the hit.
+NotificationSpec watchNotification(AppLocalizations l, WatchPush p) {
+  final line = [p.title, ?p.price].join(' · ');
+  return NotificationSpec(
+    id: notificationId('watch:${p.slug}:${p.item}'),
+    channel: NotifyChannel.watches,
+    title: p.available
+        ? l.notifyWatchAvailable(p.name)
+        : l.notifyWatchTitle(p.name),
+    body: p.reason == null ? line : '$line\n${p.reason}',
+    payload: PushTarget(kind: 'watch', slug: p.slug, url: p.url).encode(),
+    actions: [
+      NotifyAction(NotifyActions.openLink, l.notifyOpenLink, opensApp: true),
+      NotifyAction(NotifyActions.open, l.notifyOpen, opensApp: true),
+    ],
   );
 }
 

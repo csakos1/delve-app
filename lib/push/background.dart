@@ -73,6 +73,9 @@ Future<void> handlePush(
       if (!foreground) await notifications.show(waterNotification(l, p));
     case final BriefPush p:
       if (!foreground) await notifications.show(briefNotification(l, p));
+    case final WatchPush p:
+      // also in the foreground: a hit matters wherever the app is
+      await notifications.show(watchNotification(l, p));
     case null:
       break;
   }

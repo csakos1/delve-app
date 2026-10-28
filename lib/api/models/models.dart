@@ -10,3 +10,4 @@ export 'server_info.dart';
 export 'stats.dart';
 export 'system_info.dart';
 export 'tool_step.dart';
+export 'watch.dart';

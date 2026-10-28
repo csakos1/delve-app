@@ -2,16 +2,21 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../api/models/models.dart';
 import '../../app/dashboard.dart';
+import '../../app/router.dart';
 import '../../app/system.dart';
+import '../../app/watches.dart';
 import '../../l10n/app_localizations.dart';
 import '../../sync/connection_status.dart';
 import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
 import '../format.dart';
+import '../links.dart';
+import '../schedule_text.dart';
 import '../widgets/chart_paint.dart';
 import '../widgets/connection_ui.dart';
 import '../widgets/page_scaffolds.dart';
@@ -20,7 +25,8 @@ import '../widgets/system_ui.dart';
 import '../widgets/water_chart.dart';
 
 /// 12 Dashboard: connection, the Lake Balaton water level with its week (B2),
-/// the morning brief (B4) and the System card (B3).
+/// the morning brief (B4), the watches' newest hits (W3) and the System card
+/// (B3).
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -39,6 +45,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Future<void> _refresh({bool quiet = false}) async {
     unawaited(_refreshSystem());
+    unawaited(_refreshWatches());
     final service = ref.read(dashboardServiceProvider);
     if (service == null) return;
     try {
@@ -50,6 +57,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l.approvalsRefreshFailed(apiErrorText(l, e)))),
       );
+    }
+  }
+
+  /// The Watches card keeps what it had when this fails.
+  Future<void> _refreshWatches() async {
+    try {
+      await ref.read(watchesProvider.notifier).refresh();
+    } on Object {
+      // kept in WatchesView.error
     }
   }
 
@@ -107,6 +123,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               _ => const SizedBox(height: 320),
             },
             const BriefCard(),
+            const WatchesCard(),
             const SizedBox(height: DelveTokens.space3),
             const SystemCard(),
           ],
@@ -455,7 +472,14 @@ class BriefCard extends ConsumerWidget {
           children: [
             CardHeader(
               title: l.dashBriefTitle,
-              note: clockTime(reading.card.ts, now),
+              note: switch (b.lateByS) {
+                // written after the desktop was switched on (N74)
+                final s? when s > 0 => l.dashBriefLate(
+                  clockTime(reading.card.ts, now),
+                  uptimeText(Duration(seconds: s)),
+                ),
+                _ => clockTime(reading.card.ts, now),
+              },
             ),
             _BriefTiles(
               uptime: b.uptimeS == null
@@ -612,6 +636,174 @@ class _Tile extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Watches (design 21d), between the brief and System, when at least one
+/// watch exists: how many are active and the newest hits with Open link, or
+/// "No hits yet" and the next check. The header opens the list.
+class WatchesCard extends ConsumerWidget {
+  const WatchesCard({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final view = ref.watch(watchesProvider);
+    final items = view.items;
+    if (items == null || items.isEmpty) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
+    final now = DateTime.now();
+    final recent = view.recent ?? const <RecentHit>[];
+    final muted = context.delve.textMuted;
+    final next = [
+      for (final w in items)
+        if (!w.paused) ?w.nextRunAt,
+    ]..sort();
+    return Padding(
+      padding: const EdgeInsets.only(top: DelveTokens.space3),
+      child: Container(
+        key: const Key('dashboard.watches'),
+        padding: const EdgeInsets.fromLTRB(
+          DelveTokens.space4,
+          DelveTokens.space3,
+          DelveTokens.space4,
+          DelveTokens.space1,
+        ),
+        decoration: BoxDecoration(
+          color: context.colors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(DelveTokens.rlg),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            InkWell(
+              key: const Key('dashboard.watches.open'),
+              onTap: () => context.push(Routes.watches),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minHeight: DelveTokens.touchTarget,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l.dashWatchesTitle,
+                        style: context.text.titleMedium,
+                      ),
+                    ),
+                    Text(
+                      l.dashWatchesActive(view.active),
+                      style: context.text.labelMedium!.copyWith(color: muted),
+                    ),
+                    const SizedBox(width: DelveTokens.space1),
+                    SymbolIcon(DelveIcons.chevronRight, size: 22, color: muted),
+                  ],
+                ),
+              ),
+            ),
+            if (recent.isEmpty)
+              Padding(
+                key: const Key('dashboard.watches.empty'),
+                padding: const EdgeInsets.only(bottom: DelveTokens.space3),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l.watchNoHitsYet, style: context.text.bodyMedium),
+                    if (next.isNotEmpty)
+                      Text(
+                        l.dashWatchesNext(aheadText(l, next.first, now)),
+                        style: context.text.bodySmall!.copyWith(color: muted),
+                      ),
+                  ],
+                ),
+              )
+            else
+              for (final r in recent) _RecentHitLine(hit: r, now: now),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One hit on the Dashboard card: title, "price · watch" (or the marker
+/// word), time, Open link.
+class _RecentHitLine extends ConsumerWidget {
+  const _RecentHitLine({required this.hit, required this.now});
+
+  final RecentHit hit;
+  final DateTime now;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final i = hit.item;
+    final secondary = context.colors.onSurfaceVariant;
+    final meta = context.text.labelMedium!.copyWith(color: secondary);
+    final (word, color) = i.reserved
+        ? (l.watchItemOnHold, context.delve.warnFg)
+        : i.availableAgain
+        ? (l.watchItemAvailable, context.delve.okFg)
+        : (hit.watchName, secondary);
+    return InkWell(
+      key: Key('dashboard.watches.hit.${i.id}'),
+      onTap: () => openLink(context, ref, i.url),
+      onLongPress: () => copyLink(context, i.url),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: context.colors.outlineVariant)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    i.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.bodyMedium,
+                  ),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        if (i.price case final p? when p.isNotEmpty)
+                          TextSpan(text: '$p · '),
+                        TextSpan(
+                          text: word,
+                          style: TextStyle(color: color),
+                        ),
+                      ],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: meta,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: DelveTokens.space2),
+            Text(
+              listTime(i.seenAt, now),
+              style: context.text.labelMedium!.copyWith(
+                color: context.delve.textMuted,
+              ),
+            ),
+            IconButton(
+              tooltip: l.watchOpenLink,
+              onPressed: () => openLink(context, ref, i.url),
+              icon: SymbolIcon(
+                DelveIcons.openLink,
+                size: DelveTokens.iconMd,
+                color: secondary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

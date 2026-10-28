@@ -579,6 +579,9 @@ class FailedRunCard extends StatelessWidget {
     'run_lost' => l.runFailedLost,
     'stream_unstable' => l.runFailedUnstable,
     final e when e.startsWith('hermes_') => l.runFailedHermes(e),
+    // the agent's own words for a reply that ran out of room (N73)
+    final e when e.contains('cut off') && e.contains('length limit') =>
+      l.runFailedCutOff,
     final e => e,
   };
 
@@ -615,6 +618,10 @@ class FailedRunCard extends StatelessWidget {
                 Text(l.runFailed, style: context.text.titleSmall),
                 Text(
                   reason(l, error),
+                  key: const Key('run.failed.reason'),
+                  // the agent's text can be long (N73)
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
                   style: context.text.bodySmall!.copyWith(
                     color: context.colors.onSurfaceVariant,
                   ),

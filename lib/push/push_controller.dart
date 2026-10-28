@@ -37,6 +37,11 @@ final class PushOpen extends PushEvent {
   const PushOpen(super.target);
 }
 
+/// Open link on a watch's notification: the listing in the browser.
+final class PushOpenLink extends PushEvent {
+  const PushOpenLink(super.target);
+}
+
 /// Allow once from the notification went through.
 final class PushAnswered extends PushEvent {
   const PushAnswered(super.target, this.approval);
@@ -177,6 +182,10 @@ class PushController {
         }
         if (!_disposed) _events.add(PushAnswerFailed(target, e));
       }
+      return;
+    }
+    if (tap.actionId == NotifyActions.openLink && target.url != null) {
+      _events.add(PushOpenLink(target));
       return;
     }
     _events.add(PushOpen(target));

@@ -16,6 +16,9 @@ class ReduceOutcome {
 
   /// `schedule.updated` / `schedule.deleted` in order (kept in memory).
   final List<ScheduleChange> schedules = [];
+
+  /// `watch.updated` / `watch.item` in order (kept in memory).
+  final List<WatchChange> watches = [];
   final List<ServerError> errors = [];
   final List<UnknownEvent> unknown = [];
 }
@@ -257,6 +260,8 @@ class EventReducer {
 
       case final ScheduleChange change:
         outcome.schedules.add(change);
+      case final WatchChange change:
+        outcome.watches.add(change);
 
       case final ServerError error:
         outcome.errors.add(error);

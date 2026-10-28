@@ -102,10 +102,20 @@ reached over Tailscale only.
   from `android/key.properties` when it is there (see Development); otherwise with the
   debug key.
 
+- W3: watches — what the agent checks on a schedule for the user (listings, tickets),
+  made and changed in a chat. More → Watches lists them with their state and new hits
+  (design 21a); a watch shows its condition and filters, Pause / Resume / Run now, the
+  hits with the judge's reason (on hold, now available) and the rejected listings
+  collapsed (21b); a hit opens its link in the browser, a long press copies it. The
+  Dashboard shows the newest hits (21d); a hit is a notification on its own "Watches"
+  channel with Open link (21e), switched in Settings → Notifications ("Watch hits").
+  New watch, Change in chat and Fix in chat open a new chat with a draft or with the
+  watch hint and two examples (21g). The morning brief says when it was written late.
+
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share
-target. (A home-screen widget was planned and dropped.) Requires a server with API revision 8 or newer
-(`/api/v1/attachments`).
+target, W3 the watches. (A home-screen widget was planned and dropped.) Requires a server
+with API revision 9 or newer (`/api/v1/watches`).
 
 ## Stack
 
@@ -121,6 +131,7 @@ target. (A home-screen widget was planned and dropped.) Requires a server with A
 | Icons | Material Symbols Rounded (`material_symbols_icons`) |
 | Markdown | flutter_markdown_plus |
 | Push | firebase_messaging (data messages), flutter_local_notifications |
+| Links | url_launcher (a watch's hits open in the browser) |
 | Fonts | Jost, Inter, JetBrains Mono — bundled, SIL OFL 1.1 |
 
 Data flow: WebSocket events and REST loads are written to the drift database; screens only
@@ -145,6 +156,7 @@ lib/
   app/system.dart            the system view in memory: REST, system.updated, stop/start
   app/schedules.dart         the schedule list in memory: REST, schedule.* events
   app/cron_preset.dart       cron ↔ daily times / weekdays at a time / plain cron
+  app/watches.dart           the watches and their items in memory: REST, watch.* events
   attachments/               pickers, photo resizing, uploads (ComposerAttachments),
                              the image cache
   share/                     Share to Delve: the method channel (share_channel.dart), the
@@ -170,6 +182,8 @@ test/
   sync_engine_test.dart      the connection against a local fake WebSocket server
   dashboard_test.dart        water readings, the week, the brief, the Dashboard screen
   schedules_test.dart        cron presets and texts, the Schedules list and editor
+  watches_test.dart          watch texts, the watch push, the Watches list and detail, the
+                             Dashboard card, Settings → Watch hits
   attachments_test.dart      resizing bounds, uploads and retries, REST, the chat's "+",
                              tiles and "Send again"
   share_test.dart            shared payloads, the method channel, the Share to Delve screen

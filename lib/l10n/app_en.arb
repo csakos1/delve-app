@@ -1331,5 +1331,269 @@
         "type": "int"
       }
     }
-  }
+  },
+  "dashBriefLate": "{time} · {late} late",
+  "@dashBriefLate": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "late": {
+        "type": "String"
+      }
+    }
+  },
+  "dashWatchesActive": "{count} active",
+  "@dashWatchesActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashWatchesNext": "Next check {when}",
+  "@dashWatchesNext": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "dashWatchesTitle": "Watches",
+  "linkOpenFailed": "Couldn't open the link — it's copied",
+  "moreWatches": "Watches",
+  "moreWatchesSub": "Listings and tickets the agent checks for you",
+  "notifyBriefLate": "{late} late",
+  "@notifyBriefLate": {
+    "placeholders": {
+      "late": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyChannelWatches": "Watches",
+  "notifyChannelWatchesDesc": "When a watch finds something new",
+  "notifyOpenLink": "Open link",
+  "notifyWatchAvailable": "Now available · {name}",
+  "@notifyWatchAvailable": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyWatchTitle": "Watch · {name}",
+  "@notifyWatchTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "runFailedCutOff": "The answer was cut off: the agent ran out of room. Try a new chat or a shorter request.",
+  "settingsNotifyWatches": "Watch hits",
+  "settingsNotifyWatchesSub": "When a watch finds something new",
+  "watchActionFailed": "Couldn't change the watch: {reason}",
+  "@watchActionFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "watchChangeDraft": "Change the watch “{name}”: ",
+  "@watchChangeDraft": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "watchChangeInChat": "Change in chat",
+  "watchCondition": "Condition",
+  "watchCopyLink": "Copy link",
+  "watchDetailsOn": "On — opens each new listing",
+  "watchDetailsPages": "Details pages",
+  "watchErrorsInRow": "{count} errors in a row",
+  "@watchErrorsInRow": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "watchEveryHours": "{count, plural, =1{Every hour} other{Every {count} hours}}",
+  "@watchEveryHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "watchEveryMinutes": "Every {count} minutes",
+  "@watchEveryMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "watchExampleCinema": "Tell me when tickets for <film> are on sale at Cinema City.",
+  "watchExampleHardverapro": "Watch Hardverapró for RTX 4070 Supers under 180 000 Ft, not used for mining, three times a day.",
+  "watchFixDraft": "The watch “{name}” keeps failing ({error}). Check it and fix it.",
+  "@watchFixDraft": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "watchFixInChat": "Fix in chat",
+  "watchGone": "This watch is gone: it was deleted in a chat, or the desktop no longer has it.",
+  "watchHint": "Describe what to watch, where, how often, and what counts.",
+  "watchHits": "{count, plural, =0{Hits} other{Hits · {count}}}",
+  "@watchHits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "watchHits24h": "{count} in the last 24 h",
+  "@watchHits24h": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "watchItemAvailable": "Now available",
+  "watchItemByFilters": "Matched by filters · no judge",
+  "watchItemCouldntJudge": "Couldn't judge",
+  "watchItemOnHold": "On hold",
+  "watchItemWaiting": "Waiting for judge",
+  "watchKeywords": "Keywords",
+  "watchKeywordsAny": "any of {words}",
+  "@watchKeywordsAny": {
+    "placeholders": {
+      "words": {
+        "type": "String"
+      }
+    }
+  },
+  "watchKeywordsNot": "not {words}",
+  "@watchKeywordsNot": {
+    "placeholders": {
+      "words": {
+        "type": "String"
+      }
+    }
+  },
+  "watchLastCheck": "Last check",
+  "watchListings": "{count, plural, =1{1 listing} other{{count} listings}}",
+  "@watchListings": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "watchLoadMore": "Load more",
+  "watchMatches": "{count, plural, =1{1 match} other{{count} matches}}",
+  "@watchMatches": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "watchNew": "{count, plural, =1{1 new} other{{count} new}}",
+  "@watchNew": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "watchNextCheck": "Next check",
+  "watchNextIn": "{when} · in {wait}",
+  "@watchNextIn": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "wait": {
+        "type": "String"
+      }
+    }
+  },
+  "watchNextPaused": "— paused",
+  "watchNoCondition": "No condition — filters only",
+  "watchNoHits": "No hits yet.",
+  "watchNoHitsYet": "No hits yet",
+  "watchOff": "Off",
+  "watchOn": "On",
+  "watchOpenLink": "Open link",
+  "watchPause": "Pause",
+  "watchPending": "{count, plural, =1{1 listing waits for the judge} other{{count} listings wait for the judge}}",
+  "@watchPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "watchPrice": "Price",
+  "watchRejected": "Rejected ({count})",
+  "@watchRejected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "watchResume": "Resume",
+  "watchRunNow": "Run now",
+  "watchRunStarted": "Checking now — new hits show up here in a minute",
+  "watchSchedule": "Schedule",
+  "watchSearch": "Search",
+  "watchSource": "Source",
+  "watchSourcePage": "Web page",
+  "watchStateActive": "Active",
+  "watchStateError": "Error",
+  "watchStatePaused": "Paused",
+  "watchStateStopped": "Stopped after hit",
+  "watchStateUnknown": "Setting up",
+  "watchStopAfterHit": "Stop after hit",
+  "watchStoppedAfterHit": "Paused after its first hit · {when}",
+  "@watchStoppedAfterHit": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "watchYesterday": "yesterday {time}",
+  "@watchYesterday": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "watchesEmptyBody": "Watches are made in a chat: describe what to watch, where, how often and what counts. They run on a schedule without the model.",
+  "watchesEmptyTitle": "No watches yet",
+  "watchesLoadFailed": "Couldn't load watches: {reason}",
+  "@watchesLoadFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "watchesNew": "New watch",
+  "watchesNote": "Watches run on a schedule without the model. New ones and changes are made in a chat."
 }

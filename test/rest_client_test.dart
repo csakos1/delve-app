@@ -20,7 +20,7 @@ void main() {
 
   test('meta needs no token and parses', () async {
     final meta = await api().meta();
-    expect((meta.apiRevision, meta.serverVersion), (8, '0.1.0'));
+    expect((meta.apiRevision, meta.serverVersion), (9, '0.1.0'));
     expect(server.requests.single.headers['Authorization'], isNull);
     expect(server.requests.single.uri.toString(), '$testServer/api/v1/meta');
   });

@@ -133,6 +133,18 @@ void main() {
       await openSettings(t);
       expect(find.text('https://archlinux.example.ts.net'), findsOneWidget);
       expect(find.text('pixel'), findsOneWidget);
+      final settingsList = find
+          .descendant(
+            of: find.byType(SettingsScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      // the thinking route is below the notification switches
+      await t.scrollUntilVisible(
+        find.text('OK'),
+        200,
+        scrollable: settingsList,
+      );
       expect(find.text('OK'), findsOneWidget);
       // the versions are below the notification switches
       await t.scrollUntilVisible(
@@ -160,6 +172,16 @@ void main() {
         'THINKING ROUTE',
         'Check again',
       ]) {
+        await t.scrollUntilVisible(
+          find.text(label),
+          200,
+          scrollable: find
+              .descendant(
+                of: find.byType(SettingsScreen),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
         expect(t.getTopLeft(find.text(label)).dx, 16, reason: label);
       }
     });
@@ -200,6 +222,16 @@ void main() {
       await t.pumpAndSettle();
       await t.tap(find.text('Settings'));
       await t.pumpAndSettle();
+      await t.scrollUntilVisible(
+        find.text('Check failed'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byType(SettingsScreen),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
       expect(find.text('Check failed'), findsOneWidget);
     });
 
@@ -215,6 +247,8 @@ void main() {
             )
             .first,
       );
+      await t.ensureVisible(find.byKey(const Key('settings.unpair')));
+      await t.pumpAndSettle();
       await t.tap(find.byKey(const Key('settings.unpair')));
       await t.pumpAndSettle();
       expect(find.text('Unpair this device?'), findsOneWidget);

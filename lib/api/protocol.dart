@@ -3,7 +3,7 @@
 /// Oldest backend contract this build works with (`/meta` `api_revision`).
 /// Raise it together with the models when the app starts relying on a newer
 /// contract; a smaller server revision shows the "server too old" screen.
-const int kMinApiRevision = 8; // 8: attachments
+const int kMinApiRevision = 9; // 9: watches
 
 /// REST routes the app calls (method + path template); checked against the
 /// backend contract in `test/contract_test.dart`.
@@ -50,6 +50,10 @@ abstract final class ApiRoutes {
     'POST',
     '/api/v1/attachments/{attachment_id}/copy',
   );
+  static const watches = ('GET', '/api/v1/watches');
+  static const watch = ('GET', '/api/v1/watches/{slug}');
+  static const watchItems = ('GET', '/api/v1/watches/{slug}/items');
+  static const watchAction = ('POST', '/api/v1/watches/{slug}/{verb}');
   static const ws = ('WS', '/api/v1/ws');
 
   static const List<(String, String)> all = <(String, String)>[
@@ -81,6 +85,10 @@ abstract final class ApiRoutes {
     uploadAttachment,
     attachment,
     copyAttachment,
+    watches,
+    watch,
+    watchItems,
+    watchAction,
     ws,
   ];
 
@@ -198,3 +206,6 @@ abstract final class WsClose {
 
 /// `POST /system/llama` actions.
 enum LlamaAction { start, stop }
+
+/// `POST /watches/{slug}/{verb}`: through the desktop's cron (W2).
+enum WatchAction { pause, resume, run }

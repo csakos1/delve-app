@@ -12,6 +12,7 @@ import 'package:delve/push/push_providers.dart';
 import 'package:delve/share/share_channel.dart';
 import 'package:delve/sync/connection_status.dart';
 import 'package:delve/sync/sync_providers.dart';
+import 'package:delve/ui/links.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
 import 'package:flutter/widgets.dart';
@@ -53,6 +54,9 @@ class TestEnv {
   final MemoryCredentialStore store;
   final FakeServer server;
 
+  /// Links the app opened (url_launcher is off in tests).
+  final LinkLog links = LinkLog();
+
   /// Connection state the screens see (the socket itself is off in tests).
   final ConnectionStatus? status;
 
@@ -79,6 +83,7 @@ class TestEnv {
       syncEnabledProvider.overrideWithValue(false), // no socket here
       pushEnabledProvider.overrideWithValue(false), // no Firebase here
       shareSourceProvider.overrideWithValue(share), // no platform channel
+      linkOpenerProvider.overrideWithValue(links.open), // no browser
       if (push case final p?)
         pushStateProvider.overrideWith((ref) => Stream.value(p)),
       if (status case final s?)
@@ -103,6 +108,7 @@ class TestEnv {
         syncEnabledProvider.overrideWithValue(false), // no socket here
         pushEnabledProvider.overrideWithValue(false), // no Firebase here
         shareSourceProvider.overrideWithValue(share), // no platform channel
+        linkOpenerProvider.overrideWithValue(links.open), // no browser
         if (push case final p?)
           pushStateProvider.overrideWith((ref) => Stream.value(p)),
         if (status case final s?)
@@ -173,4 +179,15 @@ class AttachmentFakes {
   final AttachmentApi api;
   final AttachmentPicker picker;
   final ImagePrep prep;
+}
+
+/// The links a test's app opened; [result] is what the "browser" answers.
+class LinkLog {
+  final List<Uri> opened = [];
+  bool result = true;
+
+  Future<bool> open(Uri url) async {
+    opened.add(url);
+    return result;
+  }
 }

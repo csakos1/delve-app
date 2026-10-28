@@ -151,6 +151,11 @@ class SyncEngine {
   /// `schedule.updated` / `schedule.deleted` events (B4).
   Stream<ScheduleChange> get scheduleChanges => _scheduleController.stream;
 
+  final _watchController = StreamController<WatchChange>.broadcast();
+
+  /// `watch.updated` / `watch.item` events (W2).
+  Stream<WatchChange> get watchChanges => _watchController.stream;
+
   Uri get webSocketUrl => webSocketUri(credentials.server, ApiRoutes.ws.$2);
 
   bool _started = false;
@@ -277,6 +282,7 @@ class SyncEngine {
     await _statusController.close();
     await _systemController.close();
     await _scheduleController.close();
+    await _watchController.close();
   }
 
   // ---------------------------------------------------------------------------
@@ -615,6 +621,9 @@ class SyncEngine {
         if (!_disposed) {
           for (final change in outcome.schedules) {
             _scheduleController.add(change);
+          }
+          for (final change in outcome.watches) {
+            _watchController.add(change);
           }
         }
         for (final err in outcome.errors) {

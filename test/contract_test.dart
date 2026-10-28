@@ -75,6 +75,8 @@ void main() {
           'stats_point': (j) => StatsPoint.fromJson(j).toJson(),
           'stats_day': (j) => StatsDay.fromJson(j).toJson(),
           'stats_gpu': (j) => StatsGpu.fromJson(j).toJson(),
+          'watch': (j) => Watch.fromJson(j).toJson(),
+          'watch_item': (j) => WatchItem.fromJson(j).toJson(),
         };
 
     test('every contract shape has a model', () {

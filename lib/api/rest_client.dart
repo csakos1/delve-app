@@ -118,6 +118,7 @@ class DelveApi {
     bool? runDone,
     bool? water,
     bool? brief,
+    bool? watches,
   }) async => _parse(
     await _json(
       ApiRoutes.patchDevice,
@@ -127,6 +128,7 @@ class DelveApi {
           'run_done': ?runDone,
           'water': ?water,
           'brief': ?brief,
+          'watches': ?watches,
         },
       },
     ),
@@ -348,6 +350,55 @@ class DelveApi {
     ScheduleRun.fromJson,
   );
 
+  // --- watches (W2) --------------------------------------------------------
+
+  /// The watches (deleted ones left out), by name.
+  Future<List<Watch>> watches() async {
+    final json = await _json(ApiRoutes.watches);
+    return _parse(
+      json,
+      (j) => [for (final w in _list(j, 'data')) Watch.fromJson(w)],
+    );
+  }
+
+  /// One watch; 404 `watch_not_found`.
+  Future<Watch> watch(String slug) async => _parse(
+    await _json(ApiRoutes.watch, params: {'slug': slug}),
+    Watch.fromJson,
+  );
+
+  /// A watch's items newest first: [verdicts] (`hits` = match + mechanical,
+  /// or `reject`, `error`, …), older than [before] (an item id).
+  Future<WatchItemPage> watchItems(
+    String slug, {
+    List<String> verdicts = const ['hits'],
+    int? before,
+    int limit = 30,
+  }) async {
+    final json = await _json(
+      ApiRoutes.watchItems,
+      params: {'slug': slug},
+      query: {'verdict': verdicts.join(','), 'before': before, 'limit': limit},
+    );
+    return _parse(
+      json,
+      (j) => WatchItemPage([
+        for (final i in _list(j, 'data')) WatchItem.fromJson(i),
+      ], j['next_before'] as int?),
+    );
+  }
+
+  /// Pause, resume or run a watch now (the desktop's cron, through the
+  /// helper); 409 `watch_job_missing`, 503 `helper_unavailable`.
+  Future<Watch> watchAction(String slug, WatchAction action) async => _parse(
+    await _json(
+      ApiRoutes.watchAction,
+      params: {'slug': slug, 'verb': action.name},
+      receiveTimeout: const Duration(seconds: 60),
+    ),
+    Watch.fromJson,
+  );
+
   // --- attachments (B6) ---------------------------------------------------
 
   /// Uploads one photo or file (the raw bytes, the type in `Content-Type`);
@@ -410,6 +461,14 @@ class ConversationPage {
   const ConversationPage(this.conversations, this.nextCursor);
   final List<Conversation> conversations;
   final String? nextCursor;
+}
+
+/// `GET /watches/{slug}/items`: one page and the id to continue from (null =
+/// last page).
+class WatchItemPage {
+  const WatchItemPage(this.items, this.nextBefore);
+  final List<WatchItem> items;
+  final int? nextBefore;
 }
 
 /// `GET /conversations/{id}/messages`.

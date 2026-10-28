@@ -116,6 +116,75 @@ class SubPage extends StatelessWidget {
   }
 }
 
+/// Content under a page-colour top bar: right under the bar the page colour
+/// fades out over [height], so what scrolls up dims out under the bar
+/// instead of being cut at a line (design 21, the chat). Taps go through.
+class UnderBarFade extends StatelessWidget {
+  const UnderBarFade({
+    super.key,
+    required this.child,
+    this.fadeKey = const Key('page.fade'),
+  });
+
+  static const double height = DelveTokens.space6;
+
+  final Widget child;
+  final Key fadeKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final page = context.colors.surface;
+    return Stack(
+      children: [
+        Positioned.fill(child: child),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: height,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              key: fadeKey,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [page, page.withValues(alpha: 0)],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A sub-page bar in the page colour (it does not change when content
+/// scrolls under it; [UnderBarFade] goes under it): back, title, actions.
+class PageColourBar extends StatelessWidget implements PreferredSizeWidget {
+  const PageColourBar({
+    super.key,
+    required this.title,
+    this.actions = const [],
+  });
+
+  final String title;
+  final List<Widget> actions;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(DelveTokens.topBar);
+
+  @override
+  Widget build(BuildContext context) => AppBar(
+    backgroundColor: context.colors.surface,
+    notificationPredicate: (_) => false,
+    leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
+    title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+    actions: actions,
+  );
+}
+
 /// Rounded Material Symbol with the design's fill rule (1 = active/status).
 class SymbolIcon extends StatelessWidget {
   const SymbolIcon(
@@ -211,4 +280,15 @@ abstract final class DelveIcons {
   static const IconData attachFile = Symbols.attach_file_rounded;
   static const IconData imageGone = Symbols.hide_image_rounded;
   static const IconData sendAgain = Symbols.redo_rounded;
+  static const IconData watches = Symbols.travel_explore_rounded;
+  static const IconData newWatch = Symbols.add_comment_rounded;
+  static const IconData storefront = Symbols.storefront_rounded;
+  static const IconData theaters = Symbols.theaters_rounded;
+  static const IconData webPage = Symbols.language_rounded;
+  static const IconData quote = Symbols.format_quote_rounded;
+  static const IconData filter = Symbols.filter_alt_rounded;
+  static const IconData onHold = Symbols.pause_circle_rounded;
+  static const IconData pause = Symbols.pause_rounded;
+  static const IconData openLink = Symbols.open_in_new_rounded;
+  static const IconData fillIn = Symbols.north_west_rounded;
 }

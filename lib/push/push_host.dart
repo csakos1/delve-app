@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app/router.dart';
 import '../l10n/app_localizations.dart';
 import '../ui/format.dart';
+import '../ui/links.dart';
 import 'push_controller.dart';
 import 'push_message.dart';
 import 'push_providers.dart';
@@ -47,14 +48,24 @@ class _PushHostState extends ConsumerState<PushHost> {
     final l = AppLocalizations.of(context);
     final router = ref.read(routerProvider);
     final messenger = ScaffoldMessenger.maybeOf(context);
-    // a chat's notification opens the chat, a card's the dashboard
-    String place(PushTarget t) => switch (t.conversationId) {
-      final id? => Routes.chat(id),
-      null => Routes.dashboard,
+    // a watch's notification opens the watch, a chat's the chat, a card's
+    // the dashboard
+    String place(PushTarget t) => switch ((t.slug, t.conversationId)) {
+      (final slug?, _) when t.kind == 'watch' => Routes.watch(slug),
+      (_, final id?) => Routes.chat(id),
+      _ => Routes.dashboard,
     };
     switch (event) {
       case PushOpen(:final target):
         router.go(place(target));
+      case PushOpenLink(:final target):
+        final uri = Uri.tryParse(target.url ?? '');
+        final open = ref.read(linkOpenerProvider);
+        unawaited(() async {
+          final opened = uri != null && await open(uri);
+          // the browser did not take it: the watch instead
+          if (!opened && mounted) router.go(place(target));
+        }());
       case PushAnswered(:final target, :final approval):
         router.go(place(target));
         final late =

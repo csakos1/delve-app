@@ -30,6 +30,7 @@ _Brief _$BriefFromJson(Map<String, dynamic> json) => _Brief(
   missing:
       (json['missing'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const <String>[],
+  lateByS: (json['late_by_s'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$BriefToJson(_Brief instance) => <String, dynamic>{
@@ -44,6 +45,7 @@ Map<String, dynamic> _$BriefToJson(_Brief instance) => <String, dynamic>{
   'llama_state': instance.llamaState,
   'hermes_state': instance.hermesState,
   'missing': instance.missing,
+  'late_by_s': instance.lateByS,
 };
 
 _BriefIncident _$BriefIncidentFromJson(Map<String, dynamic> json) =>

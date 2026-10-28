@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 mixin _$Brief {
 
 /// Local date, `YYYY-MM-DD`.
- String get date; int? get uptimeS; DateTime? get bootedAt; int? get openIncidents; List<BriefIncident> get incidents; int? get updatesCount; DateTime? get updatesCheckedAt; BriefWater? get water; String? get llamaState; String? get hermesState; List<String> get missing;
+ String get date; int? get uptimeS; DateTime? get bootedAt; int? get openIncidents; List<BriefIncident> get incidents; int? get updatesCount; DateTime? get updatesCheckedAt; BriefWater? get water; String? get llamaState; String? get hermesState; List<String> get missing;/// Written this long after its time: the desktop was off then (N74).
+ int? get lateByS;
 /// Create a copy of Brief
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +30,16 @@ $BriefCopyWith<Brief> get copyWith => _$BriefCopyWithImpl<Brief>(this as Brief, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Brief&&(identical(other.date, date) || other.date == date)&&(identical(other.uptimeS, uptimeS) || other.uptimeS == uptimeS)&&(identical(other.bootedAt, bootedAt) || other.bootedAt == bootedAt)&&(identical(other.openIncidents, openIncidents) || other.openIncidents == openIncidents)&&const DeepCollectionEquality().equals(other.incidents, incidents)&&(identical(other.updatesCount, updatesCount) || other.updatesCount == updatesCount)&&(identical(other.updatesCheckedAt, updatesCheckedAt) || other.updatesCheckedAt == updatesCheckedAt)&&(identical(other.water, water) || other.water == water)&&(identical(other.llamaState, llamaState) || other.llamaState == llamaState)&&(identical(other.hermesState, hermesState) || other.hermesState == hermesState)&&const DeepCollectionEquality().equals(other.missing, missing));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Brief&&(identical(other.date, date) || other.date == date)&&(identical(other.uptimeS, uptimeS) || other.uptimeS == uptimeS)&&(identical(other.bootedAt, bootedAt) || other.bootedAt == bootedAt)&&(identical(other.openIncidents, openIncidents) || other.openIncidents == openIncidents)&&const DeepCollectionEquality().equals(other.incidents, incidents)&&(identical(other.updatesCount, updatesCount) || other.updatesCount == updatesCount)&&(identical(other.updatesCheckedAt, updatesCheckedAt) || other.updatesCheckedAt == updatesCheckedAt)&&(identical(other.water, water) || other.water == water)&&(identical(other.llamaState, llamaState) || other.llamaState == llamaState)&&(identical(other.hermesState, hermesState) || other.hermesState == hermesState)&&const DeepCollectionEquality().equals(other.missing, missing)&&(identical(other.lateByS, lateByS) || other.lateByS == lateByS));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,date,uptimeS,bootedAt,openIncidents,const DeepCollectionEquality().hash(incidents),updatesCount,updatesCheckedAt,water,llamaState,hermesState,const DeepCollectionEquality().hash(missing));
+int get hashCode => Object.hash(runtimeType,date,uptimeS,bootedAt,openIncidents,const DeepCollectionEquality().hash(incidents),updatesCount,updatesCheckedAt,water,llamaState,hermesState,const DeepCollectionEquality().hash(missing),lateByS);
 
 @override
 String toString() {
-  return 'Brief(date: $date, uptimeS: $uptimeS, bootedAt: $bootedAt, openIncidents: $openIncidents, incidents: $incidents, updatesCount: $updatesCount, updatesCheckedAt: $updatesCheckedAt, water: $water, llamaState: $llamaState, hermesState: $hermesState, missing: $missing)';
+  return 'Brief(date: $date, uptimeS: $uptimeS, bootedAt: $bootedAt, openIncidents: $openIncidents, incidents: $incidents, updatesCount: $updatesCount, updatesCheckedAt: $updatesCheckedAt, water: $water, llamaState: $llamaState, hermesState: $hermesState, missing: $missing, lateByS: $lateByS)';
 }
 
 
@@ -49,7 +50,7 @@ abstract mixin class $BriefCopyWith<$Res>  {
   factory $BriefCopyWith(Brief value, $Res Function(Brief) _then) = _$BriefCopyWithImpl;
 @useResult
 $Res call({
- String date, int? uptimeS, DateTime? bootedAt, int? openIncidents, List<BriefIncident> incidents, int? updatesCount, DateTime? updatesCheckedAt, BriefWater? water, String? llamaState, String? hermesState, List<String> missing
+ String date, int? uptimeS, DateTime? bootedAt, int? openIncidents, List<BriefIncident> incidents, int? updatesCount, DateTime? updatesCheckedAt, BriefWater? water, String? llamaState, String? hermesState, List<String> missing, int? lateByS
 });
 
 
@@ -66,7 +67,7 @@ class _$BriefCopyWithImpl<$Res>
 
 /// Create a copy of Brief
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? uptimeS = freezed,Object? bootedAt = freezed,Object? openIncidents = freezed,Object? incidents = null,Object? updatesCount = freezed,Object? updatesCheckedAt = freezed,Object? water = freezed,Object? llamaState = freezed,Object? hermesState = freezed,Object? missing = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? uptimeS = freezed,Object? bootedAt = freezed,Object? openIncidents = freezed,Object? incidents = null,Object? updatesCount = freezed,Object? updatesCheckedAt = freezed,Object? water = freezed,Object? llamaState = freezed,Object? hermesState = freezed,Object? missing = null,Object? lateByS = freezed,}) {
   return _then(_self.copyWith(
 date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as String,uptimeS: freezed == uptimeS ? _self.uptimeS : uptimeS // ignore: cast_nullable_to_non_nullable
@@ -79,7 +80,8 @@ as DateTime?,water: freezed == water ? _self.water : water // ignore: cast_nulla
 as BriefWater?,llamaState: freezed == llamaState ? _self.llamaState : llamaState // ignore: cast_nullable_to_non_nullable
 as String?,hermesState: freezed == hermesState ? _self.hermesState : hermesState // ignore: cast_nullable_to_non_nullable
 as String?,missing: null == missing ? _self.missing : missing // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,lateByS: freezed == lateByS ? _self.lateByS : lateByS // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 /// Create a copy of Brief
@@ -176,10 +178,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String date,  int? uptimeS,  DateTime? bootedAt,  int? openIncidents,  List<BriefIncident> incidents,  int? updatesCount,  DateTime? updatesCheckedAt,  BriefWater? water,  String? llamaState,  String? hermesState,  List<String> missing)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String date,  int? uptimeS,  DateTime? bootedAt,  int? openIncidents,  List<BriefIncident> incidents,  int? updatesCount,  DateTime? updatesCheckedAt,  BriefWater? water,  String? llamaState,  String? hermesState,  List<String> missing,  int? lateByS)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Brief() when $default != null:
-return $default(_that.date,_that.uptimeS,_that.bootedAt,_that.openIncidents,_that.incidents,_that.updatesCount,_that.updatesCheckedAt,_that.water,_that.llamaState,_that.hermesState,_that.missing);case _:
+return $default(_that.date,_that.uptimeS,_that.bootedAt,_that.openIncidents,_that.incidents,_that.updatesCount,_that.updatesCheckedAt,_that.water,_that.llamaState,_that.hermesState,_that.missing,_that.lateByS);case _:
   return orElse();
 
 }
@@ -197,10 +199,10 @@ return $default(_that.date,_that.uptimeS,_that.bootedAt,_that.openIncidents,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String date,  int? uptimeS,  DateTime? bootedAt,  int? openIncidents,  List<BriefIncident> incidents,  int? updatesCount,  DateTime? updatesCheckedAt,  BriefWater? water,  String? llamaState,  String? hermesState,  List<String> missing)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String date,  int? uptimeS,  DateTime? bootedAt,  int? openIncidents,  List<BriefIncident> incidents,  int? updatesCount,  DateTime? updatesCheckedAt,  BriefWater? water,  String? llamaState,  String? hermesState,  List<String> missing,  int? lateByS)  $default,) {final _that = this;
 switch (_that) {
 case _Brief():
-return $default(_that.date,_that.uptimeS,_that.bootedAt,_that.openIncidents,_that.incidents,_that.updatesCount,_that.updatesCheckedAt,_that.water,_that.llamaState,_that.hermesState,_that.missing);case _:
+return $default(_that.date,_that.uptimeS,_that.bootedAt,_that.openIncidents,_that.incidents,_that.updatesCount,_that.updatesCheckedAt,_that.water,_that.llamaState,_that.hermesState,_that.missing,_that.lateByS);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -217,10 +219,10 @@ return $default(_that.date,_that.uptimeS,_that.bootedAt,_that.openIncidents,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String date,  int? uptimeS,  DateTime? bootedAt,  int? openIncidents,  List<BriefIncident> incidents,  int? updatesCount,  DateTime? updatesCheckedAt,  BriefWater? water,  String? llamaState,  String? hermesState,  List<String> missing)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String date,  int? uptimeS,  DateTime? bootedAt,  int? openIncidents,  List<BriefIncident> incidents,  int? updatesCount,  DateTime? updatesCheckedAt,  BriefWater? water,  String? llamaState,  String? hermesState,  List<String> missing,  int? lateByS)?  $default,) {final _that = this;
 switch (_that) {
 case _Brief() when $default != null:
-return $default(_that.date,_that.uptimeS,_that.bootedAt,_that.openIncidents,_that.incidents,_that.updatesCount,_that.updatesCheckedAt,_that.water,_that.llamaState,_that.hermesState,_that.missing);case _:
+return $default(_that.date,_that.uptimeS,_that.bootedAt,_that.openIncidents,_that.incidents,_that.updatesCount,_that.updatesCheckedAt,_that.water,_that.llamaState,_that.hermesState,_that.missing,_that.lateByS);case _:
   return null;
 
 }
@@ -232,7 +234,7 @@ return $default(_that.date,_that.uptimeS,_that.bootedAt,_that.openIncidents,_tha
 @JsonSerializable()
 
 class _Brief implements Brief {
-  const _Brief({required this.date, this.uptimeS, this.bootedAt, this.openIncidents, final  List<BriefIncident> incidents = const <BriefIncident>[], this.updatesCount, this.updatesCheckedAt, this.water, this.llamaState, this.hermesState, final  List<String> missing = const <String>[]}): _incidents = incidents,_missing = missing;
+  const _Brief({required this.date, this.uptimeS, this.bootedAt, this.openIncidents, final  List<BriefIncident> incidents = const <BriefIncident>[], this.updatesCount, this.updatesCheckedAt, this.water, this.llamaState, this.hermesState, final  List<String> missing = const <String>[], this.lateByS}): _incidents = incidents,_missing = missing;
   factory _Brief.fromJson(Map<String, dynamic> json) => _$BriefFromJson(json);
 
 /// Local date, `YYYY-MM-DD`.
@@ -259,6 +261,8 @@ class _Brief implements Brief {
   return EqualUnmodifiableListView(_missing);
 }
 
+/// Written this long after its time: the desktop was off then (N74).
+@override final  int? lateByS;
 
 /// Create a copy of Brief
 /// with the given fields replaced by the non-null parameter values.
@@ -273,16 +277,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Brief&&(identical(other.date, date) || other.date == date)&&(identical(other.uptimeS, uptimeS) || other.uptimeS == uptimeS)&&(identical(other.bootedAt, bootedAt) || other.bootedAt == bootedAt)&&(identical(other.openIncidents, openIncidents) || other.openIncidents == openIncidents)&&const DeepCollectionEquality().equals(other._incidents, _incidents)&&(identical(other.updatesCount, updatesCount) || other.updatesCount == updatesCount)&&(identical(other.updatesCheckedAt, updatesCheckedAt) || other.updatesCheckedAt == updatesCheckedAt)&&(identical(other.water, water) || other.water == water)&&(identical(other.llamaState, llamaState) || other.llamaState == llamaState)&&(identical(other.hermesState, hermesState) || other.hermesState == hermesState)&&const DeepCollectionEquality().equals(other._missing, _missing));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Brief&&(identical(other.date, date) || other.date == date)&&(identical(other.uptimeS, uptimeS) || other.uptimeS == uptimeS)&&(identical(other.bootedAt, bootedAt) || other.bootedAt == bootedAt)&&(identical(other.openIncidents, openIncidents) || other.openIncidents == openIncidents)&&const DeepCollectionEquality().equals(other._incidents, _incidents)&&(identical(other.updatesCount, updatesCount) || other.updatesCount == updatesCount)&&(identical(other.updatesCheckedAt, updatesCheckedAt) || other.updatesCheckedAt == updatesCheckedAt)&&(identical(other.water, water) || other.water == water)&&(identical(other.llamaState, llamaState) || other.llamaState == llamaState)&&(identical(other.hermesState, hermesState) || other.hermesState == hermesState)&&const DeepCollectionEquality().equals(other._missing, _missing)&&(identical(other.lateByS, lateByS) || other.lateByS == lateByS));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,date,uptimeS,bootedAt,openIncidents,const DeepCollectionEquality().hash(_incidents),updatesCount,updatesCheckedAt,water,llamaState,hermesState,const DeepCollectionEquality().hash(_missing));
+int get hashCode => Object.hash(runtimeType,date,uptimeS,bootedAt,openIncidents,const DeepCollectionEquality().hash(_incidents),updatesCount,updatesCheckedAt,water,llamaState,hermesState,const DeepCollectionEquality().hash(_missing),lateByS);
 
 @override
 String toString() {
-  return 'Brief(date: $date, uptimeS: $uptimeS, bootedAt: $bootedAt, openIncidents: $openIncidents, incidents: $incidents, updatesCount: $updatesCount, updatesCheckedAt: $updatesCheckedAt, water: $water, llamaState: $llamaState, hermesState: $hermesState, missing: $missing)';
+  return 'Brief(date: $date, uptimeS: $uptimeS, bootedAt: $bootedAt, openIncidents: $openIncidents, incidents: $incidents, updatesCount: $updatesCount, updatesCheckedAt: $updatesCheckedAt, water: $water, llamaState: $llamaState, hermesState: $hermesState, missing: $missing, lateByS: $lateByS)';
 }
 
 
@@ -293,7 +297,7 @@ abstract mixin class _$BriefCopyWith<$Res> implements $BriefCopyWith<$Res> {
   factory _$BriefCopyWith(_Brief value, $Res Function(_Brief) _then) = __$BriefCopyWithImpl;
 @override @useResult
 $Res call({
- String date, int? uptimeS, DateTime? bootedAt, int? openIncidents, List<BriefIncident> incidents, int? updatesCount, DateTime? updatesCheckedAt, BriefWater? water, String? llamaState, String? hermesState, List<String> missing
+ String date, int? uptimeS, DateTime? bootedAt, int? openIncidents, List<BriefIncident> incidents, int? updatesCount, DateTime? updatesCheckedAt, BriefWater? water, String? llamaState, String? hermesState, List<String> missing, int? lateByS
 });
 
 
@@ -310,7 +314,7 @@ class __$BriefCopyWithImpl<$Res>
 
 /// Create a copy of Brief
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? date = null,Object? uptimeS = freezed,Object? bootedAt = freezed,Object? openIncidents = freezed,Object? incidents = null,Object? updatesCount = freezed,Object? updatesCheckedAt = freezed,Object? water = freezed,Object? llamaState = freezed,Object? hermesState = freezed,Object? missing = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? date = null,Object? uptimeS = freezed,Object? bootedAt = freezed,Object? openIncidents = freezed,Object? incidents = null,Object? updatesCount = freezed,Object? updatesCheckedAt = freezed,Object? water = freezed,Object? llamaState = freezed,Object? hermesState = freezed,Object? missing = null,Object? lateByS = freezed,}) {
   return _then(_Brief(
 date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as String,uptimeS: freezed == uptimeS ? _self.uptimeS : uptimeS // ignore: cast_nullable_to_non_nullable
@@ -323,7 +327,8 @@ as DateTime?,water: freezed == water ? _self.water : water // ignore: cast_nulla
 as BriefWater?,llamaState: freezed == llamaState ? _self.llamaState : llamaState // ignore: cast_nullable_to_non_nullable
 as String?,hermesState: freezed == hermesState ? _self.hermesState : hermesState // ignore: cast_nullable_to_non_nullable
 as String?,missing: null == missing ? _self._missing : missing // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,lateByS: freezed == lateByS ? _self.lateByS : lateByS // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

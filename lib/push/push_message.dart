@@ -59,6 +59,7 @@ sealed class PushMessage {
             final v => v,
           },
           levelCm: double.tryParse(s('level_cm') ?? ''),
+          lateByS: int.tryParse(s('late_by_s') ?? ''),
         );
       case 'card':
         final cardId = s('card_id');
@@ -77,6 +78,31 @@ sealed class PushMessage {
           levelCm: level,
           lakeAvgCm: double.tryParse(s('lake_avg_cm') ?? ''),
           trendCm: double.tryParse(s('trend_cm_24h') ?? ''),
+        );
+      case 'watch':
+        final slug = s('slug');
+        final item = int.tryParse(s('item') ?? '');
+        final title = s('title');
+        final url = s('url');
+        if (slug == null || item == null || title == null || url == null) {
+          return null;
+        }
+        return WatchPush(
+          slug: slug,
+          name: s('name') ?? slug,
+          item: item,
+          title: title,
+          url: url,
+          available: s('change') == 'available',
+          price: switch (s('price')) {
+            null || '' => null,
+            final v => v,
+          },
+          reason: switch (s('reason')) {
+            null || '' => null,
+            final v => v,
+          },
+          reserved: s('reserved') == 'true',
         );
       case 'run_done':
         final conversationId = s('conversation_id');
@@ -175,6 +201,7 @@ final class BriefPush extends PushMessage {
     this.openIncidents,
     this.llamaState,
     this.levelCm,
+    this.lateByS,
   });
 
   final String cardId;
@@ -185,6 +212,42 @@ final class BriefPush extends PushMessage {
 
   /// Siófok's level, cm.
   final double? levelCm;
+
+  /// Written this long after its time (the desktop was off, N74).
+  final int? lateByS;
+}
+
+/// A watch found something (W2): a new hit, or a held one is free again.
+final class WatchPush extends PushMessage {
+  const WatchPush({
+    required this.slug,
+    required this.name,
+    required this.item,
+    required this.title,
+    required this.url,
+    required this.available,
+    this.price,
+    this.reason,
+    this.reserved = false,
+  });
+
+  final String slug;
+  final String name;
+
+  /// The item's id (`watch_items.id`).
+  final int item;
+  final String title;
+  final String url;
+
+  /// `change: available` (was on hold), else a new hit.
+  final bool available;
+  final String? price;
+
+  /// The judge's sentence (none for a hit by filters only).
+  final String? reason;
+
+  /// Still on hold when it was found.
+  final bool reserved;
 }
 
 /// Notification id for a key (request id, run id): FNV-1a, positive 31 bit.
@@ -201,7 +264,13 @@ int notificationId(String key) {
 
 /// What a tap or an action carries back: the notification's payload.
 class PushTarget {
-  const PushTarget({required this.kind, this.conversationId, this.requestId});
+  const PushTarget({
+    required this.kind,
+    this.conversationId,
+    this.requestId,
+    this.slug,
+    this.url,
+  });
 
   static PushTarget? decode(String? payload) {
     if (payload == null || payload.isEmpty) return null;
@@ -211,29 +280,44 @@ class PushTarget {
       final kind = j['kind'];
       final conv = j['conversation_id'];
       final req = j['request_id'];
+      final slug = j['slug'];
+      final url = j['url'];
       if (kind is! String) return null;
-      // a chat's notification needs its chat; a card's opens the dashboard
-      if (kind != 'card' && conv is! String) return null;
+      // a watch's notification needs its watch; a chat's its chat; a card's
+      // opens the dashboard
+      if (kind == 'watch'
+          ? slug is! String
+          : kind != 'card' && conv is! String) {
+        return null;
+      }
       return PushTarget(
         kind: kind,
         conversationId: conv is String ? conv : null,
         requestId: req is String ? req : null,
+        slug: slug is String ? slug : null,
+        url: url is String ? url : null,
       );
     } on FormatException {
       return null;
     }
   }
 
-  /// `approval`, `run_done` or `card`.
+  /// `approval`, `run_done`, `card` or `watch`.
   final String kind;
 
-  /// null for a card.
+  /// null for a card and a watch.
   final String? conversationId;
   final String? requestId;
+
+  /// A watch's notification: the watch and the listing's link.
+  final String? slug;
+  final String? url;
 
   String encode() => jsonEncode({
     'kind': kind,
     'conversation_id': ?conversationId,
     'request_id': ?requestId,
+    'slug': ?slug,
+    'url': ?url,
   });
 }

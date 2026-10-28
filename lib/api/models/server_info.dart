@@ -102,6 +102,9 @@ abstract class NotifySettings with _$NotifySettings {
     @Default(true) bool runDone,
     @Default(false) bool water,
     @Default(false) bool brief,
+
+    /// Watch hits (W2); on unless turned off.
+    @Default(true) bool watches,
   }) = _NotifySettings;
 
   factory NotifySettings.fromJson(Map<String, Object?> json) =>
