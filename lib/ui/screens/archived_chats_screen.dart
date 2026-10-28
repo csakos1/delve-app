@@ -37,7 +37,18 @@ class _ArchivedChatsScreenState extends ConsumerState<ArchivedChatsScreen> {
   void _snack(String text, {SnackBarAction? action}) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text), action: action));
+      ..showSnackBar(
+        action == null
+            ? SnackBar(content: Text(text))
+            // an action would keep the bar up until tapped: Undo goes by
+            // itself too
+            : SnackBar(
+                content: Text(text),
+                action: action,
+                persist: false,
+                duration: DelveTokens.undoSnack,
+              ),
+      );
   }
 
   Future<void> _refresh() async {

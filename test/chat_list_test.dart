@@ -450,6 +450,26 @@ void main() {
       expect(find.text('Balaton water'), findsOneWidget);
     });
 
+    testWidgets('the archive snackbar goes by itself after 5 s', (t) async {
+      final env = await pumpDelve(t, before: seed);
+      env.server.on(
+        'PATCH',
+        '/api/v1/conversations/c_done',
+        (r) => FakeReply(200, {
+          ...conversation('c_done', title: 'Balaton water').toJson(),
+          'archived': true,
+        }),
+      );
+      await t.drag(find.text('Balaton water'), const Offset(-500, 0));
+      await t.pumpAndSettle();
+      expect(find.text('Chat archived'), findsOneWidget);
+      await t.pump(const Duration(milliseconds: 4800));
+      expect(find.text('Chat archived'), findsOneWidget);
+      await t.pump(const Duration(milliseconds: 400));
+      await t.pumpAndSettle();
+      expect(find.text('Chat archived'), findsNothing);
+    });
+
     testWidgets('archive failure keeps the row and says why', (t) async {
       final env = await pumpDelve(t, before: seed);
       env.server.unreachable = true;

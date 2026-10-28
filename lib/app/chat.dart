@@ -60,7 +60,13 @@ class ChatData {
 }
 
 extension ChatQueries on AppDatabase {
-  Future<ChatData> loadChat(String conversationId) async {
+  /// One snapshot of the chat: the reads share a transaction, so a write
+  /// between them (a message written and its outbox row dropped) is seen
+  /// whole or not at all, never half.
+  Future<ChatData> loadChat(String conversationId) =>
+      transaction(() => _loadChat(conversationId));
+
+  Future<ChatData> _loadChat(String conversationId) async {
     final conversation = await (select(
       conversations,
     )..where((t) => t.id.equals(conversationId))).getSingleOrNull();

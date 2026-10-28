@@ -153,7 +153,7 @@ class HermesCard extends StatelessWidget {
             title: l.systemHermes,
             note: l.systemChecked(clockTime(info.checkedAt, now)),
           ),
-          InfoRow(label: l.systemStatus, trailing: hermesChip(l, h.status)),
+          InfoRow(label: l.systemStatus, trailing: hermesStatus(l, h.status)),
           for (final issue in h.issues)
             InfoRow(
               label: _capitalized(issue.check),
@@ -212,7 +212,7 @@ class LlamaCard extends StatelessWidget {
               crossAxisAlignment: WrapCrossAlignment.center,
               spacing: DelveTokens.space3,
               children: [
-                llamaChip(l, ll.status),
+                llamaStatus(l, ll.status),
                 if (ll.since case final since?)
                   Text(
                     l.systemSince(clockTime(since, DateTime.now())),

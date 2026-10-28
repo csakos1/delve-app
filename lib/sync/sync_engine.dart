@@ -31,6 +31,7 @@ class SyncTiming {
     this.batchWindow = const Duration(milliseconds: 80),
     this.ackTimeout = const Duration(seconds: 15),
     this.pingInterval = const Duration(seconds: 20),
+    this.sentSettle = const Duration(seconds: 10),
   });
 
   final Duration helloTimeout;
@@ -52,6 +53,11 @@ class SyncTiming {
   /// A `ping` this often while live: the server counts a socket as live only
   /// while frames arrive (push presence, decision 261).
   final Duration pingInterval;
+
+  /// An acknowledged message stays in the outbox (state `sent`) until its
+  /// `message.created` is written, so the chat never shows a gap between
+  /// the two; if the event does not come within this time, the row goes.
+  final Duration sentSettle;
 }
 
 /// Why a request over the socket did not get an answer.
@@ -176,19 +182,21 @@ class SyncEngine {
   int _requestCounter = 0;
   final Map<String, Completer<Map<String, Object?>>> _requests = {};
   bool _outboxRunning = false;
+  final Set<Timer> _settleTimers = {};
   String? _focus;
 
   // ---------------------------------------------------------------------------
   // lifecycle
 
   /// Starts connecting (once). Outbox rows left `sending` by a previous run of
-  /// the app go back to `pending`.
+  /// the app go back to `pending`; `sent` ones (acknowledged) are dropped.
   Future<void> start() async {
     if (_started || _disposed) return;
     _started = true;
     await (db.update(db.outbox)..where((t) => t.state.equals('sending'))).write(
       const OutboxCompanion(state: Value('pending')),
     );
+    await (db.delete(db.outbox)..where((t) => t.state.equals('sent'))).go();
     if (_foreground) _connect();
   }
 
@@ -257,9 +265,11 @@ class SyncEngine {
       _pauseTimer,
       _flushTimer,
       _pingTimer,
+      ..._settleTimers,
     ]) {
       t?.cancel();
     }
+    _settleTimers.clear();
     await _networkSub?.cancel();
     _closeLink(1000, 'bye', null);
     _failRequests(const NoAnswer());
@@ -802,6 +812,41 @@ class SyncEngine {
   Future<void> discardMessage(String clientMsgId) =>
       db.forgetOutbox(clientMsgId);
 
+  /// The server has the message. Its `message.created` may still wait in
+  /// the event batch (it travels apart from the ack): until it is written,
+  /// the outbox row stays as `sent`, which the chat shows like a sent message.
+  /// The reducer drops the row in the transaction that writes the message.
+  Future<void> _acknowledged(String clientMsgId) async {
+    final arrived = await db.transaction(() async {
+      final message =
+          await (db.select(db.messages)
+                ..where((t) => t.clientMsgId.equals(clientMsgId))
+                ..limit(1))
+              .getSingleOrNull();
+      if (message != null) {
+        await db.forgetOutbox(clientMsgId);
+        return true;
+      }
+      await (db.update(db.outbox)
+            ..where((t) => t.clientMsgId.equals(clientMsgId)))
+          .write(const OutboxCompanion(state: Value('sent')));
+      return false;
+    });
+    if (arrived || _disposed) return;
+    late final Timer timer;
+    timer = Timer(timing.sentSettle, () {
+      _settleTimers.remove(timer);
+      if (_disposed) return;
+      unawaited(
+        (db.delete(db.outbox)
+              ..where((t) => t.clientMsgId.equals(clientMsgId))
+              ..where((t) => t.state.equals('sent')))
+            .go(),
+      );
+    });
+    _settleTimers.add(timer);
+  }
+
   Future<void> _requeueSending() =>
       (db.update(db.outbox)..where((t) => t.state.equals('sending'))).write(
         const OutboxCompanion(state: Value('pending')),
@@ -835,7 +880,7 @@ class SyncEngine {
               attachmentIds: [for (final a in row.attachments) a.id],
             ),
           );
-          await db.forgetOutbox(row.clientMsgId);
+          await _acknowledged(row.clientMsgId);
           sent++;
         } on RequestRejected catch (e) {
           await (db.update(

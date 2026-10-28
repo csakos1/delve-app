@@ -455,6 +455,61 @@ void main() {
     });
   });
 
+  group('top bar', () {
+    testWidgets('page colour, a fade under it, the chip on the right edge', (
+      t,
+    ) async {
+      await start(t, seedFinished);
+      await openChat(t);
+      final bar = t.widget<AppBar>(find.byKey(const Key('chat.topBar')));
+      expect(bar.backgroundColor, const Color(0xFF111213));
+      expect(find.byKey(const Key('chat.menu')), findsNothing);
+      expect(find.byTooltip('Chat options'), findsNothing);
+      // the chip ends on the 16 dp gutter (the screen is 448 dp wide)
+      expect(t.getTopRight(find.byKey(const Key('chat.contextChip'))).dx, 432);
+      // the fade sits right under the bar, page colour to transparent
+      final fade = find.byKey(const Key('chat.fade'));
+      expect(
+        t.getTopLeft(fade).dy,
+        t.getBottomLeft(find.byKey(const Key('chat.topBar'))).dy,
+      );
+      expect(t.getSize(fade).height, 24);
+      final gradient =
+          (t.widget<DecoratedBox>(fade).decoration as BoxDecoration).gradient!
+              as LinearGradient;
+      expect(gradient.colors.first, const Color(0xFF111213));
+      expect(gradient.colors.last.a, 0);
+    });
+
+    testWidgets('closing the Usage sheet does not open a closed keyboard', (
+      t,
+    ) async {
+      await start(t, seedFinished);
+      await openChat(t);
+      final field = find.byKey(const Key('composer.field'));
+      FocusNode focus() => t
+          .state<EditableTextState>(
+            find.descendant(of: field, matching: find.byType(EditableText)),
+          )
+          .widget
+          .focusNode;
+      await t.tap(field);
+      await t.pump();
+      expect(focus().hasFocus, isTrue);
+      // Back hides the keyboard, the field keeps the focus
+      t.testTextInput.hide();
+      await t.pump();
+
+      await t.tap(find.byKey(const Key('chat.contextChip')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('usage.sheet')), findsOneWidget);
+      await t.tap(find.byKey(const Key('usage.close')));
+      await t.pumpAndSettle();
+      expect(focus().hasFocus, isFalse);
+      expect(t.testTextInput.isVisible, isFalse);
+    });
+  });
+
   group('running chat', () {
     testWidgets('live text overlays the message; Stop and queue note', (
       t,
@@ -543,8 +598,24 @@ void main() {
             ),
           );
       await env.db.forgetOutbox('cm_1');
+      // every frame until the move is done shows the message: no empty
+      // intro, no empty chat in between
+      for (var i = 0; i < 12; i++) {
+        await t.pump(const Duration(milliseconds: 16));
+        expect(
+          find.text('Your agent on archlinux · over Tailscale'),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey('msg.9')).evaluate().isNotEmpty ||
+              find.byKey(const ValueKey('outbox.cm_1')).evaluate().isNotEmpty,
+          isTrue,
+          reason: 'frame $i',
+        );
+      }
       await t.pumpAndSettle();
       expect(fake.calls, contains('open c_new'));
+      expect(find.byKey(const ValueKey('msg.9')), findsOneWidget);
       expect(
         t.widget<Text>(find.byKey(const Key('chat.title'))).data,
         'hi there',

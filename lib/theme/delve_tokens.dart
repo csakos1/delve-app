@@ -50,6 +50,9 @@ abstract final class DelveTokens {
   static const Duration long = Duration(milliseconds: 350);
   static const Duration caption = Duration(milliseconds: 2000);
   static const Duration progress = Duration(milliseconds: 1800);
+
+  /// A snackbar with Undo (archive, restore) goes after this long.
+  static const Duration undoSnack = Duration(seconds: 5);
   static const Curve fastCurve = Curves.easeOut;
   static const Curve shortCurve = Curves.easeOutCubic;
   static const Curve standard = Curves.easeInOutCubic;

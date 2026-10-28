@@ -79,6 +79,25 @@ class StatusBanner extends StatelessWidget {
   }
 }
 
+/// A status word in its status colour, without a chip: for rows whose value
+/// is a state (system: Hermes, llama-server). Mono, like the values beside
+/// it; still a word, so the state is never told by colour alone.
+class StatusText extends StatelessWidget {
+  const StatusText({super.key, required this.kind, required this.label});
+
+  final StatusKind kind;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    label,
+    style: DelveText.mono.copyWith(
+      color: context.status(kind).fg,
+      fontWeight: FontWeight.w500,
+    ),
+  );
+}
+
 /// Status chip: h 22, radius 6, status bg/fg/border, filled 15 dp icon + word.
 class StatusChip extends StatelessWidget {
   const StatusChip({

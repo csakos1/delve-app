@@ -134,7 +134,8 @@ class Outbox extends Table {
   BoolColumn get thinking => boolean().nullable()();
   DateTimeColumn get createdAt => dateTime()();
 
-  /// pending | sending | failed
+  /// pending | sending | sent (acknowledged, its message not written yet) |
+  /// failed
   TextColumn get state => text().withDefault(const Constant('pending'))();
   IntColumn get attempts => integer().withDefault(const Constant(0))();
   TextColumn get lastError => text().nullable()();

@@ -4342,7 +4342,8 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
   final bool? thinking;
   final DateTime createdAt;
 
-  /// pending | sending | failed
+  /// pending | sending | sent (acknowledged, its message not written yet) |
+  /// failed
   final String state;
   final int attempts;
   final String? lastError;

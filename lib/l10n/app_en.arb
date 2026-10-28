@@ -320,7 +320,6 @@
   },
   "chatCopied": "Copied",
   "chatLinkCopied": "Link copied",
-  "chatMenu": "Chat options",
   "chatNotConnected": "not connected to the server",
   "chatNoAnswer": "the server did not answer",
   "chatStopFailed": "Couldn't stop: {reason}",

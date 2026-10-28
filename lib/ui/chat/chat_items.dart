@@ -98,7 +98,9 @@ class UserBubble extends StatelessWidget {
 }
 
 /// A message the server has not acknowledged: the bubble with its state —
-/// waiting for the connection, sending, or not sent (Retry / Discard).
+/// waiting for the connection, sending, or not sent (Retry / Discard). An
+/// acknowledged one (`sent`) waits only for its message to be written and
+/// looks like it, without a footer.
 class OutboxBubble extends StatelessWidget {
   const OutboxBubble({
     super.key,
@@ -117,8 +119,10 @@ class OutboxBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final d = context.delve;
-    final Widget footer;
-    if (row.state == 'failed') {
+    final Widget? footer;
+    if (row.state == 'sent') {
+      footer = null;
+    } else if (row.state == 'failed') {
       footer = Wrap(
         alignment: WrapAlignment.end,
         crossAxisAlignment: WrapCrossAlignment.center,

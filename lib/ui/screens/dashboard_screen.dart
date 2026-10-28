@@ -69,6 +69,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final updated = _updated;
     return TopLevelPage(
       title: l.navDashboard,
+      tintOnScroll: true,
       actions: [
         if (updated != null)
           Padding(
@@ -381,13 +382,14 @@ class SystemCard extends ConsumerWidget {
     }
     final gpus = info.gpus;
     final muted = DelveText.mono.copyWith(color: context.delve.textMuted);
-    Widget pair(Widget chip, String? text) => Wrap(
+    // the version or model, then the state last in the row
+    Widget pair(String? text, Widget status) => Wrap(
       alignment: WrapAlignment.end,
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: DelveTokens.space3,
       children: [
-        chip,
         if (text != null) Text(text, style: muted),
+        status,
       ],
     );
     return SurfaceCard(
@@ -402,13 +404,13 @@ class SystemCard extends ConsumerWidget {
           InfoRow(
             label: l.systemHermesShort,
             trailing: pair(
-              hermesChip(l, info.hermes.status),
               info.hermes.version == null ? null : 'v${info.hermes.version}',
+              hermesStatus(l, info.hermes.status),
             ),
           ),
           InfoRow(
             label: l.systemLlama,
-            trailing: pair(llamaChip(l, info.llama.status), info.llama.model),
+            trailing: pair(info.llama.model, llamaStatus(l, info.llama.status)),
           ),
           for (final g in gpus ?? const <GpuInfo>[])
             GpuRow(gpu: g, showPower: false),
@@ -464,7 +466,7 @@ class BriefCard extends ConsumerWidget {
             ),
             const SizedBox(height: DelveTokens.space2),
             if (b.llamaState case final state?)
-              InfoRow(label: l.systemLlama, trailing: llamaChip(l, state)),
+              InfoRow(label: l.systemLlama, trailing: llamaStatus(l, state)),
             if (booted != null)
               InfoRow(
                 label: l.dashBriefLastBoot,

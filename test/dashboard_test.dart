@@ -2,6 +2,7 @@ import 'package:delve/api/models/models.dart';
 import 'package:delve/app/dashboard.dart';
 import 'package:delve/data/db/database.dart';
 import 'package:delve/data/db/store.dart';
+import 'package:delve/theme/delve_colors.dart';
 import 'package:delve/ui/format.dart';
 import 'package:delve/ui/screens/dashboard_screen.dart';
 import 'package:delve/ui/widgets/system_ui.dart';
@@ -196,6 +197,46 @@ void main() {
       expect(find.text('Offline'), findsOneWidget); // no socket in widget tests
     });
 
+    testWidgets('the header turns surface-2 while the page is scrolled', (
+      t,
+    ) async {
+      // bigger text: the page is surely taller than the screen
+      t.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+      final today = DateTime.now();
+      final brief = AgentCard.fromJson(FakeServer.sample('card_brief'));
+      await openDashboard(
+        t,
+        cards: [
+          water('t', today, level: 98),
+          brief.copyWith(ts: today.toUtc()),
+        ],
+      );
+      final page = find.byType(DashboardScreen);
+      Color? header() =>
+          (t
+                      .widget<AnimatedContainer>(
+                        find.descendant(
+                          of: page,
+                          matching: find.byKey(const Key('page.header')),
+                        ),
+                      )
+                      .decoration!
+                  as BoxDecoration)
+              .color;
+      final list = find
+          .descendant(of: page, matching: find.byType(ListView))
+          .first;
+
+      expect(header(), delveColorScheme.surface);
+      await t.drag(list, const Offset(0, -300));
+      await t.pumpAndSettle();
+      expect(header(), delveColorScheme.surfaceContainer);
+      await t.drag(list, const Offset(0, 300));
+      await t.pumpAndSettle();
+      expect(header(), delveColorScheme.surface);
+    });
+
     testWidgets('the morning brief: figures, llama-server, last boot', (
       t,
     ) async {
@@ -249,7 +290,7 @@ void main() {
       );
       expectOnRightEdge(
         t,
-        inCard(find.byKey(const Key('system.llama.chip'))),
+        inCard(find.byKey(const Key('system.llama.status'))),
         card,
       );
       expectOnRightEdge(

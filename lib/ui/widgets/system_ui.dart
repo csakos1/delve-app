@@ -120,47 +120,38 @@ class InfoRow extends StatelessWidget {
   );
 }
 
-/// The status chip of llama-server: running is ok-styled (a service, not a
-/// run), loading and its kin are info, failed and unreachable alert.
-StatusChip llamaChip(AppLocalizations l, String status) {
-  final (kind, icon, label) = switch (status) {
-    'running' => (StatusKind.ok, DelveIcons.ok, l.systemStateRunning),
-    'loading' => (StatusKind.info, DelveIcons.hourglass, l.systemStateLoading),
-    'starting' => (
-      StatusKind.info,
-      DelveIcons.hourglass,
-      l.systemStateStarting,
-    ),
-    'stopping' => (
-      StatusKind.info,
-      DelveIcons.hourglass,
-      l.systemStateStopping,
-    ),
-    'stopped' => (StatusKind.info, DelveIcons.cancel, l.systemStateStopped),
-    'failed' => (StatusKind.alert, DelveIcons.error, l.systemStateFailed),
-    'down' => (StatusKind.alert, DelveIcons.error, l.systemStateDown),
-    _ => (StatusKind.info, DelveIcons.info, l.systemStateUnknown),
+/// The state of llama-server as coloured text: running is ok (a service,
+/// not a run), loading and its kin warn, stopped and unknown info, failed and
+/// unreachable alert.
+StatusText llamaStatus(AppLocalizations l, String status) {
+  final (kind, label) = switch (status) {
+    'running' => (StatusKind.ok, l.systemStateRunning),
+    'loading' => (StatusKind.warn, l.systemStateLoading),
+    'starting' => (StatusKind.warn, l.systemStateStarting),
+    'stopping' => (StatusKind.warn, l.systemStateStopping),
+    'stopped' => (StatusKind.info, l.systemStateStopped),
+    'failed' => (StatusKind.alert, l.systemStateFailed),
+    'down' => (StatusKind.alert, l.systemStateDown),
+    _ => (StatusKind.info, l.systemStateUnknown),
   };
-  return StatusChip(
-    key: const Key('system.llama.chip'),
+  return StatusText(
+    key: const Key('system.llama.status'),
     kind: kind,
-    icon: icon,
     label: label,
   );
 }
 
-/// The status chip of Hermes: ok, degraded (warn), down, unknown.
-StatusChip hermesChip(AppLocalizations l, String status) {
-  final (kind, icon, label) = switch (status) {
-    'ok' => (StatusKind.ok, DelveIcons.ok, l.systemStateOk),
-    'degraded' => (StatusKind.warn, DelveIcons.warning, l.systemStateDegraded),
-    'down' => (StatusKind.alert, DelveIcons.error, l.systemStateDown),
-    _ => (StatusKind.info, DelveIcons.info, l.systemStateUnknown),
+/// The state of Hermes as coloured text: ok, degraded (warn), down, unknown.
+StatusText hermesStatus(AppLocalizations l, String status) {
+  final (kind, label) = switch (status) {
+    'ok' => (StatusKind.ok, l.systemStateOk),
+    'degraded' => (StatusKind.warn, l.systemStateDegraded),
+    'down' => (StatusKind.alert, l.systemStateDown),
+    _ => (StatusKind.info, l.systemStateUnknown),
   };
-  return StatusChip(
-    key: const Key('system.hermes.chip'),
+  return StatusText(
+    key: const Key('system.hermes.status'),
     kind: kind,
-    icon: icon,
     label: label,
   );
 }

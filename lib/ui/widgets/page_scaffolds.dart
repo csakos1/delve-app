@@ -4,46 +4,86 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../theme/delve_theme.dart';
 
 /// Top-level screen (inside the bottom-nav shell): a Jost headline instead of
-/// an app bar.
-class TopLevelPage extends StatelessWidget {
+/// an app bar. With [tintOnScroll], the header (status bar included) turns
+/// surface-2 while the content is scrolled under it, like a scrolled app bar.
+class TopLevelPage extends StatefulWidget {
   const TopLevelPage({
     super.key,
     required this.title,
     required this.child,
     this.actions = const [],
+    this.tintOnScroll = false,
   });
 
   final String title;
   final Widget child;
   final List<Widget> actions;
+  final bool tintOnScroll;
+
+  @override
+  State<TopLevelPage> createState() => _TopLevelPageState();
+}
+
+class _TopLevelPageState extends State<TopLevelPage> {
+  bool _scrolled = false;
+
+  bool _onScroll(ScrollNotification n) {
+    if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
+    final scrolled = n.metrics.pixels > n.metrics.minScrollExtent;
+    if (scrolled != _scrolled) setState(() => _scrolled = scrolled);
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.colors;
+    Widget body = MediaQuery.removePadding(
+      context: context,
+      removeTop: true,
+      child: widget.child,
+    );
+    if (widget.tintOnScroll) {
+      body = NotificationListener<ScrollNotification>(
+        onNotification: _onScroll,
+        child: body,
+      );
+    }
     return SafeArea(
+      top: false,
       bottom: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DelveTokens.space4,
-              DelveTokens.space4,
-              DelveTokens.space2,
-              DelveTokens.space2,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Semantics(
-                    header: true,
-                    child: Text(title, style: context.text.headlineMedium),
+          AnimatedContainer(
+            key: const Key('page.header'),
+            duration: DelveTokens.short,
+            curve: DelveTokens.shortCurve,
+            color: _scrolled ? cs.surfaceContainer : cs.surface,
+            padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DelveTokens.space4,
+                DelveTokens.space4,
+                DelveTokens.space2,
+                DelveTokens.space2,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        widget.title,
+                        style: context.text.headlineMedium,
+                      ),
+                    ),
                   ),
-                ),
-                ...actions,
-              ],
+                  ...widget.actions,
+                ],
+              ),
             ),
           ),
-          Expanded(child: child),
+          Expanded(child: body),
         ],
       ),
     );

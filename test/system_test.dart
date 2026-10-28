@@ -1,4 +1,6 @@
+import 'package:delve/theme/delve_colors.dart';
 import 'package:delve/ui/format.dart';
+import 'package:delve/ui/widgets/status_ui.dart';
 import 'package:delve/ui/widgets/system_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -104,6 +106,8 @@ void main() {
 
       expect(find.text('Hermes Agent'), findsOneWidget);
       expect(find.text('degraded'), findsOneWidget);
+      // states are coloured words, not chips
+      expect(find.byType(StatusChip), findsNothing);
       expect(find.text('Disk'), findsOneWidget);
       expect(find.text('96% used'), findsOneWidget);
       expect(find.text('v0.22.2'), findsOneWidget);
@@ -128,7 +132,7 @@ void main() {
           find.ancestor(of: f, matching: find.byType(SurfaceCard)).first;
       for (final f in [
         find.textContaining('checked '),
-        find.byKey(const Key('system.hermes.chip')),
+        find.byKey(const Key('system.hermes.status')),
         find.text('96% used'),
         find.text('v0.22.2'),
         find.text('1 run active · 1 queued'),
@@ -364,14 +368,38 @@ void main() {
       expect(inCard(find.text('running')), findsOneWidget);
       expect(inCard(find.text('Qwen3.8-27B')), findsOneWidget);
       expect(inCard(find.text('51 °C · 11.1 / 12 GB')), findsOneWidget);
+      // the state is the last thing in its row, after the version or model
       for (final f in [
         find.text('2 GPUs'),
-        find.text('v0.22.2'),
-        find.text('Qwen3.8-27B'),
+        find.text('degraded'),
+        find.text('running'),
         find.text('51 °C · 11.1 / 12 GB'),
       ]) {
         expectOnRightEdge(t, inCard(f), card);
       }
+      for (final (before, state) in [
+        ('v0.22.2', 'degraded'),
+        ('Qwen3.8-27B', 'running'),
+      ]) {
+        // right of it on the same line, or on a line below when the row wraps
+        final b = t.getRect(inCard(find.text(before)));
+        final st = t.getRect(inCard(find.text(state)));
+        expect(
+          st.left >= b.right || st.top >= b.bottom,
+          isTrue,
+          reason: '$before before $state: $b, $st',
+        );
+      }
+      // states are coloured words, not chips
+      expect(inCard(find.byType(StatusChip)), findsNothing);
+      expect(
+        t.widget<Text>(inCard(find.text('degraded'))).style!.color,
+        DelveColors.dark.warnFg,
+      );
+      expect(
+        t.widget<Text>(inCard(find.text('running'))).style!.color,
+        DelveColors.dark.okFg,
+      );
 
       env.server.on(
         'POST',

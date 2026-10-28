@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import '../../api/models/models.dart';
 import '../../api/protocol.dart';
 import '../../app/chat.dart';
-import '../../app/chat_list.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../app/session.dart';
@@ -71,6 +70,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   /// The new chat exists; the screen is moving to it.
   bool _moving = false;
+
+  /// The last outbox entry of the first message seen: shown on if the entry
+  /// is gone a frame before the message made of it is (two streams).
+  OutboxRow? _lastOutbox;
   ChatActions? _opened;
 
   /// Thinking for a new chat (sent with its first message).
@@ -113,6 +116,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final first = widget.firstClientMsgId;
     if (id == null && first != null && first != oldWidget.firstClientMsgId) {
       _firstClientMsgId = first;
+      _lastOutbox = null;
       _moving = false;
     }
   }
@@ -205,7 +209,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       attachments: attachments,
     );
     if (widget.conversationId == null && mounted) {
-      setState(() => _firstClientMsgId = id);
+      setState(() {
+        _firstClientMsgId = id;
+        _lastOutbox = null;
+      });
     }
   }
 
@@ -308,17 +315,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  Future<void> _setArchived(String id, {required bool archived}) async {
-    final l = AppLocalizations.of(context);
-    try {
-      await ref
-          .read(chatListPagerProvider(false).notifier)
-          .setArchived(id, archived: archived);
-      if (mounted) _snack(archived ? l.chatsArchived : l.archivedRestored);
-    } on Exception catch (e) {
-      if (mounted) _snack(l.chatsArchiveFailed(apiErrorText(l, e)));
+  /// Usage sheet. Closing it gives the focus back to the composer, which
+  /// would open the keyboard: when the keyboard was closed before (the field
+  /// may still hold the focus after Back hid it), the focus goes first.
+  Future<void> _openUsage(String id, String title) async {
+    if (MediaQuery.viewInsetsOf(context).bottom == 0) {
+      FocusManager.instance.primaryFocus?.unfocus();
     }
+    await showUsageSheet(context, conversationId: id, title: title);
   }
+
+  /// The user's own message in the moment between its outbox entry and the
+  /// chat that holds it (a new chat moving to its conversation): the same
+  /// bubble, so nothing blinks.
+  Widget _writtenBubble(MessageRow m) => UserBubble(
+    key: ValueKey('msg.${m.id}'),
+    text: m.content,
+    attachments: m.attachments,
+    onOpenAttachment: _openAttachment,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -332,20 +347,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget _buildNew(BuildContext context) {
     final l = AppLocalizations.of(context);
     final first = _firstClientMsgId;
-    if (first != null && !_moving) {
-      // watched, not listened: the rebuild this triggers runs the post-frame
-      // callback; a callback on its own schedules no frame
-      final created = ref.watch(_createdMessageProvider(first)).value;
-      if (created != null) {
-        _moving = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) context.replace(Routes.chat(created.conversationId));
-        });
-      }
+    // watched, not listened: the rebuild this triggers runs the post-frame
+    // callback (a callback on its own schedules no frame); watched until the
+    // chat shows, so the message stays on screen while the screen moves
+    final created = first == null
+        ? null
+        : ref.watch(_createdMessageProvider(first)).value;
+    if (created != null && !_moving) {
+      _moving = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.replace(Routes.chat(created.conversationId));
+      });
     }
-    final outbox = first == null
+    final current = first == null
         ? null
         : ref.watch(_outboxRowProvider(first)).value;
+    if (current != null) _lastOutbox = current;
+    final outbox =
+        current ?? (first != null && created == null ? _lastOutbox : null);
     final host =
         ref.watch(sessionProvider.select((s) => s.credentials?.server.host)) ??
         '';
@@ -355,36 +374,43 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
     );
 
+    // the outbox entry until the server's message is written, then that
+    // message until the screen has moved to the conversation
+    final Widget? sent = outbox != null
+        ? OutboxBubble(
+            row: outbox,
+            onOpenAttachment: _openAttachment,
+            onRetry: () => unawaited(
+              ref.read(chatActionsProvider)?.retry(outbox.clientMsgId),
+            ),
+            onDiscard: () {
+              unawaited(
+                ref.read(chatActionsProvider)?.discard(outbox.clientMsgId),
+              );
+              setState(() {
+                _firstClientMsgId = null;
+                _lastOutbox = null;
+              });
+            },
+          )
+        : created != null
+        ? _writtenBubble(created)
+        : null;
+
     return Scaffold(
       appBar: _ChatAppBar(title: l.newChat),
       body: Column(
         children: [
           Expanded(
-            child: outbox == null
-                ? _NewChatIntro(host: host.split('.').first)
-                : ListView(
-                    reverse: true,
-                    padding: const EdgeInsets.all(DelveTokens.space4),
-                    children: [
-                      OutboxBubble(
-                        row: outbox,
-                        onOpenAttachment: _openAttachment,
-                        onRetry: () => unawaited(
-                          ref
-                              .read(chatActionsProvider)
-                              ?.retry(outbox.clientMsgId),
-                        ),
-                        onDiscard: () {
-                          unawaited(
-                            ref
-                                .read(chatActionsProvider)
-                                ?.discard(outbox.clientMsgId),
-                          );
-                          setState(() => _firstClientMsgId = null);
-                        },
-                      ),
-                    ],
-                  ),
+            child: _UnderBarFade(
+              child: sent == null
+                  ? _NewChatIntro(host: host.split('.').first)
+                  : ListView(
+                      reverse: true,
+                      padding: _listPadding,
+                      children: [sent],
+                    ),
+            ),
           ),
           _composer(connected: connected, thinking: _newThinking),
         ],
@@ -419,8 +445,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             l.newChat,
           );
     final stopTarget = data?.openRuns.firstOrNull;
+    // a new chat that has just moved here: its first message until the chat
+    // has loaded (one frame), so the screen does not blink empty
+    final first = _firstClientMsgId;
+    final carried = first == null
+        ? null
+        : ref.watch(_createdMessageProvider(first)).value;
     final items = data == null
-        ? const <Widget>[]
+        ? [if (carried != null) _writtenBubble(carried)]
         : _items(data, live, connected: connected, selfDevice: selfDevice);
 
     return Scaffold(
@@ -428,43 +460,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         title: title,
         actions: [
           if (conversation != null)
-            ContextChip(
-              numbers: UsageNumbers.of(conversation, live?.context),
-              onTap: () => unawaited(
-                showUsageSheet(context, conversationId: id, title: title),
+            Padding(
+              // the chip ends on the page's 16 dp gutter
+              padding: const EdgeInsets.only(right: DelveTokens.space4),
+              child: ContextChip(
+                numbers: UsageNumbers.of(conversation, live?.context),
+                onTap: () => unawaited(_openUsage(id, title)),
               ),
-            ),
-          if (conversation != null)
-            PopupMenuButton<bool>(
-              key: const Key('chat.menu'),
-              tooltip: l.chatMenu,
-              icon: const SymbolIcon(DelveIcons.moreVert),
-              onSelected: (archive) =>
-                  unawaited(_setArchived(id, archived: archive)),
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: !conversation.archived,
-                  child: Text(
-                    conversation.archived ? l.archivedRestore : l.chatsArchive,
-                  ),
-                ),
-              ],
             ),
         ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: ListView.separated(
-              key: const Key('chat.list'),
-              reverse: true,
-              padding: const EdgeInsets.all(DelveTokens.space4),
-              itemCount: items.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(height: DelveTokens.space3),
-              // reversed: the newest item sits at the bottom, next to the
-              // composer, and stays there while text streams in
-              itemBuilder: (_, i) => items[items.length - 1 - i],
+            child: _UnderBarFade(
+              child: ListView.separated(
+                key: const Key('chat.list'),
+                reverse: true,
+                padding: _listPadding,
+                itemCount: items.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: DelveTokens.space3),
+                // reversed: the newest item sits at the bottom, next to the
+                // composer, and stays there while text streams in
+                itemBuilder: (_, i) => items[items.length - 1 - i],
+              ),
             ),
           ),
           if (conversation != null && conversation.contextWarn)
@@ -568,8 +588,57 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 }
 
-/// Top bar: surface-2, back, title (titleMedium, one line), the context
-/// chip (an existing chat) and the overflow menu.
+/// The chat list's padding: on top, room for the fade under the bar, so the
+/// oldest item is clear of it when scrolled to the top.
+const _listPadding = EdgeInsets.fromLTRB(
+  DelveTokens.space4,
+  _UnderBarFade.height,
+  DelveTokens.space4,
+  DelveTokens.space4,
+);
+
+/// The chat under its top bar: the bar has the page colour, and right under
+/// it the page colour fades out over [height], so text scrolling up dims out
+/// under the bar instead of being cut at a line. Taps go through the fade.
+class _UnderBarFade extends StatelessWidget {
+  const _UnderBarFade({required this.child});
+
+  static const double height = DelveTokens.space6;
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final page = context.colors.surface;
+    return Stack(
+      children: [
+        Positioned.fill(child: child),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: height,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              key: const Key('chat.fade'),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [page, page.withValues(alpha: 0)],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Top bar: the page colour (it does not change when the chat scrolls under
+/// it), back, title (titleMedium, one line) and the context chip on the
+/// right (an existing chat).
 class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   const _ChatAppBar({required this.title, this.actions = const []});
 
@@ -581,7 +650,9 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) => AppBar(
-    backgroundColor: context.colors.surfaceContainer,
+    key: const Key('chat.topBar'),
+    backgroundColor: context.colors.surface,
+    notificationPredicate: (_) => false,
     leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
     title: Text(
       title,

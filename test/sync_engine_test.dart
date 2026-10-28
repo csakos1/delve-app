@@ -27,6 +27,19 @@ const fast = SyncTiming(
   pauseGrace: Duration(milliseconds: 100),
   batchWindow: Duration(milliseconds: 5),
   ackTimeout: Duration(seconds: 2),
+  sentSettle: Duration(milliseconds: 50),
+);
+
+/// [fast], but an acknowledged message waits long for its event.
+const holdSent = SyncTiming(
+  helloTimeout: Duration(milliseconds: 400),
+  silence: Duration(milliseconds: 600),
+  backoffMin: Duration(milliseconds: 10),
+  backoffMax: Duration(milliseconds: 40),
+  pauseGrace: Duration(milliseconds: 100),
+  batchWindow: Duration(milliseconds: 5),
+  ackTimeout: Duration(seconds: 2),
+  sentSettle: Duration(seconds: 30),
 );
 
 /// Polls [cond] until it holds (real sockets need real time).
@@ -469,6 +482,112 @@ void main() {
       ws.autoAck = true;
       await engine.retryMessage(id);
       await eventually(() async => (await db.select(db.outbox).get()).isEmpty);
+    });
+
+    test(
+      'acknowledged: kept as sent, not sent again, gone with its message',
+      () async {
+        await engine.dispose();
+        engine = makeEngine(timing: holdSent);
+        await engine.start();
+        await live();
+        final id = await engine.sendMessage('hi', conversationId: 'c_1');
+        await eventually(
+          () async => (await db.select(db.outbox).getSingle()).state == 'sent',
+          reason: 'sent',
+        );
+        // the chat shows it in the meantime; a reconnect does not resend it
+        await ws.connections.first.close(1011);
+        await ws.nextConnection(index: 1);
+        await live();
+        expect([
+          for (final c in ws.connections) ...c.all('chat.send'),
+        ], hasLength(1));
+        expect((await db.select(db.outbox).getSingle()).state, 'sent');
+
+        ws.broadcast('message.created', {
+          'conversation_id': 'c_1',
+          'message': sample('message_user', {
+            'id': 501,
+            'conversation_id': 'c_1',
+            'content': 'hi',
+            'client_msg_id': id,
+            'attachments': <Object?>[],
+          }),
+        });
+        await eventually(
+          () async => (await db.select(db.outbox).get()).isEmpty,
+          reason: 'outbox row dropped',
+        );
+        final m = await (db.select(
+          db.messages,
+        )..where((t) => t.clientMsgId.equals(id))).getSingle();
+        expect(m.content, 'hi');
+      },
+    );
+
+    test(
+      'acknowledged, but no message comes: the row goes after a while',
+      () async {
+        await engine.start();
+        await live();
+        await engine.sendMessage('hi', conversationId: 'c_1');
+        await eventually(
+          () async => (await db.select(db.outbox).get()).isEmpty,
+          reason: 'dropped after sentSettle',
+        );
+      },
+    );
+
+    test('a message written before its ack drops the row at once', () async {
+      await engine.dispose();
+      engine = makeEngine(timing: holdSent);
+      ws.autoAck = false;
+      await engine.start();
+      await live();
+      final id = await engine.sendMessage('hi', conversationId: 'c_1');
+      final conn = ws.connections.first;
+      final send = await conn.next('chat.send');
+      ws.broadcast('message.created', {
+        'conversation_id': 'c_1',
+        'message': sample('message_user', {
+          'id': 502,
+          'conversation_id': 'c_1',
+          'content': 'hi',
+          'client_msg_id': id,
+          'attachments': <Object?>[],
+        }),
+      });
+      await eventually(
+        () async => (await db.select(db.messages).get()).isNotEmpty,
+        reason: 'message written',
+      );
+      conn.reply(send, {
+        'conversation_id': 'c_1',
+        'message_id': 502,
+        'run_id': 'q_1',
+        'replayed': false,
+      });
+      await eventually(
+        () async => (await db.select(db.outbox).get()).isEmpty,
+        reason: 'outbox empty without waiting for sentSettle',
+        timeout: const Duration(seconds: 2),
+      );
+    });
+
+    test('sent rows of a previous run are dropped at start', () async {
+      await db
+          .into(db.outbox)
+          .insert(
+            OutboxCompanion.insert(
+              clientMsgId: '3b2f8a8e-1111-4c1e-9a7b-000000000003',
+              body: 'b',
+              createdAt: DateTime.utc(2026),
+              state: const Value('sent'),
+            ),
+          );
+      await engine.start();
+      expect(await db.select(db.outbox).get(), isEmpty);
     });
 
     test(

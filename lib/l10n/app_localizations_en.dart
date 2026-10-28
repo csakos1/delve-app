@@ -505,9 +505,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatLinkCopied => 'Link copied';
 
   @override
-  String get chatMenu => 'Chat options';
-
-  @override
   String get chatNotConnected => 'not connected to the server';
 
   @override

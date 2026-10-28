@@ -958,12 +958,6 @@ abstract class AppLocalizations {
   /// **'Link copied'**
   String get chatLinkCopied;
 
-  /// No description provided for @chatMenu.
-  ///
-  /// In en, this message translates to:
-  /// **'Chat options'**
-  String get chatMenu;
-
   /// No description provided for @chatNotConnected.
   ///
   /// In en, this message translates to:
