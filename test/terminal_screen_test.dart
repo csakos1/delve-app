@@ -4,11 +4,13 @@ import 'package:delve/terminal/sticky_keys.dart';
 import 'package:delve/terminal/terminal_connection.dart';
 import 'package:delve/terminal/terminal_lock.dart';
 import 'package:delve/terminal/terminal_providers.dart';
+import 'package:delve/terminal/terminal_service.dart';
 import 'package:delve/terminal/terminal_theme.dart';
 import 'package:delve/terminal/tmux_terminal.dart';
 import 'package:delve/ui/screens/settings_screen.dart';
 import 'package:delve/ui/screens/share_screen.dart';
 import 'package:delve/ui/screens/terminal_screen.dart';
+import 'package:delve/ui/widgets/page_scaffolds.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -448,6 +450,75 @@ void main() {
     await t.tap(find.byKey(const ValueKey('terminal.key.|')));
     await t.pump();
     expect(env.terminal.dialer.last.written, '\x1b|');
+  });
+
+  TerminalService service(WidgetTester t) => ProviderScope.containerOf(
+    t.element(find.byType(TerminalScreen)),
+  ).read(terminalServiceProvider);
+
+  testWidgets('the extra row: page 2 by a swipe, its keys reach the '
+      'desktop, the row remembers its page (T2b-2)', (t) async {
+    final env = await openTerminal(t, setupDone: true);
+    final link = env.terminal.dialer.last;
+    expect(find.byKey(const ValueKey('terminal.key.PgUp')), findsNothing);
+    await t.fling(
+      find.byKey(const Key('terminal.extraKeys.pages')),
+      const Offset(-300, 0),
+      1000,
+    );
+    await frames(t, 20);
+    expect(find.byKey(const ValueKey('terminal.key.PgUp')), findsOneWidget);
+    expect(find.byKey(const ValueKey('terminal.key.Tab')), findsNothing);
+    expect(service(t).extraKeysPage, 1);
+    for (final k in ['PgUp', 'F10', 'Del']) {
+      await t.tap(find.byKey(ValueKey('terminal.key.$k')));
+    }
+    await t.tap(
+      find.byKey(ValueKey('terminal.key.${DelveIcons.backspace.codePoint}')),
+    );
+    await t.pump();
+    expect(link.written, '\x1b[5~\x1b[21~\x1b[3~\x7f');
+  });
+
+  testWidgets('a pinch sets the font size in whole steps up to 20 sp, shows '
+      'the size and the columns × rows for a second, and is no tap (T2b-2)', (
+    t,
+  ) async {
+    final env = await openTerminal(t, setupDone: true);
+    final link = env.terminal.dialer.last;
+    final mid = t.getCenter(find.byKey(const Key('terminal.scroll')));
+    final a = await t.startGesture(mid - const Offset(40, 0), pointer: 7);
+    final b = await t.startGesture(mid + const Offset(40, 0), pointer: 8);
+    await t.pump();
+    for (var i = 0; i < 4; i++) {
+      await a.moveBy(const Offset(-10, 0));
+      await b.moveBy(const Offset(10, 0));
+      await t.pump();
+    }
+    // 80 px apart → 160: twice 13 sp, kept at 20
+    expect(service(t).fontSize, 20);
+    await frames(t, 2);
+    final chip = find.byKey(const Key('terminal.pinch.chip'));
+    final term = service(t).connection.terminal;
+    expect(
+      t
+          .widget<Text>(find.descendant(of: chip, matching: find.byType(Text)))
+          .data,
+      '20 sp · ${term.viewWidth} × ${term.viewHeight}',
+    );
+    double opacity() => t
+        .widget<AnimatedOpacity>(
+          find.ancestor(of: chip, matching: find.byType(AnimatedOpacity)).first,
+        )
+        .opacity;
+    expect(opacity(), 1);
+    await a.up();
+    await b.up();
+    await frames(t, 4);
+    expect(link.written, isNot(contains('\x1b[<')), reason: 'no click');
+    await t.pump(const Duration(seconds: 1));
+    await frames(t, 4);
+    expect(opacity(), 0);
   });
 
   group('selection (T2b)', () {

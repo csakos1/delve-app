@@ -60,6 +60,9 @@ abstract final class DelveTokens {
   // motion
   static const Duration fast = Duration(milliseconds: 100);
   static const Duration short = Duration(milliseconds: 150);
+
+  /// How long the terminal's pinch chip stays after the last step.
+  static const Duration pinchChip = Duration(seconds: 1);
   static const Duration medium = Duration(milliseconds: 250);
   static const Duration long = Duration(milliseconds: 350);
   static const Duration caption = Duration(milliseconds: 2000);

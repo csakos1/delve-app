@@ -119,6 +119,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _chipTimer?.cancel();
     _settle?.cancel();
     _thaw?.cancel();
     _focus.dispose();
@@ -130,6 +131,25 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
     if (!mounted) return;
     _focus.requestFocus();
     _viewKey.currentState?.requestKeyboard();
+  }
+
+  /// The pinch chip (design 22-0): the size and the new columns × rows,
+  /// for a second after the last step.
+  bool _chip = false;
+  Timer? _chipTimer;
+
+  void _pinchFont(double size) {
+    unawaited(_service.setFontSize(size));
+    unawaited(HapticFeedback.selectionClick());
+    _chipTimer?.cancel();
+    setState(() => _chip = true);
+    _chipTimer = Timer(DelveTokens.pinchChip, () {
+      if (mounted) setState(() => _chip = false);
+    });
+    // the columns and rows are known after the next layout
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   /// A tap on the terminal: ends a selection; otherwise a click for tmux
@@ -380,7 +400,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
                       right: 0,
                       bottom: live,
                       height: DelveTokens.terminalExtraKeys,
-                      child: ExtraKeys(connection: c),
+                      child: ExtraKeys(
+                        connection: c,
+                        page: service.extraKeysPage,
+                        onPage: (p) => service.extraKeysPage = p,
+                      ),
                     ),
                   ],
                 ),
@@ -411,6 +435,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
                 onTap: _tap,
                 onLongPressStart: _selectStart,
                 onLongPressMove: _selectMove,
+                fontSize: service.fontSize,
+                onFontSize: _pinchFont,
                 // every touch is the layer's: xterm's own long press opened
                 // the keyboard and clicked into tmux (T2a phone test)
                 child: IgnorePointer(
@@ -442,6 +468,24 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
                 onSendToChat: _sendSelection,
                 textStyle: delveTerminalStyle(service.fontSize),
                 focusNode: _focus,
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              top: DelveTokens.space2,
+              child: IgnorePointer(
+                child: Center(
+                  child: AnimatedOpacity(
+                    opacity: _chip ? 1 : 0,
+                    duration: DelveTokens.short,
+                    child: _PinchChip(
+                      size: service.fontSize.round(),
+                      columns: c.terminal.viewWidth,
+                      rows: c.terminal.viewHeight,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -910,6 +954,45 @@ class _Denied extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// The font size and the terminal's columns × rows while pinching
+/// (design 22-0: "pinch feedback").
+class _PinchChip extends StatelessWidget {
+  const _PinchChip({
+    required this.size,
+    required this.columns,
+    required this.rows,
+  });
+
+  final int size;
+  final int columns;
+  final int rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    return Container(
+      key: const Key('terminal.pinch.chip'),
+      height: DelveTokens.chip,
+      padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space3),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(DelveTokens.chip),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SymbolIcon(DelveIcons.textSize, size: 16, color: cs.onSurfaceVariant),
+          const SizedBox(width: DelveTokens.space2),
+          Text(
+            AppLocalizations.of(context).termPinchChip(size, columns, rows),
+            style: DelveText.monoSmall.copyWith(color: cs.onSurface),
+          ),
+        ],
+      ),
     );
   }
 }

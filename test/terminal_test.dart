@@ -786,6 +786,53 @@ void main() {
       expect(row(t, 9), '');
     });
 
+    test('copy mode begins with a whole redraw already scrolled up: the '
+        "kept lines match tmux's; a key that leaves it keeps the lines "
+        'scrolled onto the pane, without the indicator (N110)', () {
+      final t = screen();
+      // output scrolls three lines out at the top: kept
+      t.write('\x1b[1;9r\x1b[9;1H\nline9\r\nline10\r\nline11\x1b[r');
+      expect(t.historyLength, 3);
+      expect(row(t, 0), 'line3');
+      // tmux enters copy mode one line up and draws the whole pane
+      final redraw = StringBuffer('\x1b[?25l');
+      for (var i = 0; i < 9; i++) {
+        redraw.write('\x1b[${i + 1};1H\x1b[2Kline${i + 2}');
+      }
+      redraw.write('\x1b[1;15H\x1b[30;43m[1/50]\x1b[0m');
+      t.write(redraw.toString());
+      expect(t.inCopyMode, isTrue);
+      expect(row(t, 0), startsWith('line2'));
+      expect(t.historyLength, 2, reason: 'line2 is on the pane now');
+      expect(t.belowLength, 1, reason: 'line11 went under the bottom');
+      // one more line up, as tmux draws a step
+      t.write(
+        '\x1b[1;9r\x1b[1;1H\x1b[1L\x1b[1;1Hline1\x1b[1;15H\x1b[30;43m'
+        '[2/50]\x1b[0m\x1b[2;1H\x1b[2Kline2\x1b[r',
+      );
+      expect(t.historyLength, 1);
+      expect(t.belowLength, 2);
+      // a key: tmux redraws the live pane over these rows
+      t.leftCopyMode();
+      expect(t.belowLength, 0);
+      expect(t.historyLength, 3);
+      final doc = t.documentLines();
+      expect(
+        [for (var i = 0; i < 3; i++) doc[i].getText().trim()],
+        ['line0', 'line1', 'line2'],
+      );
+      expect(identical(doc[1], t.buffer.lines[0]), isFalse, reason: 'a copy');
+    });
+
+    test('out of copy mode nothing is kept below the pane', () {
+      final t = screen()..write('\x1b[1;15H\x1b[30;43m[2/50]\x1b[0m');
+      expect(t.inCopyMode, isTrue);
+      expect(t.belowLength, 2);
+      t.write('\x1b[1;1H\x1b[2Kline0'); // the live pane again
+      expect(t.inCopyMode, isFalse);
+      expect(t.belowLength, 0);
+    });
+
     test('the main screen is left to xterm', () {
       final t = TmuxTerminal()..resize(20, 10);
       for (var i = 0; i < 10; i++) {
@@ -1071,6 +1118,36 @@ void main() {
       await until(() => c.terminal.inCopyMode, reason: 'copy mode again');
       c.terminal.textInput('y');
       expect(link.written, endsWith('xqy'));
+    });
+
+    test('PgUp / PgDn page through copy mode: no `q`, the selection stays; '
+        'other keys still leave it (T2b-2)', () async {
+      final rig = Rig();
+      addTearDown(rig.dispose);
+      final link = await rig.live();
+      final c = rig.connection;
+      link.send(screen() + indicator(3));
+      await until(() => c.terminal.inCopyMode, reason: 'copy mode');
+      final buffer = c.terminal.buffer;
+      c.selection.setSelection(
+        buffer.createAnchorFromOffset(const CellOffset(0, 5)),
+        buffer.createAnchorFromOffset(const CellOffset(5, 5)),
+      );
+      expect(c.hasSelection, isTrue);
+      c.terminal.keyInput(TerminalKey.pageUp);
+      c.terminal.keyInput(TerminalKey.pageDown);
+      expect(link.written, '\x1b[5~\x1b[6~');
+      expect(c.terminal.inCopyMode, isTrue);
+      expect(c.hasSelection, isTrue);
+      c.terminal.keyInput(TerminalKey.home);
+      expect(link.written, startsWith('\x1b[5~\x1b[6~q'));
+      expect(c.terminal.inCopyMode, isFalse);
+      expect(c.hasSelection, isFalse);
+      // outside copy mode PgUp is the program's, as it is
+      expect(TerminalConnection.isPageKey('\x1b[5~'), isTrue);
+      expect(TerminalConnection.isPageKey('\x1b[6;5~'), isTrue);
+      expect(TerminalConnection.isPageKey('\x1b[3~'), isFalse);
+      expect(TerminalConnection.isPageKey('q'), isFalse);
     });
 
     test('mouse reports are told apart from keys', () {

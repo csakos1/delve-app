@@ -74,6 +74,9 @@ class TmuxTerminal extends Terminal {
   int _copyUp = 0;
   int _copyHistory = 0;
 
+  /// The column where the indicator (and the time before it) begins.
+  int _indicatorAt = 0;
+
   /// Where the shell's cursor was (column, pane row) when copy mode began.
   (int, int)? _prompt;
 
@@ -90,11 +93,44 @@ class TmuxTerminal extends Terminal {
 
   /// A keystroke takes tmux out of copy mode (the connection sends `q`
   /// before it): no second `q` before tmux's redraw shows it.
+  ///
+  /// tmux's redraw puts the live pane back over these rows in place. The
+  /// lines scrolled back onto the pane are still in tmux's history, so they
+  /// are kept again – copies of those on screen – and what is kept below is
+  /// what tmux redraws (N110: after a `q` from a scroll, closing the keyboard
+  /// brought back older lines than tmux's for a round trip).
   void leftCopyMode() {
     if (!_copyMode) return;
     _copyMode = false;
     _leaving = true;
+    if (!isUsingAltBuffer) return;
+    // the live pane is the last rows of the document while the lines kept
+    // below are exactly the scroll (else only the stale ones are dropped)
+    if (_copyUp > 0 && _below.length == _copyUp) {
+      final doc = documentLines();
+      final first = _history.length; // the pane's first row in [doc]
+      final rows = paneRows;
+      final kept = [
+        for (var i = 0; i < doc.length - rows; i++)
+          i >= first && i < first + rows ? _copyOf(doc[i]) : doc[i],
+      ];
+      // the pane's first row without tmux's indicator, as tmux keeps it
+      if (first < kept.length) {
+        final top = kept[first];
+        top.eraseRange(math.min(_indicatorAt, top.length), top.length, cursor);
+      }
+      _history
+        ..clear()
+        ..addAll(kept);
+      final over = _history.length - historyMax;
+      if (over > 0) _history.removeRange(0, over);
+    }
+    _below.clear();
   }
+
+  /// A detached copy of [line]: tmux overwrites the original in place.
+  static BufferLine _copyOf(BufferLine line) =>
+      BufferLine(line.length)..copyFrom(line, 0, 0, line.length);
 
   /// A `q` went out; the indicator still on screen is the old one.
   bool _leaving = false;
@@ -109,13 +145,33 @@ class TmuxTerminal extends Terminal {
   /// time and before an optional search count) is right-aligned on the
   /// pane's first row, in mode-style colours.
   void _seeCopyMode() {
+    final was = _copyMode;
     _copyMode = false;
     if (!_found()) {
       _leaving = false;
-      return;
+    } else {
+      // still the old screen until tmux's redraw after the `q`
+      _copyMode = !_leaving;
     }
-    // still the old screen until tmux's redraw after the `q`
-    _copyMode = !_leaving;
+    if (!was && _copyMode) _enteredCopyMode();
+    // out of copy mode the pane is live: nothing is below it
+    if (was && !_copyMode) _below.clear();
+  }
+
+  /// tmux draws the pane whole when copy mode begins, already scrolled up
+  /// by [_copyUp]: the lines on top are the newest of tmux's history (no
+  /// longer kept here), the live lines that went under the bottom are not
+  /// kept – blank ones stand in for them, redrawn by tmux when they come
+  /// back (N110: the kept lines matched tmux's again).
+  void _enteredCopyMode() {
+    if (!isUsingAltBuffer) return;
+    final k = math.min(_copyUp, paneRows);
+    if (k <= 0) return;
+    _history.removeRange(math.max(0, _history.length - k), _history.length);
+    _below.clear();
+    for (var i = 0; i < k; i++) {
+      _below.add(BufferLine(viewWidth));
+    }
   }
 
   bool _found() {
@@ -137,6 +193,7 @@ class TmuxTerminal extends Terminal {
     }
     final m = _indicator.firstMatch(text.toString());
     if (m == null) return false;
+    _indicatorAt = math.max(0, w - 48) + m.start;
     _copyUp = int.parse(m.group(1)!);
     _copyHistory = int.parse(m.group(2)!);
     return true;

@@ -149,6 +149,12 @@ reached over Tailscale only.
   The app's sessions have no tmux status line (`status off`; the tab bar names the
   session), and the cursor is drawn over the view, from the cell's top to as far below the
   middle of the capitals: xterm's filled the cell, so it sat low beside the text.
+  The extra row has a second page, swiped to (Home End PgUp PgDn F1 F2 F3 F5 F10 Ins Del
+  ⌫; two dots while swiping; it keeps its page). PgUp and PgDn page through tmux's copy mode
+  after a scroll instead of leaving it. Two fingers pinch the font size, 9–20 sp in whole
+  steps, with a chip of the size and the new columns × rows for a second. Bold text is
+  JetBrains Mono 700. Rows whose edge cells are coloured (htop's bars) reach the screen's
+  edges. Leaving copy mode with a key keeps the lines tmux has in its history (N110).
 
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share

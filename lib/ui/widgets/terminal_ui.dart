@@ -456,18 +456,65 @@ class _FingerprintText extends StatelessWidget {
   );
 }
 
-/// The extra key row, page 1 (design 22). Ctrl/Alt are sticky; the keys
+/// The extra key row (design 22): two pages, swiped sideways – page 1 Tab
+/// Esc Ctrl Alt, the arrows and `| ~ / -`; page 2 Home End PgUp PgDn F1 F2
+/// F3 F5 F10 Ins Del ⌫. Two dots show the page while swiping; the row
+/// remembers its page ([page], [onPage]). Ctrl/Alt are sticky; the keys
 /// never take the focus, so the keyboard stays open.
-class ExtraKeys extends StatelessWidget {
-  const ExtraKeys({super.key, required this.connection});
+class ExtraKeys extends StatefulWidget {
+  const ExtraKeys({
+    super.key,
+    required this.connection,
+    this.page = 0,
+    this.onPage,
+  });
 
   final TerminalConnection connection;
+
+  /// The page shown first.
+  final int page;
+
+  /// The page swiped to.
+  final ValueChanged<int>? onPage;
+
+  @override
+  State<ExtraKeys> createState() => _ExtraKeysState();
+}
+
+class _ExtraKeysState extends State<ExtraKeys> {
+  late final PageController _pages = PageController(
+    initialPage: widget.page.clamp(0, 1),
+  );
+  bool _swiping = false;
+  int _shown = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _shown = widget.page.clamp(0, 1);
+  }
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  bool _onScroll(ScrollNotification n) {
+    final swiping = switch (n) {
+      ScrollStartNotification() || ScrollUpdateNotification() => true,
+      ScrollEndNotification() => false,
+      _ => _swiping,
+    };
+    if (swiping != _swiping) setState(() => _swiping = swiping);
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final keys = connection.keys;
-    final term = connection.terminal;
+    final keys = widget.connection.keys;
+    final term = widget.connection.terminal;
     void key(TerminalKey k) {
       unawaited(HapticFeedback.selectionClick());
       term.keyInput(k);
@@ -479,42 +526,121 @@ class ExtraKeys extends StatelessWidget {
       keys.consumed();
     }
 
+    final cs = context.colors;
     return ListenableBuilder(
       listenable: keys,
       builder: (context, _) => DecoratedBox(
         key: const Key('terminal.extraKeys'),
         decoration: BoxDecoration(
-          color: context.colors.surfaceContainer,
+          color: cs.surfaceContainer,
           border: Border(
             top: BorderSide(
-              color: context.colors.outlineVariant,
+              color: cs.outlineVariant,
               width: DelveTokens.hairline,
             ),
           ),
         ),
-        child: Row(
+        child: Stack(
           children: [
-            // Tab first, at the thumb (T2b phone test)
-            _Key('Tab', () => key(TerminalKey.tab)),
-            _Key('Esc', () => key(TerminalKey.escape)),
-            _Key(
-              'Ctrl',
-              keys.tapCtrl,
-              sticky: keys.ctrl,
-              semantics: l.termKeyCtrl,
+            NotificationListener<ScrollNotification>(
+              onNotification: _onScroll,
+              child: PageView(
+                key: const Key('terminal.extraKeys.pages'),
+                controller: _pages,
+                onPageChanged: (p) {
+                  setState(() => _shown = p);
+                  widget.onPage?.call(p);
+                },
+                children: [
+                  Row(
+                    children: [
+                      // Tab first, at the thumb (T2b phone test)
+                      _Key('Tab', () => key(TerminalKey.tab)),
+                      _Key('Esc', () => key(TerminalKey.escape)),
+                      _Key(
+                        'Ctrl',
+                        keys.tapCtrl,
+                        sticky: keys.ctrl,
+                        semantics: l.termKeyCtrl,
+                      ),
+                      _Key(
+                        'Alt',
+                        keys.tapAlt,
+                        sticky: keys.alt,
+                        semantics: l.termKeyAlt,
+                      ),
+                      _Key.icon(
+                        DelveIcons.arrowBack,
+                        () => key(TerminalKey.arrowLeft),
+                      ),
+                      _Key.icon(
+                        DelveIcons.arrowDown,
+                        () => key(TerminalKey.arrowDown),
+                      ),
+                      _Key.icon(
+                        DelveIcons.arrowUp,
+                        () => key(TerminalKey.arrowUp),
+                      ),
+                      _Key.icon(
+                        DelveIcons.arrowForward,
+                        () => key(TerminalKey.arrowRight),
+                      ),
+                      _Key('|', () => char('|'), big: true),
+                      _Key('~', () => char('~'), big: true),
+                      _Key('/', () => char('/'), big: true),
+                      _Key('-', () => char('-'), big: true),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      _Key('Home', () => key(TerminalKey.home)),
+                      _Key('End', () => key(TerminalKey.end)),
+                      _Key('PgUp', () => key(TerminalKey.pageUp)),
+                      _Key('PgDn', () => key(TerminalKey.pageDown)),
+                      _Key('F1', () => key(TerminalKey.f1)),
+                      _Key('F2', () => key(TerminalKey.f2)),
+                      _Key('F3', () => key(TerminalKey.f3)),
+                      _Key('F5', () => key(TerminalKey.f5)),
+                      _Key('F10', () => key(TerminalKey.f10)),
+                      _Key('Ins', () => key(TerminalKey.insert)),
+                      _Key('Del', () => key(TerminalKey.delete)),
+                      _Key.icon(
+                        DelveIcons.backspace,
+                        () => key(TerminalKey.backspace),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            _Key('Alt', keys.tapAlt, sticky: keys.alt, semantics: l.termKeyAlt),
-            _Key.icon(DelveIcons.arrowBack, () => key(TerminalKey.arrowLeft)),
-            _Key.icon(DelveIcons.arrowDown, () => key(TerminalKey.arrowDown)),
-            _Key.icon(DelveIcons.arrowUp, () => key(TerminalKey.arrowUp)),
-            _Key.icon(
-              DelveIcons.arrowForward,
-              () => key(TerminalKey.arrowRight),
+            // the page, while swiping (design 22-0: page dots)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: DelveTokens.space1,
+              child: IgnorePointer(
+                child: AnimatedOpacity(
+                  key: const Key('terminal.extraKeys.dots'),
+                  opacity: _swiping ? 1 : 0,
+                  duration: DelveTokens.short,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (var i = 0; i < 2; i++)
+                        Container(
+                          width: DelveTokens.space1,
+                          height: DelveTokens.space1,
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: i == _shown ? cs.onSurface : cs.outline,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            _Key('|', () => char('|'), big: true),
-            _Key('~', () => char('~'), big: true),
-            _Key('/', () => char('/'), big: true),
-            _Key('-', () => char('-'), big: true),
           ],
         ),
       ),

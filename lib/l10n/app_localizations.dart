@@ -3969,6 +3969,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Selection end'**
   String get termSelEnd;
+
+  /// No description provided for @termPinchChip.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} sp · {columns} × {rows}'**
+  String termPinchChip(int size, int columns, int rows);
 }
 
 class _AppLocalizationsDelegate

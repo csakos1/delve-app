@@ -1776,5 +1776,19 @@
     }
   },
   "termSelStart": "Selection start",
-  "termSelEnd": "Selection end"
+  "termSelEnd": "Selection end",
+  "termPinchChip": "{size} sp · {columns} × {rows}",
+  "@termPinchChip": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      },
+      "columns": {
+        "type": "int"
+      },
+      "rows": {
+        "type": "int"
+      }
+    }
+  }
 }

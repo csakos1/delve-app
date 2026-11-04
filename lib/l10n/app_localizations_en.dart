@@ -2418,4 +2418,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get termSelEnd => 'Selection end';
+
+  @override
+  String termPinchChip(int size, int columns, int rows) {
+    return '$size sp · $columns × $rows';
+  }
 }

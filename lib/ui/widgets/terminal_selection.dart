@@ -532,16 +532,80 @@ class _ReversedPainter extends CustomPainter {
             : null);
     final view = viewKey.currentState;
     final box = layer();
-    if ((range == null && cursor == null) ||
-        view == null ||
-        box is! RenderBox) {
-      return;
-    }
+    if (view == null || box is! RenderBox) return;
     final render = view.renderTerminal;
     if (!render.attached || !box.attached) return;
     final origin =
         render.localToGlobal(Offset.zero) - box.localToGlobal(Offset.zero);
     final cell = render.cellSize;
+    final theme = delveTerminalTheme;
+    final palette = cells.palette;
+    final data = CellData.empty();
+
+    // Coloured rows reach the edges (htop's bars, a status line): the screen
+    // is whole cells, so the grid ends a few pixels short of the right edge
+    // and the bottom, and the colour stopped there (T2b phone test). The
+    // first and the last row on screen reach up and down too.
+    Color? shown(BufferLine line, int x) {
+      if (x < 0 || x >= line.length) return null;
+      line.getCellData(x, data);
+      final inverse = data.flags & CellFlags.inverse != 0;
+      if (!inverse &&
+          data.background & CellColor.typeMask == CellColor.normal) {
+        return null;
+      }
+      return inverse
+          ? terminalColor(data.foreground, palette, theme.foreground)
+          : terminalColor(data.background, palette, theme.background);
+    }
+
+    final lines = terminal.buffer.lines;
+    final columns = terminal.viewWidth;
+    final first = render.getCellOffset(Offset.zero).y;
+    final last = math.min(first + terminal.viewHeight - 1, lines.length - 1);
+    final edge = Paint();
+    for (var y = first; y <= last; y++) {
+      final line = lines[y];
+      final at = render.getOffset(CellOffset(0, y));
+      // xterm draws its rows at whole pixels
+      final top = at.dy.truncateToDouble() + origin.dy;
+      final bottom = top + cell.height;
+      final left = at.dx + origin.dx;
+      final right = left + columns * cell.width;
+      final start = shown(line, 0);
+      if (start != null && left > 0) {
+        canvas.drawRect(
+          Rect.fromLTRB(0, top, left, bottom),
+          edge..color = start,
+        );
+      }
+      final end = shown(line, columns - 1);
+      if (end != null && right < size.width) {
+        canvas.drawRect(
+          Rect.fromLTRB(right, top, size.width, bottom),
+          edge..color = end,
+        );
+      }
+      final up = y == first && top > 0;
+      final down = y == last && bottom < size.height;
+      if (!up && !down) continue;
+      for (var x = 0; x < columns; x++) {
+        final colour = shown(line, x);
+        if (colour == null) continue;
+        final l = x == 0 ? 0.0 : left + x * cell.width;
+        final r = x == columns - 1 ? size.width : left + (x + 1) * cell.width;
+        if (up) {
+          canvas.drawRect(Rect.fromLTRB(l, 0, r, top), edge..color = colour);
+        }
+        if (down) {
+          canvas.drawRect(
+            Rect.fromLTRB(l, bottom, r, size.height),
+            edge..color = colour,
+          );
+        }
+      }
+    }
+
     if (cursor != null) {
       // a block, hollow without focus (as xterm's), centred on the text
       final hollow = !focused();
@@ -556,9 +620,6 @@ class _ReversedPainter extends CustomPainter {
     }
     if (range == null) return;
     final buffer = terminal.buffer;
-    final theme = delveTerminalTheme;
-    final palette = cells.palette;
-    final data = CellData.empty();
     final fill = Paint();
     for (final segment in range.toSegments()) {
       if (segment.line < 0 || segment.line >= buffer.lines.length) continue;

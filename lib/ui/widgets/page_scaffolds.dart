@@ -299,6 +299,7 @@ abstract final class DelveIcons {
   static const IconData paste = Symbols.content_paste_rounded;
   static const IconData arrowBack = Symbols.arrow_back_rounded;
   static const IconData arrowForward = Symbols.arrow_forward_rounded;
+  static const IconData backspace = Symbols.backspace_rounded;
   static const IconData check = Symbols.check_rounded;
   static const IconData textSize = Symbols.format_size_rounded;
   static const IconData remove = Symbols.remove_rounded;

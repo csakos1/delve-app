@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:xterm/xterm.dart';
 
 import '../../terminal/terminal_connection.dart';
+import '../../terminal/terminal_service.dart';
 import '../../terminal/terminal_wheel.dart';
 
 /// Touch scrolling for the terminal (T2a phone test: there was none).
@@ -22,6 +23,9 @@ import '../../terminal/terminal_wheel.dart';
 /// itself takes no pointer at all, because its own long press opened the
 /// keyboard and clicked into tmux before it selected anything. A tap that
 /// only stops a fling is not a tap; a selection stays while scrolling.
+///
+/// Two fingers pinch the font size (design 22-0: 9–20 sp in 1 sp steps); a
+/// touch that had two fingers is no tap, long press or scroll.
 class TerminalScrollLayer extends StatefulWidget {
   const TerminalScrollLayer({
     super.key,
@@ -32,6 +36,8 @@ class TerminalScrollLayer extends StatefulWidget {
     this.onTap,
     this.onLongPressStart,
     this.onLongPressMove,
+    this.fontSize = kTerminalFontSize,
+    this.onFontSize,
   });
 
   final TerminalConnection connection;
@@ -49,6 +55,10 @@ class TerminalScrollLayer extends StatefulWidget {
   final void Function(Offset global)? onLongPressStart;
   final void Function(Offset global)? onLongPressMove;
 
+  /// The font size now, and a new one from a pinch (whole sp, in range).
+  final double fontSize;
+  final ValueChanged<double>? onFontSize;
+
   @override
   State<TerminalScrollLayer> createState() => _TerminalScrollLayerState();
 }
@@ -62,6 +72,16 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
 
   /// The pointer that went down stopped a fling: its tap is not a tap.
   bool _stoppedFling = false;
+
+  /// The fingers down now (local positions).
+  final _pointers = <int, Offset>{};
+
+  /// The fingers' distance when the pinch began, and the size then.
+  double? _pinchFrom;
+  double _pinchSize = kTerminalFontSize;
+
+  /// This touch had two fingers: no tap, long press, scroll or fling.
+  bool _pinched = false;
 
   @override
   void initState() {
@@ -88,8 +108,37 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
     return render.getCellOffset(_at);
   }
 
+  double get _spread {
+    final p = _pointers.values.take(2).toList();
+    return (p[0] - p[1]).distance;
+  }
+
+  void _pinchStart() {
+    _pinched = true;
+    _stop();
+    _pinchFrom = _spread;
+    _pinchSize = widget.fontSize;
+  }
+
+  void _pinchMove() {
+    final from = _pinchFrom;
+    final on = widget.onFontSize;
+    if (from == null || from <= 0 || on == null) return;
+    final size = (_pinchSize * _spread / from)
+        .roundToDouble()
+        .clamp(kTerminalFontMin, kTerminalFontMax)
+        .toDouble();
+    if (size != widget.fontSize) on(size);
+  }
+
+  void _up(PointerEvent e) {
+    _pointers.remove(e.pointer);
+    if (_pointers.length < 2) _pinchFrom = null;
+  }
+
   /// [dy]: finger movement, down positive (older output comes into view).
   void _move(double dy) {
+    if (_pinched) return;
     final c = widget.connection;
     if (c.terminal.mouseMode.reportScroll) {
       _steps.stepPx = _lineHeight * kWheelStepLines;
@@ -121,21 +170,43 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
   @override
   Widget build(BuildContext context) {
     return Listener(
+      // the child (a translucent detector over a view that takes no touch)
+      // does not count as hit, so a deferring listener never saw a pointer:
+      // no pinch, and a touch did not stop a fling
+      behavior: HitTestBehavior.translucent,
       onPointerDown: (e) {
+        if (_pointers.isEmpty) _pinched = false;
+        _pointers[e.pointer] = e.localPosition;
+        if (_pointers.length == 2 && widget.onFontSize != null) {
+          _pinchStart();
+          return;
+        }
+        if (_pointers.length > 1) return;
         _stoppedFling = _fling.isAnimating;
         _stop();
         _at = e.localPosition;
       },
+      onPointerMove: (e) {
+        if (!_pointers.containsKey(e.pointer)) return;
+        _pointers[e.pointer] = e.localPosition;
+        if (_pinchFrom != null) _pinchMove();
+      },
+      onPointerUp: _up,
+      onPointerCancel: _up,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTapUp: (d) {
-          if (_stoppedFling) return;
+          if (_stoppedFling || _pinched) return;
           widget.onTap?.call(d.globalPosition);
         },
-        onLongPressStart: (d) =>
-            widget.onLongPressStart?.call(d.globalPosition),
-        onLongPressMoveUpdate: (d) =>
-            widget.onLongPressMove?.call(d.globalPosition),
+        onLongPressStart: (d) {
+          if (_pinched) return;
+          widget.onLongPressStart?.call(d.globalPosition);
+        },
+        onLongPressMoveUpdate: (d) {
+          if (_pinched) return;
+          widget.onLongPressMove?.call(d.globalPosition);
+        },
         onVerticalDragStart: (d) {
           _stop();
           _steps.reset();
@@ -143,6 +214,7 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
         },
         onVerticalDragUpdate: (d) => _move(d.delta.dy),
         onVerticalDragEnd: (d) {
+          if (_pinched) return;
           final v = d.velocity.pixelsPerSecond.dy;
           if (v.abs() < 300) return;
           _flingLast = 0;

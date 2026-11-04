@@ -672,6 +672,9 @@ class TerminalConnection extends ChangeNotifier {
   }
 
   void _input(String data, {bool keepSelection = false}) {
+    // PgUp / PgDn after a scroll page through tmux's copy mode (both key
+    // tables bind them), like the wheel: no `q`, the selection stays
+    if (terminal.inCopyMode && isPageKey(data)) keepSelection = true;
     final reply = isTerminalReply(data);
     if (!reply && !keepSelection && hasSelection) clearSelection();
     final link = _link;
@@ -730,6 +733,12 @@ class TerminalConnection extends ChangeNotifier {
   );
 
   static final _mouse = RegExp(r'^(\x1b\[<\d+;\d+;\d+[mM]|\x1b\[M[\s\S]{3})+$');
+
+  static final _page = RegExp(r'^\x1b\[[56](;\d+)?~$');
+
+  /// PgUp or PgDn (with or without modifiers).
+  @visibleForTesting
+  static bool isPageKey(String data) => _page.hasMatch(data);
 
   /// A mouse report (a tap, a wheel step): tmux's copy mode takes it as
   /// it is.

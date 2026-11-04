@@ -61,6 +61,9 @@ class TerminalService extends ChangeNotifier {
   /// The trusted key of the current host:port (for Settings).
   PinnedHostKey? get pinned => _pinned;
 
+  /// The extra key row's page (design 22: the row remembers its page).
+  int extraKeysPage = 0;
+
   double _fontSize = kTerminalFontSize;
   double get fontSize => _fontSize;
 
