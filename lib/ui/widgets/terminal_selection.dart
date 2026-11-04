@@ -42,8 +42,9 @@ CellOffset _lastCell(BufferRange range, int width) {
 /// there is no room). Lies over the terminal view, in the same box; draws
 /// nothing (and takes no touch) while nothing is selected.
 ///
-/// It also draws the shell's cursor while tmux's copy mode is on
-/// ([TmuxTerminal.promptCursor]): xterm draws none then.
+/// It also draws the cursor (xterm's is transparent: [delveTerminalViewTheme]),
+/// as high as [terminalCursorHeight]; while tmux's copy mode is on, the
+/// shell's cursor ([TmuxTerminal.promptCursor]) instead of tmux's own.
 class TerminalSelectionLayer extends StatefulWidget {
   const TerminalSelectionLayer({
     super.key,
@@ -444,6 +445,23 @@ class _ReversedCells {
 
   List<Color> get palette => _palette ??= terminalPalette(delveTerminalTheme);
 
+  (double, TextScaler, double)? _cursorFor;
+  double _cursorHeight = 0;
+
+  /// [terminalCursorHeight] for the text style, from a laid-out capital's
+  /// baseline (the same line box xterm draws the rows in).
+  double cursorHeight(TerminalStyle style, TextScaler scaler, double line) {
+    final key = (style.fontSize, scaler, line);
+    if (_cursorFor == key) return _cursorHeight;
+    final m = paragraph(0x4D, delveTerminalTheme.foreground, 0, style, scaler);
+    _cursorFor = key;
+    return _cursorHeight = terminalCursorHeight(
+      lineHeight: line,
+      baseline: m.alphabeticBaseline,
+      fontSize: scaler.scale(style.fontSize),
+    );
+  }
+
   ui.Paragraph paragraph(
     int code,
     Color color,
@@ -503,10 +521,18 @@ class _ReversedPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final range = connection.selection.selection?.normalized;
-    final prompt = connection.terminal.promptCursor;
+    final terminal = connection.terminal;
+    final cursor =
+        terminal.promptCursor ??
+        (terminal.cursorVisibleMode
+            ? CellOffset(
+                terminal.buffer.cursorX,
+                terminal.buffer.absoluteCursorY,
+              )
+            : null);
     final view = viewKey.currentState;
     final box = layer();
-    if ((range == null && prompt == null) ||
+    if ((range == null && cursor == null) ||
         view == null ||
         box is! RenderBox) {
       return;
@@ -516,11 +542,12 @@ class _ReversedPainter extends CustomPainter {
     final origin =
         render.localToGlobal(Offset.zero) - box.localToGlobal(Offset.zero);
     final cell = render.cellSize;
-    if (prompt != null) {
-      // as xterm draws its block cursor; hollow without focus
+    if (cursor != null) {
+      // a block, hollow without focus (as xterm's), centred on the text
       final hollow = !focused();
+      final height = cells.cursorHeight(style, scaler, cell.height);
       canvas.drawRect(
-        (render.getOffset(prompt) + origin) & cell,
+        (render.getOffset(cursor) + origin) & Size(cell.width, height),
         Paint()
           ..color = delveTerminalTheme.cursor
           ..strokeWidth = 1
@@ -528,7 +555,6 @@ class _ReversedPainter extends CustomPainter {
       );
     }
     if (range == null) return;
-    final terminal = connection.terminal;
     final buffer = terminal.buffer;
     final theme = delveTerminalTheme;
     final palette = cells.palette;

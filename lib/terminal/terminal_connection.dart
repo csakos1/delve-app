@@ -115,11 +115,18 @@ class TerminalConnection extends ChangeNotifier {
     this.onInput,
     DateTime Function()? now,
     int maxLines = 10000,
+    int statusRows = 0,
   }) : keys = StickyModifiers(),
        _now = now ?? DateTime.now {
-    terminal = TmuxTerminal(maxLines: maxLines, inputHandler: keys)
-      ..onOutput = _input
-      ..onResize = _resized;
+    // the app's tmux sessions have no status line (`SshTarget.command`)
+    terminal =
+        TmuxTerminal(
+            maxLines: maxLines,
+            inputHandler: keys,
+            statusRows: statusRows,
+          )
+          ..onOutput = _input
+          ..onResize = _resized;
     selection.addListener(_selectionSet);
   }
 

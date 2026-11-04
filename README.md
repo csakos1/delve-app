@@ -146,6 +146,9 @@ reached over Tailscale only.
   there (the first step enters copy mode and scrolls too); the desktop's other sessions
   keep tmux's 5 lines. A line of drag is one step, so the text follows the finger; a fling
   stops below 4 lines a second instead of creeping on.
+  The app's sessions have no tmux status line (`status off`; the tab bar names the
+  session), and the cursor is drawn over the view, from the cell's top to as far below the
+  middle of the capitals: xterm's filled the cell, so it sat low beside the text.
 
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share

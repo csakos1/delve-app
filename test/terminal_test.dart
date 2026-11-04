@@ -45,9 +45,12 @@ Future<void> settle([int ms = 120]) =>
     Future<void>.delayed(Duration(milliseconds: ms));
 
 class Rig {
-  Rig({FakeSshDialer? dialer, TerminalTiming timing = fastTerminalTiming})
-    : dialer = dialer ?? FakeSshDialer(),
-      store = MemorySecretStore() {
+  Rig({
+    FakeSshDialer? dialer,
+    TerminalTiming timing = fastTerminalTiming,
+    int statusRows = 0,
+  }) : dialer = dialer ?? FakeSshDialer(),
+       store = MemorySecretStore() {
     secrets = TerminalSecrets(store);
     connection = TerminalConnection(
       dialer: this.dialer,
@@ -55,6 +58,7 @@ class Rig {
       timing: timing,
       onLive: () => lives++,
       onInput: () => inputs++,
+      statusRows: statusRows,
     );
   }
 
@@ -111,12 +115,14 @@ void main() {
     });
 
     test('the tmux command attaches with a UTF-8 locale, marks the session '
-        "as the app's and binds the wheel to one line there", () {
+        "as the app's, turns its status line off and binds the wheel to one "
+        'line there', () {
       expect(
         target.command,
         startsWith(
           r'env LANG=en_US.UTF-8 tmux -u new-session -A -s delve-1 \; '
-          r'set-option @delve 1 \; bind-key -T root WheelUpPane ',
+          r'set-option @delve 1 \; set-option status off \; '
+          r'bind-key -T root WheelUpPane ',
         ),
       );
       expect(SshTarget.quoteSession("a b'c"), "'a bc'");
@@ -143,8 +149,9 @@ void main() {
       }
       expect(commands.first, ['-u', 'new-session', '-A', '-s', 'delve-1']);
       expect(commands[1], ['set-option', '@delve', '1']);
-      expect(commands.length, 2 + SshTarget.tmuxWheelBindings.length);
-      expect(commands[2], [
+      expect(commands[2], ['set-option', 'status', 'off']);
+      expect(commands.length, 3 + SshTarget.tmuxWheelBindings.length);
+      expect(commands[3], [
         'bind-key',
         '-T',
         'root',
@@ -156,10 +163,10 @@ void main() {
         'copy-mode -e; if-shell -F "#{@delve}" "send-keys -X -N 1 scroll-up"',
       ]);
       for (final (i, table, dir) in [
-        (3, 'copy-mode', 'up'),
-        (4, 'copy-mode', 'down'),
-        (5, 'copy-mode-vi', 'up'),
-        (6, 'copy-mode-vi', 'down'),
+        (4, 'copy-mode', 'up'),
+        (5, 'copy-mode', 'down'),
+        (6, 'copy-mode-vi', 'up'),
+        (7, 'copy-mode-vi', 'down'),
       ]) {
         final key = dir == 'up' ? 'WheelUpPane' : 'WheelDownPane';
         expect(commands[i], [
@@ -748,6 +755,37 @@ void main() {
       expect(t.buffer.cursorY, 2);
     });
 
+    test("without tmux's status line (the app's sessions, T2b): the pane "
+        'is every row; it shrinks and grows like tmux all the same', () {
+      final t = TmuxTerminal(statusRows: 0)..resize(20, 10);
+      t.write('\x1b[?1049h');
+      for (var i = 0; i < 10; i++) {
+        t.write('\x1b[${i + 1};1Hline$i');
+      }
+      t.write('\x1b[10;7H'); // the prompt on the last row
+      expect(t.paneRows, 10);
+      t.resize(20, 7); // the keyboard opens: lines leave at the top
+      expect(
+        [for (var i = 0; i < 7; i++) row(t, i)],
+        [for (var i = 3; i < 10; i++) 'line$i'],
+      );
+      expect(t.buffer.cursorY, 6);
+      expect(t.historyLength, 3);
+      t.resize(20, 10); // and closes: they come back
+      expect(
+        [for (var i = 0; i < 10; i++) row(t, i)],
+        [for (var i = 0; i < 10; i++) 'line$i'],
+      );
+      expect(t.buffer.cursorY, 9);
+      // a line below the cursor goes first, and comes back blank
+      t.write('\x1b[5;1H');
+      t.resize(20, 9);
+      expect(row(t, 0), 'line0');
+      expect(row(t, 8), 'line8');
+      t.resize(20, 10);
+      expect(row(t, 9), '');
+    });
+
     test('the main screen is left to xterm', () {
       final t = TmuxTerminal()..resize(20, 10);
       for (var i = 0; i < 10; i++) {
@@ -866,7 +904,7 @@ void main() {
   group('selection over a scrolling tmux', () {
     /// tmux on a 24-row screen: pane rows 0–22 with `line0`…, status last.
     Future<(Rig, FakeSshLink)> tmux() async {
-      final rig = Rig();
+      final rig = Rig(statusRows: 1);
       addTearDown(rig.dispose);
       final link = await rig.live();
       final buf = StringBuffer('\x1b[?1049h');
@@ -1074,8 +1112,33 @@ void main() {
 
     test('the view paints no selection of its own', () {
       expect(delveTerminalViewTheme.selection.a, 0);
+      expect(delveTerminalViewTheme.cursor.a, 0, reason: 'nor a cursor');
       expect(delveTerminalViewTheme.foreground, delveTerminalTheme.foreground);
       expect(delveTerminalViewTheme.green, delveTerminalTheme.green);
+    });
+
+    test('the cursor ends as far below the middle of the capitals as the '
+        "cell's top is above it (T2b phone test: it reached further down "
+        'than up, onto the row below)', () {
+      // JetBrains Mono at 13 with a 1.2 line height, as the phone draws it
+      final h = terminalCursorHeight(
+        lineHeight: 15.6,
+        baseline: 11.76,
+        fontSize: 13,
+      );
+      final middle = 11.76 - kTerminalCapHeight * 13 / 2;
+      expect(h, closeTo(2 * middle, 1e-9));
+      expect(h, lessThan(15.6));
+      expect(15.6 - h, closeTo(1.57, 0.01), reason: 'a little shorter');
+      // never taller than the cell, and the whole cell when it can't tell
+      expect(
+        terminalCursorHeight(lineHeight: 15.6, baseline: 15, fontSize: 13),
+        15.6,
+      );
+      expect(
+        terminalCursorHeight(lineHeight: 15.6, baseline: 2, fontSize: 13),
+        15.6,
+      );
     });
   });
 

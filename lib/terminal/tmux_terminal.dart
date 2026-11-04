@@ -41,9 +41,15 @@ import 'package:xterm/xterm.dart';
 /// indicator, right-aligned on the pane's first row: [inCopyMode] hides the
 /// cursor, and [promptCursor] is where the shell's cursor shows meanwhile.
 ///
-/// Assumes tmux's status line is the last row (tmux's default).
+/// tmux's status line, when it has one, is the last row ([statusRows]: 1,
+/// tmux's default); the app's sessions have none (0).
 class TmuxTerminal extends Terminal {
-  TmuxTerminal({super.maxLines, super.inputHandler});
+  TmuxTerminal({super.maxLines, super.inputHandler, this.statusRows = 1})
+    : assert(statusRows == 0 || statusRows == 1);
+
+  /// Rows tmux's status line takes at the bottom of the screen: 1 (tmux's
+  /// default) or 0 (`status off`, the app's sessions).
+  final int statusRows;
 
   /// How many lines left the top are kept (a keyboard is ~20 rows).
   static const historyMax = 200;
@@ -138,7 +144,7 @@ class TmuxTerminal extends Terminal {
 
   /// Rows of the pane: all but tmux's status line on the alternate screen.
   int get paneRows =>
-      isUsingAltBuffer ? math.max(1, viewHeight - 1) : viewHeight;
+      isUsingAltBuffer ? math.max(1, viewHeight - statusRows) : viewHeight;
 
   /// The pane as one document, top to bottom: the lines kept above it, the
   /// pane's rows, the lines kept below it. Row [historyLength] is the pane's
@@ -340,8 +346,8 @@ class TmuxTerminal extends Terminal {
   void _movePrompt(int oldHeight, int height) {
     final at = _prompt;
     if (at == null || oldHeight < 3) return;
-    final oldRows = oldHeight - 1;
-    final rows = math.max(1, height - 1);
+    final oldRows = oldHeight - statusRows;
+    final rows = math.max(1, height - statusRows);
     var y = at.$2;
     if (rows < oldRows) {
       final below = math.max(0, oldRows - 1 - y);
@@ -359,7 +365,7 @@ class TmuxTerminal extends Terminal {
     final b = buffer;
     final x = b.cursorX;
     final y = b.cursorY;
-    final paneBottom = viewHeight - 2;
+    final paneBottom = viewHeight - 1 - statusRows;
     final below = math.min(k, math.max(0, paneBottom - y));
     final top = k - below;
     b.resetVerticalMargins();
@@ -383,7 +389,7 @@ class TmuxTerminal extends Terminal {
     final x = b.cursorX;
     final y = b.cursorY;
     final n = math.min(k, _history.length);
-    final status = viewHeight - 1 - k; // where xterm left it
+    final status = viewHeight - statusRows - k; // where xterm left it
     b.resetVerticalMargins();
     if (n > 0) {
       b.setCursor(0, 0);
@@ -394,7 +400,9 @@ class TmuxTerminal extends Terminal {
         b.lines[b.scrollBack + i] = back[i]..resize(viewWidth);
       }
     }
-    if (k > n) {
+    // without a status line the rows still missing are xterm's blank ones,
+    // already at the bottom
+    if (k > n && statusRows > 0) {
       b.setCursor(0, status + n);
       b.insertLines(k - n);
     }

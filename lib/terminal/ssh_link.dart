@@ -29,10 +29,13 @@ class SshTarget {
   /// `LANG`, so tmux gets a UTF-8 locale and `-u` (T0); `-A` attaches the
   /// session if it exists. The session is marked as the app's (`@delve`,
   /// on the session just made or attached) and the wheel bindings are set
-  /// (T2b: one line per wheel step there).
+  /// (T2b: one line per wheel step there). Its status line is off: the app's
+  /// tab bar names the session, and the green bar stood off the screen's
+  /// edges, above the extra keys (T2b); [TmuxTerminal.statusRows] is 0.
   String get command => [
     'env LANG=en_US.UTF-8 tmux -u new-session -A -s ${quoteSession(session)}',
     'set-option @delve 1',
+    'set-option status off',
     ...tmuxWheelBindings,
   ].join(r' \; ');
 

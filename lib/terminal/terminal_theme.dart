@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/painting.dart';
 import 'package:xterm/xterm.dart';
 
@@ -40,7 +42,9 @@ const delveTerminalTheme = TerminalTheme(
 final delveTerminalViewTheme = TerminalTheme(
   background: delveTerminalTheme.background,
   foreground: delveTerminalTheme.foreground,
-  cursor: delveTerminalTheme.cursor,
+  // the cursor too is drawn over the view, centred on the text
+  // ([terminalCursorHeight])
+  cursor: const Color(0x00000000),
   selection: const Color(0x00000000),
   black: delveTerminalTheme.black,
   red: delveTerminalTheme.red,
@@ -117,6 +121,28 @@ Color terminalColor(int cell, List<Color> palette, Color fallback) {
 
 /// Line height of terminal rows (13 sp → 15.6 dp rows).
 const kTerminalLineHeight = 1.2;
+
+/// JetBrains Mono's capital height, a fraction of the font size (its
+/// `OS/2` table: 730 of 1000 units).
+const kTerminalCapHeight = 0.73;
+
+/// The block cursor's height: from the top of the cell down to as far below
+/// the middle of the capitals as the cell's top is above it.
+///
+/// xterm fills the whole cell, and the line height's extra room falls mostly
+/// below the text, so its cursor reached further down than up – it looked
+/// low beside the text and touched the row under it (T2b phone test).
+/// [baseline] is the text's baseline from the cell's top, [fontSize] in the
+/// same units.
+double terminalCursorHeight({
+  required double lineHeight,
+  required double baseline,
+  required double fontSize,
+}) {
+  final middle = baseline - kTerminalCapHeight * fontSize / 2;
+  if (middle <= 0) return lineHeight;
+  return math.min(lineHeight, 2 * middle);
+}
 
 /// Terminal text: JetBrains Mono at [fontSize] sp.
 TerminalStyle delveTerminalStyle(double fontSize) => TerminalStyle(
