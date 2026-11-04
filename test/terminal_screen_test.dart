@@ -808,4 +808,34 @@ void main() {
     await t.pump();
     expect(link.written, endsWith('q|\t'));
   });
+
+  testWidgets('a fling up with copy mode at the top of the history ends at '
+      'once, so the next tap is a tap: a click and the keyboard (T3 phone '
+      'test: after a flick in a new session, "[0/0]", the keyboard needed a '
+      'second tap)', (t) async {
+    final env = await openTerminal(t, setupDone: true);
+    final link = env.terminal.dialer.last;
+    link.send('\x1b[?1049h\x1b[?1000h\x1b[?1006h\x1b[1;1H~ > \x1b[1;5H');
+    await frames(t, 2);
+    final term = service(t).connection.terminal;
+    // a new session: tmux's copy mode has nothing to go up to
+    const text = '[0/0]';
+    final from = term.viewWidth - text.length + 1;
+    link.send('\x1b[1;${from}H\x1b[30;43m$text\x1b[0m\x1b[1;5H');
+    await frames(t, 2);
+    expect(term.copyAtTop, isTrue);
+    final scroll = find.byKey(const Key('terminal.scroll'));
+    await t.fling(scroll, const Offset(0, 300), 3000);
+    await frames(t, 2);
+    final sent = link.written.length;
+    await frames(t, 4);
+    expect(link.written.length, sent, reason: 'no wheel steps after the drag');
+    int shows() =>
+        t.testTextInput.log.where((c) => c.method == 'TextInput.show').length;
+    final before = shows();
+    await t.tap(scroll);
+    await frames(t, 2);
+    expect(link.written.substring(sent), contains('\x1b[<0;'), reason: 'click');
+    expect(shows(), greaterThan(before), reason: 'the keyboard');
+  });
 }

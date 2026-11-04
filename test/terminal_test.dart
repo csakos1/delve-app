@@ -115,18 +115,21 @@ void main() {
     });
 
     test('an app session: made when missing with a 10 000-line history, '
-        "attached exactly, marked as the app's, no status line, the wheel "
-        'bindings', () {
+        "attached exactly, marked as the app's, no status line, a cleared "
+        'screen not kept, the wheel bindings', () {
       expect(
         target.command,
         startsWith(
           "export LANG=en_US.UTF-8; tmux -u has-session -t '=delve-1' "
           "2>/dev/null || tmux -u new-session -d -s 'delve-1' "
           r'\; set-option history-limit 10000 '
-          r"\; new-window -k -t ':^'; "
+          r"\; new-window -k -t ':^' "
+          r'\; set-option -w scroll-on-clear off; '
           "exec tmux -u attach-session -t '=delve-1' "
-          r'\; set-option @delve 1 \; set-option status off \; '
-          'bind-key -T root WheelUpPane ',
+          r'\; set-option @delve 1 \; set-option status off '
+          r'\; set-option -w scroll-on-clear off '
+          r"\; set-hook after-new-window 'set-option -w scroll-on-clear off' "
+          r'\; bind-key -T root WheelUpPane ',
         ),
       );
       final desktop = target.copyWith(session: 'work', app: false);
@@ -139,12 +142,14 @@ void main() {
       );
       expect(desktop.command, isNot(contains('@delve 1')));
       expect(desktop.command, isNot(contains('new-session')));
+      expect(desktop.command, isNot(contains('scroll-on-clear')));
       expect(shellQuote("a b'c"), r"'a b'\''c'");
     });
 
     test('the shell runs it as tmux commands: has-session, then a new '
         'session with its history set before its first window, then the '
-        'attach with each binding whole (a fake tmux on PATH)', () async {
+        'attach with the hook and each binding whole (a fake tmux on '
+        'PATH)', () async {
       final bin = Directory.systemTemp.createTempSync('delve-tmux');
       addTearDown(() => bin.deleteSync(recursive: true));
       final tmux = File('${bin.path}/tmux')
@@ -191,13 +196,20 @@ void main() {
         ['-u', 'new-session', '-d', '-s', "it's x"],
         ['set-option', 'history-limit', '10000'],
         ['new-window', '-k', '-t', ':^'],
+        ['set-option', '-w', 'scroll-on-clear', 'off'],
       ]);
       final attach = commands(calls[2].skip(1).toList());
       expect(attach.first, ['-u', 'attach-session', '-t', "=it's x"]);
       expect(attach[1], ['set-option', '@delve', '1']);
       expect(attach[2], ['set-option', 'status', 'off']);
-      expect(attach.length, 3 + SshTarget.tmuxWheelBindings.length);
-      expect(attach[3], [
+      expect(attach[3], ['set-option', '-w', 'scroll-on-clear', 'off']);
+      expect(attach[4], [
+        'set-hook',
+        'after-new-window',
+        'set-option -w scroll-on-clear off',
+      ]);
+      expect(attach.length, 5 + SshTarget.tmuxWheelBindings.length);
+      expect(attach[5], [
         'bind-key',
         '-T',
         'root',
@@ -209,10 +221,10 @@ void main() {
         'copy-mode -e; if-shell -F "#{@delve}" "send-keys -X -N 1 scroll-up"',
       ]);
       for (final (i, table, dir) in [
-        (4, 'copy-mode', 'up'),
-        (5, 'copy-mode', 'down'),
-        (6, 'copy-mode-vi', 'up'),
-        (7, 'copy-mode-vi', 'down'),
+        (6, 'copy-mode', 'up'),
+        (7, 'copy-mode', 'down'),
+        (8, 'copy-mode-vi', 'up'),
+        (9, 'copy-mode-vi', 'down'),
       ]) {
         final key = dir == 'up' ? 'WheelUpPane' : 'WheelDownPane';
         expect(attach[i], [
@@ -879,6 +891,67 @@ void main() {
       expect(t.belowLength, 0);
     });
 
+    test('a line that leaves the top in copy mode is kept without the '
+        'indicator and its time (T3 phone test: a column of old indicators; '
+        "tmux 3.4's bytes of a step down)", () {
+      final t = TmuxTerminal(statusRows: 0)..resize(56, 10);
+      t.write('\x1b[?1049h');
+      for (var i = 0; i < 10; i++) {
+        t.write('\x1b[${i + 1};1Hline$i');
+      }
+      String mark(int up) =>
+          '\x1b[1;42H\x1b[30m\x1b[43m23:19:58 [$up/32]\x1b[39m\x1b[49m';
+      t.write(mark(4));
+      expect(t.inCopyMode, isTrue);
+      for (var up = 3; up >= 1; up--) {
+        // the top line deleted, the bottom one drawn, the indicator on the
+        // new first row
+        t.write('\x1b[H\x1b[1M\x1b[10;1Hnew$up${mark(up)}');
+        expect(t.inCopyMode, isTrue);
+      }
+      expect(t.historyLength, 3);
+      expect(
+        [for (final l in t.documentLines().take(3)) l.getText().trim()],
+        ['line0', 'line1', 'line2'],
+      );
+      // tmux leaves copy mode at the bottom and redraws the first row
+      t.write('\x1b[1;1Hline3\x1b[K\x1b[10;1H');
+      expect(t.inCopyMode, isFalse);
+      // the keyboard closes: those lines are tmux's history seen in copy
+      // mode, not lines its pane scrolled out – tmux takes none back, and
+      // nor does the screen (T3 phone test: two old prompts showed above
+      // the screen for a round trip)
+      expect(t.scrolledOut, 0);
+      t.resize(56, 13);
+      expect(row(t, 0), 'line3');
+      expect(row(t, 9), 'new1');
+      expect(row(t, 10), '');
+      expect(t.historyLength, 3);
+    });
+
+    test('a smaller pane, then output, then a bigger one: tmux takes back '
+        'the lines its pane scrolled out, no more (its hscrolled)', () {
+      final t = TmuxTerminal(statusRows: 0)..resize(20, 10);
+      t.write('\x1b[?1049h');
+      for (var i = 0; i < 10; i++) {
+        t.write('\x1b[${i + 1};1Hline$i');
+      }
+      t.write('\x1b[10;7H'); // the prompt on the last row
+      t.resize(20, 7); // three lines go up into the history
+      expect(t.scrolledOut, 3);
+      t.write('\x1b[7;1H\nline10'); // output scrolls one more
+      expect(t.scrolledOut, 4);
+      t.resize(20, 9);
+      expect(t.scrolledOut, 2);
+      expect(row(t, 0), 'line2');
+      expect(row(t, 8), 'line10');
+      // copy mode's scrolling is not the pane's
+      t.write('\x1b[1;16H\x1b[30;43m[1/9]\x1b[0m');
+      expect(t.inCopyMode, isTrue);
+      t.write('\x1b[9;1H\n');
+      expect(t.scrolledOut, 2);
+    });
+
     test('the main screen is left to xterm', () {
       final t = TmuxTerminal()..resize(20, 10);
       for (var i = 0; i < 10; i++) {
@@ -1070,8 +1143,13 @@ void main() {
 
     /// tmux's position indicator, right-aligned on the first row in
     /// mode-style colours; its own cursor left on row 20.
-    String indicator(int up, {String colours = '30;43', int end = 80}) {
-      final text = '[$up/120]';
+    String indicator(
+      int up, {
+      String colours = '30;43',
+      int end = 80,
+      int history = 120,
+    }) {
+      final text = '[$up/$history]';
       return '\x1b[1;${end - text.length + 1}H\x1b[${colours}m$text\x1b[0m'
           '\x1b[20;1H';
     }
@@ -1113,15 +1191,40 @@ void main() {
       expect((tmux()..write(indicator(3, end: 70))).inCopyMode, isFalse);
     });
 
-    test('a resize moves the shell cursor the way tmux moves its line', () {
-      final t = tmux(prompt: 20)..write(indicator(0));
-      expect(t.promptCursor, const CellOffset(2, 20));
-      // keyboard: 10 rows less, 2 below the cursor go first, then 8 at top
-      t.resize(80, 14);
-      expect(t.promptCursor, CellOffset(2, t.buffer.scrollBack + 12));
-      // back: 10 lines come from tmux's history at the top
-      t.resize(80, 24);
-      expect(t.promptCursor, CellOffset(2, t.buffer.scrollBack + 22));
+    test('a resize: no shell cursor until tmux redraws, then on the row '
+        "tmux's copy of the pane moved its line to (T3 phone test: it "
+        'jumped up to a keyboard height below the prompt; the numbers are '
+        "a real tmux 3.4's)", () {
+      // the app's session: 56×45 without a status line, the prompt on row 3
+      // over 55 lines of history
+      final t = TmuxTerminal(statusRows: 0)..resize(56, 45);
+      t.write('\x1b[?1049h\x1b[1;1H~ >\r\n~ >\r\n~ >\r\n~ >\x1b[4;5H');
+      String at(int up, int history) =>
+          indicator(up, end: 56, history: history);
+      CellOffset row(int r) => CellOffset(4, t.buffer.scrollBack + r);
+      t.write(at(5, 55));
+      expect(t.inCopyMode, isTrue);
+      expect(t.promptCursor, row(8));
+      // the keyboard opens: tmux moves 20 rows of its copy into the history
+      // and keeps the view – [22/75], the prompt's line on row 5
+      t.resize(56, 25);
+      expect(t.inCopyMode, isTrue);
+      expect(t.promptCursor, isNull, reason: 'the old numbers on screen');
+      t.write('\x1b[10;1H'); // not tmux's redraw yet
+      expect(t.promptCursor, isNull);
+      t.write(at(22, 75));
+      expect(t.promptCursor, row(5));
+      // three wheel steps down
+      t.write(at(19, 75));
+      expect(t.promptCursor, row(2));
+      // the keyboard closes: [2/55]
+      t.resize(56, 45);
+      expect(t.promptCursor, isNull);
+      t.write(at(2, 55));
+      expect(t.promptCursor, row(5));
+      // above the view: none
+      t.write(at(0, 75));
+      expect(t.promptCursor, isNull);
     });
 
     test('a key goes to the shell: `q` first, once until the redraw; a tap '
@@ -1194,6 +1297,80 @@ void main() {
       expect(TerminalConnection.isPageKey('\x1b[6;5~'), isTrue);
       expect(TerminalConnection.isPageKey('\x1b[3~'), isFalse);
       expect(TerminalConnection.isPageKey('q'), isFalse);
+    });
+
+    test("the shell's cursor in copy mode is tmux's answer, not a guess "
+        'from the screen (T3 phone test: after a reconnect it was two rows '
+        'above the prompt and a column short)', () async {
+      final rig = Rig();
+      addTearDown(rig.dispose);
+      final link = await rig.live();
+      // tmux: the pane's cursor at column 5 of row 7, 120 lines of history
+      link.tmux.cursor = (5, 7, 120);
+      final c = rig.connection;
+      // the screen's guess would be column 2 of row 4
+      link.send(screen());
+      await until(() => c.terminal.buffer.lines[0].getText() == 'line0');
+      link.send(indicator(3));
+      await until(() => c.terminal.inCopyMode, reason: 'copy mode');
+      await until(() => c.terminal.promptCursor != null, reason: 'answer');
+      expect(link.runs.single, contains('display-message -p'));
+      expect(link.runs.single, contains("-t 'delve-1:'"));
+      expect(
+        c.terminal.promptCursor,
+        CellOffset(5, c.terminal.buffer.scrollBack + 10),
+      );
+      link.send(indicator(5));
+      await until(
+        () => c.terminal.promptCursor?.y == c.terminal.buffer.scrollBack + 12,
+      );
+    });
+
+    test('no answer from tmux: the guess from the screen', () async {
+      final rig = Rig();
+      addTearDown(rig.dispose);
+      final link = await rig.live();
+      final c = rig.connection;
+      link.send(screen());
+      await until(() => c.terminal.buffer.lines[0].getText() == 'line0');
+      link.send(indicator(3));
+      await until(() => c.terminal.inCopyMode, reason: 'copy mode');
+      await until(() => c.terminal.promptCursor != null, reason: 'guess');
+      expect(c.terminal.promptCursor, const CellOffset(2, 7));
+      expect(parseShellCursor('3|4|10|delve-1\n', 'delve-1'), (3, 4, 10));
+      expect(parseShellCursor('3|4|10|delve-10\n', 'delve-1'), isNull);
+      expect(parseShellCursor('no server running', 'delve-1'), isNull);
+    });
+
+    test('a resize in copy mode leaves it first: `q` before the new size '
+        '(T3 phone test: tmux moved the view by a keyboard and the numbers '
+        'changed); with a selection copy mode stays', () async {
+      final rig = Rig();
+      addTearDown(rig.dispose);
+      final link = await rig.live();
+      final c = rig.connection;
+      link.send(screen() + indicator(3));
+      await until(() => c.terminal.inCopyMode, reason: 'copy mode');
+      c.terminal.resize(80, 14); // the keyboard opens
+      expect(link.written, 'q');
+      expect(c.terminal.inCopyMode, isFalse);
+      await until(() => link.resizes.isNotEmpty, reason: 'new size');
+      expect(link.resizes.last, (80, 14));
+
+      // tmux redraws the live pane, then copy mode again with a selection
+      link.send(left);
+      await until(() => c.terminal.buffer.lines[0].getText() == 'line0');
+      link.send(indicator(2));
+      await until(() => c.terminal.inCopyMode, reason: 'copy mode again');
+      final buffer = c.terminal.buffer;
+      c.selection.setSelection(
+        buffer.createAnchorFromOffset(const CellOffset(0, 5)),
+        buffer.createAnchorFromOffset(const CellOffset(5, 5)),
+      );
+      c.terminal.resize(80, 24);
+      expect(link.written, 'q');
+      expect(c.terminal.inCopyMode, isTrue);
+      expect(c.hasSelection, isTrue);
     });
 
     test('mouse reports are told apart from keys', () {

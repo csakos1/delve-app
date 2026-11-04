@@ -100,6 +100,11 @@ class FakeTmux {
     return null;
   }
 
+  /// The pane's cursor and history size that `display-message` tells
+  /// (where the shell's cursor is in copy mode); null: not answered.
+  (int, int, int)? cursor;
+
+  static final _display = RegExp(r"display-message -p -t '(.*):' ");
   static final _rename = RegExp(r"rename-session -t '=(.*)' '(.*)'$");
   static final _kill = RegExp(r"kill-session -t '=(.*)'$");
 
@@ -117,6 +122,10 @@ class FakeTmux {
         ].join(),
         0,
       );
+    }
+    if (cursor case final c? when _display.hasMatch(command)) {
+      final name = _display.firstMatch(command)![1]!;
+      return SshRunResult('${c.$1}|${c.$2}|${c.$3}|$name\n', 0);
     }
     if (_rename.firstMatch(command) case final m?) {
       final s = byName(m[1]!);

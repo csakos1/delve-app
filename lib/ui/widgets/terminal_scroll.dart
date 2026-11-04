@@ -68,6 +68,10 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
   late final AnimationController _fling;
   final _steps = WheelSteps(1);
   double _flingLast = 0;
+
+  /// The fling goes up (older output), and it began in tmux's copy mode.
+  bool _flingUp = false;
+  bool _flingInCopyMode = false;
   Offset _at = Offset.zero;
 
   /// The pointer that went down stopped a fling: its tap is not a tap.
@@ -153,7 +157,10 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
     final sc = widget.scrollController;
     if (!sc.hasClients) return;
     final p = sc.position;
-    sc.jumpTo((p.pixels - dy).clamp(p.minScrollExtent, p.maxScrollExtent));
+    final to = (p.pixels - dy).clamp(p.minScrollExtent, p.maxScrollExtent);
+    sc.jumpTo(to);
+    // at either end a fling would go on unseen (see [_flingAtEnd])
+    if (to == p.minScrollExtent || to == p.maxScrollExtent) _stop();
   }
 
   void _onFling() {
@@ -161,6 +168,19 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
     final d = v - _flingLast;
     _flingLast = v;
     if (d != 0) _move(d);
+    if (_fling.isAnimating && _flingAtEnd()) _stop();
+  }
+
+  /// tmux can go no further this way, so the fling ends: going on unseen it
+  /// made the next tap only stop it (T3 phone test: a flick in a new
+  /// session sat at "[0/0]", and the keyboard needed a second tap). Up: copy
+  /// mode at the top of the history. Down: copy mode left at the bottom
+  /// (`copy-mode -e`); a fling down that began outside copy mode may be a
+  /// program's (vim, htop) and goes on.
+  bool _flingAtEnd() {
+    final t = widget.connection.terminal;
+    if (_flingUp) return t.copyAtTop;
+    return _flingInCopyMode && !t.inCopyMode;
   }
 
   void _stop() {
@@ -217,6 +237,9 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
           if (_pinched) return;
           final v = d.velocity.pixelsPerSecond.dy;
           if (v.abs() < 300) return;
+          _flingUp = v > 0;
+          _flingInCopyMode = widget.connection.terminal.inCopyMode;
+          if (_flingAtEnd()) return;
           _flingLast = 0;
           _fling.value = 0;
           unawaited(

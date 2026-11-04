@@ -133,7 +133,9 @@ class TerminalConnection extends ChangeNotifier {
             statusRows: statusRows,
           )
           ..onOutput = _input
-          ..onResize = _resized;
+          ..onResize = _resized
+          ..onCopyMode = ((entry) => unawaited(_askShellCursor(entry)))
+          ..onResizeInCopyMode = _leaveForResize;
     selection.addListener(_selectionSet);
   }
 
@@ -640,6 +642,11 @@ class TerminalConnection extends ChangeNotifier {
     unawaited(link.done.then((end) => _ended(end, gen)));
     _set(TermPhase.live);
     onLive?.call();
+    // scrolled up when the connection went: tmux may have moved the pane
+    // meanwhile, so it tells again where the shell's cursor is
+    if (terminal.inCopyMode) {
+      unawaited(_askShellCursor(terminal.copyModeEntry));
+    }
   }
 
   void _ended(SshEnd end, int gen) {
@@ -722,6 +729,50 @@ class TerminalConnection extends ChangeNotifier {
       return;
     }
     link.write(Uint8List.fromList(utf8.encode(data)));
+    _watchEcho();
+  }
+
+  /// Copy mode began: tmux tells where the shell's cursor is, which the
+  /// screen does not show ([TmuxTerminal.onCopyMode]). No answer: the guess
+  /// from the last screen.
+  Future<void> _askShellCursor(int entry) async {
+    final link = _link;
+    final target = _target;
+    if (link == null || target == null || _phase != TermPhase.live) {
+      terminal.shellCursorFromTmux(entry);
+      return;
+    }
+    SshRunResult? answer;
+    try {
+      answer = await link.run(target.shellCursorCommand);
+    } on Object {
+      answer = null;
+    }
+    if (_disposed) return;
+    terminal.shellCursorFromTmux(
+      entry,
+      answer == null || answer.exitCode != 0
+          ? null
+          : parseShellCursor(answer.output, target.session),
+    );
+  }
+
+  /// The pane is about to change size in copy mode (the keyboard opening or
+  /// closing after a scroll): out of copy mode first, so tmux keeps the lines
+  /// in place ([TmuxTerminal.onResizeInCopyMode]). A selection keeps copy
+  /// mode: it is on the lines copy mode shows.
+  void _leaveForResize() {
+    if (hasSelection) return;
+    final link = _link;
+    if (!terminal.inCopyMode || link == null || _phase != TermPhase.live) {
+      return;
+    }
+    terminal.leftCopyMode();
+    if (_holding) {
+      _held.add('q');
+      return;
+    }
+    link.write(Uint8List.fromList(utf8.encode('q')));
     _watchEcho();
   }
 

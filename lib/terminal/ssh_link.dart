@@ -55,11 +55,21 @@ class SshTarget {
   /// desktop session is attached unchanged (the bindings belong to the
   /// server and keep tmux's steps there). A desktop session that is gone
   /// ends the command at once ("can't find session").
+  ///
+  /// The app's windows do not scroll a cleared screen into the history
+  /// ([tmuxNoScrollOnClear]): set on the first window before its shell
+  /// prints anything, on the current one at every attach (sessions made
+  /// before), and by a session hook on windows opened later.
   String get command {
     final exact = shellQuote('=$session');
     final attach = [
       'exec tmux -u attach-session -t $exact',
-      if (app) ...['set-option @delve 1', 'set-option status off'],
+      if (app) ...[
+        'set-option @delve 1',
+        'set-option status off',
+        tmuxNoScrollOnClear,
+        "set-hook after-new-window '$tmuxNoScrollOnClear'",
+      ],
       ...tmuxWheelBindings,
     ].join(r' \; ');
     return [
@@ -69,10 +79,30 @@ class SshTarget {
             'tmux -u new-session -d -s ${shellQuote(session)} '
             r'\; set-option history-limit '
             '$kAppHistoryLimit '
-            r"\; new-window -k -t ':^'",
+            r"\; new-window -k -t ':^' \; "
+            '$tmuxNoScrollOnClear',
       attach,
     ].join('; ');
   }
+
+  /// tmux (3.3+) moves the screen into the history when a program clears
+  /// all of it (`scroll-on-clear`, on by default). zsh redraws its prompt on
+  /// every pty resize with `\r…\e[J` – on the first row that clears the
+  /// whole screen, so each resize (the first size, the keyboard opening and
+  /// closing) left one more empty prompt in the history, and a bigger pane
+  /// pulled them back onto the screen (T3 phone test: 8 prompts above a new
+  /// session). Measured on a real tmux 3.4 with zsh 5.9: 7 history lines
+  /// after five resizes, none with this option off; bash does not clear.
+  static const tmuxNoScrollOnClear = 'set-option -w scroll-on-clear off';
+
+  /// Asks tmux where the shell's cursor is on this session's pane, with the
+  /// pane's history size ([parseShellCursor]); the session's name comes
+  /// last, to check the answer: a session that is gone would be matched by
+  /// another one starting with its name.
+  String get shellCursorCommand =>
+      'LANG=en_US.UTF-8 tmux -u display-message -p '
+      '-t ${shellQuote('$session:')} '
+      "'#{cursor_x}|#{cursor_y}|#{history_size}|#{session_name}'";
 
   /// tmux's wheel bindings, one line per step in the app's sessions.
   ///
@@ -103,6 +133,18 @@ class SshTarget {
         "'select-pane; send-keys -X -N 1 scroll-down' "
         "'select-pane; send-keys -X -N 5 scroll-down'",
   ];
+}
+
+/// tmux's answer to [SshTarget.shellCursorCommand]: (column, row, history
+/// size) – null when it is not about [session].
+(int, int, int)? parseShellCursor(String output, String session) {
+  final parts = output.trim().split('|');
+  if (parts.length < 4 || parts.sublist(3).join('|') != session) return null;
+  final x = int.tryParse(parts[0]);
+  final y = int.tryParse(parts[1]);
+  final history = int.tryParse(parts[2]);
+  if (x == null || y == null || history == null) return null;
+  return (x, y, history);
 }
 
 /// The history limit of the app's tmux sessions (T3: tmux's 2000 lines run
