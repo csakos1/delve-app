@@ -147,7 +147,18 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
           if (v.abs() < 300) return;
           _flingLast = 0;
           _fling.value = 0;
-          unawaited(_fling.animateWith(FrictionSimulation(0.05, 0, v)));
+          unawaited(
+            _fling.animateWith(
+              FrictionSimulation(
+                0.05,
+                0,
+                v,
+                tolerance: Tolerance(
+                  velocity: _lineHeight * kFlingStopLinesPerSecond,
+                ),
+              ),
+            ),
+          );
         },
         child: ScrollConfiguration(
           behavior: const _NoDragScroll(),

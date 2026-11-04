@@ -232,7 +232,9 @@ void main() {
     await t.drag(view, const Offset(0, 200));
     await frames(t, 6);
     final up = RegExp(r'\x1b\[<64;\d+;\d+M').allMatches(link.written);
-    expect(up.length, greaterThanOrEqualTo(2));
+    // one step per line of drag (T2b: tmux scrolls one line per step in the
+    // app's sessions); 200 px is about a dozen lines here, less the slop
+    expect(up.length, greaterThanOrEqualTo(8));
     expect(link.written, isNot(contains('\x1b[<65;')));
 
     await t.drag(view, const Offset(0, -200));

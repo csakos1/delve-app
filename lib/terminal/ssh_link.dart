@@ -27,9 +27,44 @@ class SshTarget {
 
   /// The pty command: an exec channel starts a non-login shell without
   /// `LANG`, so tmux gets a UTF-8 locale and `-u` (T0); `-A` attaches the
-  /// session if it exists.
-  String get command =>
-      'env LANG=en_US.UTF-8 tmux -u new-session -A -s ${quoteSession(session)}';
+  /// session if it exists. The session is marked as the app's (`@delve`,
+  /// on the session just made or attached) and the wheel bindings are set
+  /// (T2b: one line per wheel step there).
+  String get command => [
+    'env LANG=en_US.UTF-8 tmux -u new-session -A -s ${quoteSession(session)}',
+    'set-option @delve 1',
+    ...tmuxWheelBindings,
+  ].join(r' \; ');
+
+  /// tmux's wheel bindings, one line per step in the app's sessions.
+  ///
+  /// tmux scrolls 5 lines per wheel step in copy mode and the first step
+  /// only enters copy mode: on a phone the text jumped 5 lines at a time and
+  /// the start of a drag did nothing (T2b phone test). A key binding belongs
+  /// to the whole tmux server, so the app's sessions are told apart by a
+  /// session option (`@delve`): the desktop's other sessions keep tmux's
+  /// defaults (`select-pane; send -X -N 5 scroll-…`, `copy-mode -e`). The
+  /// root binding keeps tmux's test for a program that wants the mouse
+  /// (htop, vim: `send -M`), with a nested two-way `||` (tmux 3.4 reads a
+  /// three-way one as true). Tried on a real tmux: one line per step, the
+  /// first step scrolls too, other sessions 0 then 5.
+  static const tmuxWheelBindings = [
+    "bind-key -T root WheelUpPane if-shell -F '#{||:#{alternate_on},"
+        "#{||:#{pane_in_mode},#{mouse_any_flag}}}' 'send-keys -M' "
+        "'copy-mode -e; if-shell -F \"#{@delve}\" \"send-keys -X -N 1 scroll-up\"'",
+    "bind-key -T copy-mode WheelUpPane if-shell -F '#{@delve}' "
+        "'select-pane; send-keys -X -N 1 scroll-up' "
+        "'select-pane; send-keys -X -N 5 scroll-up'",
+    "bind-key -T copy-mode WheelDownPane if-shell -F '#{@delve}' "
+        "'select-pane; send-keys -X -N 1 scroll-down' "
+        "'select-pane; send-keys -X -N 5 scroll-down'",
+    "bind-key -T copy-mode-vi WheelUpPane if-shell -F '#{@delve}' "
+        "'select-pane; send-keys -X -N 1 scroll-up' "
+        "'select-pane; send-keys -X -N 5 scroll-up'",
+    "bind-key -T copy-mode-vi WheelDownPane if-shell -F '#{@delve}' "
+        "'select-pane; send-keys -X -N 1 scroll-down' "
+        "'select-pane; send-keys -X -N 5 scroll-down'",
+  ];
 
   /// A tmux session name as one shell word.
   static String quoteSession(String s) =>

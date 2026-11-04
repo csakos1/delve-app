@@ -141,6 +141,11 @@ reached over Tailscale only.
   Scrolling up puts tmux in copy mode, where keys are commands: the app sees it by tmux's
   position indicator, draws the shell's cursor where the prompt went (not tmux's), and a
   key typed then is sent after a `q`, so it goes to the shell. Tab is the first extra key.
+  A wheel step is one line in the app's tmux sessions: the pty command marks the session
+  (`@delve`) and binds the wheel keys of the root and copy-mode tables to scroll one line
+  there (the first step enters copy mode and scrolls too); the desktop's other sessions
+  keep tmux's 5 lines. A line of drag is one step, so the text follows the finger; a fling
+  stops below 4 lines a second instead of creeping on.
 
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share

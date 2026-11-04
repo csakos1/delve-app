@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' show Process;
 import 'dart:typed_data';
 
 import 'package:delve/terminal/phone_key.dart';
@@ -109,12 +110,70 @@ void main() {
       expect(hostKeyTypeLabel('ssh-ed25519'), 'ED25519');
     });
 
-    test('the tmux command attaches with a UTF-8 locale', () {
+    test('the tmux command attaches with a UTF-8 locale, marks the session '
+        "as the app's and binds the wheel to one line there", () {
       expect(
         target.command,
-        'env LANG=en_US.UTF-8 tmux -u new-session -A -s delve-1',
+        startsWith(
+          r'env LANG=en_US.UTF-8 tmux -u new-session -A -s delve-1 \; '
+          r'set-option @delve 1 \; bind-key -T root WheelUpPane ',
+        ),
       );
       expect(SshTarget.quoteSession("a b'c"), "'a bc'");
+    });
+
+    test('the shell hands tmux the command as separate words: each binding '
+        'whole, `;` between commands (T2b: one line per wheel step)', () async {
+      final printed = await Process.run('sh', [
+        '-c',
+        target.command.replaceFirst(
+          'env LANG=en_US.UTF-8 tmux',
+          r"printf '%s\n'",
+        ),
+      ]);
+      final words = (printed.stdout as String).trim().split('\n');
+      // commands, split at the `;` words
+      final commands = <List<String>>[[]];
+      for (final w in words) {
+        if (w == ';') {
+          commands.add([]);
+        } else {
+          commands.last.add(w);
+        }
+      }
+      expect(commands.first, ['-u', 'new-session', '-A', '-s', 'delve-1']);
+      expect(commands[1], ['set-option', '@delve', '1']);
+      expect(commands.length, 2 + SshTarget.tmuxWheelBindings.length);
+      expect(commands[2], [
+        'bind-key',
+        '-T',
+        'root',
+        'WheelUpPane',
+        'if-shell',
+        '-F',
+        '#{||:#{alternate_on},#{||:#{pane_in_mode},#{mouse_any_flag}}}',
+        'send-keys -M',
+        'copy-mode -e; if-shell -F "#{@delve}" "send-keys -X -N 1 scroll-up"',
+      ]);
+      for (final (i, table, dir) in [
+        (3, 'copy-mode', 'up'),
+        (4, 'copy-mode', 'down'),
+        (5, 'copy-mode-vi', 'up'),
+        (6, 'copy-mode-vi', 'down'),
+      ]) {
+        final key = dir == 'up' ? 'WheelUpPane' : 'WheelDownPane';
+        expect(commands[i], [
+          'bind-key',
+          '-T',
+          table,
+          key,
+          'if-shell',
+          '-F',
+          '#{@delve}',
+          'select-pane; send-keys -X -N 1 scroll-$dir',
+          'select-pane; send-keys -X -N 5 scroll-$dir',
+        ]);
+      }
     });
   });
 
@@ -579,6 +638,33 @@ void main() {
       t.write('\x1b[H\x1b[L');
       expect(identical(t.buffer.lines[0], top), isTrue);
       expect(t.historyLength, 0);
+    });
+
+    test("tmux's one-line copy-mode steps, in its own bytes (T2b: one line "
+        'per wheel step): the pane moves a line at a time, the lines that '
+        'leave the bottom come back as the same lines', () {
+      final t = screen();
+      final kept = [for (var i = 6; i <= 8; i++) t.buffer.lines[i]];
+      // as tmux 3.4 draws a step up: region, insert a line at the top, the
+      // top row redrawn, the region back to the whole screen
+      String up(int n) =>
+          '\x1b[1;9r\x1b[1;1H\x1b[1L\x1b[1;1Hold$n\x1b[1;10r\x1b[9;5H';
+      for (var n = 1; n <= 3; n++) {
+        t.write(up(n));
+        expect(row(t, 0), 'old$n');
+        expect(row(t, n), 'line0');
+        expect(row(t, 8), 'line${8 - n}');
+        expect(row(t, 9), 'status');
+        expect(t.belowLength, n);
+        expectAttached(t);
+      }
+      // a step down: delete the top line, draw the bottom one
+      t.write('\x1b[1;9r\x1b[1;1H\x1b[1M\x1b[9;1Hline6\x1b[1;10r');
+      expect(identical(t.buffer.lines[8], kept[0]), isTrue);
+      expect(row(t, 8), 'line6');
+      expect(row(t, 0), 'old2');
+      expect(t.belowLength, 2);
+      expectAttached(t);
     });
 
     test('a line that left the bottom comes back when tmux scrolls up '

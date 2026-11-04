@@ -30,10 +30,15 @@ String? wheelReport(
   };
 }
 
-/// Lines a finger has to move for one wheel step. tmux scrolls 5 lines per
-/// wheel step in copy mode, so 3 lines of drag move the view a bit faster
-/// than the finger – a whole screen in about two swipes.
-const kWheelStepLines = 3.0;
+/// Lines a finger has to move for one wheel step. In the app's tmux
+/// sessions a wheel step scrolls one line (`SshTarget.tmuxWheelBindings`),
+/// so the text follows the finger line by line; with tmux's own 5 lines and
+/// 3 lines of drag it jumped 5 lines at a time (T2b phone test).
+const kWheelStepLines = 1.0;
+
+/// A fling stops below this speed: its slow end would otherwise creep on in
+/// single steps for seconds (lines per second).
+const kFlingStopLinesPerSecond = 4.0;
 
 /// Turns finger movement into whole wheel steps; the remainder carries over.
 class WheelSteps {
