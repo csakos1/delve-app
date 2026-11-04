@@ -9,6 +9,7 @@ import 'package:xterm/xterm.dart';
 
 import '../../app/router.dart';
 import '../../l10n/app_localizations.dart';
+import '../../share/share_channel.dart';
 import '../../terminal/secrets.dart';
 import '../../terminal/terminal_connection.dart';
 import '../../terminal/terminal_lock.dart';
@@ -19,6 +20,7 @@ import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import '../widgets/terminal_scroll.dart';
+import '../widgets/terminal_selection.dart';
 import '../widgets/terminal_ui.dart';
 
 /// 22 Terminal tab: setup (22d/22e), the session with its state line (22a,
@@ -67,6 +69,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
   bool _promptLock = true;
   bool _unlocking = false;
   String? _unlockProblem;
+
+  /// Where the long press that started the selection went down.
+  Offset? _pressAt;
 
   @override
   void initState() {
@@ -125,6 +130,79 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
     if (!mounted) return;
     _focus.requestFocus();
     _viewKey.currentState?.requestKeyboard();
+  }
+
+  /// A tap on the terminal: ends a selection; otherwise a click for tmux
+  /// (pane focus, a program that wants the mouse) and the keyboard.
+  void _tap(Offset global) {
+    final c = _service.connection;
+    if (c.hasSelection) {
+      c.clearSelection();
+      return;
+    }
+    final view = _viewKey.currentState;
+    if (view != null) {
+      final render = view.renderTerminal;
+      final at = render.globalToLocal(global);
+      render
+        ..mouseEvent(
+          TerminalMouseButton.left,
+          TerminalMouseButtonState.down,
+          at,
+        )
+        ..mouseEvent(TerminalMouseButton.left, TerminalMouseButtonState.up, at);
+    }
+    _showKeyboard();
+  }
+
+  /// A long press selects the word under the finger (22j3): no keyboard,
+  /// nothing for tmux.
+  void _selectStart(Offset global) {
+    _pressAt = global;
+    final c = _service.connection;
+    if (selectWordAt(_viewKey.currentState, c.selection, global)) {
+      unawaited(Feedback.forLongPress(context));
+    }
+  }
+
+  void _selectMove(Offset global) {
+    final from = _pressAt;
+    if (from == null) return;
+    selectWordAt(
+      _viewKey.currentState,
+      _service.connection.selection,
+      from,
+      global,
+    );
+  }
+
+  Future<void> _copySelection() async {
+    final c = _service.connection;
+    final text = c.selectedText();
+    c.clearSelection();
+    if (text == null) return;
+    final l = AppLocalizations.of(context);
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l.termSelCopied('\n'.allMatches(text).length + 1)),
+        ),
+      );
+  }
+
+  /// To the Share to Delve screen's chat picker (17): the selection as a
+  /// fenced code block, the cursor on an empty line above it, not sent.
+  void _sendSelection() {
+    final c = _service.connection;
+    final text = c.selectedText();
+    c.clearSelection();
+    if (text == null) return;
+    ref
+        .read(pendingShareProvider.notifier)
+        .offer(SharedPayload(text: '\n```\n$text\n```', caretAtStart: true));
   }
 
   /// The keyboard's overlap with the body this frame → [_layout]. Called
@@ -322,25 +400,51 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
         // the last screen stays, dimmed, while not connected (22c)
         opacity: c.live ? 1 : 0.5,
         duration: DelveTokens.short,
-        child: TerminalScrollLayer(
-          key: const Key('terminal.scroll'),
-          connection: c,
-          viewKey: _viewKey,
-          scrollController: _scroll,
-          child: TerminalView(
-            c.terminal,
-            key: _viewKey,
-            focusNode: _focus,
-            scrollController: _scroll,
-            theme: delveTerminalTheme,
-            textStyle: delveTerminalStyle(service.fontSize),
-            padding: const EdgeInsets.all(DelveTokens.terminalPadding),
-            autofocus: true,
-            deleteDetection: true,
-            // the scroll layer sends the wheel (xterm's own report is
-            // Shift+wheel, and arrow keys would page the shell history)
-            simulateScroll: false,
-          ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: TerminalScrollLayer(
+                key: const Key('terminal.scroll'),
+                connection: c,
+                viewKey: _viewKey,
+                scrollController: _scroll,
+                onTap: _tap,
+                onLongPressStart: _selectStart,
+                onLongPressMove: _selectMove,
+                // every touch is the layer's: xterm's own long press opened
+                // the keyboard and clicked into tmux (T2a phone test)
+                child: IgnorePointer(
+                  child: TerminalView(
+                    c.terminal,
+                    key: _viewKey,
+                    controller: c.selection,
+                    focusNode: _focus,
+                    scrollController: _scroll,
+                    theme: delveTerminalViewTheme,
+                    textStyle: delveTerminalStyle(service.fontSize),
+                    padding: const EdgeInsets.all(DelveTokens.terminalPadding),
+                    autofocus: true,
+                    deleteDetection: true,
+                    // the scroll layer sends the wheel (xterm's own report
+                    // is Shift+wheel, and arrow keys would page the shell
+                    // history)
+                    simulateScroll: false,
+                  ),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: TerminalSelectionLayer(
+                connection: c,
+                viewKey: _viewKey,
+                scrollController: _scroll,
+                onCopy: () => unawaited(_copySelection()),
+                onSendToChat: _sendSelection,
+                textStyle: delveTerminalStyle(service.fontSize),
+                focusNode: _focus,
+              ),
+            ),
+          ],
         ),
       ),
     );

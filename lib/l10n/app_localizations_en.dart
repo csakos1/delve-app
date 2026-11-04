@@ -2395,4 +2395,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String termUnlockFailed(String detail) {
     return 'Couldn\'t unlock: $detail';
   }
+
+  @override
+  String get termSelCopy => 'Copy';
+
+  @override
+  String get termSelSendToChat => 'Send to chat';
+
+  @override
+  String termSelCopied(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Copied $count lines',
+      one: 'Copied 1 line',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get termSelStart => 'Selection start';
+
+  @override
+  String get termSelEnd => 'Selection end';
 }

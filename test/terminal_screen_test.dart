@@ -5,11 +5,15 @@ import 'package:delve/terminal/terminal_connection.dart';
 import 'package:delve/terminal/terminal_lock.dart';
 import 'package:delve/terminal/terminal_providers.dart';
 import 'package:delve/terminal/terminal_theme.dart';
+import 'package:delve/terminal/tmux_terminal.dart';
 import 'package:delve/ui/screens/settings_screen.dart';
+import 'package:delve/ui/screens/share_screen.dart';
 import 'package:delve/ui/screens/terminal_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:xterm/xterm.dart';
 
 import 'support/harness.dart';
 import 'support/terminal_fakes.dart';
@@ -444,6 +448,165 @@ void main() {
     expect(env.terminal.dialer.last.written, '\x1b|');
   });
 
+  group('selection (T2b)', () {
+    /// The middle of [cell] on the screen.
+    Offset at(WidgetTester t, CellOffset cell) {
+      final render = t
+          .state<TerminalViewState>(find.byType(TerminalView))
+          .renderTerminal;
+      final size = render.cellSize;
+      return render.localToGlobal(
+        render.getOffset(cell) + Offset(size.width / 2, size.height / 2),
+      );
+    }
+
+    TerminalView view(WidgetTester t) =>
+        t.widget<TerminalView>(find.byType(TerminalView));
+
+    String? selected(WidgetTester t) {
+      final range = view(t).controller!.selection;
+      return range == null ? null : view(t).terminal.buffer.getText(range);
+    }
+
+    int shows(WidgetTester t) =>
+        t.testTextInput.log.where((c) => c.method == 'TextInput.show').length;
+
+    /// tmux in its alternate screen, with the mouse on, showing [text].
+    Future<FakeSshLink> tmux(WidgetTester t, String text) async {
+      final env = await openTerminal(t, setupDone: true);
+      final link = env.terminal.dialer.last;
+      link.send('\x1b[?1049h\x1b[?1000h\x1b[?1006h$text');
+      await frames(t, 2);
+      return link;
+    }
+
+    Future<void> longPress(WidgetTester t, CellOffset cell) async {
+      await t.longPressAt(at(t, cell));
+      await frames(t, 4);
+    }
+
+    final toolbar = find.byKey(const Key('terminal.select.toolbar'));
+
+    testWidgets('a long press selects the word: no keyboard, no click for '
+        'tmux; Copy puts it on the clipboard', (t) async {
+      final link = await tmux(t, 'hello world');
+      final before = shows(t);
+      await longPress(t, const CellOffset(1, 0));
+      expect(selected(t), 'hello');
+      expect(
+        view(t).theme.selection.a,
+        0,
+        reason: 'drawn reversed, not by xterm',
+      );
+      expect(toolbar, findsOneWidget);
+      expect(find.byKey(const Key('terminal.select.start')), findsOneWidget);
+      expect(find.byKey(const Key('terminal.select.end')), findsOneWidget);
+      expect(shows(t), before, reason: 'no keyboard');
+      expect(link.written, isNot(contains('\x1b[<')), reason: 'no click');
+
+      String? copied;
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied = (call.arguments as Map)['text'] as String?;
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await t.tap(find.byKey(const Key('terminal.select.copy')));
+      await frames(t, 2);
+      expect(copied, 'hello');
+      expect(find.text('Copied 1 line'), findsOneWidget);
+      expect(toolbar, findsNothing);
+      expect(selected(t), isNull);
+    });
+
+    testWidgets('dragging the end handle takes in the next word, nothing '
+        'goes to tmux', (t) async {
+      final link = await tmux(t, 'hello world');
+      await longPress(t, const CellOffset(1, 0));
+      final cell = t
+          .state<TerminalViewState>(find.byType(TerminalView))
+          .renderTerminal
+          .cellSize;
+      await t.drag(
+        find.byKey(const Key('terminal.select.end')),
+        Offset(cell.width * 6, 0),
+      );
+      await frames(t, 4);
+      expect(selected(t), 'hello world');
+      expect(toolbar, findsOneWidget);
+      expect(link.written, isNot(contains('\x1b[<')));
+    });
+
+    testWidgets('a tap ends the selection without a click; the next tap '
+        'clicks for tmux and brings the keyboard', (t) async {
+      final link = await tmux(t, 'hello world');
+      await longPress(t, const CellOffset(1, 0));
+      final before = shows(t);
+      await t.tapAt(at(t, const CellOffset(3, 12)));
+      await frames(t, 2);
+      expect(selected(t), isNull);
+      expect(toolbar, findsNothing);
+      expect(link.written, isNot(contains('\x1b[<')));
+      expect(shows(t), before);
+
+      await t.tapAt(at(t, const CellOffset(3, 12)));
+      await frames(t, 2);
+      expect(link.written, contains('\x1b[<0;'));
+      expect(shows(t), greaterThan(before));
+    });
+
+    testWidgets('a scroll keeps the selection; it moves with its lines '
+        '(T2b phone test)', (t) async {
+      final link = await tmux(t, 'hello world');
+      await longPress(t, const CellOffset(1, 0));
+      expect(selected(t), 'hello');
+      await t.drag(
+        find.byKey(const Key('terminal.scroll')),
+        const Offset(0, 200),
+      );
+      await frames(t, 4);
+      expect(link.written, contains('\x1b[<64;'));
+      expect(selected(t), 'hello');
+      expect(toolbar, findsOneWidget);
+      // tmux answers by scrolling the pane down two lines
+      link.send('\x1b[1;20r\x1b[2T\x1b[r');
+      await frames(t, 4);
+      expect(selected(t), 'hello');
+      expect(view(t).controller!.selection!.normalized.begin.y, 2);
+      expect(toolbar, findsOneWidget);
+      // and a long press on a line it moved still selects (it stayed
+      // attached)
+      await longPress(t, const CellOffset(8, 2));
+      expect(selected(t), 'world');
+    });
+
+    testWidgets('Send to chat: the chat picker, the selection as a code '
+        'block with the cursor on an empty line above it', (t) async {
+      await tmux(t, 'hello world');
+      await longPress(t, const CellOffset(7, 0));
+      await t.tap(find.byKey(const Key('terminal.select.send')));
+      await frames(t, 6);
+      expect(find.byType(ShareScreen), findsOneWidget);
+      final field = t.widget<TextField>(
+        find.byKey(const Key('composer.field')),
+      );
+      expect(field.controller!.text, '\n```\nworld\n```');
+      expect(
+        field.controller!.selection,
+        const TextSelection.collapsed(offset: 0),
+      );
+    });
+  });
+
   group('settings', () {
     Future<void> openTerminalSettings(WidgetTester t) async {
       await t.tap(find.byKey(const Key('terminal.menu')));
@@ -537,5 +700,39 @@ void main() {
       final saved = await TerminalSecrets(env.terminal.store).loadConfig();
       expect(saved!.port, 2200);
     });
+  });
+
+  testWidgets("after a scroll (tmux's copy mode) xterm draws no cursor and "
+      'a key goes to the shell, `q` first; Tab is the first extra key '
+      '(T2b phone test)', (t) async {
+    final env = await openTerminal(t, setupDone: true);
+    final link = env.terminal.dialer.last;
+    // tmux with the mouse on; the shell's cursor at column 2 of row 2
+    link.send('\x1b[?1049h\x1b[?1000h\x1b[?1006h\x1b[3;3H');
+    await frames(t, 2);
+    final term =
+        t.widget<TerminalView>(find.byType(TerminalView)).terminal
+            as TmuxTerminal;
+    const text = '[2/50]';
+    final from = term.viewWidth - text.length + 1;
+    link.send('\x1b[1;${from}H\x1b[30;43m$text\x1b[0m\x1b[10;1H');
+    await frames(t, 2);
+    expect(term.inCopyMode, isTrue);
+    expect(term.cursorVisibleMode, isFalse);
+    expect(term.promptCursor, CellOffset(2, term.buffer.scrollBack + 4));
+
+    await t.tap(find.byKey(const ValueKey('terminal.key.|')));
+    await t.pump();
+    expect(link.written, endsWith('q|'));
+    expect(term.inCopyMode, isFalse);
+
+    double left(String label) =>
+        t.getTopLeft(find.byKey(ValueKey('terminal.key.$label'))).dx;
+    for (final other in ['Esc', 'Ctrl', 'Alt']) {
+      expect(left('Tab'), lessThan(left(other)), reason: other);
+    }
+    await t.tap(find.byKey(const ValueKey('terminal.key.Tab')));
+    await t.pump();
+    expect(link.written, endsWith('q|\t'));
   });
 }

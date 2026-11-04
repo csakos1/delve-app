@@ -33,6 +33,88 @@ const delveTerminalTheme = TerminalTheme(
   searchHitForeground: Color(0xFF0C0D0E),
 );
 
+/// What the terminal view gets: [delveTerminalTheme] without its own
+/// selection colour. The selection is drawn reversed – each cell in its
+/// text colour, the text in the cell's background – over the view (T2b, as
+/// in Termux and Linux terminals), so xterm paints none.
+final delveTerminalViewTheme = TerminalTheme(
+  background: delveTerminalTheme.background,
+  foreground: delveTerminalTheme.foreground,
+  cursor: delveTerminalTheme.cursor,
+  selection: const Color(0x00000000),
+  black: delveTerminalTheme.black,
+  red: delveTerminalTheme.red,
+  green: delveTerminalTheme.green,
+  yellow: delveTerminalTheme.yellow,
+  blue: delveTerminalTheme.blue,
+  magenta: delveTerminalTheme.magenta,
+  cyan: delveTerminalTheme.cyan,
+  white: delveTerminalTheme.white,
+  brightBlack: delveTerminalTheme.brightBlack,
+  brightRed: delveTerminalTheme.brightRed,
+  brightGreen: delveTerminalTheme.brightGreen,
+  brightYellow: delveTerminalTheme.brightYellow,
+  brightBlue: delveTerminalTheme.brightBlue,
+  brightMagenta: delveTerminalTheme.brightMagenta,
+  brightCyan: delveTerminalTheme.brightCyan,
+  brightWhite: delveTerminalTheme.brightWhite,
+  searchHitBackground: delveTerminalTheme.searchHitBackground,
+  searchHitBackgroundCurrent: delveTerminalTheme.searchHitBackgroundCurrent,
+  searchHitForeground: delveTerminalTheme.searchHitForeground,
+);
+
+/// The 256 colours of a cell's palette index, as xterm 4.0.0 resolves them
+/// (its PaletteBuilder, index 15 included, which it maps to white).
+List<Color> terminalPalette(TerminalTheme t) {
+  final named = [
+    t.black,
+    t.red,
+    t.green,
+    t.yellow,
+    t.blue,
+    t.magenta,
+    t.cyan,
+    t.white,
+    t.brightBlack,
+    t.brightRed,
+    t.brightGreen,
+    t.brightYellow,
+    t.brightBlue,
+    t.brightMagenta,
+    t.brightCyan,
+    t.white,
+  ];
+  const steps = [0, 95, 135, 175, 215, 255];
+  return List<Color>.generate(256, (i) {
+    if (i < 16) return named[i];
+    if (i < 232) {
+      final n = i - 16;
+      return Color.fromARGB(
+        0xFF,
+        steps[n ~/ 36],
+        steps[n ~/ 6 % 6],
+        steps[n % 6],
+      );
+    }
+    final v = 8 + (i - 232) * 10;
+    return Color.fromARGB(0xFF, v, v, v);
+  }, growable: false);
+}
+
+/// The colour a cell colour (xterm's encoding) shows in: [fallback] for the
+/// default colour.
+Color terminalColor(int cell, List<Color> palette, Color fallback) {
+  switch (cell & CellColor.typeMask) {
+    case CellColor.normal:
+      return fallback;
+    case CellColor.named:
+    case CellColor.palette:
+      return palette[cell & CellColor.valueMask];
+    default:
+      return Color((cell & CellColor.valueMask) | 0xFF000000);
+  }
+}
+
 /// Line height of terminal rows (13 sp → 15.6 dp rows).
 const kTerminalLineHeight = 1.2;
 

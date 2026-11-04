@@ -78,6 +78,9 @@ class _ShareScreenState extends ConsumerState<ShareScreen> {
     if (p.text case final t?) {
       final now = _text.text.trimRight();
       _text.text = now.isEmpty ? t : '$now\n$t';
+      if (now.isEmpty && p.caretAtStart) {
+        _text.selection = const TextSelection.collapsed(offset: 0);
+      }
     }
     final left = _attachments.addAll(p.files) + p.skipped;
     if (left > 0) {

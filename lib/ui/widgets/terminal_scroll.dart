@@ -17,6 +17,11 @@ import '../../terminal/terminal_wheel.dart';
 ///
 /// xterm's inner scroll views get no touch drags (their drag devices are
 /// switched off below), so the drag is ours and is not split between them.
+///
+/// Taps and long presses are reported here too (T2b): the terminal view
+/// itself takes no pointer at all, because its own long press opened the
+/// keyboard and clicked into tmux before it selected anything. A tap that
+/// only stops a fling is not a tap; a selection stays while scrolling.
 class TerminalScrollLayer extends StatefulWidget {
   const TerminalScrollLayer({
     super.key,
@@ -24,6 +29,9 @@ class TerminalScrollLayer extends StatefulWidget {
     required this.viewKey,
     required this.scrollController,
     required this.child,
+    this.onTap,
+    this.onLongPressStart,
+    this.onLongPressMove,
   });
 
   final TerminalConnection connection;
@@ -33,6 +41,13 @@ class TerminalScrollLayer extends StatefulWidget {
   final ScrollController scrollController;
 
   final Widget child;
+
+  /// A confirmed tap (not the start of a long press), global position.
+  final void Function(Offset global)? onTap;
+
+  /// A long press, and the finger moving while it is held.
+  final void Function(Offset global)? onLongPressStart;
+  final void Function(Offset global)? onLongPressMove;
 
   @override
   State<TerminalScrollLayer> createState() => _TerminalScrollLayerState();
@@ -44,6 +59,9 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
   final _steps = WheelSteps(1);
   double _flingLast = 0;
   Offset _at = Offset.zero;
+
+  /// The pointer that went down stopped a fling: its tap is not a tap.
+  bool _stoppedFling = false;
 
   @override
   void initState() {
@@ -104,11 +122,20 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
   Widget build(BuildContext context) {
     return Listener(
       onPointerDown: (e) {
+        _stoppedFling = _fling.isAnimating;
         _stop();
         _at = e.localPosition;
       },
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
+        onTapUp: (d) {
+          if (_stoppedFling) return;
+          widget.onTap?.call(d.globalPosition);
+        },
+        onLongPressStart: (d) =>
+            widget.onLongPressStart?.call(d.globalPosition),
+        onLongPressMoveUpdate: (d) =>
+            widget.onLongPressMove?.call(d.globalPosition),
         onVerticalDragStart: (d) {
           _stop();
           _steps.reset();

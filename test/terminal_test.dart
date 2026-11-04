@@ -530,6 +530,91 @@ void main() {
     String row(Terminal t, int i) =>
         t.buffer.lines[t.buffer.scrollBack + i].getText().trim();
 
+    void expectAttached(Terminal t) {
+      final lines = t.buffer.lines;
+      for (var i = t.buffer.scrollBack; i < lines.length; i++) {
+        expect(lines[i].attached, isTrue, reason: 'row $i');
+        expect(lines[i].index, i, reason: 'row $i');
+      }
+    }
+
+    test('lines moved by a scroll or a shrink stay attached (xterm 4.0.0 '
+        'detached them: no selection after a scroll or with the keyboard '
+        'open, T2b phone test)', () {
+      final t = screen();
+      final anchor = t.buffer.lines[5].createAnchor(2);
+      t.write('\x1b[1;9r\x1b[2S'); // tmux scrolls the pane up by two
+      expectAttached(t);
+      expect(row(t, 3), 'line5');
+      expect(anchor.attached, isTrue);
+      expect((anchor.x, anchor.y), (2, 3));
+      t.write('\x1b[2T'); // and down again
+      expectAttached(t);
+      expect(anchor.y, 5);
+      t.resize(20, 7); // the keyboard opens
+      expectAttached(t);
+      t.resize(20, 10); // and closes
+      expectAttached(t);
+      expect(anchor.attached, isTrue);
+    });
+
+    test('a line that left the top comes back as the same line when tmux '
+        'scrolls down (copy mode going up), blank until tmux draws it', () {
+      final t = screen();
+      final top = t.buffer.lines[0];
+      t.write('\x1b[1;9r\x1b[S');
+      expect(top.attached, isFalse);
+      expect(t.historyLength, 1);
+      t.write('\x1b[T');
+      expect(identical(t.buffer.lines[0], top), isTrue);
+      expect(top.attached, isTrue);
+      expect(row(t, 0), '');
+      expect(row(t, 1), 'line1');
+      expect(t.historyLength, 0);
+      // reverse index at the top, and delete / insert line there, the same
+      t.write('\x1b[S\x1b[H\x1bM');
+      expect(identical(t.buffer.lines[0], top), isTrue);
+      t.write('\x1b[H\x1b[M');
+      expect(t.historyLength, 1);
+      t.write('\x1b[H\x1b[L');
+      expect(identical(t.buffer.lines[0], top), isTrue);
+      expect(t.historyLength, 0);
+    });
+
+    test('a line that left the bottom comes back when tmux scrolls up '
+        'again (T2b phone test: a selection on it was gone for good)', () {
+      final t = screen();
+      final bottom = t.buffer.lines[8];
+      t.write('\x1b[1;9r\x1b[T'); // copy mode goes up: line8 leaves below
+      expect(bottom.attached, isFalse);
+      expect(t.belowLength, 1);
+      expect(row(t, 8), 'line7');
+      t.write('\x1b[S'); // and down again
+      expect(identical(t.buffer.lines[8], bottom), isTrue);
+      expect(t.belowLength, 0);
+      expect(row(t, 7), 'line7');
+      expect(row(t, 8), '', reason: 'blank until tmux draws it');
+      // a line feed at the bottom and a delete at the top do the same
+      t.write('\x1b[T\x1b[9;1H\n');
+      expect(identical(t.buffer.lines[8], bottom), isTrue);
+      t.write('\x1b[T\x1b[H\x1b[M');
+      expect(identical(t.buffer.lines[8], bottom), isTrue);
+    });
+
+    test('the pane as one document: kept above, the pane, kept below', () {
+      final t = screen();
+      t.write('\x1b[1;9r\x1b[2S'); // line0, line1 above
+      final doc = t.documentLines();
+      expect(doc.length, 2 + 9);
+      expect(doc[0].getText().trim(), 'line0');
+      expect(doc[2].getText().trim(), 'line2');
+      t.write('\x1b[5T'); // two back from above, five go below
+      final down = t.documentLines();
+      expect(down.length, 9 + 5);
+      expect(t.belowLength, 5);
+      expect(down[11].getText().trim(), 'line8');
+    });
+
     test('a smaller screen keeps the status line and drops lines at the '
         'top (T2a: one-line jump when the keyboard opened)', () {
       final t = screen()..resize(20, 7);
@@ -634,6 +719,278 @@ void main() {
         expect(link.written, '\x1b[<64;2;2M');
       },
     );
+  });
+
+  group('selection', () {
+    void select(TerminalConnection c, CellOffset from, CellOffset to) {
+      final buffer = c.terminal.buffer;
+      c.selection.setSelection(
+        buffer.createAnchorFromOffset(from),
+        buffer.createAnchorFromOffset(to),
+      );
+    }
+
+    test('the selected text, without the blanks tmux pads lines with; '
+        'blanks only is nothing', () async {
+      final rig = Rig();
+      addTearDown(rig.dispose);
+      final link = await rig.live();
+      final c = rig.connection;
+      link.send('hello world   \r\nsecond line   ');
+      await until(
+        () => c.terminal.buffer.lines[1].getText().startsWith('second'),
+      );
+      expect(c.selectedText(), isNull);
+      select(c, const CellOffset(6, 0), const CellOffset(6, 1));
+      expect(c.selectedText(), 'world\nsecond');
+      select(c, const CellOffset(11, 0), const CellOffset(14, 0));
+      expect(c.selectedText(), isNull);
+    });
+
+    test('a key ends it; what xterm answers to tmux does not', () async {
+      final rig = Rig();
+      addTearDown(rig.dispose);
+      final link = await rig.live();
+      final c = rig.connection;
+      link.send('hello');
+      await until(() => c.terminal.buffer.lines[0].getText() == 'hello');
+      select(c, const CellOffset(0, 0), const CellOffset(5, 0));
+      link.send('\x1b[c');
+      await until(() => link.written.isNotEmpty, reason: 'DA answer');
+      expect(c.selection.selection, isNotNull);
+      c.terminal.textInput('x');
+      expect(c.selection.selection, isNull);
+      expect(link.written, endsWith('x'));
+    });
+
+    test('a wheel step keeps it (T2b phone test: it should stay while '
+        'scrolling)', () async {
+      final rig = Rig();
+      addTearDown(rig.dispose);
+      final link = await rig.live();
+      final c = rig.connection;
+      link.send('\x1b[?1049h\x1b[?1000h\x1b[?1006hhello');
+      await until(() => c.terminal.mouseMode.reportScroll);
+      select(c, const CellOffset(0, 0), const CellOffset(5, 0));
+      expect(c.wheel(up: true, column: 0, row: 0), isTrue);
+      expect(c.selectedText(), 'hello');
+    });
+  });
+
+  group('selection over a scrolling tmux', () {
+    /// tmux on a 24-row screen: pane rows 0–22 with `line0`…, status last.
+    Future<(Rig, FakeSshLink)> tmux() async {
+      final rig = Rig();
+      addTearDown(rig.dispose);
+      final link = await rig.live();
+      final buf = StringBuffer('\x1b[?1049h');
+      for (var i = 0; i < 23; i++) {
+        buf.write('\x1b[${i + 1};1Hline$i');
+      }
+      buf.write('\x1b[24;1Hstatus\x1b[1;23r');
+      link.send(buf.toString());
+      final c = rig.connection;
+      await until(() => c.terminal.buffer.lines[22].getText() == 'line22');
+      return (rig, link);
+    }
+
+    test('partly scrolled out: the rest stays, cut at the edge, its handle '
+        'hidden, Copy takes all of it; scrolled out entirely it waits; '
+        'scrolled back it is all there (T2b phone test)', () async {
+      final (rig, link) = await tmux();
+      final c = rig.connection;
+      final buffer = c.terminal.buffer;
+      c.selection.setSelection(
+        buffer.createAnchorFromOffset(const CellOffset(0, 20)),
+        buffer.createAnchorFromOffset(const CellOffset(6, 22)),
+      );
+      expect(c.selectedText(), 'line20\nline21\nline22');
+
+      link.send('\x1b[2T'); // copy mode up two: 21 and 22 go below
+      await until(() => c.terminal.belowLength == 2);
+      var range = c.selection.selection!.normalized;
+      expect((range.begin.x, range.begin.y), (0, 22));
+      expect((range.end.x, range.end.y), (80, 22));
+      expect(c.selectionEndHidden, isTrue);
+      expect(c.selectionStartHidden, isFalse);
+      expect(c.selectedText(), 'line20\nline21\nline22');
+
+      link.send('\x1b[3T'); // line20 goes below too
+      await until(() => c.terminal.belowLength == 5);
+      expect(c.selection.selection, isNull);
+      expect(c.hasSelection, isTrue);
+
+      // back down five; tmux draws the lines that come back
+      link.send(
+        '\x1b[5S\x1b[19;1Hline18\x1b[20;1Hline19\x1b[21;1Hline20'
+        '\x1b[22;1Hline21\x1b[23;1Hline22',
+      );
+      await until(() => c.terminal.buffer.lines[22].getText() == 'line22');
+      range = c.selection.selection!.normalized;
+      expect((range.begin.x, range.begin.y), (0, 20));
+      expect((range.end.x, range.end.y), (6, 22));
+      expect(c.selectionEndHidden, isFalse);
+      expect(c.selectedText(), 'line20\nline21\nline22');
+      // and a key still ends it
+      c.terminal.textInput('x');
+      expect(c.hasSelection, isFalse);
+      expect(c.selection.selection, isNull);
+    });
+  });
+
+  group("tmux's copy mode (T2b phone test: typing after a scroll went to "
+      '"goto line")', () {
+    /// tmux on 80×24: pane rows 0–22, status last, the shell's cursor at
+    /// column 2 of row [prompt].
+    String screen({int prompt = 4}) {
+      final buf = StringBuffer('\x1b[?1049h\x1b[?1000h\x1b[?1006h');
+      for (var i = 0; i < 23; i++) {
+        buf.write('\x1b[${i + 1};1Hline$i');
+      }
+      buf.write('\x1b[24;1Hstatus\x1b[1;23r\x1b[${prompt + 1};3H');
+      return buf.toString();
+    }
+
+    /// tmux's position indicator, right-aligned on the first row in
+    /// mode-style colours; its own cursor left on row 20.
+    String indicator(int up, {String colours = '30;43', int end = 80}) {
+      final text = '[$up/120]';
+      return '\x1b[1;${end - text.length + 1}H\x1b[${colours}m$text\x1b[0m'
+          '\x1b[20;1H';
+    }
+
+    /// tmux's redraw after copy mode: the first row without the indicator.
+    const left = '\x1b[1;1Hline0\x1b[K\x1b[5;3H';
+
+    TmuxTerminal tmux({int prompt = 4}) => TmuxTerminal()
+      ..resize(80, 24)
+      ..write(screen(prompt: prompt));
+
+    test("seen by its indicator: no cursor of its own; the shell's cursor "
+        'shows moved down by the scroll; gone after the redraw', () {
+      final t = tmux();
+      expect(t.inCopyMode, isFalse);
+      expect(t.cursorVisibleMode, isTrue);
+      expect(t.promptCursor, isNull);
+      t.write(indicator(3));
+      expect(t.inCopyMode, isTrue);
+      expect(t.cursorVisibleMode, isFalse);
+      expect(t.promptCursor, const CellOffset(2, 7));
+      t.write(indicator(5));
+      expect(t.promptCursor, const CellOffset(2, 9));
+      t.write(left);
+      expect(t.inCopyMode, isFalse);
+      expect(t.cursorVisibleMode, isTrue);
+      expect(t.promptCursor, isNull);
+    });
+
+    test('scrolled further than the pane: no shell cursor', () {
+      final t = tmux()..write(indicator(19));
+      expect(t.promptCursor, isNull);
+      expect(t.cursorVisibleMode, isFalse);
+    });
+
+    test('the same text without the colours, or not at the edge, is not '
+        'copy mode', () {
+      expect((tmux()..write(indicator(3, colours: '0'))).inCopyMode, isFalse);
+      expect((tmux()..write(indicator(3, end: 70))).inCopyMode, isFalse);
+    });
+
+    test('a resize moves the shell cursor the way tmux moves its line', () {
+      final t = tmux(prompt: 20)..write(indicator(0));
+      expect(t.promptCursor, const CellOffset(2, 20));
+      // keyboard: 10 rows less, 2 below the cursor go first, then 8 at top
+      t.resize(80, 14);
+      expect(t.promptCursor, CellOffset(2, t.buffer.scrollBack + 12));
+      // back: 10 lines come from tmux's history at the top
+      t.resize(80, 24);
+      expect(t.promptCursor, CellOffset(2, t.buffer.scrollBack + 22));
+    });
+
+    test('a key goes to the shell: `q` first, once until the redraw; a tap '
+        'and a wheel step stay in copy mode', () async {
+      final rig = Rig();
+      addTearDown(rig.dispose);
+      final link = await rig.live();
+      final c = rig.connection;
+      link.send(screen() + indicator(3));
+      await until(() => c.terminal.inCopyMode, reason: 'copy mode');
+
+      expect(c.wheel(up: true, column: 0, row: 0), isTrue);
+      expect(link.written, isNot(contains('q')));
+      c.terminal.mouseInput(
+        TerminalMouseButton.left,
+        TerminalMouseButtonState.down,
+        const CellOffset(1, 1),
+      );
+      expect(link.written, isNot(contains('q')));
+      expect(c.terminal.inCopyMode, isTrue);
+
+      c.terminal.textInput('l');
+      c.terminal.textInput('s');
+      expect(link.written, endsWith('qls'));
+      expect(c.terminal.inCopyMode, isFalse);
+
+      // the old screen again (tmux has not redrawn yet): still no `q`
+      link.send('${indicator(3)}\x1b[11;1Hmark');
+      await until(
+        () => c.terminal.buffer.lines[10].getText().startsWith('mark'),
+      );
+      expect(c.terminal.inCopyMode, isFalse);
+      c.terminal.textInput('x');
+      expect(link.written, endsWith('qlsx'));
+
+      // redrawn, then scrolled up again
+      link.send(left);
+      await until(() => c.terminal.buffer.lines[0].getText() == 'line0');
+      link.send(indicator(1));
+      await until(() => c.terminal.inCopyMode, reason: 'copy mode again');
+      c.terminal.textInput('y');
+      expect(link.written, endsWith('xqy'));
+    });
+
+    test('mouse reports are told apart from keys', () {
+      expect(
+        TerminalConnection.isMouseReport('\x1b[<0;3;4M\x1b[<0;3;4m'),
+        isTrue,
+      );
+      expect(TerminalConnection.isMouseReport('\x1b[<64;1;1M'), isTrue);
+      expect(TerminalConnection.isMouseReport('\x1b[M !!'), isTrue);
+      expect(TerminalConnection.isMouseReport('\x1b[A'), isFalse);
+      expect(TerminalConnection.isMouseReport('q'), isFalse);
+    });
+  });
+
+  group('reversed selection colours', () {
+    test('the palette is the one xterm 4.0.0 uses', () {
+      final p = terminalPalette(delveTerminalTheme);
+      expect(p[1], delveTerminalTheme.red);
+      expect(p[15], delveTerminalTheme.white);
+      expect(p[16], const Color(0xFF000000));
+      expect(p[21], const Color(0xFF0000FF));
+      expect(p[196], const Color(0xFFFF0000));
+      expect(p[110], const Color(0xFF87AFD7));
+      expect(p[232], const Color(0xFF080808));
+      expect(p[255], const Color(0xFFEEEEEE));
+    });
+
+    test('cell colours: default, palette, RGB', () {
+      final p = terminalPalette(delveTerminalTheme);
+      const fallback = Color(0xFF123456);
+      expect(terminalColor(0, p, fallback), fallback);
+      expect(terminalColor(CellColor.named | 2, p, fallback), p[2]);
+      expect(terminalColor(CellColor.palette | 200, p, fallback), p[200]);
+      expect(
+        terminalColor(CellColor.rgb | 0xABCDEF, p, fallback),
+        const Color(0xFFABCDEF),
+      );
+    });
+
+    test('the view paints no selection of its own', () {
+      expect(delveTerminalViewTheme.selection.a, 0);
+      expect(delveTerminalViewTheme.foreground, delveTerminalTheme.foreground);
+      expect(delveTerminalViewTheme.green, delveTerminalTheme.green);
+    });
   });
 
   group('lock', () {

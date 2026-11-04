@@ -1764,5 +1764,17 @@
         "type": "String"
       }
     }
-  }
+  },
+  "termSelCopy": "Copy",
+  "termSelSendToChat": "Send to chat",
+  "termSelCopied": "{count, plural, =1{Copied 1 line} other{Copied {count} lines}}",
+  "@termSelCopied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "termSelStart": "Selection start",
+  "termSelEnd": "Selection end"
 }

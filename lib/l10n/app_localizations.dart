@@ -3939,6 +3939,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t unlock: {detail}'**
   String termUnlockFailed(String detail);
+
+  /// No description provided for @termSelCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get termSelCopy;
+
+  /// No description provided for @termSelSendToChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to chat'**
+  String get termSelSendToChat;
+
+  /// No description provided for @termSelCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Copied 1 line} other{Copied {count} lines}}'**
+  String termSelCopied(int count);
+
+  /// No description provided for @termSelStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Selection start'**
+  String get termSelStart;
+
+  /// No description provided for @termSelEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Selection end'**
+  String get termSelEnd;
 }
 
 class _AppLocalizationsDelegate

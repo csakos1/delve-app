@@ -120,6 +120,7 @@ class TerminalConnection extends ChangeNotifier {
     terminal = TmuxTerminal(maxLines: maxLines, inputHandler: keys)
       ..onOutput = _input
       ..onResize = _resized;
+    selection.addListener(_selectionSet);
   }
 
   final SshDialer dialer;
@@ -134,7 +135,156 @@ class TerminalConnection extends ChangeNotifier {
 
   final DateTime Function() _now;
   final StickyModifiers keys;
-  late final Terminal terminal;
+  late final TmuxTerminal terminal;
+
+  /// The selection on the screen (T2b): the view and the selection layer
+  /// paint it, the gesture layer sets it. A key the user sends to the
+  /// desktop ends it; scrolling does not.
+  ///
+  /// It is kept by its lines (the first and the last, which tmux's view
+  /// keeps when they scroll out): partly scrolled out, the rest still shows,
+  /// cut at the pane's edge; scrolled out entirely it waits, and shows again
+  /// when its lines come back (T2b phone test: it vanished for good once its
+  /// last line went under the bottom).
+  final selection = TerminalController();
+
+  BufferLine? _selFirst;
+  int _selFirstX = 0;
+  BufferLine? _selLast;
+  int _selEndX = 0; // exclusive
+  bool _syncing = false;
+  bool _startHidden = false;
+  bool _endHidden = false;
+
+  /// Something is selected (perhaps scrolled out, not drawn now).
+  bool get hasSelection => _selFirst != null || selection.selection != null;
+
+  /// The selection's first / last line is scrolled out: its handle is not
+  /// drawn.
+  bool get selectionStartHidden => _startHidden;
+  bool get selectionEndHidden => _endHidden;
+
+  /// Ends the selection (a tap, Copy, Send to chat).
+  void clearSelection() {
+    _forget();
+    if (selection.selection != null) selection.clearSelection();
+  }
+
+  void _forget() {
+    _selFirst = null;
+    _selLast = null;
+    _startHidden = false;
+    _endHidden = false;
+  }
+
+  /// The gestures set (or cleared) the selection on screen: kept by lines.
+  void _selectionSet() {
+    if (_syncing) return;
+    final range = selection.selection?.normalized;
+    if (range == null) {
+      _forget();
+      return;
+    }
+    final lines = terminal.buffer.lines;
+    _selFirst = lines[range.begin.y];
+    _selFirstX = range.begin.x;
+    _selLast = lines[range.end.y];
+    _selEndX = range.end.x;
+    _startHidden = false;
+    _endHidden = false;
+  }
+
+  /// After tmux moved the lines: the selection on screen follows its lines,
+  /// cut at the pane's edges.
+  void _syncSelection() {
+    final first = _selFirst;
+    final last = _selLast;
+    final t = terminal;
+    if (_disposed || first == null || last == null || !t.isUsingAltBuffer) {
+      return;
+    }
+    final doc = t.documentLines();
+    final a = doc.indexWhere((l) => identical(l, first));
+    final b = doc.indexWhere((l) => identical(l, last));
+    if (a < 0 || b < 0) {
+      clearSelection(); // its lines are gone (cleared, or kept no longer)
+      return;
+    }
+    final top = t.historyLength;
+    final bottom = top + t.paneRows - 1;
+    _startHidden = a < top;
+    _endHidden = b > bottom;
+    final buffer = t.buffer;
+    final want = (b < top || a > bottom)
+        ? null
+        : (
+            _startHidden
+                ? const CellOffset(0, 0)
+                : CellOffset(_selFirstX, a - top),
+            _endHidden
+                ? CellOffset(t.viewWidth, t.paneRows - 1)
+                : CellOffset(_selEndX, b - top),
+          );
+    final now = selection.selection?.normalized;
+    final from = want == null
+        ? null
+        : CellOffset(want.$1.x, want.$1.y + buffer.scrollBack);
+    final to = want == null
+        ? null
+        : CellOffset(want.$2.x, want.$2.y + buffer.scrollBack);
+    if (now == null && from == null) return;
+    if (now != null &&
+        from != null &&
+        to != null &&
+        now.begin.x == from.x &&
+        now.begin.y == from.y &&
+        now.end.x == to.x &&
+        now.end.y == to.y) {
+      return;
+    }
+    _syncing = true;
+    try {
+      if (from == null || to == null) {
+        selection.clearSelection();
+      } else {
+        selection.setSelection(
+          buffer.createAnchorFromOffset(from),
+          buffer.createAnchorFromOffset(to),
+          mode: SelectionMode.line,
+        );
+      }
+    } finally {
+      _syncing = false;
+    }
+  }
+
+  /// The selected text (null: nothing selected), scrolled-out parts
+  /// included, without the blanks tmux pads each line with.
+  String? selectedText() {
+    final first = _selFirst;
+    final last = _selLast;
+    String text;
+    final doc = terminal.isUsingAltBuffer ? terminal.documentLines() : null;
+    final a = doc?.indexWhere((l) => identical(l, first)) ?? -1;
+    final b = doc?.indexWhere((l) => identical(l, last)) ?? -1;
+    if (doc != null && first != null && a >= 0 && b >= a) {
+      text = [
+        for (var i = a; i <= b; i++)
+          doc[i]
+              .getText(i == a ? _selFirstX : 0, i == b ? _selEndX : null)
+              .trimRight(),
+      ].join('\n');
+    } else {
+      final range = selection.selection;
+      if (range == null) return null;
+      text = terminal.buffer
+          .getText(range)
+          .split('\n')
+          .map((line) => line.trimRight())
+          .join('\n');
+    }
+    return text.trim().isEmpty ? null : text;
+  }
 
   TermPhase _phase = TermPhase.idle;
   TermPhase get phase => _phase;
@@ -282,7 +432,7 @@ class TerminalConnection extends ChangeNotifier {
   bool wheel({required bool up, required int column, required int row}) {
     final report = wheelReport(terminal, up: up, column: column, row: row);
     if (report == null) return false;
-    _input(report);
+    _input(report, keepSelection: true);
     return true;
   }
 
@@ -350,6 +500,7 @@ class TerminalConnection extends ChangeNotifier {
     _echo?.cancel();
     _echo = null;
     terminal.write(data);
+    _syncSelection();
   }
 
   void _tick() {
@@ -513,10 +664,22 @@ class TerminalConnection extends ChangeNotifier {
     }
   }
 
-  void _input(String data) {
+  void _input(String data, {bool keepSelection = false}) {
+    final reply = isTerminalReply(data);
+    if (!reply && !keepSelection && hasSelection) clearSelection();
     final link = _link;
     if (link == null || _phase != TermPhase.live) return; // not queued
-    if (!isTerminalReply(data)) onInput?.call();
+    if (!reply &&
+        !keepSelection &&
+        !isMouseReport(data) &&
+        terminal.inCopyMode) {
+      // a keystroke after a scroll is for the shell, not a copy-mode
+      // command (T2b phone test: typing opened tmux's "goto line"); `q`
+      // leaves copy mode in both of tmux's key tables
+      data = 'q$data';
+      terminal.leftCopyMode();
+    }
+    if (!reply) onInput?.call();
     if (_holding) {
       // a check is open: sent after its answer, dropped without one
       _held.add(data);
@@ -530,6 +693,9 @@ class TerminalConnection extends ChangeNotifier {
   /// once (tmux redraws within a round trip); further changes within
   /// [TerminalTiming.resizeSettle] are sent once, at the end of the window.
   void _resized(int columns, int rows, int pixelWidth, int pixelHeight) {
+    // from layout, where the view may not be told to lay out again; and the
+    // tmux view adopts its lines after this call
+    if (_selFirst != null) scheduleMicrotask(_syncSelection);
     _pendingSize = (columns, rows);
     if (_resize != null) return;
     _sendSize();
@@ -556,6 +722,13 @@ class TerminalConnection extends ChangeNotifier {
     r'^(\x1b\[[?>=]?[0-9;]*[cRnIO]|\x1b\][^\x07\x1b]*(\x07|\x1b\\)|\x1bP[^\x1b]*\x1b\\)+$',
   );
 
+  static final _mouse = RegExp(r'^(\x1b\[<\d+;\d+;\d+[mM]|\x1b\[M[\s\S]{3})+$');
+
+  /// A mouse report (a tap, a wheel step): tmux's copy mode takes it as
+  /// it is.
+  @visibleForTesting
+  static bool isMouseReport(String data) => _mouse.hasMatch(data);
+
   /// What xterm sends by itself when tmux asks (not a keystroke): it must
   /// not count as the user's activity for the lock.
   @visibleForTesting
@@ -576,6 +749,9 @@ class TerminalConnection extends ChangeNotifier {
     answerHostKey(trust: false);
     _drop();
     keys.dispose();
+    selection
+      ..removeListener(_selectionSet)
+      ..dispose();
     super.dispose();
   }
 }

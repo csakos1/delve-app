@@ -494,6 +494,8 @@ class ExtraKeys extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // Tab first, at the thumb (T2b phone test)
+            _Key('Tab', () => key(TerminalKey.tab)),
             _Key('Esc', () => key(TerminalKey.escape)),
             _Key(
               'Ctrl',
@@ -502,7 +504,6 @@ class ExtraKeys extends StatelessWidget {
               semantics: l.termKeyCtrl,
             ),
             _Key('Alt', keys.tapAlt, sticky: keys.alt, semantics: l.termKeyAlt),
-            _Key('Tab', () => key(TerminalKey.tab)),
             _Key.icon(DelveIcons.arrowBack, () => key(TerminalKey.arrowLeft)),
             _Key.icon(DelveIcons.arrowDown, () => key(TerminalKey.arrowDown)),
             _Key.icon(DelveIcons.arrowUp, () => key(TerminalKey.arrowUp)),

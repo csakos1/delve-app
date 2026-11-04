@@ -49,6 +49,8 @@ abstract final class DelveTokens {
   static const double terminalHintStrip = 36;
   static const double terminalSessionRow = 72;
   static const double terminalPadding = 2;
+  static const double terminalHandle = 22;
+  static const double terminalToolbar = 48;
 
   // icons
   static const double iconSm = 16;

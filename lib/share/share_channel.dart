@@ -13,6 +13,7 @@ class SharedPayload {
     this.text,
     this.skipped = 0,
     this.failed = 0,
+    this.caretAtStart = false,
   });
 
   /// Photos and files, as the composer takes picked ones.
@@ -27,6 +28,10 @@ class SharedPayload {
   /// Could not be read from the sharing app.
   final int failed;
 
+  /// The cursor goes to the start of the text, not after it (the terminal's
+  /// Send to chat: an empty line above the code block, 22j3).
+  final bool caretAtStart;
+
   /// Two shares before the screen took the first.
   SharedPayload merge(SharedPayload next) => SharedPayload(
     files: [...files, ...next.files],
@@ -36,6 +41,7 @@ class SharedPayload {
     },
     skipped: skipped + next.skipped,
     failed: failed + next.failed,
+    caretAtStart: text == null ? next.caretAtStart : caretAtStart,
   );
 
   /// The map the Android side sends (MainActivity.kt); null when it holds
@@ -170,6 +176,13 @@ class PendingShare extends Notifier<SharedPayload?> {
     });
     ref.onDispose(() => unawaited(sub?.cancel()));
     return null;
+  }
+
+  /// Something from inside the app for the Share to Delve screen (the
+  /// terminal's Send to chat); the host opens the screen as for a share.
+  void offer(SharedPayload p) {
+    final now = state;
+    state = now == null ? p : now.merge(p);
   }
 
   /// Hands the waiting share over (once).
