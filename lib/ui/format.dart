@@ -97,6 +97,16 @@ String ageText(Duration d) {
   return '${s ~/ 3600} h';
 }
 
+/// How long ago, coarse (a tmux session's age): `< 1 min`, `12 min`,
+/// `3 h`, `5 d`.
+String agoText(Duration d) {
+  final m = d.isNegative ? 0 : d.inMinutes;
+  if (m < 1) return '< 1 min';
+  if (m < 60) return '$m min';
+  if (d.inHours < 24) return '${d.inHours} h';
+  return '${d.inDays} d';
+}
+
 /// MiB as GB: one decimal (`11.1`), or whole for a [total] that is one (`12`).
 String gbText(int mib, {bool total = false}) {
   final gb = mib / 1024;

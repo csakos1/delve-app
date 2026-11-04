@@ -3975,6 +3975,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{size} sp · {columns} × {rows}'**
   String termPinchChip(int size, int columns, int rows);
+
+  /// No description provided for @termTabSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, tab {index} of {count}, {state}'**
+  String termTabSemantics(String name, int index, int count, String state);
+
+  /// No description provided for @termTabTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · {state} · {columns} × {rows}'**
+  String termTabTooltip(String name, String state, int columns, int rows);
+
+  /// No description provided for @termTabRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get termTabRename;
+
+  /// No description provided for @termTabClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close tab'**
+  String get termTabClose;
+
+  /// No description provided for @termTabKill.
+  ///
+  /// In en, this message translates to:
+  /// **'Kill session…'**
+  String get termTabKill;
+
+  /// No description provided for @termNewTab.
+  ///
+  /// In en, this message translates to:
+  /// **'New tab'**
+  String get termNewTab;
+
+  /// No description provided for @termMenuSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions on {host}'**
+  String termMenuSessions(String host);
+
+  /// No description provided for @termSessionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions on {host}'**
+  String termSessionsTitle(String host);
+
+  /// No description provided for @termSessionsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{tmux · 1 session · {open} open here} other{tmux · {count} sessions · {open} open here}}'**
+  String termSessionsSummary(int count, int open);
+
+  /// No description provided for @termSessionsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New session'**
+  String get termSessionsNew;
+
+  /// No description provided for @termSessionsNewSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts tmux on the desktop and opens it here'**
+  String get termSessionsNewSub;
+
+  /// No description provided for @termSessionTag.
+  ///
+  /// In en, this message translates to:
+  /// **'tab'**
+  String get termSessionTag;
+
+  /// No description provided for @termSessionAttachedHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Attached here'**
+  String get termSessionAttachedHere;
+
+  /// No description provided for @termSessionAttachedBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Attached here and on the desktop'**
+  String get termSessionAttachedBoth;
+
+  /// No description provided for @termSessionAttachedDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Attached on the desktop'**
+  String get termSessionAttachedDesktop;
+
+  /// No description provided for @termSessionDetached.
+  ///
+  /// In en, this message translates to:
+  /// **'Detached'**
+  String get termSessionDetached;
+
+  /// No description provided for @termSessionWindows.
+  ///
+  /// In en, this message translates to:
+  /// **'{windows, plural, =1{1 window} other{{windows} windows}}'**
+  String termSessionWindows(int windows);
+
+  /// No description provided for @termSessionMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{windows, plural, =1{1 window · created {age} ago} other{{windows} windows · created {age} ago}}'**
+  String termSessionMeta(int windows, String age);
+
+  /// No description provided for @termSessionOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open as tab'**
+  String get termSessionOpen;
+
+  /// No description provided for @termSessionsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tmux sessions on the desktop.'**
+  String get termSessionsEmpty;
+
+  /// No description provided for @termSessionsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach tmux on the desktop: {detail}'**
+  String termSessionsFailed(String detail);
+
+  /// No description provided for @termTmuxFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'tmux said: {detail}'**
+  String termTmuxFailed(String detail);
+
+  /// No description provided for @termSessionsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get termSessionsButton;
+
+  /// No description provided for @termRenameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename session'**
+  String get termRenameTitle;
+
+  /// No description provided for @termRenameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Session name'**
+  String get termRenameLabel;
+
+  /// No description provided for @termRenameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Letters, digits, - and _ (up to 32)'**
+  String get termRenameHint;
+
+  /// No description provided for @termRenameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Only letters, digits, - and _ (up to 32)'**
+  String get termRenameInvalid;
+
+  /// No description provided for @termRenameSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get termRenameSave;
+
+  /// No description provided for @termKillTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Kill “{name}”?'**
+  String termKillTitle(String name);
+
+  /// No description provided for @termKillBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every window in it, and whatever runs there, stops on the desktop. This can\'t be undone.'**
+  String get termKillBody;
+
+  /// No description provided for @termKill.
+  ///
+  /// In en, this message translates to:
+  /// **'Kill'**
+  String get termKill;
+
+  /// No description provided for @termNoTabsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No tabs open'**
+  String get termNoTabsTitle;
+
+  /// No description provided for @termNoTabsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your tmux sessions keep running on the desktop. Open one here, or start a new one.'**
+  String get termNoTabsBody;
 }
 
 class _AppLocalizationsDelegate

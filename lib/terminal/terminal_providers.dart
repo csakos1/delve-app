@@ -45,10 +45,7 @@ final terminalServiceProvider = Provider<TerminalService>((ref) {
   );
   final network = ref
       .read(terminalNetworkProvider)
-      .listen(
-        (_) => service.connection.networkChanged(),
-        onError: (Object _) {},
-      );
+      .listen((_) => service.networkChanged(), onError: (Object _) {});
   ref.onDispose(() {
     unawaited(network.cancel());
     service.dispose();

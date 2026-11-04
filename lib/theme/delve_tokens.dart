@@ -43,6 +43,9 @@ abstract final class DelveTokens {
   // terminal (design 22)
   static const double terminalTabBar = 44;
   static const double terminalTabMinWidth = 64;
+
+  /// The fade the tabs scroll under, before `+` and `⋯` (design 22).
+  static const double terminalTabFade = 28;
   static const double terminalStateLine = 32;
   static const double terminalStateLineTappable = 48;
   static const double terminalExtraKeys = 48;

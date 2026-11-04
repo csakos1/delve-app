@@ -141,7 +141,7 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
     if (_pinched) return;
     final c = widget.connection;
     if (c.terminal.mouseMode.reportScroll) {
-      _steps.stepPx = _lineHeight * kWheelStepLines;
+      _steps.stepPx = _lineHeight * c.wheelLines;
       final n = _steps.add(dy);
       if (n == 0) return;
       final cell = _cell();

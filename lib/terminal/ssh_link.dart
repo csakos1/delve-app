@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -14,6 +15,7 @@ class SshTarget {
     required this.port,
     required this.user,
     required this.session,
+    this.app = true,
   });
 
   final String host;
@@ -23,21 +25,54 @@ class SshTarget {
   /// The tmux session name.
   final String session;
 
+  /// The app's own session (made by the app, or marked `@delve` before):
+  /// made when it is missing, with a 10 000-line history, no status line
+  /// and one line per wheel step. False: a session started on the desktop,
+  /// attached as it is (T3).
+  final bool app;
+
   String get hostPort => '$host:$port';
 
-  /// The pty command: an exec channel starts a non-login shell without
-  /// `LANG`, so tmux gets a UTF-8 locale and `-u` (T0); `-A` attaches the
-  /// session if it exists. The session is marked as the app's (`@delve`,
-  /// on the session just made or attached) and the wheel bindings are set
-  /// (T2b: one line per wheel step there). Its status line is off: the app's
-  /// tab bar names the session, and the green bar stood off the screen's
-  /// edges, above the extra keys (T2b); [TmuxTerminal.statusRows] is 0.
-  String get command => [
-    'env LANG=en_US.UTF-8 tmux -u new-session -A -s ${quoteSession(session)}',
-    'set-option @delve 1',
-    'set-option status off',
-    ...tmuxWheelBindings,
-  ].join(r' \; ');
+  SshTarget copyWith({String? session, bool? app}) => SshTarget(
+    host: host,
+    port: port,
+    user: user,
+    session: session ?? this.session,
+    app: app ?? this.app,
+  );
+
+  /// The pty command. An exec channel starts a non-login shell without
+  /// `LANG`, so tmux gets a UTF-8 locale and `-u` (T0). `=name` matches the
+  /// session name exactly (a bare name would also match a prefix).
+  ///
+  /// An app session that is missing is made detached first: tmux gives a
+  /// pane the history limit its session has when the pane is made, so the
+  /// session's first window is replaced (`new-window -k`) after the option
+  /// is set – `set-option` after `new-session`, or `respawn-pane`, leaves
+  /// the first pane at the server's 2000 lines (T3-0, on a real tmux). The
+  /// session is then marked as the app's (`@delve`), its status line is
+  /// off (the tab bar names it, T2b) and the wheel bindings are set; a
+  /// desktop session is attached unchanged (the bindings belong to the
+  /// server and keep tmux's steps there). A desktop session that is gone
+  /// ends the command at once ("can't find session").
+  String get command {
+    final exact = shellQuote('=$session');
+    final attach = [
+      'exec tmux -u attach-session -t $exact',
+      if (app) ...['set-option @delve 1', 'set-option status off'],
+      ...tmuxWheelBindings,
+    ].join(r' \; ');
+    return [
+      'export LANG=en_US.UTF-8',
+      if (app)
+        'tmux -u has-session -t $exact 2>/dev/null || '
+            'tmux -u new-session -d -s ${shellQuote(session)} '
+            r'\; set-option history-limit '
+            '$kAppHistoryLimit '
+            r"\; new-window -k -t ':^'",
+      attach,
+    ].join('; ');
+  }
 
   /// tmux's wheel bindings, one line per step in the app's sessions.
   ///
@@ -68,12 +103,30 @@ class SshTarget {
         "'select-pane; send-keys -X -N 1 scroll-down' "
         "'select-pane; send-keys -X -N 5 scroll-down'",
   ];
+}
 
-  /// A tmux session name as one shell word.
-  static String quoteSession(String s) =>
-      RegExp(r'^[A-Za-z0-9_.-]+$').hasMatch(s)
-      ? s
-      : "'${s.replaceAll("'", '')}'";
+/// The history limit of the app's tmux sessions (T3: tmux's 2000 lines run
+/// out after one `pacman -Syu`).
+const kAppHistoryLimit = 10000;
+
+/// [s] as one word for a POSIX shell (and zsh: a quoted `=` at the start of
+/// a word is not a path expansion).
+String shellQuote(String s) => "'${s.replaceAll("'", r"'\''")}'";
+
+/// What an exec command printed, and how it ended.
+class SshRunResult {
+  const SshRunResult(this.output, this.exitCode, {this.error = ''});
+
+  /// Its stdout, as text.
+  final String output;
+
+  /// Its stderr, as text (tmux's complaint when it failed).
+  final String error;
+
+  /// null: the desktop did not say.
+  final int? exitCode;
+
+  bool get ok => exitCode == null || exitCode == 0;
 }
 
 /// Why opening a session failed.
@@ -130,6 +183,10 @@ abstract interface class SshLink {
   /// connection for minutes, so only an answer tells it is still there.
   Future<bool> probe(Duration timeout);
 
+  /// Runs [command] on the same connection, without a pty (a second
+  /// channel: the tmux session list, rename, kill – T3).
+  Future<SshRunResult> run(String command, {Duration timeout = kRunTimeout});
+
   /// Closes it the polite way (the session's end goes to sshd).
   Future<void> close();
 
@@ -147,6 +204,33 @@ abstract interface class SshDialer {
     required int columns,
     required int rows,
   });
+
+  /// Connects, runs [command] without a pty and closes again (when no tab
+  /// is connected; [SshTarget.session] is not used).
+  Future<SshRunResult> run(
+    SshTarget target, {
+    required PhoneKey key,
+    required HostKeyCheck verify,
+    required String command,
+    Duration timeout = kRunTimeout,
+  });
+}
+
+/// How long a [SshLink.run] / [SshDialer.run] command may take.
+const kRunTimeout = Duration(seconds: 8);
+
+Future<SshRunResult> _runOn(
+  SSHClient client,
+  String command,
+  Duration timeout,
+) async {
+  final r = await client.runWithResult(command).timeout(timeout);
+  const text = Utf8Decoder(allowMalformed: true);
+  return SshRunResult(
+    text.convert(r.stdout),
+    r.exitCode,
+    error: text.convert(r.stderr).trim(),
+  );
 }
 
 /// dartssh2 4.1: TCP, key auth, an `xterm-256color` pty running tmux.
@@ -163,6 +247,44 @@ class Dartssh2Dialer implements SshDialer {
     required int columns,
     required int rows,
   }) async {
+    final (client, socket, declined) = await _connect(target, key, verify);
+    try {
+      await client.authenticated;
+      final session = await client.execute(
+        target.command,
+        pty: SSHPtyConfig(width: columns, height: rows),
+      );
+      return _Dartssh2Link(client, session, socket);
+    } on Object catch (e) {
+      unawaited(client.close());
+      throw _failure(e, declined());
+    }
+  }
+
+  @override
+  Future<SshRunResult> run(
+    SshTarget target, {
+    required PhoneKey key,
+    required HostKeyCheck verify,
+    required String command,
+    Duration timeout = kRunTimeout,
+  }) async {
+    final (client, _, declined) = await _connect(target, key, verify);
+    try {
+      await client.authenticated;
+      return await _runOn(client, command, timeout);
+    } on Object catch (e) {
+      throw _failure(e, declined());
+    } finally {
+      unawaited(client.close().catchError((Object _) {}));
+    }
+  }
+
+  Future<(SSHClient, _TcpSocket, bool Function())> _connect(
+    SshTarget target,
+    PhoneKey key,
+    HostKeyCheck verify,
+  ) async {
     final _TcpSocket socket;
     try {
       socket = _TcpSocket(
@@ -185,21 +307,14 @@ class Dartssh2Dialer implements SshDialer {
         return ok;
       },
     );
-    try {
-      await client.authenticated;
-      final session = await client.execute(
-        target.command,
-        pty: SSHPtyConfig(width: columns, height: rows),
-      );
-      return _Dartssh2Link(client, session, socket);
-    } on Object catch (e) {
-      unawaited(client.close());
-      if (declined || e is SSHHostkeyError) {
-        throw SshHostKeyRejected(_short(e));
-      }
-      if (e is SSHAuthError) throw SshAuthDenied(_short(e));
-      throw SshUnreachable(_short(e));
-    }
+    return (client, socket, () => declined);
+  }
+
+  static SshFailure _failure(Object e, bool declined) {
+    if (e is SshFailure) return e;
+    if (declined || e is SSHHostkeyError) return SshHostKeyRejected(_short(e));
+    if (e is SSHAuthError) return SshAuthDenied(_short(e));
+    return SshUnreachable(_short(e));
   }
 
   static String _short(Object e) => switch (e) {
@@ -319,6 +434,18 @@ class _Dartssh2Link implements SshLink {
       return true;
     } on Object {
       return false;
+    }
+  }
+
+  @override
+  Future<SshRunResult> run(
+    String command, {
+    Duration timeout = kRunTimeout,
+  }) async {
+    try {
+      return await _runOn(_client, command, timeout);
+    } on Object catch (e) {
+      throw SshUnreachable(Dartssh2Dialer._short(e));
     }
   }
 

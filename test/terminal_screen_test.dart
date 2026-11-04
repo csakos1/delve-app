@@ -118,7 +118,7 @@ void main() {
     expect(open.host, 'archlinux.example.ts.net');
     expect(open.port, 2222);
     expect(open.user, 'csakos');
-    expect(open.command, contains('tmux -u new-session -A -s delve-1'));
+    expect(open.command, contains("tmux -u new-session -d -s 'delve-1'"));
     final saved = await TerminalSecrets(env.terminal.store).loadConfig();
     expect(saved!.verified, isTrue);
   });

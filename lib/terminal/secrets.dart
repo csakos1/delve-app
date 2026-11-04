@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'phone_key.dart';
+import 'terminal_tabs.dart';
 
 /// A small key-value store for the terminal: the phone key, the pinned host
 /// keys and the connection settings. In the app it is the Android keystore.
@@ -121,6 +122,7 @@ class TerminalSecrets {
   static const configKey = 'delve.terminal.config.v1';
   static const fontKey = 'delve.terminal.font.v1';
   static const imeKey = 'delve.terminal.ime.v1';
+  static const tabsKey = 'delve.terminal.tabs.v1';
 
   final SecretStore _store;
 
@@ -197,6 +199,20 @@ class TerminalSecrets {
 
   Future<void> saveImeHeights(Map<String, double> heights) =>
       _store.write(imeKey, jsonEncode(heights));
+
+  /// The open tabs (T3). Nothing saved yet: the one tab before T3.
+  Future<SavedTabs> loadTabs() async {
+    final raw = await _store.read(tabsKey);
+    if (raw == null) return SavedTabs.first;
+    try {
+      return SavedTabs.fromJson(jsonDecode(raw) as Map<String, Object?>);
+    } on Object {
+      return SavedTabs.first;
+    }
+  }
+
+  Future<void> saveTabs(SavedTabs tabs) =>
+      _store.write(tabsKey, jsonEncode(tabs.toJson()));
 
   Future<Map<String, PinnedHostKey>> _hosts() async {
     final raw = await _store.read(hostsKey);

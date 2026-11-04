@@ -41,8 +41,9 @@ enum TermPhase {
   failed,
 }
 
-/// Why the connection is [TermPhase.offline].
-enum OfflineReason { user, sessionEnded, background }
+/// Why the connection is [TermPhase.offline]. [parked]: another tab is in
+/// front (T3: only the active tab and the one before it stay connected).
+enum OfflineReason { user, sessionEnded, background, parked }
 
 /// A host key waiting for the user's yes or no.
 class HostKeyQuestion {
@@ -68,6 +69,7 @@ class TerminalTiming {
     this.probeEvery = const Duration(seconds: 5),
     this.probeTimeout = const Duration(seconds: 3),
     this.echoWait = const Duration(seconds: 1),
+    this.keepPrevious = const Duration(seconds: 60),
   });
 
   /// Waits before reconnect attempt 1, 2, …; the last one repeats.
@@ -94,6 +96,10 @@ class TerminalTiming {
   /// probe at once, and hold further keystrokes until the answer.
   final Duration echoWait;
 
+  /// The tab left last stays connected this long (T3: switching back is
+  /// instant), the others are parked at once.
+  final Duration keepPrevious;
+
   Duration delay(int attempt) =>
       backoff[(attempt - 1).clamp(0, backoff.length - 1)];
 }
@@ -116,6 +122,7 @@ class TerminalConnection extends ChangeNotifier {
     DateTime Function()? now,
     int maxLines = 10000,
     int statusRows = 0,
+    this.wheelLines = kWheelStepLines,
   }) : keys = StickyModifiers(),
        _now = now ?? DateTime.now {
     // the app's tmux sessions have no status line (`SshTarget.command`)
@@ -139,6 +146,11 @@ class TerminalConnection extends ChangeNotifier {
 
   /// Called on every keystroke the user sends (the lock's activity clock).
   final void Function()? onInput;
+
+  /// Lines of finger movement per wheel step: the lines tmux scrolls per
+  /// step in this session, so the text follows the finger (1 in the app's
+  /// sessions, 5 in a desktop one).
+  final double wheelLines;
 
   final DateTime Function() _now;
   final StickyModifiers keys;
@@ -346,6 +358,20 @@ class TerminalConnection extends ChangeNotifier {
     _wasLive = _wasLive || afterSetup;
     attempt = 0;
     unawaited(_open());
+  }
+
+  /// The session was renamed: later connects attach the new name (the live
+  /// one follows tmux by itself).
+  void retarget(SshTarget target) {
+    if (_target != null) _target = target;
+  }
+
+  /// Runs [command] on this live connection without a pty (T3: the session
+  /// list, rename, kill). null: not connected.
+  Future<SshRunResult?> run(String command) async {
+    final link = _link;
+    if (link == null || _phase != TermPhase.live) return null;
+    return link.run(command);
   }
 
   /// Tries again now (the Disconnected line, the Retry button).

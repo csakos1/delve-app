@@ -303,4 +303,8 @@ abstract final class DelveIcons {
   static const IconData check = Symbols.check_rounded;
   static const IconData textSize = Symbols.format_size_rounded;
   static const IconData remove = Symbols.remove_rounded;
+  static const IconData tab = Symbols.tab_rounded;
+  static const IconData tabClose = Symbols.tab_close_rounded;
+  static const IconData rename = Symbols.edit_rounded;
+  static const IconData kill = Symbols.delete_forever_rounded;
 }

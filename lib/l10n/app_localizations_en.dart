@@ -2423,4 +2423,144 @@ class AppLocalizationsEn extends AppLocalizations {
   String termPinchChip(int size, int columns, int rows) {
     return '$size sp · $columns × $rows';
   }
+
+  @override
+  String termTabSemantics(String name, int index, int count, String state) {
+    return '$name, tab $index of $count, $state';
+  }
+
+  @override
+  String termTabTooltip(String name, String state, int columns, int rows) {
+    return '$name · $state · $columns × $rows';
+  }
+
+  @override
+  String get termTabRename => 'Rename';
+
+  @override
+  String get termTabClose => 'Close tab';
+
+  @override
+  String get termTabKill => 'Kill session…';
+
+  @override
+  String get termNewTab => 'New tab';
+
+  @override
+  String termMenuSessions(String host) {
+    return 'Sessions on $host';
+  }
+
+  @override
+  String termSessionsTitle(String host) {
+    return 'Sessions on $host';
+  }
+
+  @override
+  String termSessionsSummary(int count, int open) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'tmux · $count sessions · $open open here',
+      one: 'tmux · 1 session · $open open here',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get termSessionsNew => 'New session';
+
+  @override
+  String get termSessionsNewSub =>
+      'Starts tmux on the desktop and opens it here';
+
+  @override
+  String get termSessionTag => 'tab';
+
+  @override
+  String get termSessionAttachedHere => 'Attached here';
+
+  @override
+  String get termSessionAttachedBoth => 'Attached here and on the desktop';
+
+  @override
+  String get termSessionAttachedDesktop => 'Attached on the desktop';
+
+  @override
+  String get termSessionDetached => 'Detached';
+
+  @override
+  String termSessionWindows(int windows) {
+    String _temp0 = intl.Intl.pluralLogic(
+      windows,
+      locale: localeName,
+      other: '$windows windows',
+      one: '1 window',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String termSessionMeta(int windows, String age) {
+    String _temp0 = intl.Intl.pluralLogic(
+      windows,
+      locale: localeName,
+      other: '$windows windows · created $age ago',
+      one: '1 window · created $age ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get termSessionOpen => 'Open as tab';
+
+  @override
+  String get termSessionsEmpty => 'No tmux sessions on the desktop.';
+
+  @override
+  String termSessionsFailed(String detail) {
+    return 'Couldn\'t reach tmux on the desktop: $detail';
+  }
+
+  @override
+  String termTmuxFailed(String detail) {
+    return 'tmux said: $detail';
+  }
+
+  @override
+  String get termSessionsButton => 'Sessions';
+
+  @override
+  String get termRenameTitle => 'Rename session';
+
+  @override
+  String get termRenameLabel => 'Session name';
+
+  @override
+  String get termRenameHint => 'Letters, digits, - and _ (up to 32)';
+
+  @override
+  String get termRenameInvalid => 'Only letters, digits, - and _ (up to 32)';
+
+  @override
+  String get termRenameSave => 'Rename';
+
+  @override
+  String termKillTitle(String name) {
+    return 'Kill “$name”?';
+  }
+
+  @override
+  String get termKillBody =>
+      'Every window in it, and whatever runs there, stops on the desktop. This can\'t be undone.';
+
+  @override
+  String get termKill => 'Kill';
+
+  @override
+  String get termNoTabsTitle => 'No tabs open';
+
+  @override
+  String get termNoTabsBody =>
+      'Your tmux sessions keep running on the desktop. Open one here, or start a new one.';
 }

@@ -156,9 +156,25 @@ reached over Tailscale only.
   JetBrains Mono 700. Rows whose edge cells are coloured (htop's bars) reach the screen's
   edges. Leaving copy mode with a key keeps the lines tmux has in its history (N110).
 
+- T3: tabs, one tmux session each, each with its own SSH connection (22a). `+` opens a
+  new session, `delve-N` with the smallest N not used by a tab or a session on the
+  desktop; the app's sessions are made with a 10 000-line history (tmux sets a pane's
+  history when the pane is made, so the session is made detached, the option set, and its
+  first window replaced; then it is attached). Only the tab in front and the one left last
+  stay connected, the last one for a minute; the others connect when they come to the
+  front. A long press on a tab opens its menu (Rename, Close tab, Kill session…), a long
+  press and a drag moves it; the tabs and their order are kept. Closing a tab only
+  detaches: the session keeps running on the desktop. ⋯ → Sessions on archlinux (22g1)
+  lists every tmux session there — open here as a tab, attached on the desktop or
+  detached, its windows and age — opens one as a tab, renames it or kills it after asking
+  (22g2); the list, rename and kill run over a connected tab, or a connection of their own
+  that only trusts the pinned host key. A session started on the desktop is attached as it
+  is: its status line stays and a wheel step is tmux's 5 lines (a drag follows it). With
+  every tab closed the terminal offers a new session or the list.
+
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share
-target, W3 the watches, T2a the terminal. (A home-screen widget was planned and dropped.)
+target, W3 the watches, T2a–T3 the terminal. (A home-screen widget was planned and dropped.)
 Requires a server with API revision 9 or newer (`/api/v1/watches`); the terminal needs
 sshd on 2222 (delve-infra, installation step 19).
 
@@ -205,7 +221,8 @@ lib/
   app/watches.dart           the watches and their items in memory: REST, watch.* events
   terminal/                  the phone key and pins (secrets), the SSH link (dartssh2), the
                              connection with reconnects, sticky Ctrl/Alt, the lock, the
-                             service (one per app) and its providers
+                             tabs (terminal_tabs.dart: saved tabs, the tmux session list
+                             and commands), the service (one per app) and its providers
   attachments/               pickers, photo resizing, uploads (ComposerAttachments),
                              the image cache
   share/                     Share to Delve: the method channel (share_channel.dart), the
@@ -241,6 +258,11 @@ test/
                              the lock and the service
   terminal_screen_test.dart  the tab: setup, trust, denied, lock, host key changed,
                              reconnecting, the extra keys, selection, Terminal settings
+  terminal_tabs_test.dart    session lists, names and tmux commands, saved tabs,
+                             the service's tabs: saved, new, kept / parked, closed,
+                             moved, renamed, killed
+  terminal_tabs_screen_test.dart  the tab bar, +, the sessions sheet, the tab menu,
+                             rename, kill, the empty state, dragging a tab
   push_test.dart             pushes → notifications, Deny in the background, the
                              controller with fakes, Settings → Notifications
   support/                   fake REST server (a dio adapter), fake WebSocket server,

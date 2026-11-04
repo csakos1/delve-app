@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io' show Process;
+import 'dart:io' show Directory, File, Platform, Process;
 import 'dart:typed_data';
 
 import 'package:delve/terminal/phone_key.dart';
@@ -114,44 +114,90 @@ void main() {
       expect(hostKeyTypeLabel('ssh-ed25519'), 'ED25519');
     });
 
-    test('the tmux command attaches with a UTF-8 locale, marks the session '
-        "as the app's, turns its status line off and binds the wheel to one "
-        'line there', () {
+    test('an app session: made when missing with a 10 000-line history, '
+        "attached exactly, marked as the app's, no status line, the wheel "
+        'bindings', () {
       expect(
         target.command,
         startsWith(
-          r'env LANG=en_US.UTF-8 tmux -u new-session -A -s delve-1 \; '
-          r'set-option @delve 1 \; set-option status off \; '
-          r'bind-key -T root WheelUpPane ',
+          "export LANG=en_US.UTF-8; tmux -u has-session -t '=delve-1' "
+          "2>/dev/null || tmux -u new-session -d -s 'delve-1' "
+          r'\; set-option history-limit 10000 '
+          r"\; new-window -k -t ':^'; "
+          "exec tmux -u attach-session -t '=delve-1' "
+          r'\; set-option @delve 1 \; set-option status off \; '
+          'bind-key -T root WheelUpPane ',
         ),
       );
-      expect(SshTarget.quoteSession("a b'c"), "'a bc'");
+      final desktop = target.copyWith(session: 'work', app: false);
+      expect(
+        desktop.command,
+        startsWith(
+          "export LANG=en_US.UTF-8; exec tmux -u attach-session -t '=work' "
+          r'\; bind-key -T root WheelUpPane ',
+        ),
+      );
+      expect(desktop.command, isNot(contains('@delve 1')));
+      expect(desktop.command, isNot(contains('new-session')));
+      expect(shellQuote("a b'c"), r"'a b'\''c'");
     });
 
-    test('the shell hands tmux the command as separate words: each binding '
-        'whole, `;` between commands (T2b: one line per wheel step)', () async {
-      final printed = await Process.run('sh', [
-        '-c',
-        target.command.replaceFirst(
-          'env LANG=en_US.UTF-8 tmux',
-          r"printf '%s\n'",
-        ),
-      ]);
-      final words = (printed.stdout as String).trim().split('\n');
-      // commands, split at the `;` words
-      final commands = <List<String>>[[]];
-      for (final w in words) {
-        if (w == ';') {
-          commands.add([]);
-        } else {
-          commands.last.add(w);
+    test('the shell runs it as tmux commands: has-session, then a new '
+        'session with its history set before its first window, then the '
+        'attach with each binding whole (a fake tmux on PATH)', () async {
+      final bin = Directory.systemTemp.createTempSync('delve-tmux');
+      addTearDown(() => bin.deleteSync(recursive: true));
+      final tmux = File('${bin.path}/tmux')
+        ..writeAsStringSync(
+          '#!/bin/sh\n'
+          r'echo "LANG=$LANG"; printf "%s\n" "$@"; echo ---'
+          '\n'
+          r'[ "$2" = has-session ] && exit 1'
+          '\n'
+          'exit 0\n',
+        );
+      await Process.run('chmod', ['+x', tmux.path]);
+      final name = target.copyWith(session: "it's x");
+      final printed = await Process.run(
+        'sh',
+        ['-c', name.command],
+        environment: {'PATH': '${bin.path}:${Platform.environment['PATH']}'},
+      );
+      final calls = (printed.stdout as String)
+          .trim()
+          .split('---')
+          .map((c) => c.trim().split('\n'))
+          .where((c) => c.length > 1)
+          .toList();
+      // tmux invocations, each split into commands at the `;` words
+      List<List<String>> commands(List<String> words) {
+        final out = <List<String>>[[]];
+        for (final w in words) {
+          if (w == ';') {
+            out.add([]);
+          } else {
+            out.last.add(w);
+          }
         }
+        return out;
       }
-      expect(commands.first, ['-u', 'new-session', '-A', '-s', 'delve-1']);
-      expect(commands[1], ['set-option', '@delve', '1']);
-      expect(commands[2], ['set-option', 'status', 'off']);
-      expect(commands.length, 3 + SshTarget.tmuxWheelBindings.length);
-      expect(commands[3], [
+
+      expect(calls.length, 3);
+      for (final c in calls) {
+        expect(c.first, 'LANG=en_US.UTF-8');
+      }
+      expect(calls[0].skip(1), ['-u', 'has-session', '-t', "=it's x"]);
+      expect(commands(calls[1].skip(1).toList()), [
+        ['-u', 'new-session', '-d', '-s', "it's x"],
+        ['set-option', 'history-limit', '10000'],
+        ['new-window', '-k', '-t', ':^'],
+      ]);
+      final attach = commands(calls[2].skip(1).toList());
+      expect(attach.first, ['-u', 'attach-session', '-t', "=it's x"]);
+      expect(attach[1], ['set-option', '@delve', '1']);
+      expect(attach[2], ['set-option', 'status', 'off']);
+      expect(attach.length, 3 + SshTarget.tmuxWheelBindings.length);
+      expect(attach[3], [
         'bind-key',
         '-T',
         'root',
@@ -169,7 +215,7 @@ void main() {
         (7, 'copy-mode-vi', 'down'),
       ]) {
         final key = dir == 'up' ? 'WheelUpPane' : 'WheelDownPane';
-        expect(commands[i], [
+        expect(attach[i], [
           'bind-key',
           '-T',
           table,

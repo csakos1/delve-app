@@ -15,16 +15,19 @@ import '../../terminal/terminal_connection.dart';
 import '../../terminal/terminal_lock.dart';
 import '../../terminal/terminal_providers.dart';
 import '../../terminal/terminal_service.dart';
+import '../../terminal/terminal_tabs.dart';
 import '../../terminal/terminal_theme.dart';
 import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import '../widgets/terminal_scroll.dart';
 import '../widgets/terminal_selection.dart';
+import '../widgets/terminal_tabs_ui.dart';
 import '../widgets/terminal_ui.dart';
 
-/// 22 Terminal tab: setup (22d/22e), the session with its state line (22a,
-/// 22c), the biometric lock (22f). One tab in T2a; tabs come in T3.
+/// 22 Terminal tab: setup (22d/22e), the tabs – each a tmux session – with
+/// the state line (22a, 22c), the sessions sheet (22g), the biometric lock
+/// (22f).
 class TerminalScreen extends ConsumerStatefulWidget {
   const TerminalScreen({super.key});
 
@@ -36,9 +39,20 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
     with WidgetsBindingObserver {
   late final TerminalService _service = ref.read(terminalServiceProvider);
   final _focus = FocusNode(debugLabel: 'terminal');
-  final _viewKey = GlobalKey<TerminalViewState>();
   final _bodyKey = GlobalKey(debugLabel: 'terminal.body');
-  final _scroll = ScrollController();
+
+  /// Each tab's view: a fresh [TerminalView] (and its scroll position) per
+  /// tab, kept while the tab is open.
+  final _views = <int, _TabView>{};
+
+  _TabView _viewOf(TerminalTab tab) => _views.putIfAbsent(tab.id, _TabView.new);
+
+  /// The tab in front and its view (null: no tab open).
+  TerminalConnection? get _conn => _service.current?.connection;
+  _TabView? get _front {
+    final t = _service.current;
+    return t == null ? null : _viewOf(t);
+  }
 
   /// Space between the terminal body's bottom and the screen's bottom (the
   /// bottom navigation): the keyboard overlaps the body only by the rest.
@@ -92,10 +106,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final connection = _service.connection;
     switch (state) {
       case AppLifecycleState.resumed:
-        connection.setForeground(foreground: true);
+        _service.setForeground(foreground: true);
         if (!mounted) return;
         setState(() => _promptLock = true);
         final restore = _restoreIme && _visible;
@@ -110,7 +123,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
         _freeze();
       case AppLifecycleState.hidden || AppLifecycleState.paused:
         _freeze();
-        connection.setForeground(foreground: false);
+        _service.setForeground(foreground: false);
       case AppLifecycleState.detached:
         break;
     }
@@ -123,14 +136,57 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
     _settle?.cancel();
     _thaw?.cancel();
     _focus.dispose();
-    _scroll.dispose();
+    for (final v in _views.values) {
+      v.dispose();
+    }
     super.dispose();
   }
 
   void _showKeyboard() {
     if (!mounted) return;
     _focus.requestFocus();
-    _viewKey.currentState?.requestKeyboard();
+    _front?.viewKey.currentState?.requestKeyboard();
+  }
+
+  /// Another tab to the front; the keyboard stays as it was.
+  void _select(int index) {
+    final ime = _imeUp;
+    _service.select(index);
+    if (ime) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showKeyboard());
+    }
+  }
+
+  /// `+`: a new app session in a new tab.
+  void _newTab() {
+    final ime = _imeUp;
+    unawaited(
+      _service.newTab().then((_) {
+        if (ime) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _showKeyboard());
+        }
+      }),
+    );
+  }
+
+  void _sessions() {
+    final router = GoRouter.of(context);
+    unawaited(
+      showTerminalSessions(
+        context,
+        service: _service,
+        onSettings: () => unawaited(router.push(Routes.terminalSettings)),
+      ),
+    );
+  }
+
+  /// Views of closed tabs go.
+  void _prune() {
+    final open = {for (final t in _service.tabs) t.id};
+    final gone = _views.keys.where((id) => !open.contains(id)).toList();
+    for (final id in gone) {
+      _views.remove(id)!.dispose();
+    }
   }
 
   /// The pinch chip (design 22-0): the size and the new columns × rows,
@@ -155,12 +211,13 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
   /// A tap on the terminal: ends a selection; otherwise a click for tmux
   /// (pane focus, a program that wants the mouse) and the keyboard.
   void _tap(Offset global) {
-    final c = _service.connection;
+    final c = _conn;
+    if (c == null) return;
     if (c.hasSelection) {
       c.clearSelection();
       return;
     }
-    final view = _viewKey.currentState;
+    final view = _front?.viewKey.currentState;
     if (view != null) {
       final render = view.renderTerminal;
       final at = render.globalToLocal(global);
@@ -179,25 +236,23 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
   /// nothing for tmux.
   void _selectStart(Offset global) {
     _pressAt = global;
-    final c = _service.connection;
-    if (selectWordAt(_viewKey.currentState, c.selection, global)) {
+    final c = _conn;
+    if (c == null) return;
+    if (selectWordAt(_front?.viewKey.currentState, c.selection, global)) {
       unawaited(Feedback.forLongPress(context));
     }
   }
 
   void _selectMove(Offset global) {
     final from = _pressAt;
-    if (from == null) return;
-    selectWordAt(
-      _viewKey.currentState,
-      _service.connection.selection,
-      from,
-      global,
-    );
+    final c = _conn;
+    if (from == null || c == null) return;
+    selectWordAt(_front?.viewKey.currentState, c.selection, from, global);
   }
 
   Future<void> _copySelection() async {
-    final c = _service.connection;
+    final c = _conn;
+    if (c == null) return;
     final text = c.selectedText();
     c.clearSelection();
     if (text == null) return;
@@ -216,7 +271,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
   /// To the Share to Delve screen's chat picker (17): the selection as a
   /// fenced code block, the cursor on an empty line above it, not sent.
   void _sendSelection() {
-    final c = _service.connection;
+    final c = _conn;
+    if (c == null) return;
     final text = c.selectedText();
     c.clearSelection();
     if (text == null) return;
@@ -248,7 +304,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
       _layout = 0;
     }
     _settle?.cancel();
-    _settle = Timer(_service.connection.timing.resizeSettle, () {
+    _settle = Timer(_service.timing.resizeSettle, () {
       if (!mounted) return;
       final end = _live;
       if (end > 0) _service.rememberImeHeight(slot, end);
@@ -312,17 +368,25 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: ListenableBuilder(
-        listenable: Listenable.merge([service, service.connection]),
+        // every tab: their dots show in the tab bar
+        listenable: Listenable.merge([
+          service,
+          for (final t in service.tabs) t.connection,
+        ]),
         builder: (context, _) {
-          final c = service.connection;
+          final c = service.current?.connection;
           if (!service.ready) {
             return const Center(child: CircularProgressIndicator());
           }
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _prune();
+          });
           final setupDone =
-              service.config.verified || c.phase == TermPhase.live;
-          if (!setupDone ||
-              c.phase == TermPhase.denied ||
-              c.phase == TermPhase.verifying) {
+              service.config.verified || c?.phase == TermPhase.live;
+          if (c != null &&
+              (!setupDone ||
+                  c.phase == TermPhase.denied ||
+                  c.phase == TermPhase.verifying)) {
             return _Setup(service: service);
           }
           if (service.lock.locked) {
@@ -345,8 +409,42 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
     );
   }
 
+  Widget _tabBar(TerminalService service) => TerminalTabBar(
+    tabs: service.tabs,
+    active: service.activeIndex,
+    onSelect: _select,
+    onMove: service.moveTab,
+    onMenu: (i, at) => unawaited(
+      showTabMenu(context, service: service, tab: service.tabs[i], at: at),
+    ),
+    trailing: [
+      IconButton(
+        key: const Key('terminal.newTab'),
+        tooltip: AppLocalizations.of(context).termNewTab,
+        icon: const SymbolIcon(DelveIcons.add, size: 22),
+        onPressed: _newTab,
+      ),
+      _Menu(service: service, onSessions: _sessions),
+    ],
+  );
+
   Widget _session(BuildContext context, TerminalService service) {
-    final c = service.connection;
+    final tab = service.current;
+    if (tab == null) {
+      return SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _tabBar(service),
+            Expanded(
+              child: _NoTabs(onNew: _newTab, onSessions: _sessions),
+            ),
+          ],
+        ),
+      );
+    }
+    final c = tab.connection;
     final live = math
         .max(0, MediaQuery.viewInsetsOf(context).bottom - _gap)
         .toDouble();
@@ -358,12 +456,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TerminalTabBar(
-            sessions: const [kFirstSession],
-            active: 0,
-            phase: c.phase,
-            trailing: _Menu(service: service),
-          ),
+          _tabBar(service),
           TerminalStateLine(connection: c),
           Expanded(
             // the terminal's colour under everything: while the keyboard
@@ -393,7 +486,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
                           DelveTokens.terminalExtraKeys,
                       child: c.phase == TermPhase.refused
                           ? HostKeyChangedPanel(connection: c)
-                          : _view(service),
+                          : KeyedSubtree(
+                              // a fresh view per tab
+                              key: ValueKey('terminal.view.${tab.id}'),
+                              child: _view(service, tab),
+                            ),
                     ),
                     Positioned(
                       left: 0,
@@ -416,8 +513,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
     );
   }
 
-  Widget _view(TerminalService service) {
-    final c = service.connection;
+  Widget _view(TerminalService service, TerminalTab tab) {
+    final c = tab.connection;
+    final v = _viewOf(tab);
     return ColoredBox(
       color: delveTerminalTheme.background,
       child: AnimatedOpacity(
@@ -430,8 +528,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
               child: TerminalScrollLayer(
                 key: const Key('terminal.scroll'),
                 connection: c,
-                viewKey: _viewKey,
-                scrollController: _scroll,
+                viewKey: v.viewKey,
+                scrollController: v.scroll,
                 onTap: _tap,
                 onLongPressStart: _selectStart,
                 onLongPressMove: _selectMove,
@@ -442,10 +540,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
                 child: IgnorePointer(
                   child: TerminalView(
                     c.terminal,
-                    key: _viewKey,
+                    key: v.viewKey,
                     controller: c.selection,
                     focusNode: _focus,
-                    scrollController: _scroll,
+                    scrollController: v.scroll,
                     theme: delveTerminalViewTheme,
                     textStyle: delveTerminalStyle(service.fontSize),
                     padding: const EdgeInsets.all(DelveTokens.terminalPadding),
@@ -462,8 +560,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
             Positioned.fill(
               child: TerminalSelectionLayer(
                 connection: c,
-                viewKey: _viewKey,
-                scrollController: _scroll,
+                viewKey: v.viewKey,
+                scrollController: v.scroll,
                 onCopy: () => unawaited(_copySelection()),
                 onSendToChat: _sendSelection,
                 textStyle: delveTerminalStyle(service.fontSize),
@@ -498,13 +596,14 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
 /// ⋯ in the tab bar: settings, disconnect / reconnect. A plain menu, so the
 /// choice does not depend on the button staying mounted while it is open.
 class _Menu extends StatelessWidget {
-  const _Menu({required this.service});
+  const _Menu({required this.service, required this.onSessions});
 
   final TerminalService service;
+  final VoidCallback onSessions;
 
   Future<void> _open(BuildContext context) async {
     final l = AppLocalizations.of(context);
-    final c = service.connection;
+    final c = service.current?.connection;
     final router = GoRouter.of(context);
     final box = context.findRenderObject()! as RenderBox;
     final overlay =
@@ -520,20 +619,27 @@ class _Menu extends StatelessWidget {
       context: context,
       position: position,
       items: [
+        PopupMenuItem(
+          key: const Key('terminal.menu.sessions'),
+          value: 'sessions',
+          child: Text(l.termMenuSessions(service.config.host.split('.').first)),
+        ),
         PopupMenuItem(value: 'settings', child: Text(l.termMenuSettings)),
-        if (c.live)
+        if (c != null && c.live)
           PopupMenuItem(value: 'disconnect', child: Text(l.termMenuDisconnect))
-        else if (c.phase != TermPhase.refused)
+        else if (c != null && c.phase != TermPhase.refused)
           PopupMenuItem(value: 'reconnect', child: Text(l.termMenuReconnect)),
       ],
     );
     switch (choice) {
+      case 'sessions':
+        onSessions();
       case 'settings':
         unawaited(router.push(Routes.terminalSettings));
       case 'disconnect':
-        unawaited(c.disconnect());
+        unawaited(c?.disconnect());
       case 'reconnect':
-        c.retryNow();
+        c?.retryNow();
     }
   }
 
@@ -572,9 +678,8 @@ class _Locked extends StatelessWidget {
           Opacity(
             opacity: DelveTokens.disabledContent,
             child: TerminalTabBar(
-              sessions: const [kFirstSession],
-              active: 0,
-              phase: service.connection.phase,
+              tabs: service.tabs,
+              active: service.activeIndex,
             ),
           ),
           Expanded(
@@ -992,6 +1097,79 @@ class _PinchChip extends StatelessWidget {
             style: DelveText.monoSmall.copyWith(color: cs.onSurface),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// One tab's view state: its [TerminalView]'s key and scroll position.
+class _TabView {
+  final viewKey = GlobalKey<TerminalViewState>();
+  final scroll = ScrollController();
+
+  void dispose() => scroll.dispose();
+}
+
+/// Every tab closed: the sessions keep running on the desktop.
+class _NoTabs extends StatelessWidget {
+  const _NoTabs({required this.onNew, required this.onSessions});
+
+  final VoidCallback onNew;
+  final VoidCallback onSessions;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final d = context.delve;
+    return ColoredBox(
+      key: const Key('terminal.noTabs'),
+      color: delveTerminalTheme.background,
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(DelveTokens.space6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SymbolIcon(DelveIcons.terminal, size: 40, color: d.textMuted),
+              const SizedBox(height: DelveTokens.space4),
+              Text(
+                l.termNoTabsTitle,
+                textAlign: TextAlign.center,
+                style: context.text.titleMedium,
+              ),
+              const SizedBox(height: DelveTokens.space2),
+              Text(
+                l.termNoTabsBody,
+                textAlign: TextAlign.center,
+                style: context.text.bodyMedium!.copyWith(
+                  color: context.colors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: DelveTokens.space5),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: DelveTokens.space2,
+                runSpacing: DelveTokens.space2,
+                children: [
+                  FilledButton.icon(
+                    key: const Key('terminal.noTabs.new'),
+                    onPressed: onNew,
+                    icon: const SymbolIcon(
+                      DelveIcons.add,
+                      size: DelveTokens.iconMd,
+                    ),
+                    label: Text(l.termSessionsNew),
+                  ),
+                  FilledButton.tonal(
+                    key: const Key('terminal.noTabs.sessions'),
+                    onPressed: onSessions,
+                    child: Text(l.termSessionsButton),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

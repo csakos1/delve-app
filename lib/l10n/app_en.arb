@@ -1790,5 +1790,132 @@
         "type": "int"
       }
     }
-  }
+  },
+  "termTabSemantics": "{name}, tab {index} of {count}, {state}",
+  "@termTabSemantics": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "termTabTooltip": "{name} · {state} · {columns} × {rows}",
+  "@termTabTooltip": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "state": {
+        "type": "String"
+      },
+      "columns": {
+        "type": "int"
+      },
+      "rows": {
+        "type": "int"
+      }
+    }
+  },
+  "termTabRename": "Rename",
+  "termTabClose": "Close tab",
+  "termTabKill": "Kill session…",
+  "termNewTab": "New tab",
+  "termMenuSessions": "Sessions on {host}",
+  "@termMenuSessions": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "termSessionsTitle": "Sessions on {host}",
+  "@termSessionsTitle": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "termSessionsSummary": "{count, plural, =1{tmux · 1 session · {open} open here} other{tmux · {count} sessions · {open} open here}}",
+  "@termSessionsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "open": {
+        "type": "int"
+      }
+    }
+  },
+  "termSessionsNew": "New session",
+  "termSessionsNewSub": "Starts tmux on the desktop and opens it here",
+  "termSessionTag": "tab",
+  "termSessionAttachedHere": "Attached here",
+  "termSessionAttachedBoth": "Attached here and on the desktop",
+  "termSessionAttachedDesktop": "Attached on the desktop",
+  "termSessionDetached": "Detached",
+  "termSessionWindows": "{windows, plural, =1{1 window} other{{windows} windows}}",
+  "@termSessionWindows": {
+    "placeholders": {
+      "windows": {
+        "type": "int"
+      }
+    }
+  },
+  "termSessionMeta": "{windows, plural, =1{1 window · created {age} ago} other{{windows} windows · created {age} ago}}",
+  "@termSessionMeta": {
+    "placeholders": {
+      "windows": {
+        "type": "int"
+      },
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "termSessionOpen": "Open as tab",
+  "termSessionsEmpty": "No tmux sessions on the desktop.",
+  "termSessionsFailed": "Couldn't reach tmux on the desktop: {detail}",
+  "@termSessionsFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "termTmuxFailed": "tmux said: {detail}",
+  "@termTmuxFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "termSessionsButton": "Sessions",
+  "termRenameTitle": "Rename session",
+  "termRenameLabel": "Session name",
+  "termRenameHint": "Letters, digits, - and _ (up to 32)",
+  "termRenameInvalid": "Only letters, digits, - and _ (up to 32)",
+  "termRenameSave": "Rename",
+  "termKillTitle": "Kill “{name}”?",
+  "@termKillTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "termKillBody": "Every window in it, and whatever runs there, stops on the desktop. This can't be undone.",
+  "termKill": "Kill",
+  "termNoTabsTitle": "No tabs open",
+  "termNoTabsBody": "Your tmux sessions keep running on the desktop. Open one here, or start a new one."
 }

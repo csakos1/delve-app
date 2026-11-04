@@ -57,10 +57,86 @@ const fastTerminalTiming = TerminalTiming(
   ],
   resizeSettle: Duration(milliseconds: 30),
   staleAfter: Duration(milliseconds: 200),
+  keepPrevious: Duration(milliseconds: 150),
   probeEvery: Duration(milliseconds: 300),
   probeTimeout: Duration(milliseconds: 60),
   echoWait: Duration(milliseconds: 50),
 );
+
+/// A session on the fake desktop's tmux.
+class FakeSession {
+  FakeSession(
+    this.name, {
+    this.attached = 0,
+    this.windows = 1,
+    this.app = false,
+    this.status = 'on',
+    this.created = 1793800000,
+  });
+
+  String name;
+  int attached;
+  int windows;
+  bool app;
+  String status;
+  int created;
+}
+
+/// The desktop's tmux for exec commands: lists, renames and kills
+/// [sessions], the way the real one answers (T3-0).
+class FakeTmux {
+  final List<FakeSession> sessions = [];
+
+  /// Every command run, in order (link or own connection).
+  final List<String> commands = [];
+
+  /// The next commands fail with this stderr (exit 1).
+  final List<String> failures = [];
+
+  FakeSession? byName(String name) {
+    for (final s in sessions) {
+      if (s.name == name) return s;
+    }
+    return null;
+  }
+
+  static final _rename = RegExp(r"rename-session -t '=(.*)' '(.*)'$");
+  static final _kill = RegExp(r"kill-session -t '=(.*)'$");
+
+  SshRunResult run(String command) {
+    commands.add(command);
+    if (failures.isNotEmpty) {
+      return SshRunResult('', 1, error: failures.removeAt(0));
+    }
+    if (command.contains('list-sessions')) {
+      return SshRunResult(
+        [
+          for (final s in sessions)
+            '${s.attached}|${s.windows}|${s.created}|${s.app ? 1 : 0}|'
+                '${s.status}|${s.name}\n',
+        ].join(),
+        0,
+      );
+    }
+    if (_rename.firstMatch(command) case final m?) {
+      final s = byName(m[1]!);
+      if (s == null) {
+        return SshRunResult('', 1, error: "can't find session: ${m[1]}");
+      }
+      s.name = m[2]!;
+      return const SshRunResult('', 0);
+    }
+    if (_kill.firstMatch(command) case final m?) {
+      final s = byName(m[1]!);
+      if (s == null) {
+        return SshRunResult('', 1, error: "can't find session: ${m[1]}");
+      }
+      sessions.remove(s);
+      return const SshRunResult('', 0);
+    }
+    return const SshRunResult('', 127, error: 'unknown command');
+  }
+}
 
 /// Opens [FakeSshLink]s; the host key and failures are set per test.
 class FakeSshDialer implements SshDialer {
@@ -82,6 +158,15 @@ class FakeSshDialer implements SshDialer {
   final List<FakeSshLink> links = [];
   final List<(int, int)> openSizes = [];
 
+  /// The desktop's tmux (exec commands).
+  final tmux = FakeTmux();
+
+  /// Commands run over a connection of their own ([run]).
+  final List<String> runs = [];
+
+  /// Consumed one per [run]: a failure to throw, or null for success.
+  final List<SshFailure?> runFailures = [];
+
   FakeSshLink get last => links.last;
 
   @override
@@ -102,14 +187,50 @@ class FakeSshDialer implements SshDialer {
     if (g != null) await g.future;
     final failure = failures.isEmpty ? null : failures.removeAt(0);
     if (failure != null) throw failure;
-    final link = FakeSshLink()..alive = linksAlive;
+    final link = FakeSshLink(tmux: tmux)..alive = linksAlive;
     links.add(link);
     return link;
+  }
+
+  @override
+  Future<SshRunResult> run(
+    SshTarget target, {
+    required PhoneKey key,
+    required HostKeyCheck verify,
+    required String command,
+    Duration timeout = kRunTimeout,
+  }) async {
+    runs.add(command);
+    final hk = hostKey;
+    if (hk != null && !await verify(hk.$1, hk.$2)) {
+      throw const SshHostKeyRejected('Hostkey verification failed');
+    }
+    final failure = runFailures.isEmpty ? null : runFailures.removeAt(0);
+    if (failure != null) throw failure;
+    return tmux.run(command);
   }
 }
 
 /// One live session: what was written and resized, and how it ends.
 class FakeSshLink implements SshLink {
+  FakeSshLink({FakeTmux? tmux}) : tmux = tmux ?? FakeTmux();
+
+  /// Answers [run] (the desktop's tmux).
+  final FakeTmux tmux;
+
+  /// Commands run over this connection.
+  final List<String> runs = [];
+
+  @override
+  Future<SshRunResult> run(
+    String command, {
+    Duration timeout = kRunTimeout,
+  }) async {
+    runs.add(command);
+    if (!alive) throw const SshUnreachable('timed out');
+    return tmux.run(command);
+  }
+
   final _output = StreamController<Uint8List>();
   final _done = Completer<SshEnd>();
   final List<String> writes = [];
