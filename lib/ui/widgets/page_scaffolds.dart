@@ -291,4 +291,15 @@ abstract final class DelveIcons {
   static const IconData pause = Symbols.pause_rounded;
   static const IconData openLink = Symbols.open_in_new_rounded;
   static const IconData fillIn = Symbols.north_west_rounded;
+  static const IconData terminal = Symbols.terminal_rounded;
+  static const IconData fingerprint = Symbols.fingerprint_rounded;
+  static const IconData verified = Symbols.verified_user_rounded;
+  static const IconData policy = Symbols.policy_rounded;
+  static const IconData key = Symbols.key_rounded;
+  static const IconData paste = Symbols.content_paste_rounded;
+  static const IconData arrowBack = Symbols.arrow_back_rounded;
+  static const IconData arrowForward = Symbols.arrow_forward_rounded;
+  static const IconData check = Symbols.check_rounded;
+  static const IconData textSize = Symbols.format_size_rounded;
+  static const IconData remove = Symbols.remove_rounded;
 }

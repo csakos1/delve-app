@@ -15,6 +15,8 @@ import '../../push/push_controller.dart';
 import '../../push/push_providers.dart';
 import '../../sync/connection_status.dart';
 import '../../sync/sync_providers.dart';
+import '../../terminal/terminal_providers.dart';
+import '../../terminal/terminal_service.dart';
 import '../../theme/delve_theme.dart';
 import '../format.dart';
 import '../widgets/connection_ui.dart';
@@ -99,6 +101,8 @@ class SettingsScreen extends ConsumerWidget {
             ),
             _Section(l.settingsNotifications),
             _Notifications(device: device),
+            _Section(l.settingsTerminal),
+            const _TerminalRow(),
             _Section(l.settingsThinkingRoute),
             _ThinkingRoute(status: status, failed: failed),
             _Section(l.settingsVersions),
@@ -452,6 +456,47 @@ class _ConnectionRow extends ConsumerWidget {
           kind: view.kind,
           icon: view.icon,
           label: view.chip,
+        ),
+      ),
+    );
+  }
+}
+
+/// 16 → 22h: the terminal's settings, with a live summary.
+class _TerminalRow extends ConsumerStatefulWidget {
+  const _TerminalRow();
+
+  @override
+  ConsumerState<_TerminalRow> createState() => _TerminalRowState();
+}
+
+class _TerminalRowState extends ConsumerState<_TerminalRow> {
+  late final TerminalService _service = ref.read(terminalServiceProvider);
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_service.load());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return ListenableBuilder(
+      listenable: _service,
+      builder: (context, _) => InkWell(
+        key: const Key('settings.terminal'),
+        onTap: () => context.push(Routes.terminalSettings),
+        child: _Item(
+          icon: DelveIcons.terminal,
+          title: l.settingsTerminal,
+          subtitle: _service.ready
+              ? l.settingsTerminalSub(_service.config.port)
+              : null,
+          trailing: SymbolIcon(
+            DelveIcons.chevronRight,
+            color: context.colors.onSurfaceVariant,
+          ),
         ),
       ),
     );

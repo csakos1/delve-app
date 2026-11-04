@@ -140,7 +140,7 @@ class _ApprovalsScreenState extends ConsumerState<ApprovalsScreen> {
       }
     }
 
-    return TopLevelPage(
+    return SubPage(
       title: l.navApprovals,
       child: RefreshIndicator(
         onRefresh: _refresh,

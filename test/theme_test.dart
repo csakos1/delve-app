@@ -150,13 +150,22 @@ void main() {
     expect(obj(tokens['sizes']), {
       'touch-target': DelveTokens.touchTarget,
       'top-bar': DelveTokens.topBar,
-      'usage-line': DelveTokens.usageLine,
+      'context-chip': DelveTokens.contextChip,
       'bottom-nav': DelveTokens.bottomNav,
       'list-row': DelveTokens.listRow,
       'composer-min': DelveTokens.composerMin,
       'button': DelveTokens.button,
       'chip': DelveTokens.chip,
       'send-button': DelveTokens.sendButton,
+      'nav-dot': DelveTokens.navDot,
+      'approvals-badge': DelveTokens.approvalsBadge,
+      'terminal-tab-bar': DelveTokens.terminalTabBar,
+      'terminal-tab-min-width': DelveTokens.terminalTabMinWidth,
+      'terminal-state-line': DelveTokens.terminalStateLine,
+      'terminal-state-line-tappable': DelveTokens.terminalStateLineTappable,
+      'terminal-extra-keys': DelveTokens.terminalExtraKeys,
+      'terminal-hint-strip': DelveTokens.terminalHintStrip,
+      'terminal-session-row': DelveTokens.terminalSessionRow,
     });
     final motion = {
       for (final m

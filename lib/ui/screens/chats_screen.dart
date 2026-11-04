@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/chat_list.dart';
+import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../data/db/database.dart';
 import '../../l10n/app_localizations.dart';
@@ -118,6 +119,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
       syncStateProvider.select((s) => s.value?.lastSeq == null),
     );
     final paging = ref.watch(chatListPagerProvider(false));
+    final pending = ref.watch(answerableApprovalCountProvider).value ?? 0;
 
     final connecting = switch (status.phase) {
       ConnectionPhase.connecting || ConnectionPhase.awaitingHello => true,
@@ -206,6 +208,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
             onPressed: empty || skeleton ? null : _toggleSearch,
             icon: SymbolIcon(_searching ? DelveIcons.close : DelveIcons.search),
           ),
+          _ApprovalsButton(pending: pending),
         ],
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -403,6 +406,37 @@ class _SkeletonList extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// The Approvals inbox (11) from the Chats header, with the waiting count.
+class _ApprovalsButton extends StatelessWidget {
+  const _ApprovalsButton({required this.pending});
+
+  final int pending;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final icon = SymbolIcon(DelveIcons.approvals, filled: pending > 0);
+    return IconButton(
+      key: const Key('chats.approvals'),
+      tooltip: pending > 0
+          ? '${l.navApprovals}, ${l.approvalsBadge(pending)}'
+          : l.navApprovals,
+      onPressed: () => context.push(Routes.approvals),
+      icon: pending > 0
+          ? Badge(
+              key: const Key('chats.approvals.badge'),
+              label: Text('$pending'),
+              backgroundColor: context.delve.warnFg,
+              textColor: context.colors.onTertiary,
+              textStyle: context.text.labelSmall,
+              largeSize: DelveTokens.approvalsBadge,
+              child: icon,
+            )
+          : icon,
     );
   }
 }

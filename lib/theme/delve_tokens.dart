@@ -30,13 +30,25 @@ abstract final class DelveTokens {
   // sizes
   static const double touchTarget = 48;
   static const double topBar = 56;
-  static const double usageLine = 28;
+  static const double contextChip = 32;
   static const double bottomNav = 72;
   static const double listRow = 76;
   static const double composerMin = 98;
   static const double button = 48;
   static const double chip = 32;
   static const double sendButton = 44;
+  static const double navDot = 8;
+  static const double approvalsBadge = 18;
+
+  // terminal (design 22)
+  static const double terminalTabBar = 44;
+  static const double terminalTabMinWidth = 64;
+  static const double terminalStateLine = 32;
+  static const double terminalStateLineTappable = 48;
+  static const double terminalExtraKeys = 48;
+  static const double terminalHintStrip = 36;
+  static const double terminalSessionRow = 72;
+  static const double terminalPadding = 2;
 
   // icons
   static const double iconSm = 16;

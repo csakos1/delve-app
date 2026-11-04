@@ -67,7 +67,7 @@ Future<void> frames(WidgetTester t, [int n = 10]) async {
   }
 }
 
-/// Pumps the app with [approvals] stored and opens the Approvals tab.
+/// Pumps the app with [approvals] stored and opens Approvals from Chats.
 Future<TestEnv> openInbox(
   WidgetTester t, {
   List<Approval> approvals = const [],
@@ -82,7 +82,7 @@ Future<TestEnv> openInbox(
       }
     },
   );
-  await t.tap(find.text('Approvals'));
+  await t.tap(find.byKey(const Key('chats.approvals')));
   await frames(t, 20);
   return env;
 }
@@ -311,7 +311,7 @@ void main() {
     env.server.json('GET', '/api/v1/approvals', {
       'data': [approval('apr_p9', 'pending').toJson()],
     });
-    await t.tap(find.text('Approvals'));
+    await t.tap(find.byKey(const Key('chats.approvals')));
     await frames(t, 20);
     expect(find.byKey(const ValueKey('inbox.apr_p9')), findsOneWidget);
     final query = env.server.requests

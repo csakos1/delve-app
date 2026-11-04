@@ -19,21 +19,27 @@ import '../ui/screens/settings_screen.dart';
 import '../ui/screens/share_screen.dart';
 import '../ui/screens/splash_screen.dart';
 import '../ui/screens/system_screen.dart';
+import '../ui/screens/terminal_screen.dart';
+import '../ui/screens/terminal_settings_screen.dart';
 import '../ui/screens/watch_detail_screen.dart';
 import '../ui/screens/watches_screen.dart';
 import '../ui/shell/app_shell.dart';
 import 'session.dart';
 
-/// Route paths. Top-level screens live in the shell (bottom nav); Chat and
-/// the More sub-pages are pushed on the root navigator, so they have none.
+/// Route paths. Top-level screens live in the shell (bottom nav: Chats ·
+/// Terminal · Dashboard · More); Chat, Approvals and the More sub-pages are
+/// pushed on the root navigator, so they have none.
 abstract final class Routes {
   static const splash = '/splash';
   static const pair = '/pair';
   static const serverTooOld = '/server-too-old';
   static const chats = '/chats';
+  static const terminal = '/terminal';
   static const dashboard = '/dashboard';
-  static const approvals = '/approvals';
   static const more = '/more';
+
+  /// 11 Approvals: from the Chats header (and notifications), back to Chats.
+  static const approvals = '/chats/approvals';
   static const newChat = '/chats/new';
   static String chat(String id) => '/chats/c/${Uri.encodeComponent(id)}';
   static const system = '/more/system';
@@ -47,6 +53,9 @@ abstract final class Routes {
       '/more/watches/${Uri.encodeComponent(slug)}';
   static const settings = '/more/settings';
   static const connectionLog = '/more/settings/log';
+
+  /// 22h Terminal settings: from Settings and from the Terminal tab.
+  static const terminalSettings = '/more/settings/terminal';
   static const archived = '/more/archived';
 
   /// Share to Delve (design 17), on the root navigator.
@@ -120,7 +129,20 @@ GoRouter buildRouter({
                     builder: (_, state) =>
                         ChatScreen(conversationId: state.pathParameters['id']),
                   ),
+                  GoRoute(
+                    path: 'approvals',
+                    parentNavigatorKey: rootKey,
+                    builder: (_, _) => const ApprovalsScreen(),
+                  ),
                 ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.terminal,
+                builder: (_, _) => const TerminalScreen(),
               ),
             ],
           ),
@@ -129,14 +151,6 @@ GoRouter buildRouter({
               GoRoute(
                 path: Routes.dashboard,
                 builder: (_, _) => const DashboardScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: Routes.approvals,
-                builder: (_, _) => const ApprovalsScreen(),
               ),
             ],
           ),
@@ -159,12 +173,18 @@ GoRouter buildRouter({
                         MorePage.watches => const WatchesScreen(),
                       },
                       routes: [
-                        if (page == MorePage.settings)
+                        if (page == MorePage.settings) ...[
                           GoRoute(
                             path: 'log',
                             parentNavigatorKey: rootKey,
                             builder: (_, _) => const ConnectionLogScreen(),
                           ),
+                          GoRoute(
+                            path: 'terminal',
+                            parentNavigatorKey: rootKey,
+                            builder: (_, _) => const TerminalSettingsScreen(),
+                          ),
+                        ],
                         if (page == MorePage.watches)
                           GoRoute(
                             path: ':slug',

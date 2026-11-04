@@ -8,7 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
@@ -24,8 +24,11 @@ import java.util.concurrent.Executors
  * "changed"; Dart then takes it. The shared items are copied into the app's
  * cache (cacheDir/shared/<uuid>/<name>) on a background thread, at most
  * MAX_FILES of them; Dart reads the copies like picked files.
+ *
+ * A FlutterFragmentActivity: local_auth's BiometricPrompt (the terminal's
+ * lock) needs a FragmentActivity.
  */
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private var channel: MethodChannel? = null
     private var pending: Intent? = null
     private val io = Executors.newSingleThreadExecutor()

@@ -112,10 +112,25 @@ reached over Tailscale only.
   New watch, Change in chat and Fix in chat open a new chat with a draft or with the
   watch hint and two examples (21g). The morning brief says when it was written late.
 
+- T2a: the Terminal tab — SSH straight to the desktop's OpenSSH on port 2222 over the
+  tailnet (the backend is not on the path), into a tmux session that also opens on the
+  desktop (`tmux attach -t delve-1`). The bottom navigation is now Chats · Terminal ·
+  Dashboard · More; Approvals opens from the Chats header (with the waiting count; a warn
+  dot on Chats). Setup (22d/22e): the phone's own ed25519 key (secure storage) as one
+  `authorized_keys` line restricted to the tailnet, host / user / port from the paired
+  server, the desktop's host key in groups of four to compare, then pinned. The session
+  (22a): a tab, the extra key row with sticky Ctrl / Alt, the state line (22c: connecting,
+  reconnecting with backoff, disconnected, host key changed — no retry). It comes back by
+  itself after the phone cut the network in the background, the keyboard returns, and the
+  pty is resized once the keyboard has settled. A fingerprint unlocks the tab after
+  15 minutes without input (22f). Settings → Terminal (22h): host & port, font size, the
+  key line, a new key, the trusted host key and Forget.
+
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share
-target, W3 the watches. (A home-screen widget was planned and dropped.) Requires a server
-with API revision 9 or newer (`/api/v1/watches`).
+target, W3 the watches, T2a the terminal. (A home-screen widget was planned and dropped.)
+Requires a server with API revision 9 or newer (`/api/v1/watches`); the terminal needs
+sshd on 2222 (delve-infra, installation step 19).
 
 ## Stack
 
@@ -132,6 +147,7 @@ with API revision 9 or newer (`/api/v1/watches`).
 | Markdown | flutter_markdown_plus |
 | Push | firebase_messaging (data messages), flutter_local_notifications |
 | Links | url_launcher (a watch's hits open in the browser) |
+| Terminal | dartssh2 (SSH), xterm (the view), pinenacl (ed25519), local_auth (the lock) |
 | Fonts | Jost, Inter, JetBrains Mono — bundled, SIL OFL 1.1 |
 
 Data flow: WebSocket events and REST loads are written to the drift database; screens only
@@ -157,6 +173,9 @@ lib/
   app/schedules.dart         the schedule list in memory: REST, schedule.* events
   app/cron_preset.dart       cron ↔ daily times / weekdays at a time / plain cron
   app/watches.dart           the watches and their items in memory: REST, watch.* events
+  terminal/                  the phone key and pins (secrets), the SSH link (dartssh2), the
+                             connection with reconnects, sticky Ctrl/Alt, the lock, the
+                             service (one per app) and its providers
   attachments/               pickers, photo resizing, uploads (ComposerAttachments),
                              the image cache
   share/                     Share to Delve: the method channel (share_channel.dart), the
@@ -187,6 +206,11 @@ test/
   attachments_test.dart      resizing bounds, uploads and retries, REST, the chat's "+",
                              tiles and "Send again"
   share_test.dart            shared payloads, the method channel, the Share to Delve screen
+  terminal_test.dart         key line, secrets, sticky keys, the connection with a fake
+                             SSH dialer (pins, refusals, reconnects, background, resize),
+                             the lock and the service
+  terminal_screen_test.dart  the tab: setup, trust, denied, lock, host key changed,
+                             reconnecting, the extra keys, Terminal settings
   push_test.dart             pushes → notifications, Deny in the background, the
                              controller with fakes, Settings → Notifications
   support/                   fake REST server (a dio adapter), fake WebSocket server,

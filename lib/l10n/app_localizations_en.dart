@@ -2093,4 +2093,306 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get watchesNote =>
       'Watches run on a schedule without the model. New ones and changes are made in a chat.';
+
+  @override
+  String get navTerminal => 'Terminal';
+
+  @override
+  String get settingsTerminal => 'Terminal';
+
+  @override
+  String get termTitle => 'Terminal';
+
+  @override
+  String get termSetupSubtitle =>
+      'Set up once · the key never leaves this phone';
+
+  @override
+  String get termStepKey => 'This phone\'s key';
+
+  @override
+  String get termStepKeyBody =>
+      'Delve generated a key for this phone. Add this line to ~/.ssh/authorized_keys on the desktop.';
+
+  @override
+  String get termKeyLine => 'authorized_keys line';
+
+  @override
+  String get termKeyCommand => 'Or run this on the desktop';
+
+  @override
+  String get termStepHost => 'Host and port';
+
+  @override
+  String get termStepHostBody =>
+      'From the paired server. Change them if sshd listens elsewhere.';
+
+  @override
+  String get termHost => 'Host';
+
+  @override
+  String get termUser => 'User';
+
+  @override
+  String get termPort => 'Port';
+
+  @override
+  String get termStepVerify => 'Verify the desktop';
+
+  @override
+  String get termStepVerifyBody =>
+      'After Connect, compare the host key fingerprint.';
+
+  @override
+  String get termVerifyBody =>
+      'Compare this with the desktop\'s key. If one group differs, cancel.';
+
+  @override
+  String get termVerifyCommand => 'On the desktop';
+
+  @override
+  String get termTrust => 'Trust and connect';
+
+  @override
+  String get termConnect => 'Connect';
+
+  @override
+  String get termConnecting => 'Connecting…';
+
+  @override
+  String get termDenied =>
+      'Permission denied – is the line in authorized_keys?';
+
+  @override
+  String get termCheckModes => '~/.ssh is 0700 and authorized_keys is 0600';
+
+  @override
+  String get termCheckTailnet =>
+      'This phone is on the tailnet (Tailscale is on)';
+
+  @override
+  String get termCopyLine => 'Copy the line';
+
+  @override
+  String get termTryAgain => 'Try again';
+
+  @override
+  String get termNotTrusted =>
+      'The desktop\'s key was not trusted. Connect again to check it.';
+
+  @override
+  String get termHostChangedLine => 'Host key changed – connection refused';
+
+  @override
+  String get termHostChangedTitle => 'Host key changed';
+
+  @override
+  String get termHostChangedBody =>
+      'The desktop answered with a different key than the one you trusted. Someone may be in between, or the desktop\'s keys were replaced.';
+
+  @override
+  String get termShowDetails => 'Show details';
+
+  @override
+  String get termTrusted => 'Trusted';
+
+  @override
+  String get termReceived => 'Received';
+
+  @override
+  String get termForgetVerify => 'Forget and verify again';
+
+  @override
+  String get termNextNow => 'now';
+
+  @override
+  String get termOfflineUser => 'Disconnected – tap to reconnect';
+
+  @override
+  String get termOfflineEnded => 'Session ended – tap to start it again';
+
+  @override
+  String get termOfflineBackground =>
+      'Paused in the background – tap to reconnect';
+
+  @override
+  String get termStateConnected => 'connected';
+
+  @override
+  String get termStateConnecting => 'connecting';
+
+  @override
+  String get termStateReconnecting => 'reconnecting';
+
+  @override
+  String get termStateDisconnected => 'disconnected';
+
+  @override
+  String get termStateRefused => 'refused';
+
+  @override
+  String get termMenu => 'Terminal menu';
+
+  @override
+  String get termMenuSettings => 'Terminal settings';
+
+  @override
+  String get termMenuDisconnect => 'Disconnect';
+
+  @override
+  String get termMenuReconnect => 'Reconnect';
+
+  @override
+  String get termKeyCtrl => 'Control';
+
+  @override
+  String get termKeyAlt => 'Alt';
+
+  @override
+  String get termLockTitle => 'Unlock the terminal';
+
+  @override
+  String get termLockBody =>
+      'Locked after 15 min of inactivity. Your session keeps running on the desktop.';
+
+  @override
+  String get termUnlock => 'Unlock';
+
+  @override
+  String get termUnlockReason => 'Unlock the Delve terminal';
+
+  @override
+  String get termSettingsConnection => 'Connection';
+
+  @override
+  String get termBackground => 'Keep connected in background';
+
+  @override
+  String get termBackgroundLater => 'Comes in a later update';
+
+  @override
+  String get termHostPort => 'Host & port';
+
+  @override
+  String get termLockRow => 'Lock';
+
+  @override
+  String get termLockRowSub => 'After 15 min of inactivity';
+
+  @override
+  String get termDisplay => 'Display';
+
+  @override
+  String get termFontSize => 'Font size';
+
+  @override
+  String get termFontSmaller => 'Smaller';
+
+  @override
+  String get termFontBigger => 'Bigger';
+
+  @override
+  String get termPhoneKey => 'This phone\'s key';
+
+  @override
+  String get termShowLine => 'Show the authorized_keys line';
+
+  @override
+  String get termShowLineSub => 'To add on the desktop';
+
+  @override
+  String get termRegenerate => 'Regenerate key';
+
+  @override
+  String get termRegenerateSub => 'The old line stops working';
+
+  @override
+  String get termRegenerateTitle => 'Regenerate the key?';
+
+  @override
+  String get termRegenerateBody =>
+      'The desktop refuses this phone until you add the new line to ~/.ssh/authorized_keys.';
+
+  @override
+  String get termRegenerateConfirm => 'Regenerate';
+
+  @override
+  String get termRegenerated => 'New key made – add its line on the desktop';
+
+  @override
+  String get termHostKey => 'Host key';
+
+  @override
+  String get termHostKeyNone => 'Not verified yet';
+
+  @override
+  String get termHostKeyTrustedUndated => 'Trusted';
+
+  @override
+  String get termForgetHostKey => 'Forget host key';
+
+  @override
+  String get termForgetHostKeyBody =>
+      'The next connection shows the desktop\'s fingerprint again.';
+
+  @override
+  String get termForgetConfirm => 'Forget';
+
+  @override
+  String get termSave => 'Save';
+
+  @override
+  String settingsTerminalSub(int port) {
+    return 'Background connection off · port $port';
+  }
+
+  @override
+  String termCheckLine(String user) {
+    return 'The line is in ~/.ssh/authorized_keys of $user';
+  }
+
+  @override
+  String termCheckPort(int port) {
+    return 'sshd listens on $port (sudo sshd -T | grep -i port)';
+  }
+
+  @override
+  String termFailed(String target, String detail) {
+    return 'Can\'t reach $target: $detail';
+  }
+
+  @override
+  String termFontSizeValue(int size) {
+    return '$size sp';
+  }
+
+  @override
+  String termHostKeyTrusted(String date) {
+    return 'Trusted since $date';
+  }
+
+  @override
+  String termKeyArmed(String key) {
+    return '$key, armed';
+  }
+
+  @override
+  String termKeyLocked(String key) {
+    return '$key, locked';
+  }
+
+  @override
+  String termNextIn(int seconds) {
+    return 'next in $seconds s';
+  }
+
+  @override
+  String termReconnecting(int attempt) {
+    return 'Reconnecting · attempt $attempt';
+  }
+
+  @override
+  String termUnlockFailed(String detail) {
+    return 'Couldn\'t unlock: $detail';
+  }
 }

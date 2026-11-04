@@ -10,7 +10,7 @@ void main() {
   ) async {
     await pumpDelve(tester);
     expect(find.byType(NavigationBar), findsOneWidget);
-    for (final label in ['Chats', 'Dashboard', 'Approvals', 'More']) {
+    for (final label in ['Chats', 'Terminal', 'Dashboard', 'More']) {
       expect(find.text(label), findsWidgets, reason: label);
     }
     expect(find.text('New chat'), findsOneWidget);
@@ -42,7 +42,9 @@ void main() {
     expect(find.byType(NavigationBar), findsNothing);
   });
 
-  testWidgets('Approvals badge follows the database', (tester) async {
+  testWidgets('Approvals badge in the Chats header and the Chats dot', (
+    tester,
+  ) async {
     final env = await pumpDelve(tester);
     final db = env.db;
     expect(find.byType(Badge), findsNothing);
@@ -68,7 +70,24 @@ void main() {
           ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(Badge), findsNWidgets(1));
+    expect(find.byKey(const Key('chats.approvals.badge')), findsOneWidget);
+    expect(find.byKey(const Key('nav.chats.dot')), findsWidgets);
     expect(find.text('1'), findsWidgets);
+  });
+
+  testWidgets('Approvals opens from the Chats header, back returns', (
+    tester,
+  ) async {
+    await pumpDelve(tester);
+    await tester.tap(find.byKey(const Key('chats.approvals')));
+    await tester.pumpAndSettle();
+    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.byType(BackButton), findsOneWidget);
+    expect(find.text('Approvals'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.text('New chat'), findsOneWidget);
   });
 }

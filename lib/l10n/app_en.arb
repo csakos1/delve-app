@@ -1595,5 +1595,174 @@
     }
   },
   "watchesNew": "New watch",
-  "watchesNote": "Watches run on a schedule without the model. New ones and changes are made in a chat."
+  "watchesNote": "Watches run on a schedule without the model. New ones and changes are made in a chat.",
+  "navTerminal": "Terminal",
+  "settingsTerminal": "Terminal",
+  "termTitle": "Terminal",
+  "termSetupSubtitle": "Set up once · the key never leaves this phone",
+  "termStepKey": "This phone's key",
+  "termStepKeyBody": "Delve generated a key for this phone. Add this line to ~/.ssh/authorized_keys on the desktop.",
+  "termKeyLine": "authorized_keys line",
+  "termKeyCommand": "Or run this on the desktop",
+  "termStepHost": "Host and port",
+  "termStepHostBody": "From the paired server. Change them if sshd listens elsewhere.",
+  "termHost": "Host",
+  "termUser": "User",
+  "termPort": "Port",
+  "termStepVerify": "Verify the desktop",
+  "termStepVerifyBody": "After Connect, compare the host key fingerprint.",
+  "termVerifyBody": "Compare this with the desktop's key. If one group differs, cancel.",
+  "termVerifyCommand": "On the desktop",
+  "termTrust": "Trust and connect",
+  "termConnect": "Connect",
+  "termConnecting": "Connecting…",
+  "termDenied": "Permission denied – is the line in authorized_keys?",
+  "termCheckModes": "~/.ssh is 0700 and authorized_keys is 0600",
+  "termCheckTailnet": "This phone is on the tailnet (Tailscale is on)",
+  "termCopyLine": "Copy the line",
+  "termTryAgain": "Try again",
+  "termNotTrusted": "The desktop's key was not trusted. Connect again to check it.",
+  "termHostChangedLine": "Host key changed – connection refused",
+  "termHostChangedTitle": "Host key changed",
+  "termHostChangedBody": "The desktop answered with a different key than the one you trusted. Someone may be in between, or the desktop's keys were replaced.",
+  "termShowDetails": "Show details",
+  "termTrusted": "Trusted",
+  "termReceived": "Received",
+  "termForgetVerify": "Forget and verify again",
+  "termNextNow": "now",
+  "termOfflineUser": "Disconnected – tap to reconnect",
+  "termOfflineEnded": "Session ended – tap to start it again",
+  "termOfflineBackground": "Paused in the background – tap to reconnect",
+  "termStateConnected": "connected",
+  "termStateConnecting": "connecting",
+  "termStateReconnecting": "reconnecting",
+  "termStateDisconnected": "disconnected",
+  "termStateRefused": "refused",
+  "termMenu": "Terminal menu",
+  "termMenuSettings": "Terminal settings",
+  "termMenuDisconnect": "Disconnect",
+  "termMenuReconnect": "Reconnect",
+  "termKeyCtrl": "Control",
+  "termKeyAlt": "Alt",
+  "termLockTitle": "Unlock the terminal",
+  "termLockBody": "Locked after 15 min of inactivity. Your session keeps running on the desktop.",
+  "termUnlock": "Unlock",
+  "termUnlockReason": "Unlock the Delve terminal",
+  "termSettingsConnection": "Connection",
+  "termBackground": "Keep connected in background",
+  "termBackgroundLater": "Comes in a later update",
+  "termHostPort": "Host & port",
+  "termLockRow": "Lock",
+  "termLockRowSub": "After 15 min of inactivity",
+  "termDisplay": "Display",
+  "termFontSize": "Font size",
+  "termFontSmaller": "Smaller",
+  "termFontBigger": "Bigger",
+  "termPhoneKey": "This phone's key",
+  "termShowLine": "Show the authorized_keys line",
+  "termShowLineSub": "To add on the desktop",
+  "termRegenerate": "Regenerate key",
+  "termRegenerateSub": "The old line stops working",
+  "termRegenerateTitle": "Regenerate the key?",
+  "termRegenerateBody": "The desktop refuses this phone until you add the new line to ~/.ssh/authorized_keys.",
+  "termRegenerateConfirm": "Regenerate",
+  "termRegenerated": "New key made – add its line on the desktop",
+  "termHostKey": "Host key",
+  "termHostKeyNone": "Not verified yet",
+  "termHostKeyTrustedUndated": "Trusted",
+  "termForgetHostKey": "Forget host key",
+  "termForgetHostKeyBody": "The next connection shows the desktop's fingerprint again.",
+  "termForgetConfirm": "Forget",
+  "termSave": "Save",
+  "settingsTerminalSub": "Background connection off · port {port}",
+  "@settingsTerminalSub": {
+    "placeholders": {
+      "port": {
+        "type": "int"
+      }
+    }
+  },
+  "termCheckLine": "The line is in ~/.ssh/authorized_keys of {user}",
+  "@termCheckLine": {
+    "placeholders": {
+      "user": {
+        "type": "String"
+      }
+    }
+  },
+  "termCheckPort": "sshd listens on {port} (sudo sshd -T | grep -i port)",
+  "@termCheckPort": {
+    "placeholders": {
+      "port": {
+        "type": "int"
+      }
+    }
+  },
+  "termFailed": "Can't reach {target}: {detail}",
+  "@termFailed": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "termFontSizeValue": "{size} sp",
+  "@termFontSizeValue": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "termHostKeyTrusted": "Trusted since {date}",
+  "@termHostKeyTrusted": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "termKeyArmed": "{key}, armed",
+  "@termKeyArmed": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "termKeyLocked": "{key}, locked",
+  "@termKeyLocked": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "termNextIn": "next in {seconds} s",
+  "@termNextIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "termReconnecting": "Reconnecting · attempt {attempt}",
+  "@termReconnecting": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      }
+    }
+  },
+  "termUnlockFailed": "Couldn't unlock: {detail}",
+  "@termUnlockFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  }
 }

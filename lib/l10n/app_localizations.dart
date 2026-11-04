@@ -3405,6 +3405,540 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Watches run on a schedule without the model. New ones and changes are made in a chat.'**
   String get watchesNote;
+
+  /// No description provided for @navTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal'**
+  String get navTerminal;
+
+  /// No description provided for @settingsTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal'**
+  String get settingsTerminal;
+
+  /// No description provided for @termTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal'**
+  String get termTitle;
+
+  /// No description provided for @termSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up once · the key never leaves this phone'**
+  String get termSetupSubtitle;
+
+  /// No description provided for @termStepKey.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone\'s key'**
+  String get termStepKey;
+
+  /// No description provided for @termStepKeyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delve generated a key for this phone. Add this line to ~/.ssh/authorized_keys on the desktop.'**
+  String get termStepKeyBody;
+
+  /// No description provided for @termKeyLine.
+  ///
+  /// In en, this message translates to:
+  /// **'authorized_keys line'**
+  String get termKeyLine;
+
+  /// No description provided for @termKeyCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Or run this on the desktop'**
+  String get termKeyCommand;
+
+  /// No description provided for @termStepHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Host and port'**
+  String get termStepHost;
+
+  /// No description provided for @termStepHostBody.
+  ///
+  /// In en, this message translates to:
+  /// **'From the paired server. Change them if sshd listens elsewhere.'**
+  String get termStepHostBody;
+
+  /// No description provided for @termHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get termHost;
+
+  /// No description provided for @termUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get termUser;
+
+  /// No description provided for @termPort.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get termPort;
+
+  /// No description provided for @termStepVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify the desktop'**
+  String get termStepVerify;
+
+  /// No description provided for @termStepVerifyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'After Connect, compare the host key fingerprint.'**
+  String get termStepVerifyBody;
+
+  /// No description provided for @termVerifyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare this with the desktop\'s key. If one group differs, cancel.'**
+  String get termVerifyBody;
+
+  /// No description provided for @termVerifyCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'On the desktop'**
+  String get termVerifyCommand;
+
+  /// No description provided for @termTrust.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust and connect'**
+  String get termTrust;
+
+  /// No description provided for @termConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get termConnect;
+
+  /// No description provided for @termConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get termConnecting;
+
+  /// No description provided for @termDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied – is the line in authorized_keys?'**
+  String get termDenied;
+
+  /// No description provided for @termCheckModes.
+  ///
+  /// In en, this message translates to:
+  /// **'~/.ssh is 0700 and authorized_keys is 0600'**
+  String get termCheckModes;
+
+  /// No description provided for @termCheckTailnet.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone is on the tailnet (Tailscale is on)'**
+  String get termCheckTailnet;
+
+  /// No description provided for @termCopyLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the line'**
+  String get termCopyLine;
+
+  /// No description provided for @termTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get termTryAgain;
+
+  /// No description provided for @termNotTrusted.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop\'s key was not trusted. Connect again to check it.'**
+  String get termNotTrusted;
+
+  /// No description provided for @termHostChangedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Host key changed – connection refused'**
+  String get termHostChangedLine;
+
+  /// No description provided for @termHostChangedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Host key changed'**
+  String get termHostChangedTitle;
+
+  /// No description provided for @termHostChangedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop answered with a different key than the one you trusted. Someone may be in between, or the desktop\'s keys were replaced.'**
+  String get termHostChangedBody;
+
+  /// No description provided for @termShowDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Show details'**
+  String get termShowDetails;
+
+  /// No description provided for @termTrusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted'**
+  String get termTrusted;
+
+  /// No description provided for @termReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get termReceived;
+
+  /// No description provided for @termForgetVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget and verify again'**
+  String get termForgetVerify;
+
+  /// No description provided for @termNextNow.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get termNextNow;
+
+  /// No description provided for @termOfflineUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected – tap to reconnect'**
+  String get termOfflineUser;
+
+  /// No description provided for @termOfflineEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Session ended – tap to start it again'**
+  String get termOfflineEnded;
+
+  /// No description provided for @termOfflineBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused in the background – tap to reconnect'**
+  String get termOfflineBackground;
+
+  /// No description provided for @termStateConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'connected'**
+  String get termStateConnected;
+
+  /// No description provided for @termStateConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'connecting'**
+  String get termStateConnecting;
+
+  /// No description provided for @termStateReconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'reconnecting'**
+  String get termStateReconnecting;
+
+  /// No description provided for @termStateDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'disconnected'**
+  String get termStateDisconnected;
+
+  /// No description provided for @termStateRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'refused'**
+  String get termStateRefused;
+
+  /// No description provided for @termMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal menu'**
+  String get termMenu;
+
+  /// No description provided for @termMenuSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal settings'**
+  String get termMenuSettings;
+
+  /// No description provided for @termMenuDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get termMenuDisconnect;
+
+  /// No description provided for @termMenuReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect'**
+  String get termMenuReconnect;
+
+  /// No description provided for @termKeyCtrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Control'**
+  String get termKeyCtrl;
+
+  /// No description provided for @termKeyAlt.
+  ///
+  /// In en, this message translates to:
+  /// **'Alt'**
+  String get termKeyAlt;
+
+  /// No description provided for @termLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the terminal'**
+  String get termLockTitle;
+
+  /// No description provided for @termLockBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked after 15 min of inactivity. Your session keeps running on the desktop.'**
+  String get termLockBody;
+
+  /// No description provided for @termUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get termUnlock;
+
+  /// No description provided for @termUnlockReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the Delve terminal'**
+  String get termUnlockReason;
+
+  /// No description provided for @termSettingsConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get termSettingsConnection;
+
+  /// No description provided for @termBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep connected in background'**
+  String get termBackground;
+
+  /// No description provided for @termBackgroundLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Comes in a later update'**
+  String get termBackgroundLater;
+
+  /// No description provided for @termHostPort.
+  ///
+  /// In en, this message translates to:
+  /// **'Host & port'**
+  String get termHostPort;
+
+  /// No description provided for @termLockRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock'**
+  String get termLockRow;
+
+  /// No description provided for @termLockRowSub.
+  ///
+  /// In en, this message translates to:
+  /// **'After 15 min of inactivity'**
+  String get termLockRowSub;
+
+  /// No description provided for @termDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Display'**
+  String get termDisplay;
+
+  /// No description provided for @termFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Font size'**
+  String get termFontSize;
+
+  /// No description provided for @termFontSmaller.
+  ///
+  /// In en, this message translates to:
+  /// **'Smaller'**
+  String get termFontSmaller;
+
+  /// No description provided for @termFontBigger.
+  ///
+  /// In en, this message translates to:
+  /// **'Bigger'**
+  String get termFontBigger;
+
+  /// No description provided for @termPhoneKey.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone\'s key'**
+  String get termPhoneKey;
+
+  /// No description provided for @termShowLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the authorized_keys line'**
+  String get termShowLine;
+
+  /// No description provided for @termShowLineSub.
+  ///
+  /// In en, this message translates to:
+  /// **'To add on the desktop'**
+  String get termShowLineSub;
+
+  /// No description provided for @termRegenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate key'**
+  String get termRegenerate;
+
+  /// No description provided for @termRegenerateSub.
+  ///
+  /// In en, this message translates to:
+  /// **'The old line stops working'**
+  String get termRegenerateSub;
+
+  /// No description provided for @termRegenerateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate the key?'**
+  String get termRegenerateTitle;
+
+  /// No description provided for @termRegenerateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop refuses this phone until you add the new line to ~/.ssh/authorized_keys.'**
+  String get termRegenerateBody;
+
+  /// No description provided for @termRegenerateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate'**
+  String get termRegenerateConfirm;
+
+  /// No description provided for @termRegenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'New key made – add its line on the desktop'**
+  String get termRegenerated;
+
+  /// No description provided for @termHostKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Host key'**
+  String get termHostKey;
+
+  /// No description provided for @termHostKeyNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified yet'**
+  String get termHostKeyNone;
+
+  /// No description provided for @termHostKeyTrustedUndated.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted'**
+  String get termHostKeyTrustedUndated;
+
+  /// No description provided for @termForgetHostKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget host key'**
+  String get termForgetHostKey;
+
+  /// No description provided for @termForgetHostKeyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The next connection shows the desktop\'s fingerprint again.'**
+  String get termForgetHostKeyBody;
+
+  /// No description provided for @termForgetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget'**
+  String get termForgetConfirm;
+
+  /// No description provided for @termSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get termSave;
+
+  /// No description provided for @settingsTerminalSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Background connection off · port {port}'**
+  String settingsTerminalSub(int port);
+
+  /// No description provided for @termCheckLine.
+  ///
+  /// In en, this message translates to:
+  /// **'The line is in ~/.ssh/authorized_keys of {user}'**
+  String termCheckLine(String user);
+
+  /// No description provided for @termCheckPort.
+  ///
+  /// In en, this message translates to:
+  /// **'sshd listens on {port} (sudo sshd -T | grep -i port)'**
+  String termCheckPort(int port);
+
+  /// No description provided for @termFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach {target}: {detail}'**
+  String termFailed(String target, String detail);
+
+  /// No description provided for @termFontSizeValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} sp'**
+  String termFontSizeValue(int size);
+
+  /// No description provided for @termHostKeyTrusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted since {date}'**
+  String termHostKeyTrusted(String date);
+
+  /// No description provided for @termKeyArmed.
+  ///
+  /// In en, this message translates to:
+  /// **'{key}, armed'**
+  String termKeyArmed(String key);
+
+  /// No description provided for @termKeyLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{key}, locked'**
+  String termKeyLocked(String key);
+
+  /// No description provided for @termNextIn.
+  ///
+  /// In en, this message translates to:
+  /// **'next in {seconds} s'**
+  String termNextIn(int seconds);
+
+  /// No description provided for @termReconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting · attempt {attempt}'**
+  String termReconnecting(int attempt);
+
+  /// No description provided for @termUnlockFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t unlock: {detail}'**
+  String termUnlockFailed(String detail);
 }
 
 class _AppLocalizationsDelegate

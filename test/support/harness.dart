@@ -12,6 +12,7 @@ import 'package:delve/push/push_providers.dart';
 import 'package:delve/share/share_channel.dart';
 import 'package:delve/sync/connection_status.dart';
 import 'package:delve/sync/sync_providers.dart';
+import 'package:delve/terminal/terminal_providers.dart';
 import 'package:delve/ui/links.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
@@ -20,6 +21,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fake_server.dart';
+import 'terminal_fakes.dart';
 
 AppDatabase memoryDb() => AppDatabase(
   DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true),
@@ -46,7 +48,9 @@ class TestEnv {
     this.push,
     this.attachments,
     this.share,
-  }) : db = memoryDb(),
+    TerminalFakes? terminal,
+  }) : terminal = terminal ?? TerminalFakes(),
+       db = memoryDb(),
        store = MemoryCredentialStore(credentials),
        server = FakeServer();
 
@@ -72,6 +76,9 @@ class TestEnv {
   /// Shares from other apps (the platform channel is off in tests).
   final ShareSource? share;
 
+  /// The terminal's storage, SSH and biometrics (no plugins in tests).
+  final TerminalFakes terminal;
+
   // (The override list is written out twice: its element type lives in a
   // different library across Riverpod versions.)
   ProviderScope app(Widget child) => ProviderScope(
@@ -84,6 +91,11 @@ class TestEnv {
       pushEnabledProvider.overrideWithValue(false), // no Firebase here
       shareSourceProvider.overrideWithValue(share), // no platform channel
       linkOpenerProvider.overrideWithValue(links.open), // no browser
+      terminalStoreProvider.overrideWithValue(terminal.store),
+      sshDialerProvider.overrideWithValue(terminal.dialer),
+      biometricsProvider.overrideWithValue(terminal.biometrics),
+      terminalTimingProvider.overrideWithValue(terminal.timing),
+      terminalNetworkProvider.overrideWithValue(terminal.network.stream),
       if (push case final p?)
         pushStateProvider.overrideWith((ref) => Stream.value(p)),
       if (status case final s?)
@@ -109,6 +121,11 @@ class TestEnv {
         pushEnabledProvider.overrideWithValue(false), // no Firebase here
         shareSourceProvider.overrideWithValue(share), // no platform channel
         linkOpenerProvider.overrideWithValue(links.open), // no browser
+        terminalStoreProvider.overrideWithValue(terminal.store),
+        sshDialerProvider.overrideWithValue(terminal.dialer),
+        biometricsProvider.overrideWithValue(terminal.biometrics),
+        terminalTimingProvider.overrideWithValue(terminal.timing),
+        terminalNetworkProvider.overrideWithValue(terminal.network.stream),
         if (push case final p?)
           pushStateProvider.overrideWith((ref) => Stream.value(p)),
         if (status case final s?)
@@ -144,6 +161,7 @@ Future<TestEnv> pumpDelve(
   PushState? push,
   AttachmentFakes? attachments,
   ShareSource? share,
+  TerminalFakes? terminal,
   Future<void> Function(TestEnv env)? before,
   bool settle = true,
 }) async {
@@ -154,6 +172,7 @@ Future<TestEnv> pumpDelve(
     push: push,
     attachments: attachments,
     share: share,
+    terminal: terminal,
   );
   addTearDown(env.dispose);
   setDesignSize(tester);
