@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'attachments_test.dart'
+    show FakeAttachmentApi, FakePicker, FakePrep, file;
 import 'support/files_fakes.dart';
 import 'support/harness.dart';
 import 'support/terminal_fakes.dart';
@@ -25,12 +27,20 @@ Future<TerminalFakes> openFiles(
   WidgetTester t, {
   bool setupDone = true,
   TerminalFakes? fakes,
+  FakePicker? picker,
 }) async {
   final terminal = fakes ?? TerminalFakes();
   await pumpDelve(
     t,
     settle: false,
     terminal: terminal,
+    attachments: picker == null
+        ? null
+        : AttachmentFakes(
+            api: FakeAttachmentApi(),
+            picker: picker,
+            prep: FakePrep(),
+          ),
     before: setupDone ? (_) => terminal.setUpDone() : null,
   );
   await t.tap(navItem('Files'));
@@ -489,5 +499,142 @@ void main() {
     await frames(t);
     expect(find.byKey(const Key('files.offline')), findsNothing);
     expect(find.byKey(const Key('files.list')), findsOneWidget);
+  });
+  group('writing (F2a)', () {
+    Finder row(String name) => find.byKey(Key('files.row.$name'));
+
+    Future<void> name(WidgetTester t, String text) async {
+      await t.enterText(find.byKey(const Key('files.name.field')), text);
+      await t.tap(find.byKey(const Key('files.name.ok')));
+      await frames(t);
+    }
+
+    testWidgets('upload: the source sheet, a taken name asks, keep both', (
+      t,
+    ) async {
+      final picker = FakePicker()
+        ..next = [file('notes.txt', size: 5), file('new.bin', size: 3)];
+      final fakes = await openFiles(t, picker: picker);
+      await t.tap(find.byKey(const Key('files.upload')));
+      await frames(t);
+      expect(find.text('Upload to Home'), findsOneWidget);
+      await t.tap(find.byKey(const Key('files.upload.files')));
+      await frames(t);
+      expect(picker.asked, ['files 100']);
+      expect(find.byKey(const Key('files.conflict')), findsOneWidget);
+      expect(find.textContaining('notes (2).txt'), findsOneWidget);
+      await t.tap(find.byKey(const Key('files.conflict.keepBoth')));
+      await frames(t, 20);
+      final fs = fakes.files.last!;
+      expect(fs.contents['/home/user/notes (2).txt'], hasLength(5));
+      expect(fs.contents['/home/user/new.bin'], hasLength(3));
+      expect(fs.contents['/home/user/notes.txt'], hasLength(18));
+      expect(row('notes (2).txt'), findsOneWidget);
+      expect(row('new.bin'), findsOneWidget);
+      expect(find.byKey(const Key('files.uploaded')), findsOneWidget);
+      expect(find.text('Uploaded to ~'), findsOneWidget);
+    });
+
+    testWidgets('new folder; rename, a taken name refused in the dialog', (
+      t,
+    ) async {
+      await openFiles(t);
+      await t.tap(find.byKey(const Key('files.menu')));
+      await frames(t);
+      await t.tap(find.byKey(const Key('files.menu.newFolder')));
+      await frames(t);
+      await name(t, 'a/b');
+      expect(find.text("A name can't contain /"), findsOneWidget);
+      await name(t, 'Projects');
+      expect(find.byKey(const Key('files.name.field')), findsNothing);
+      expect(row('Projects'), findsOneWidget);
+      await t.tap(find.byKey(const Key('files.menu.notes.txt')));
+      await frames(t);
+      await t.tap(find.byKey(const Key('files.act.rename')));
+      await frames(t);
+      await name(t, 'file2.log');
+      expect(find.text('file2.log already exists here'), findsOneWidget);
+      await name(t, 'todo.txt');
+      expect(row('todo.txt'), findsOneWidget);
+      expect(row('notes.txt'), findsNothing);
+    });
+
+    testWidgets('trash: move and undo; the trash screen restores, empties '
+        'behind a checkbox', (t) async {
+      await openFiles(t);
+      Future<void> trash(String n) async {
+        await t.tap(find.byKey(Key('files.menu.$n')));
+        await frames(t);
+        await t.tap(find.byKey(const Key('files.act.trash')));
+        await frames(t);
+      }
+
+      await trash('notes.txt');
+      expect(row('notes.txt'), findsNothing);
+      expect(find.byKey(const Key('files.trashed')), findsOneWidget);
+      await t.tap(find.text('Undo'));
+      await frames(t);
+      expect(row('notes.txt'), findsOneWidget);
+      await trash('notes.txt');
+      await trash('file2.log');
+      await t.tap(find.byKey(const Key('files.menu')));
+      await frames(t);
+      expect(find.text('Trash (2)'), findsOneWidget);
+      await t.tap(find.byKey(const Key('files.menu.trash')));
+      await frames(t, 20);
+      expect(find.byKey(const Key('trash.list')), findsOneWidget);
+      expect(
+        t.widget<Text>(find.byKey(const Key('trash.info'))).data,
+        startsWith('2 items · 2 KB'),
+      );
+      await t.tap(find.byKey(const Key('trash.restore.notes.txt')));
+      await frames(t);
+      expect(find.byKey(const Key('trash.item.notes.txt')), findsNothing);
+      expect(find.byKey(const Key('trash.item.file2.log')), findsOneWidget);
+      await t.tap(find.byKey(const Key('trash.menu')));
+      await frames(t);
+      await t.tap(find.byKey(const Key('trash.empty')));
+      await frames(t);
+      FilledButton ok() => t.widget<FilledButton>(
+        find.descendant(
+          of: find.byKey(const Key('trash.emptyOk')),
+          matching: find.byType(FilledButton),
+        ),
+      );
+      expect(ok().onPressed, isNull);
+      await t.tap(find.byKey(const Key('trash.emptySure')));
+      await t.pump();
+      expect(ok().onPressed, isNotNull);
+      await t.tap(find.byKey(const Key('trash.emptyOk')));
+      await frames(t);
+      expect(find.byKey(const Key('trash.none')), findsOneWidget);
+      await t.tap(find.byType(BackButton));
+      await frames(t, 20);
+      expect(row('notes.txt'), findsOneWidget);
+      expect(row('file2.log'), findsNothing);
+    });
+
+    testWidgets('outside home: no trash, delete permanently asks first', (
+      t,
+    ) async {
+      await openFiles(t);
+      await t.tap(find.byKey(const Key('files.crumb./')));
+      await frames(t);
+      await t.tap(row('usr'));
+      await frames(t);
+      await t.tap(row('bin'));
+      await frames(t);
+      await t.tap(find.byKey(const Key('files.menu.tool1')));
+      await frames(t);
+      expect(find.byKey(const Key('files.act.trash')), findsNothing);
+      await t.tap(find.byKey(const Key('files.act.deleteForever')));
+      await frames(t);
+      expect(find.byKey(const Key('files.deleteForever')), findsOneWidget);
+      expect(find.text('/usr/bin/tool1 · 1001 B'), findsOneWidget);
+      await t.tap(find.byKey(const Key('files.deleteForever.ok')));
+      await frames(t);
+      expect(row('tool1'), findsNothing);
+      expect(row('tool2'), findsOneWidget);
+    });
   });
 }

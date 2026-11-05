@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router.dart';
+import '../../attachments/picker.dart';
 import '../../files/device_files.dart';
 import '../../files/files_providers.dart';
 import '../../files/files_service.dart';
@@ -15,6 +16,7 @@ import '../../terminal/terminal_lock.dart';
 import '../../terminal/terminal_providers.dart';
 import '../../terminal/terminal_service.dart';
 import '../../theme/delve_theme.dart';
+import '../widgets/files_dialogs.dart';
 import '../widgets/files_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/skeleton.dart';
@@ -23,7 +25,7 @@ import 'file_preview_screen.dart';
 
 /// 23 Files: the desktop's filesystem as `csakos` sees it, over SFTP on the
 /// terminal's key and host, behind the terminal's lock (F1: browse,
-/// download, preview).
+/// download, preview; F2a: upload, new folder, rename, trash).
 class FilesScreen extends ConsumerStatefulWidget {
   const FilesScreen({super.key});
 
@@ -85,6 +87,43 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
     if (!mounted || !_visible) return;
     final l = AppLocalizations.of(context);
     final m = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
+    if (t.upload) {
+      final dir = parentPath(t.remotePath);
+      if (t.state == TransferState.done) {
+        m.showSnackBar(
+          SnackBar(
+            key: const Key('files.uploaded'),
+            content: Row(
+              children: [
+                SymbolIcon(
+                  FileIcons.done,
+                  filled: true,
+                  size: DelveTokens.iconMd,
+                  color: context.delve.okFg,
+                ),
+                const SizedBox(width: DelveTokens.space2),
+                Expanded(
+                  child: Text(l.filesUploaded(tildePath(dir, _service.home))),
+                ),
+              ],
+            ),
+            action: _service.path == dir
+                ? null
+                : SnackBarAction(
+                    label: l.filesShowFolder,
+                    onPressed: () => _open(dir),
+                  ),
+          ),
+        );
+      } else {
+        m.showSnackBar(
+          SnackBar(
+            content: Text(l.filesUploadFailedFile(t.name, t.error ?? '')),
+          ),
+        );
+      }
+      return;
+    }
     if (t.state == TransferState.done) {
       m.showSnackBar(
         SnackBar(
@@ -189,12 +228,130 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
       ..showSnackBar(SnackBar(content: Text(l.filesPathCopied)));
   }
 
+  void _snack(String text, {SnackBarAction? action, Key? key}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(key: key, content: Text(text), action: action));
+  }
+
+  /// The folder on screen as the upload sheet names it.
+  String _folderName(String dir) => dir == _service.home
+      ? AppLocalizations.of(context).filesQuickHome
+      : dir == '/'
+      ? '/'
+      : baseName(dir);
+
+  Future<void> _upload() async {
+    final dir = _service.path;
+    if (dir == null) return;
+    _terminal.lock.keepAlive();
+    final picked = await pickForUpload(
+      context,
+      ref.read(attachmentPickerProvider),
+      folder: _folderName(dir),
+      path: tildePath(dir, _service.home),
+    );
+    if (picked == null) return;
+    if (!mounted) return;
+    await uploadAsking(context, _service, dir, picked);
+  }
+
+  Future<void> _newFolder() async {
+    final dir = _service.path;
+    if (dir == null) return;
+    _terminal.lock.keepAlive();
+    final l = AppLocalizations.of(context);
+    await showNameDialog(
+      context,
+      title: l.filesNewFolder,
+      action: l.filesCreate,
+      submit: (name) async {
+        try {
+          await _service.makeFolder(name, dir: dir);
+          return null;
+        } on Exception catch (e) {
+          return writeErrorText(l, e);
+        }
+      },
+    );
+  }
+
+  Future<void> _rename(RemoteEntry e) async {
+    _terminal.lock.keepAlive();
+    final l = AppLocalizations.of(context);
+    await showNameDialog(
+      context,
+      title: l.filesRename,
+      action: l.filesRenameAction,
+      initial: e.name,
+      submit: (name) async {
+        try {
+          await _service.renameEntry(e, name);
+          return null;
+        } on Exception catch (err) {
+          return writeErrorText(l, err);
+        }
+      },
+    );
+  }
+
+  Future<void> _toTrash(RemoteEntry e) async {
+    final l = AppLocalizations.of(context);
+    try {
+      final item = await _service.moveToTrash(e);
+      _snack(
+        l.filesTrashed(e.name),
+        key: const Key('files.trashed'),
+        action: SnackBarAction(
+          label: l.filesUndo,
+          onPressed: () => unawaited(_undoTrash(item)),
+        ),
+      );
+    } on NoTrash {
+      if (mounted) await _deleteForever(e, otherFs: true);
+    } on Exception catch (err) {
+      _snack(l.filesTrashFailed(writeErrorText(l, err)));
+    }
+  }
+
+  Future<void> _undoTrash(TrashItem item) async {
+    final l = AppLocalizations.of(context);
+    try {
+      await _service.restore(item, onConflict: ConflictChoice.keepBoth);
+    } on Exception catch (err) {
+      _snack(l.trashRestoreFailed(writeErrorText(l, err)));
+    }
+  }
+
+  /// 23j: no trash (outside home, or another filesystem inside it).
+  Future<void> _deleteForever(RemoteEntry e, {bool otherFs = false}) async {
+    final l = AppLocalizations.of(context);
+    final ok = await confirmDeleteForever(
+      context,
+      what: [
+        tildePath(e.path, _service.home),
+        if (!e.isDir && e.size != null) sizeText(e.size!),
+      ].join(' · '),
+      body: otherFs ? l.filesNoTrashOtherFs : l.filesNoTrashBody,
+    );
+    if (!ok || !mounted) return;
+    try {
+      await _service.deletePermanently(e);
+      _snack(l.filesDeleted(e.name));
+    } on Exception catch (err) {
+      _snack(l.filesDeleteFailed(writeErrorText(l, err)));
+    }
+  }
+
   void _actions(RemoteEntry e) {
     _terminal.lock.keepAlive();
     final l = AppLocalizations.of(context);
     unawaited(
       showModalBottomSheet<void>(
         context: context,
+        // over the shell's snackbar (Moved to trash · Undo) and the nav
+        useRootNavigator: true,
         showDragHandle: true,
         isScrollControlled: true,
         builder: (ctx) {
@@ -204,15 +361,21 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
             String label,
             VoidCallback onTap, {
             String? hint,
+            bool alert = false,
           }) => ListTile(
             key: Key('files.act.$key'),
             minTileHeight: DelveTokens.touchTarget,
             leading: SymbolIcon(
               icon,
               size: 22,
-              color: ctx.colors.onSurfaceVariant,
+              color: alert ? ctx.delve.alertFg : ctx.colors.onSurfaceVariant,
             ),
-            title: Text(label, style: ctx.text.bodyLarge),
+            title: Text(
+              label,
+              style: ctx.text.bodyLarge!.copyWith(
+                color: alert ? ctx.delve.alertFg : null,
+              ),
+            ),
             subtitle: hint == null
                 ? null
                 : Text(
@@ -316,6 +479,29 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
                     l.filesActCopyPath,
                     () => unawaited(_copyPath(e)),
                   ),
+                  row(
+                    'rename',
+                    FileIcons.rename,
+                    l.filesRename,
+                    () => unawaited(_rename(e)),
+                  ),
+                  const Divider(height: 1),
+                  if (_service.canTrash(e))
+                    row(
+                      'trash',
+                      FileIcons.trash,
+                      l.filesActTrash,
+                      () => unawaited(_toTrash(e)),
+                      alert: true,
+                    )
+                  else
+                    row(
+                      'deleteForever',
+                      FileIcons.deleteForever,
+                      l.filesActDeleteForever,
+                      () => unawaited(_deleteForever(e)),
+                      alert: true,
+                    ),
                   const SizedBox(height: DelveTokens.space2),
                 ],
               ),
@@ -328,6 +514,7 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
 
   Future<void> _menu(BuildContext anchor) async {
     final l = AppLocalizations.of(context);
+    // where the menu opens: measured before the trash count is awaited
     final box = anchor.findRenderObject()! as RenderBox;
     final overlay = Overlay.of(anchor).context.findRenderObject()! as RenderBox;
     final position = RelativeRect.fromRect(
@@ -337,6 +524,16 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
       ),
       Offset.zero & overlay.size,
     );
+    int? trash;
+    try {
+      trash = await _service.trashCount().timeout(
+        const Duration(milliseconds: 600),
+        onTimeout: () => null,
+      );
+    } on Exception {
+      trash = null;
+    }
+    if (!mounted) return;
     PopupMenuItem<String> sortItem(SortKey key, String label) => PopupMenuItem(
       key: Key('files.sort.${key.name}'),
       value: 'sort.${key.name}',
@@ -375,17 +572,34 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
         sortItem(SortKey.modified, l.filesSortDate),
         const PopupMenuDivider(),
         PopupMenuItem(
+          key: const Key('files.menu.newFolder'),
+          value: 'newFolder',
+          enabled: _service.path != null,
+          child: Text(l.filesNewFolder),
+        ),
+        PopupMenuItem(
+          key: const Key('files.menu.trash'),
+          value: 'trash',
+          child: Text(trash == null ? l.filesTrash : l.filesTrashCount(trash)),
+        ),
+        PopupMenuItem(
           key: const Key('files.menu.refresh'),
           value: 'refresh',
           child: Text(l.filesMenuRefresh),
         ),
       ],
     );
+    if (choice == null || !mounted) return;
     switch (choice) {
       case 'hidden':
         _service.setShowHidden(show: !_service.showHidden);
       case 'refresh':
         unawaited(_service.refresh());
+      case 'newFolder':
+        unawaited(_newFolder());
+      case 'trash':
+        _terminal.lock.keepAlive();
+        unawaited(context.push(Routes.filesTrash));
       case final String c when c.startsWith('sort.'):
         final key = SortKey.values.byName(c.substring(5));
         if (key != _service.sort) _service.sortBy(key);
@@ -396,11 +610,20 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
     unawaited(
       showModalBottomSheet<void>(
         context: context,
+        // over the shell's snackbar (Moved to trash · Undo) and the nav
+        useRootNavigator: true,
         showDragHandle: true,
         isScrollControlled: true,
         builder: (ctx) => _TransfersSheet(
           service: _service,
-          onOpen: (t) => unawaited(_openDownload(t)),
+          onOpen: (t) {
+            if (t.upload) {
+              Navigator.of(ctx).pop();
+              _open(parentPath(t.remotePath));
+            } else {
+              unawaited(_openDownload(t));
+            }
+          },
         ),
       ),
     );
@@ -471,6 +694,20 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     return Scaffold(
+      floatingActionButton: ListenableBuilder(
+        listenable: Listenable.merge([_service, _terminal]),
+        // an empty folder has its own Upload button
+        builder: (context, _) => _canWrite && _service.entries!.isNotEmpty
+            ? FloatingActionButton.extended(
+                key: const Key('files.upload'),
+                backgroundColor: context.colors.primary,
+                foregroundColor: context.colors.onPrimary,
+                onPressed: () => unawaited(_upload()),
+                icon: const SymbolIcon(FileIcons.upload),
+                label: Text(l.filesUpload),
+              )
+            : const SizedBox.shrink(),
+      ),
       body: ListenableBuilder(
         listenable: Listenable.merge([_service, _terminal]),
         builder: (context, _) {
@@ -549,6 +786,17 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
         },
       ),
     );
+  }
+
+  /// Upload and New folder: a folder listed, live, unlocked.
+  bool get _canWrite {
+    final s = _service;
+    return _terminal.ready &&
+        !_terminal.lock.locked &&
+        s.phase == FilesPhase.live &&
+        s.path != null &&
+        s.entries != null &&
+        s.listProblem == null;
   }
 
   Widget _browser(BuildContext context, AppLocalizations l) {
@@ -661,6 +909,18 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
               onPressed: () => s.setShowHidden(show: true),
               child: Text(l.filesMenuHidden),
             ),
+          OutlinedButton.icon(
+            key: const Key('files.empty.newFolder'),
+            onPressed: () => unawaited(_newFolder()),
+            icon: const SymbolIcon(FileIcons.newFolder, size: 18),
+            label: Text(l.filesNewFolder),
+          ),
+          FilledButton.icon(
+            key: const Key('files.empty.upload'),
+            onPressed: () => unawaited(_upload()),
+            icon: const SymbolIcon(FileIcons.upload, size: 18),
+            label: Text(l.filesUpload),
+          ),
         ],
       );
     }
@@ -674,7 +934,8 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
           interactive: true,
           child: ListView.builder(
             key: const Key('files.list'),
-            padding: const EdgeInsets.only(bottom: DelveTokens.space4),
+            // room under the last row for the Upload button
+            padding: const EdgeInsets.only(bottom: 88),
             itemCount: entries.length,
             itemExtent: FilesTokens.row,
             itemBuilder: (context, i) {
@@ -750,7 +1011,10 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
               ),
           ],
         );
-      case FsFailure.unreachable || FsFailure.other:
+      case FsFailure.unreachable ||
+          FsFailure.other ||
+          FsFailure.exists ||
+          FsFailure.crossDevice:
         return FilesMessage(
           key: const Key('files.error'),
           icon: DelveIcons.error,
@@ -1001,6 +1265,7 @@ class _TransfersSheet extends StatelessWidget {
                           onCancel: () => service.cancel(t),
                           onOpen: () => onOpen(t),
                           onRetry: () => service.retryTransfer(t),
+                          home: service.home,
                         ),
                     ],
                   ),

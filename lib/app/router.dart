@@ -11,6 +11,7 @@ import '../ui/screens/connection_log_screen.dart';
 import '../ui/screens/dashboard_screen.dart';
 import '../ui/screens/file_preview_screen.dart';
 import '../ui/screens/files_screen.dart';
+import '../ui/screens/folder_picker_screen.dart';
 import '../ui/screens/more_screen.dart';
 import '../ui/screens/observability_screen.dart';
 import '../ui/screens/pairing_screen.dart';
@@ -23,6 +24,7 @@ import '../ui/screens/splash_screen.dart';
 import '../ui/screens/system_screen.dart';
 import '../ui/screens/terminal_screen.dart';
 import '../ui/screens/terminal_settings_screen.dart';
+import '../ui/screens/trash_screen.dart';
 import '../ui/screens/watch_detail_screen.dart';
 import '../ui/screens/watches_screen.dart';
 import '../ui/shell/app_shell.dart';
@@ -42,6 +44,9 @@ abstract final class Routes {
 
   /// 23h, with the entry as `extra`.
   static const filePreview = '/files/preview';
+
+  /// 23i: the desktop's trash, from the Files ⋮ menu.
+  static const filesTrash = '/files/trash';
   static const dashboard = '/dashboard';
   static const more = '/more';
 
@@ -67,6 +72,9 @@ abstract final class Routes {
 
   /// Share to Delve (design 17), on the root navigator.
   static const share = '/share';
+
+  /// 23k2: Share → Save to desktop folder, the files as `extra`.
+  static const shareSave = '/share/save';
 
   /// Screens that are only reachable in one session state.
   static const gates = {splash, pair, serverTooOld};
@@ -102,7 +110,19 @@ GoRouter buildRouter({
         path: Routes.serverTooOld,
         builder: (_, _) => const ServerTooOldScreen(),
       ),
-      GoRoute(path: Routes.share, builder: (_, _) => const ShareScreen()),
+      GoRoute(
+        path: Routes.share,
+        builder: (_, _) => const ShareScreen(),
+        routes: [
+          GoRoute(
+            path: 'save',
+            redirect: (_, state) =>
+                pickArgsOf(state.extra) == null ? Routes.share : null,
+            builder: (_, state) =>
+                FolderPickerScreen(files: pickArgsOf(state.extra)!),
+          ),
+        ],
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(shell: shell),
         branches: [
@@ -167,6 +187,11 @@ GoRouter buildRouter({
                         : null,
                     builder: (_, state) =>
                         FilePreviewScreen(args: previewArgsOf(state.extra)!),
+                  ),
+                  GoRoute(
+                    path: 'trash',
+                    parentNavigatorKey: rootKey,
+                    builder: (_, _) => const TrashScreen(),
                   ),
                 ],
               ),

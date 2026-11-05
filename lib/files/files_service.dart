@@ -2,14 +2,18 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
+import '../attachments/picker.dart';
 import '../terminal/ssh_link.dart';
 import '../terminal/terminal_service.dart';
 import 'device_files.dart';
 import 'remote_fs.dart';
 import 'sftp_fs.dart';
+
+part 'files_ops.dart';
 
 /// Where the Files tab's connection is.
 enum FilesPhase {
@@ -45,16 +49,43 @@ class ListProblem {
 
 enum TransferState { queued, running, done, failed, cancelled }
 
-/// One download to the phone.
+enum TransferKind { download, upload }
+
+/// One download to the phone, or one upload to the desktop.
 class Transfer {
-  Transfer._(this.id, this.entry);
+  Transfer._(
+    this.id,
+    this.entry, {
+    this.kind = TransferKind.download,
+    this.source,
+    this.replace = false,
+  }) : _size = entry.size,
+       remotePath = entry.path;
 
   final int id;
+
+  /// A download: the desktop's file. An upload: the file it becomes (its
+  /// name and size as picked).
   final RemoteEntry entry;
+  final TransferKind kind;
+
+  /// An upload's file on the phone.
+  final PickedAttachment? source;
+
+  /// An upload that replaces the file of that name (it goes to the trash
+  /// once the new one is there).
+  final bool replace;
+
+  /// Where an upload lands (another free name if one appeared meanwhile).
+  String remotePath;
+
+  int? _size;
   TransferState state = TransferState.queued;
   int bytes = 0;
-  int? get total => entry.size;
+  int? get total => _size;
   String? error;
+
+  bool get upload => kind == TransferKind.upload;
 
   /// The Downloads/Delve entry once done.
   String? uri;
@@ -62,7 +93,7 @@ class Transfer {
   DateTime? endedAt;
   bool _cancel = false;
 
-  String get name => entry.name;
+  String get name => upload ? baseName(remotePath) : entry.name;
   bool get active =>
       state == TransferState.queued || state == TransferState.running;
 
@@ -271,6 +302,9 @@ class FilesService extends ChangeNotifier {
 
   bool _loaded = false;
 
+  /// The folder "Save to desktop folder" last saved to.
+  String? _saveFolder;
+
   Future<void> _loadPrefs() async {
     if (_loaded) return;
     _loaded = true;
@@ -282,6 +316,9 @@ class FilesService extends ChangeNotifier {
       _sort = SortKey.values.asNameMap()[j['sort']] ?? SortKey.name;
       _ascending = j['ascending'] != false;
       if (j['path'] case final String p when p.startsWith('/')) _path = p;
+      if (j['saveTo'] case final String p when p.startsWith('/')) {
+        _saveFolder = p;
+      }
     } on Object {
       // defaults
     }
@@ -297,6 +334,7 @@ class FilesService extends ChangeNotifier {
               'sort': _sort.name,
               'ascending': _ascending,
               'path': ?_path,
+              'saveTo': ?_saveFolder,
             }),
           )
           .catchError((Object _) {}),
@@ -692,10 +730,11 @@ class FilesService extends ChangeNotifier {
   // ------------------------------------------------------------ download
 
   /// Queues [e] for Downloads/Delve.
-  Transfer download(RemoteEntry e) {
+  Transfer download(RemoteEntry e) => _enqueue(Transfer._(_nextTransfer++, e));
+
+  Transfer _enqueue(Transfer t) {
     terminal.lock.keepAlive();
     if (!_transfers.any((t) => t.active)) _batch.clear();
-    final t = Transfer._(_nextTransfer++, e);
     _transfers.add(t);
     _batch.add(t.id);
     _notify();
@@ -716,7 +755,19 @@ class FilesService extends ChangeNotifier {
   void retryTransfer(Transfer t) {
     if (t.active) return;
     _transfers.remove(t);
-    download(t.entry);
+    if (t.upload) {
+      _enqueue(
+        Transfer._(
+          _nextTransfer++,
+          t.entry,
+          kind: TransferKind.upload,
+          source: t.source,
+          replace: t.replace,
+        ),
+      );
+    } else {
+      download(t.entry);
+    }
   }
 
   void clearFinished() {
@@ -756,6 +807,7 @@ class FilesService extends ChangeNotifier {
   }
 
   Future<void> _runOne(RemoteFs fs, Transfer t) async {
+    if (t.upload) return _runUpload(fs, t);
     t.state = TransferState.running;
     t.startedAt = _now();
     t.bytes = 0;

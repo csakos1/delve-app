@@ -205,6 +205,181 @@ class SftpRemoteFs implements RemoteFs {
     }
   }
 
+  // ---------------------------------------------------------------- write
+
+  @override
+  Future<RemoteEntry?> lstat(String path) async {
+    final SftpFileAttrs a;
+    try {
+      a = await _sftp.stat(path, followLink: false);
+    } on SftpStatusError catch (e) {
+      if (e.code == SftpStatusCode.noSuchFile) return null;
+      return _guard(path, () => throw e);
+    } on Object catch (e) {
+      return _guard(path, () => throw e);
+    }
+    final link = a.isSymbolicLink
+        ? await _sftp.readlink(path).catchError((Object _) => '?')
+        : null;
+    return RemoteEntry(
+      name: baseName(path),
+      path: path,
+      kind: a.isDirectory
+          ? EntryKind.directory
+          : a.isFile
+          ? EntryKind.file
+          : EntryKind.other,
+      size: a.size,
+      modified: _time(a.modifyTime),
+      mode: a.mode?.value,
+      link: link,
+    );
+  }
+
+  /// A generic SFTP failure that is really "already there".
+  Future<Never> _existsOr(String path, SftpStatusError e) async {
+    if (e.code == SftpStatusCode.failure && await lstat(path) != null) {
+      throw RemoteFsError(FsFailure.exists, path);
+    }
+    return _guard(path, () => throw e);
+  }
+
+  @override
+  Future<void> mkdir(String path) async {
+    try {
+      await _sftp.mkdir(path);
+    } on SftpStatusError catch (e) {
+      await _existsOr(path, e);
+    }
+  }
+
+  @override
+  Future<void> rename(String from, String to) async {
+    try {
+      await _sftp.rename(from, to);
+    } on SftpStatusError catch (e) {
+      // sftp-server answers EXDEV with a generic failure (F0)
+      if (e.code == SftpStatusCode.failure) {
+        throw RemoteFsError(FsFailure.crossDevice, '$from → $to');
+      }
+      await _guard(from, () => throw e);
+    }
+  }
+
+  @override
+  Future<void> writeFile(
+    String path,
+    Uint8List bytes, {
+    bool exclusive = false,
+  }) async {
+    final SftpFile f;
+    try {
+      f = await _sftp.open(
+        path,
+        mode: exclusive
+            ? SftpFileOpenMode.create |
+                  SftpFileOpenMode.exclusive |
+                  SftpFileOpenMode.write
+            : SftpFileOpenMode.create |
+                  SftpFileOpenMode.truncate |
+                  SftpFileOpenMode.write,
+      );
+    } on SftpStatusError catch (e) {
+      await _existsOr(path, e);
+    }
+    await _guard(path, () async {
+      try {
+        await f.writeBytes(bytes);
+      } finally {
+        await f.close();
+      }
+    });
+  }
+
+  @override
+  Future<int> upload(
+    String path,
+    Stream<Uint8List> data, {
+    void Function(int bytes)? onProgress,
+    bool Function()? cancelled,
+  }) => _guard(path, () async {
+    final f = await _sftp.open(
+      path,
+      mode:
+          SftpFileOpenMode.create |
+          SftpFileOpenMode.truncate |
+          SftpFileOpenMode.write,
+    );
+    var total = 0;
+    try {
+      // a cancel ends the stream: what is in flight is still acknowledged
+      final source = data.takeWhile((_) => !(cancelled?.call() ?? false));
+      await f
+          .write(
+            source,
+            onProgress: (n) {
+              total = n;
+              onProgress?.call(n);
+            },
+          )
+          .done;
+      return total;
+    } finally {
+      await f.close();
+    }
+  });
+
+  /// [command] on the desktop; a failure says why (stderr).
+  Future<String> _exec(
+    String path,
+    String command, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    final SSHRunResult r;
+    try {
+      r = await _client.runWithResult(command).timeout(timeout);
+    } on Object catch (e) {
+      throw RemoteFsError(
+        _client.isClosed ? FsFailure.unreachable : FsFailure.other,
+        '$e',
+      );
+    }
+    const text = Utf8Decoder(allowMalformed: true);
+    if (r.exitCode == 0) return text.convert(r.stdout);
+    final err = text.convert(r.stderr).trim();
+    throw RemoteFsError(
+      err.contains('Permission denied')
+          ? FsFailure.denied
+          : err.contains('No such file')
+          ? FsFailure.notFound
+          : FsFailure.other,
+      err.isEmpty ? '$path (exit ${r.exitCode})' : err,
+    );
+  }
+
+  @override
+  Future<void> deleteTree(String path) async {
+    if (path == '/' || path.isEmpty) {
+      throw RemoteFsError(FsFailure.denied, path);
+    }
+    // a big tree (a trash of node_modules) takes a while
+    await _exec(
+      path,
+      'rm -rf -- ${shellQuote(path)}',
+      timeout: const Duration(minutes: 5),
+    );
+  }
+
+  @override
+  Future<int?> diskUsage(String path) async {
+    try {
+      final out = await _exec(path, 'du -sb -- ${shellQuote(path)}');
+      return int.tryParse(out.split(RegExp(r'\s')).first);
+    } on RemoteFsError {
+      return null;
+    }
+  }
+
   @override
   Future<(int, int)?> usage(String path) async {
     try {

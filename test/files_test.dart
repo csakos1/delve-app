@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:delve/attachments/picker.dart';
 import 'package:delve/files/files_service.dart';
 import 'package:delve/files/remote_fs.dart';
 import 'package:delve/terminal/secrets.dart';
@@ -14,6 +16,7 @@ import 'support/terminal_fakes.dart';
 Future<(FilesService, TerminalFakes)> makeService({
   bool setUp = true,
   FakeFilesDialer? dialer,
+  DateTime Function()? now,
 }) async {
   final fakes = TerminalFakes(files: dialer);
   if (setUp) await fakes.setUpDone();
@@ -30,6 +33,7 @@ Future<(FilesService, TerminalFakes)> makeService({
     dialer: fakes.files,
     device: fakes.device,
     timing: fastFilesTiming,
+    now: now,
   );
   addTearDown(files.dispose);
   return (files, fakes);
@@ -381,6 +385,266 @@ void main() {
       await settle();
       expect(files.phase, FilesPhase.live);
       expect(fakes.files.opened.length, 2);
+    });
+  });
+
+  group('writing (F2a)', () {
+    Future<(FilesService, FakeRemoteFs)> live({
+      DateTime Function()? now,
+    }) async {
+      final (files, fakes) = await makeService(now: now);
+      files.setVisible(visible: true);
+      await until(() => files.entries != null);
+      await settle();
+      return (files, fakes.files.last!);
+    }
+
+    List<String> names(FilesService f) => [for (final e in f.entries!) e.name];
+
+    Matcher fails(FsFailure f) =>
+        throwsA(isA<RemoteFsError>().having((e) => e.failure, 'failure', f));
+
+    PickedAttachment picked(String name, List<int> bytes) => PickedAttachment(
+      kind: 'file',
+      name: name,
+      size: bytes.length,
+      read: () async => Uint8List.fromList(bytes),
+    );
+
+    test('a new folder; a rename; taken and bad names are refused', () async {
+      final (files, fs) = await live();
+      expect(await files.makeFolder(' Projects '), '/home/user/Projects');
+      expect(names(files), contains('Projects'));
+      expect(fs.tree['/home/user/Projects'], isEmpty);
+      await expectLater(files.makeFolder('Projects'), fails(FsFailure.exists));
+      await expectLater(
+        files.makeFolder('a/b'),
+        throwsA(
+          isA<BadName>().having((e) => e.problem, 'p', NameProblem.slash),
+        ),
+      );
+      await expectLater(files.makeFolder('..'), throwsA(isA<BadName>()));
+      final notes = files.entries!.firstWhere((e) => e.name == 'notes.txt');
+      await files.renameEntry(notes, 'todo.txt');
+      expect(names(files), contains('todo.txt'));
+      expect(names(files), isNot(contains('notes.txt')));
+      expect(
+        utf8.decode(fs.contents['/home/user/todo.txt']!),
+        startsWith('line'),
+      );
+      // the SFTP rename would replace file2.log: refused before it
+      final todo = files.entries!.firstWhere((e) => e.name == 'todo.txt');
+      await expectLater(
+        files.renameEntry(todo, 'file2.log'),
+        fails(FsFailure.exists),
+      );
+      expect(fs.contents['/home/user/file2.log'], hasLength(2000));
+    });
+
+    test('trash: the info first, a second item of the same name, restore, '
+        'none outside home or across filesystems', () async {
+      final at = DateTime(2026, 11, 5, 21, 7, 3);
+      final (files, fs) = await live(now: () => at);
+      const t = '/home/user/.local/share/Trash';
+      RemoteEntry entry(String name) =>
+          files.entries!.firstWhere((e) => e.name == name);
+      expect(files.canTrash(entry('notes.txt')), isTrue);
+      await files.moveToTrash(entry('notes.txt'));
+      expect(names(files), isNot(contains('notes.txt')));
+      expect(fs.contents['$t/files/notes.txt'], isNotNull);
+      final info = utf8.decode(fs.contents['$t/info/notes.txt.trashinfo']!);
+      expect(
+        info,
+        '[Trash Info]\nPath=/home/user/notes.txt\n'
+        'DeletionDate=2026-11-05T21:07:03\n',
+      );
+      // another notes.txt: notes.2.txt in the trash
+      await fs.writeFile(
+        '/home/user/notes.txt',
+        Uint8List.fromList(utf8.encode('second')),
+      );
+      await files.refresh();
+      await files.moveToTrash(entry('notes.txt'));
+      expect(fs.contents['$t/files/notes.2.txt'], isNotNull);
+      expect(fs.contents['$t/info/notes.2.txt.trashinfo'], isNotNull);
+      final items = await files.trashItems();
+      expect(items, hasLength(2));
+      expect(items.map((i) => i.original).toSet(), {'/home/user/notes.txt'});
+      expect(items.first.deleted, at);
+      expect(await files.trashSize(), 18 + 6);
+      expect(await files.trashCount(), 2);
+      // back where it was; the second finds the name taken
+      final first = items.firstWhere((i) => i.entry.name == 'notes.txt');
+      final second = items.firstWhere((i) => i.entry.name == 'notes.2.txt');
+      expect(await files.restore(first), '/home/user/notes.txt');
+      expect(
+        utf8.decode(fs.contents['/home/user/notes.txt']!),
+        startsWith('line'),
+      );
+      expect(fs.contents['$t/info/notes.txt.trashinfo'], isNull);
+      await expectLater(files.restore(second), fails(FsFailure.exists));
+      expect(
+        await files.restore(second, onConflict: ConflictChoice.keepBoth),
+        '/home/user/notes (2).txt',
+      );
+      expect(await files.trashItems(), isEmpty);
+      // a folder deleted from a folder that is gone: made again
+      await files.open('/home/user/Documents/hajos');
+      await files.moveToTrash(entry('evkonyv'));
+      await files.open('/home/user/Documents');
+      await files.moveToTrash(entry('hajos'));
+      final evkonyv = (await files.trashItems()).firstWhere(
+        (i) => i.name == 'evkonyv',
+      );
+      await files.restore(evkonyv);
+      expect(
+        fs.contents['/home/user/Documents/hajos/evkonyv/borito.png'],
+        hasLength(64),
+      );
+      // outside home: no trash; deleted for good
+      await files.open('/usr/bin');
+      final tool = entry('tool1');
+      expect(files.canTrash(tool), isFalse);
+      await expectLater(files.moveToTrash(tool), throwsA(isA<NoTrash>()));
+      await files.deletePermanently(tool);
+      expect(names(files), isNot(contains('tool1')));
+      // another filesystem inside home: no trash, and no info left behind
+      fs.otherDevices.add('/home/user/delve-app');
+      await files.open('/home/user/delve-app');
+      await expectLater(
+        files.moveToTrash(entry('pubspec.yaml')),
+        throwsA(isA<NoTrash>()),
+      );
+      expect(fs.tree['$t/info']!.map((e) => e.name), ['hajos.trashinfo']);
+    });
+
+    test('trash: delete one for good, empty it', () async {
+      final (files, fs) = await live();
+      const t = '/home/user/.local/share/Trash';
+      for (final n in ['notes.txt', 'file2.log', 'file10.log']) {
+        await files.moveToTrash(files.entries!.firstWhere((e) => e.name == n));
+      }
+      final items = await files.trashItems();
+      await files.deleteFromTrash(
+        items.firstWhere((i) => i.name == 'file2.log'),
+      );
+      expect((await files.trashItems()).map((i) => i.name).toSet(), {
+        'notes.txt',
+        'file10.log',
+      });
+      await files.emptyTrash();
+      expect(await files.trashItems(), isEmpty);
+      expect(fs.tree['$t/files'], isEmpty);
+      expect(fs.tree['$t/info'], isEmpty);
+    });
+
+    test('upload: skip, replace (the old one to the trash), keep both; '
+        'a .part file renamed at the end; cancel', () async {
+      final (files, fs) = await live();
+      final done = <Transfer>[];
+      final sub = files.finished.listen(done.add);
+      addTearDown(sub.cancel);
+      final here = await files.entriesIn('/home/user');
+      final transfers = files.upload(
+        '/home/user',
+        [
+          picked('notes.txt', utf8.encode('new notes')),
+          picked('file2.log', utf8.encode('new log')),
+          picked('file10.log', utf8.encode('skipped')),
+          picked('photo.jpg', List.filled(600 * 1024, 3)),
+          picked('photo.jpg', [1, 2]),
+        ],
+        here: here,
+        choices: const {
+          'notes.txt': ConflictChoice.keepBoth,
+          'file2.log': ConflictChoice.replace,
+          'file10.log': ConflictChoice.skip,
+        },
+      );
+      expect(transfers.map((t) => t.name), [
+        'notes (2).txt',
+        'file2.log',
+        'photo.jpg',
+        'photo (2).jpg',
+      ]);
+      await until(() => done.length == 4);
+      expect(transfers.map((t) => t.state).toSet(), {TransferState.done});
+      expect(
+        utf8.decode(fs.contents['/home/user/notes (2).txt']!),
+        'new notes',
+      );
+      expect(
+        utf8.decode(fs.contents['/home/user/notes.txt']!),
+        startsWith('line'),
+      );
+      expect(utf8.decode(fs.contents['/home/user/file2.log']!), 'new log');
+      expect(
+        fs.contents['/home/user/.local/share/Trash/files/file2.log'],
+        hasLength(2000),
+      );
+      expect(fs.contents['/home/user/file10.log'], isNull);
+      expect(fs.contents['/home/user/photo.jpg'], hasLength(600 * 1024));
+      expect(transfers[2].bytes, 600 * 1024);
+      expect(fs.contents['/home/user/photo (2).jpg'], [1, 2]);
+      expect(fs.contents.keys.where((k) => k.endsWith('.part')), isEmpty);
+      await until(() => names(files).contains('photo (2).jpg'));
+      // cancel: no file, no .part
+      fs.holdUploads = Completer<void>();
+      final [c] = files.upload('/home/user', [
+        picked('big.bin', [1, 2, 3]),
+      ]);
+      await until(() => c.state == TransferState.running);
+      files.cancel(c);
+      fs.holdUploads!.complete();
+      await until(() => c.state == TransferState.cancelled);
+      await settle();
+      expect(fs.contents.keys.where((k) => k.contains('big.bin')), isEmpty);
+      // a denied folder: failed, retried later
+      fs.denied.add('/tmp');
+      final [d] = files.upload('/tmp', [
+        picked('x.txt', [1]),
+      ]);
+      await until(() => d.state == TransferState.failed);
+      await settle();
+      expect(d.error, 'Permission denied');
+      expect(done.last.id, d.id);
+    });
+
+    test('save-to folder: Downloads first, then the last one used', () async {
+      final (files, fakes) = await makeService();
+      files.setVisible(visible: true);
+      await until(() => files.entries != null);
+      expect(files.saveFolder, '/home/user/Downloads');
+      files.rememberSaveFolder('/home/user/Documents');
+      await settle();
+      final raw = await fakes.store.read(FilesService.prefsKey);
+      expect(raw, contains('"saveTo":"/home/user/Documents"'));
+      expect(files.saveFolder, '/home/user/Documents');
+    });
+
+    test('names: free names, extensions, trash info round trip', () {
+      expect(keepBothName('a.tar.gz', 2), 'a.tar (2).gz');
+      expect(keepBothName('.zshrc', 3), '.zshrc (3)');
+      expect(trashName('photo.jpg', 2), 'photo.2.jpg');
+      expect(trashName('photo.jpg', 1), 'photo.jpg');
+      expect(freeName('x.txt', {'x.txt', 'x (2).txt'}.contains), 'x (3).txt');
+      expect(checkName(''), NameProblem.empty);
+      expect(checkName('a' * 256), NameProblem.tooLong);
+      expect(checkName('é' * 128), NameProblem.tooLong);
+      expect(checkName('ok name.txt'), isNull);
+      expect(
+        encodeTrashPath('/home/u/Árvíz tűrő!.txt'),
+        '/home/u/%C3%81rv%C3%ADz%20t%C5%B1r%C5%91%21.txt',
+      );
+      final info = parseTrashInfo(
+        trashInfo('/home/u/a b/ő.txt', DateTime(2026, 1, 2, 3, 4, 5)),
+      )!;
+      expect(info.path, '/home/u/a b/ő.txt');
+      expect(info.deleted, DateTime(2026, 1, 2, 3, 4, 5));
+      expect(parseTrashInfo('[Other]\nPath=/x\n'), isNull);
+      expect(isInside('/home/user/x', '/home/user'), isTrue);
+      expect(isInside('/home/user', '/home/user'), isFalse);
+      expect(isInside('/home/username', '/home/user'), isFalse);
     });
   });
 }

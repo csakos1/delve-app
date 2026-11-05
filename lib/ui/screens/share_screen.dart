@@ -12,6 +12,9 @@ import '../../attachments/composer_attachments.dart';
 import '../../attachments/image_prep.dart';
 import '../../attachments/picker.dart';
 import '../../data/db/database.dart';
+import '../../files/files_providers.dart';
+import '../../files/files_service.dart';
+import '../../files/remote_fs.dart';
 import '../../l10n/app_localizations.dart';
 import '../../share/share_channel.dart';
 import '../../sync/connection_status.dart';
@@ -21,11 +24,14 @@ import '../chat/attachments.dart';
 import '../chat/composer.dart';
 import '../format.dart';
 import '../widgets/chat_row.dart';
+import '../widgets/files_ui.dart';
 import '../widgets/page_scaffolds.dart';
+import 'folder_picker_screen.dart';
 
 /// 17 Share to Delve: what another app shared goes into the composer (photos
 /// and files as chips that upload at once, text into the field); the user
 /// picks a new chat (the default) or an existing one, and Send opens it.
+/// Photos and files can instead be saved to a desktop folder (23k2).
 class ShareScreen extends ConsumerStatefulWidget {
   const ShareScreen({super.key});
 
@@ -46,6 +52,16 @@ class _ShareScreenState extends ConsumerState<ShareScreen> {
   /// An existing chat's Thinking switch until the server confirms it.
   final Map<String, bool> _thinkingPending = {};
 
+  /// The shared photos and files as they came (Save to desktop folder
+  /// uploads the originals).
+  final List<PickedAttachment> _shared = [];
+
+  /// Files can save to the desktop (the terminal is set up), and where
+  /// the picker opens.
+  bool _desktop = false;
+  String? _lastFolder;
+  String? _home;
+
   @override
   void initState() {
     super.initState();
@@ -56,6 +72,30 @@ class _ShareScreenState extends ConsumerState<ShareScreen> {
     );
     // taking it changes a provider: not while the tree builds
     WidgetsBinding.instance.addPostFrameCallback((_) => _takePending());
+    unawaited(_loadDesktop());
+  }
+
+  Future<void> _loadDesktop() async {
+    final files = ref.read(filesServiceProvider);
+    try {
+      final setUp = await files.isSetUp();
+      final last = setUp ? await files.lastSaveFolder() : null;
+      if (!mounted) return;
+      setState(() {
+        _desktop = setUp;
+        _lastFolder = last;
+        _home = files.home;
+      });
+    } on Exception {
+      // no desktop destination
+    }
+  }
+
+  void _saveToDesktop() {
+    if (_shared.isEmpty) return;
+    unawaited(
+      context.push(Routes.shareSave, extra: FolderPickArgs(List.of(_shared))),
+    );
   }
 
   @override
@@ -82,6 +122,7 @@ class _ShareScreenState extends ConsumerState<ShareScreen> {
         _text.selection = const TextSelection.collapsed(offset: 0);
       }
     }
+    _shared.addAll(p.files);
     final left = _attachments.addAll(p.files) + p.skipped;
     if (left > 0) {
       _snack(l.attachLeftOut(left, kMaxAttachments));
@@ -221,6 +262,32 @@ class _ShareScreenState extends ConsumerState<ShareScreen> {
                       DelveIcons.edit,
                       color: cs.onSurfaceVariant,
                     ),
+                  ),
+                  const Divider(indent: 72),
+                  _SectionLabel(l.shareSaveSection),
+                  ListTile(
+                    key: const Key('share.saveToDesktop'),
+                    enabled: _desktop && _shared.isNotEmpty,
+                    leading: SymbolIcon(
+                      FileIcons.saveToDesktop,
+                      color: cs.onSurfaceVariant,
+                    ),
+                    title: title(l.shareSaveToDesktop),
+                    subtitle: Text(
+                      !_desktop
+                          ? l.shareSaveNotSetUp
+                          : _shared.isEmpty
+                          ? l.shareSaveNoFiles
+                          : _lastFolder == null
+                          ? l.shareSaveChoose
+                          : l.shareSaveLast(tildePath(_lastFolder!, _home)),
+                      style: muted,
+                    ),
+                    trailing: SymbolIcon(
+                      FileIcons.chevron,
+                      color: cs.onSurfaceVariant,
+                    ),
+                    onTap: _saveToDesktop,
                   ),
                   if (chats.isNotEmpty) ...[
                     const Divider(indent: 72),

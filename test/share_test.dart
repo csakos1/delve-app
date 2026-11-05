@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:delve/data/db/store.dart';
+import 'package:delve/files/files_service.dart';
 import 'package:delve/share/share_channel.dart';
 import 'package:delve/sync/connection_status.dart';
 import 'package:delve/ui/screens/share_screen.dart';
@@ -294,6 +295,63 @@ void main() {
       await t.tap(find.byKey(const Key('composer.send')));
       await t.pump();
       expect(actions.calls.where((c) => c.startsWith('send')), isEmpty);
+    });
+
+    testWidgets('save to a desktop folder: unlock, the picker, a taken name; '
+        'Files opens there', (t) async {
+      final env = await pumpDelve(
+        t,
+        settle: false,
+        actions: actions,
+        status: liveStatus,
+        attachments: AttachmentFakes(
+          api: api,
+          picker: FakePicker(),
+          prep: FakePrep(),
+        ),
+        share: source,
+        before: (env) async {
+          actions.db = env.db;
+          await env.terminal.setUpDone();
+        },
+      );
+      Future<void> frames([int n = 10]) async {
+        for (var i = 0; i < n; i++) {
+          await t.pump(const Duration(milliseconds: 50));
+        }
+      }
+
+      source.add(SharedPayload(files: [file('notes.txt', size: 5)]));
+      await frames();
+      expect(find.text('Choose a folder on the desktop'), findsOneWidget);
+      await t.tap(find.byKey(const Key('share.saveToDesktop')));
+      await frames(20);
+      expect(find.byKey(const Key('save.locked')), findsOneWidget);
+      await t.tap(find.byKey(const Key('save.unlock')));
+      await frames();
+      expect(
+        t.widget<Text>(find.byKey(const Key('save.path'))).data,
+        '~/Downloads',
+      );
+      expect(find.byKey(const Key('save.empty')), findsOneWidget);
+      await t.tap(find.byKey(const Key('files.quick./home/user')));
+      await frames();
+      expect(
+        find.byKey(const ValueKey('save.entry.Documents')),
+        findsOneWidget,
+      );
+      await t.tap(find.byKey(const Key('save.here')));
+      await frames();
+      await t.tap(find.byKey(const Key('files.conflict.keepBoth')));
+      await frames(30);
+      final fs = env.terminal.files.last!;
+      expect(fs.contents['/home/user/notes (2).txt'], hasLength(5));
+      expect(find.text('Share to Delve'), findsNothing);
+      expect(find.byKey(const Key('files.row.notes (2).txt')), findsOneWidget);
+      final raw = await t.runAsync(
+        () => env.terminal.store.read(FilesService.prefsKey),
+      );
+      expect(raw, contains('"saveTo":"/home/user"'));
     });
 
     testWidgets('not paired: the share waits', (t) async {

@@ -4659,6 +4659,432 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'It may be damaged, or not really a PDF. Download it to try another app.'**
   String get filesPdfBrokenBody;
+
+  /// No description provided for @filesUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get filesUpload;
+
+  /// No description provided for @filesUploadTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload to {folder}'**
+  String filesUploadTo(String folder);
+
+  /// No description provided for @filesUploadPhotosHint.
+  ///
+  /// In en, this message translates to:
+  /// **'From the gallery'**
+  String get filesUploadPhotosHint;
+
+  /// No description provided for @filesUploadCameraHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get filesUploadCameraHint;
+
+  /// No description provided for @filesUploadFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get filesUploadFiles;
+
+  /// No description provided for @filesUploadFilesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone storage, Drive…'**
+  String get filesUploadFilesHint;
+
+  /// No description provided for @filesUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded to {folder}'**
+  String filesUploaded(String folder);
+
+  /// No description provided for @filesUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload: {reason}'**
+  String filesUploadFailed(String reason);
+
+  /// No description provided for @filesUploadFailedFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload {name}: {reason}'**
+  String filesUploadFailedFile(String name, String reason);
+
+  /// No description provided for @filesShowFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Show folder'**
+  String get filesShowFolder;
+
+  /// No description provided for @filesNewFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'New folder'**
+  String get filesNewFolder;
+
+  /// No description provided for @filesCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get filesCreate;
+
+  /// No description provided for @filesRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get filesRename;
+
+  /// No description provided for @filesRenameAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get filesRenameAction;
+
+  /// No description provided for @filesNameEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get filesNameEmpty;
+
+  /// No description provided for @filesNameDots.
+  ///
+  /// In en, this message translates to:
+  /// **'“.” and “..” can\'t be names'**
+  String get filesNameDots;
+
+  /// No description provided for @filesNameSlash.
+  ///
+  /// In en, this message translates to:
+  /// **'A name can\'t contain /'**
+  String get filesNameSlash;
+
+  /// No description provided for @filesNameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Too long: 255 bytes at most'**
+  String get filesNameTooLong;
+
+  /// No description provided for @filesNameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} already exists here'**
+  String filesNameTaken(String name);
+
+  /// No description provided for @filesWriteDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied (Files never uses sudo)'**
+  String get filesWriteDenied;
+
+  /// No description provided for @filesWriteOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection to the desktop'**
+  String get filesWriteOffline;
+
+  /// No description provided for @filesFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get filesFolder;
+
+  /// No description provided for @filesConflictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **' already exists here'**
+  String get filesConflictTitle;
+
+  /// No description provided for @filesConflictHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Here'**
+  String get filesConflictHere;
+
+  /// No description provided for @filesConflictIncoming.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get filesConflictIncoming;
+
+  /// No description provided for @filesConflictSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get filesConflictSkip;
+
+  /// No description provided for @filesConflictSkipHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the one here, leave this one out'**
+  String get filesConflictSkipHint;
+
+  /// No description provided for @filesConflictReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get filesConflictReplace;
+
+  /// No description provided for @filesConflictReplaceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The one here goes to the desktop\'s trash'**
+  String get filesConflictReplaceHint;
+
+  /// No description provided for @filesConflictReplaceFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'A folder is never replaced'**
+  String get filesConflictReplaceFolder;
+
+  /// No description provided for @filesConflictKeepBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep both'**
+  String get filesConflictKeepBoth;
+
+  /// No description provided for @filesConflictKeepBothHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves as {name}'**
+  String filesConflictKeepBothHint(String name);
+
+  /// No description provided for @filesConflictAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to all {count} conflicts'**
+  String filesConflictAll(int count);
+
+  /// No description provided for @filesConflictCancelUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel upload'**
+  String get filesConflictCancelUpload;
+
+  /// No description provided for @filesActTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to trash'**
+  String get filesActTrash;
+
+  /// No description provided for @filesActDeleteForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently…'**
+  String get filesActDeleteForever;
+
+  /// No description provided for @filesTrashed.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} moved to the trash'**
+  String filesTrashed(String name);
+
+  /// No description provided for @filesUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get filesUndo;
+
+  /// No description provided for @filesTrashFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t move to the trash: {reason}'**
+  String filesTrashFailed(String reason);
+
+  /// No description provided for @filesDeleteForeverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently?'**
+  String get filesDeleteForeverTitle;
+
+  /// No description provided for @filesDeleteForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently'**
+  String get filesDeleteForever;
+
+  /// No description provided for @filesNoTrashBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Only your home folder has a trash. Files outside it are deleted at once, and this can\'t be undone.'**
+  String get filesNoTrashBody;
+
+  /// No description provided for @filesNoTrashOtherFs.
+  ///
+  /// In en, this message translates to:
+  /// **'This is on another filesystem than your home folder\'s trash, so it can\'t go there. It is deleted at once, and this can\'t be undone.'**
+  String get filesNoTrashOtherFs;
+
+  /// No description provided for @filesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} deleted'**
+  String filesDeleted(String name);
+
+  /// No description provided for @filesDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete: {reason}'**
+  String filesDeleteFailed(String reason);
+
+  /// No description provided for @filesTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash'**
+  String get filesTrash;
+
+  /// No description provided for @filesTrashCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash ({count})'**
+  String filesTrashCount(int count);
+
+  /// No description provided for @trashShared.
+  ///
+  /// In en, this message translates to:
+  /// **'shared with the desktop\'s file managers'**
+  String get trashShared;
+
+  /// No description provided for @trashNoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The trash is empty'**
+  String get trashNoneTitle;
+
+  /// No description provided for @trashNoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop\'s file managers use the same trash.'**
+  String get trashNoneBody;
+
+  /// No description provided for @trashErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the trash'**
+  String get trashErrorTitle;
+
+  /// No description provided for @trashDeletedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {time}'**
+  String trashDeletedAt(String time);
+
+  /// No description provided for @trashRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get trashRestore;
+
+  /// No description provided for @trashRestoreTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore to {folder}'**
+  String trashRestoreTo(String folder);
+
+  /// No description provided for @trashRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} restored to {folder}'**
+  String trashRestored(String name, String folder);
+
+  /// No description provided for @trashRestoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t restore: {reason}'**
+  String trashRestoreFailed(String reason);
+
+  /// No description provided for @trashDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It is deleted from the desktop\'s trash for good. This can\'t be undone.'**
+  String get trashDeleteBody;
+
+  /// No description provided for @trashEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty trash'**
+  String get trashEmpty;
+
+  /// No description provided for @trashEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty the trash?'**
+  String get trashEmptyTitle;
+
+  /// No description provided for @trashEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in the desktop\'s trash is deleted for good, also what was deleted on the desktop. This can\'t be undone.'**
+  String get trashEmptyBody;
+
+  /// No description provided for @trashEmptySure.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{I understand this item will be gone for good} other{I understand these {count} items will be gone for good}}'**
+  String trashEmptySure(int count);
+
+  /// No description provided for @trashEmptied.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash emptied'**
+  String get trashEmptied;
+
+  /// No description provided for @saveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to desktop folder'**
+  String get saveTitle;
+
+  /// No description provided for @saveFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file} other{{count} files}}'**
+  String saveFiles(int count);
+
+  /// No description provided for @saveHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Save here'**
+  String get saveHere;
+
+  /// No description provided for @shareSaveSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to the desktop'**
+  String get shareSaveSection;
+
+  /// No description provided for @shareSaveToDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to desktop folder'**
+  String get shareSaveToDesktop;
+
+  /// No description provided for @shareSaveNotSetUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up the terminal first'**
+  String get shareSaveNotSetUp;
+
+  /// No description provided for @shareSaveNoFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Only photos and files can be saved'**
+  String get shareSaveNoFiles;
+
+  /// No description provided for @shareSaveChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a folder on the desktop'**
+  String get shareSaveChoose;
+
+  /// No description provided for @shareSaveLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a folder · last used {folder}'**
+  String shareSaveLast(String folder);
 }
 
 class _AppLocalizationsDelegate

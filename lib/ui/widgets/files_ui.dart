@@ -60,6 +60,17 @@ abstract final class FileIcons {
   static const IconData numbers = Symbols.format_list_numbered_rounded;
   static const IconData radioOn = Symbols.radio_button_checked_rounded;
   static const IconData radioOff = Symbols.radio_button_unchecked_rounded;
+  static const IconData upload = Symbols.upload_rounded;
+  static const IconData newFolder = Symbols.create_new_folder_rounded;
+  static const IconData rename = Symbols.drive_file_rename_outline_rounded;
+  static const IconData trash = Symbols.delete_rounded;
+  static const IconData restore = Symbols.restore_from_trash_rounded;
+  static const IconData deleteForever = Symbols.delete_forever_rounded;
+  static const IconData saveToDesktop = Symbols.drive_folder_upload_rounded;
+  static const IconData conflict = Symbols.file_copy_rounded;
+  static const IconData skip = Symbols.redo_rounded;
+  static const IconData replace = Symbols.find_replace_rounded;
+  static const IconData keepBoth = Symbols.library_add_rounded;
 }
 
 IconData fileIcon(FileType t) => switch (t) {
@@ -634,13 +645,19 @@ class TransferRow extends StatelessWidget {
     required this.onCancel,
     required this.onOpen,
     required this.onRetry,
+    this.home,
   });
 
   final Transfer transfer;
   final DateTime now;
   final VoidCallback onCancel;
+
+  /// A download's Open; an upload's Show folder.
   final VoidCallback onOpen;
   final VoidCallback onRetry;
+
+  /// The desktop's home (an upload's folder as `~/…`).
+  final String? home;
 
   @override
   Widget build(BuildContext context) {
@@ -648,9 +665,10 @@ class TransferRow extends StatelessWidget {
     final t = transfer;
     final d = context.delve;
     final muted = d.textMuted;
+    final way = t.upload ? FileIcons.upload : FileIcons.download;
     final (IconData icon, Color color, String word) = switch (t.state) {
       TransferState.running => (
-        FileIcons.download,
+        way,
         context.colors.primary,
         '${((t.fraction ?? 0) * 100).round()} %',
       ),
@@ -682,7 +700,10 @@ class TransferRow extends StatelessWidget {
       TransferState.queued => total == null ? '' : sizeText(total),
       TransferState.done => [
         if (total != null) sizeText(total),
-        l.filesTransferInDownloads,
+        if (t.upload)
+          tildePath(parentPath(t.remotePath), home)
+        else
+          l.filesTransferInDownloads,
       ].join(' · '),
       TransferState.failed => t.error ?? '',
       TransferState.cancelled => '',
@@ -697,7 +718,7 @@ class TransferRow extends StatelessWidget {
       TransferState.done => TextButton(
         key: Key('files.transfer.open.${t.id}'),
         onPressed: onOpen,
-        child: Text(l.filesOpen),
+        child: Text(t.upload ? l.filesShowFolder : l.filesOpen),
       ),
       TransferState.failed => TextButton(
         key: Key('files.transfer.retry.${t.id}'),
@@ -718,7 +739,7 @@ class TransferRow extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    SymbolIcon(FileIcons.download, size: 16, color: muted),
+                    SymbolIcon(way, size: 16, color: muted),
                     const SizedBox(width: 4),
                     Expanded(
                       child: MiddleEllipsis(

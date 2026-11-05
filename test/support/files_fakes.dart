@@ -139,6 +139,177 @@ class FakeRemoteFs implements RemoteFs {
       ? (1024 * 1024 * 1024, 248 * 1024 * 1024)
       : (931 * 1024 * 1024 * 1024, 622 * 1024 * 1024 * 1024);
 
+  // ---------------------------------------------------------------- write
+
+  /// Folders where a move from or to elsewhere fails like across btrfs
+  /// subvolumes.
+  final Set<String> otherDevices = {};
+
+  /// Uploads wait for this when set.
+  Completer<void>? holdUploads;
+
+  /// The paths [deleteTree] removed, in order.
+  final List<String> deletedTrees = [];
+
+  void _alive() {
+    if (_done.isCompleted) {
+      throw const RemoteFsError(FsFailure.unreachable, 'closed');
+    }
+  }
+
+  RemoteEntry? _find(String path) {
+    for (final e in tree[parentPath(path)] ?? const <RemoteEntry>[]) {
+      if (e.name == baseName(path)) return e;
+    }
+    if (tree.containsKey(path)) return dirEntry(path);
+    return null;
+  }
+
+  void _put(RemoteEntry e) {
+    final dir = tree[parentPath(e.path)];
+    if (dir == null) throw RemoteFsError(FsFailure.notFound, e.path);
+    dir
+      ..removeWhere((x) => x.name == e.name)
+      ..add(e);
+  }
+
+  void _drop(String path) {
+    tree[parentPath(path)]?.removeWhere((x) => x.name == baseName(path));
+    tree.removeWhere((k, _) => k == path || isInside(k, path));
+    contents.removeWhere((k, _) => k == path || isInside(k, path));
+  }
+
+  void _writable(String path) {
+    if (denied.contains(parentPath(path))) {
+      throw RemoteFsError(FsFailure.denied, 'Permission denied: $path');
+    }
+  }
+
+  String _device(String path) =>
+      otherDevices.where((d) => path == d || isInside(path, d)).firstOrNull ??
+      '';
+
+  @override
+  Future<RemoteEntry?> lstat(String path) async {
+    _alive();
+    return _find(path);
+  }
+
+  @override
+  Future<void> mkdir(String path) async {
+    _alive();
+    _writable(path);
+    if (_find(path) != null) throw RemoteFsError(FsFailure.exists, path);
+    _put(dirEntry(path));
+    tree[path] = [];
+  }
+
+  @override
+  Future<void> rename(String from, String to) async {
+    _alive();
+    _writable(from);
+    _writable(to);
+    final e = _find(from);
+    if (e == null) throw RemoteFsError(FsFailure.notFound, from);
+    if (_device(from) != _device(to)) {
+      throw RemoteFsError(FsFailure.crossDevice, '$from → $to');
+    }
+    if (_find(to) != null) _drop(to);
+    tree[parentPath(from)]!.removeWhere((x) => x.name == e.name);
+    String moved(String p) => p == from ? to : '$to${p.substring(from.length)}';
+    _put(
+      RemoteEntry(
+        name: baseName(to),
+        path: to,
+        kind: e.kind,
+        size: e.size,
+        modified: e.modified,
+        mode: e.mode,
+        owner: e.owner,
+        link: e.link,
+      ),
+    );
+    for (final k in tree.keys.toList()) {
+      if (k == from || isInside(k, from)) {
+        tree[moved(k)] = [
+          for (final c in tree.remove(k)!)
+            RemoteEntry(
+              name: c.name,
+              path: moved(c.path),
+              kind: c.kind,
+              size: c.size,
+              modified: c.modified,
+              mode: c.mode,
+              owner: c.owner,
+              link: c.link,
+            ),
+        ];
+      }
+    }
+    for (final k in contents.keys.toList()) {
+      if (k == from || isInside(k, from)) {
+        contents[moved(k)] = contents.remove(k)!;
+      }
+    }
+  }
+
+  void _file(String path, Uint8List bytes) {
+    _put(fileEntry(path, bytes.length));
+    contents[path] = bytes;
+  }
+
+  @override
+  Future<void> writeFile(
+    String path,
+    Uint8List bytes, {
+    bool exclusive = false,
+  }) async {
+    _alive();
+    _writable(path);
+    if (exclusive && _find(path) != null) {
+      throw RemoteFsError(FsFailure.exists, path);
+    }
+    _file(path, bytes);
+  }
+
+  @override
+  Future<int> upload(
+    String path,
+    Stream<Uint8List> data, {
+    void Function(int bytes)? onProgress,
+    bool Function()? cancelled,
+  }) async {
+    _alive();
+    _writable(path);
+    final b = BytesBuilder(copy: false);
+    await for (final chunk in data) {
+      if (holdUploads case final h?) await h.future;
+      if (cancelled?.call() ?? false) break;
+      _alive();
+      b.add(chunk);
+      onProgress?.call(b.length);
+    }
+    _file(path, b.takeBytes());
+    return contents[path]!.length;
+  }
+
+  @override
+  Future<void> deleteTree(String path) async {
+    _alive();
+    _writable(path);
+    deletedTrees.add(path);
+    _drop(path);
+  }
+
+  @override
+  Future<int?> diskUsage(String path) async {
+    var n = 0;
+    for (final MapEntry(:key, :value) in contents.entries) {
+      if (key == path || isInside(key, path)) n += value.length;
+    }
+    return n;
+  }
+
   @override
   Future<bool> probe(Duration timeout) async => !_done.isCompleted;
 

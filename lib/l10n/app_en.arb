@@ -2179,5 +2179,215 @@
   "filesPdfLocked": "Password-protected PDF",
   "filesPdfLockedBody": "The phone's viewer can't open PDFs with a password. Download it and open it in another app.",
   "filesPdfBroken": "Can't read this PDF",
-  "filesPdfBrokenBody": "It may be damaged, or not really a PDF. Download it to try another app."
+  "filesPdfBrokenBody": "It may be damaged, or not really a PDF. Download it to try another app.",
+  "filesUpload": "Upload",
+  "filesUploadTo": "Upload to {folder}",
+  "@filesUploadTo": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "filesUploadPhotosHint": "From the gallery",
+  "filesUploadCameraHint": "Take a photo",
+  "filesUploadFiles": "Files",
+  "filesUploadFilesHint": "Phone storage, Drive…",
+  "filesUploaded": "Uploaded to {folder}",
+  "@filesUploaded": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "filesUploadFailed": "Couldn't upload: {reason}",
+  "@filesUploadFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "filesUploadFailedFile": "Couldn't upload {name}: {reason}",
+  "@filesUploadFailedFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "filesShowFolder": "Show folder",
+  "filesNewFolder": "New folder",
+  "filesCreate": "Create",
+  "filesRename": "Rename",
+  "filesRenameAction": "Rename",
+  "filesNameEmpty": "Enter a name",
+  "filesNameDots": "“.” and “..” can't be names",
+  "filesNameSlash": "A name can't contain /",
+  "filesNameTooLong": "Too long: 255 bytes at most",
+  "filesNameTaken": "{name} already exists here",
+  "@filesNameTaken": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesWriteDenied": "Permission denied (Files never uses sudo)",
+  "filesWriteOffline": "No connection to the desktop",
+  "filesFolder": "Folder",
+  "filesConflictTitle": " already exists here",
+  "filesConflictHere": "Here",
+  "filesConflictIncoming": "New",
+  "filesConflictSkip": "Skip",
+  "filesConflictSkipHint": "Keep the one here, leave this one out",
+  "filesConflictReplace": "Replace",
+  "filesConflictReplaceHint": "The one here goes to the desktop's trash",
+  "filesConflictReplaceFolder": "A folder is never replaced",
+  "filesConflictKeepBoth": "Keep both",
+  "filesConflictKeepBothHint": "Saves as {name}",
+  "@filesConflictKeepBothHint": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesConflictAll": "Apply to all {count} conflicts",
+  "@filesConflictAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesConflictCancelUpload": "Cancel upload",
+  "filesActTrash": "Move to trash",
+  "filesActDeleteForever": "Delete permanently…",
+  "filesTrashed": "{name} moved to the trash",
+  "@filesTrashed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesUndo": "Undo",
+  "filesTrashFailed": "Couldn't move to the trash: {reason}",
+  "@filesTrashFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "filesDeleteForeverTitle": "Delete permanently?",
+  "filesDeleteForever": "Delete permanently",
+  "filesNoTrashBody": "Only your home folder has a trash. Files outside it are deleted at once, and this can't be undone.",
+  "filesNoTrashOtherFs": "This is on another filesystem than your home folder's trash, so it can't go there. It is deleted at once, and this can't be undone.",
+  "filesDeleted": "{name} deleted",
+  "@filesDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesDeleteFailed": "Couldn't delete: {reason}",
+  "@filesDeleteFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "filesTrash": "Trash",
+  "filesTrashCount": "Trash ({count})",
+  "@filesTrashCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashShared": "shared with the desktop's file managers",
+  "trashNoneTitle": "The trash is empty",
+  "trashNoneBody": "The desktop's file managers use the same trash.",
+  "trashErrorTitle": "Couldn't read the trash",
+  "trashDeletedAt": "Deleted {time}",
+  "@trashDeletedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "trashRestore": "Restore",
+  "trashRestoreTo": "Restore to {folder}",
+  "@trashRestoreTo": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "trashRestored": "{name} restored to {folder}",
+  "@trashRestored": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "trashRestoreFailed": "Couldn't restore: {reason}",
+  "@trashRestoreFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "trashDeleteBody": "It is deleted from the desktop's trash for good. This can't be undone.",
+  "trashEmpty": "Empty trash",
+  "trashEmptyTitle": "Empty the trash?",
+  "trashEmptyBody": "Everything in the desktop's trash is deleted for good, also what was deleted on the desktop. This can't be undone.",
+  "trashEmptySure": "{count, plural, =1{I understand this item will be gone for good} other{I understand these {count} items will be gone for good}}",
+  "@trashEmptySure": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashEmptied": "Trash emptied",
+  "saveTitle": "Save to desktop folder",
+  "saveFiles": "{count, plural, =1{1 file} other{{count} files}}",
+  "@saveFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "saveHere": "Save here",
+  "shareSaveSection": "Save to the desktop",
+  "shareSaveToDesktop": "Save to desktop folder",
+  "shareSaveNotSetUp": "Set up the terminal first",
+  "shareSaveNoFiles": "Only photos and files can be saved",
+  "shareSaveChoose": "Choose a folder on the desktop",
+  "shareSaveLast": "Choose a folder · last used {folder}",
+  "@shareSaveLast": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  }
 }

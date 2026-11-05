@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 /// What a directory entry is ([RemoteEntry.kind]).
@@ -155,6 +156,40 @@ abstract interface class RemoteFs {
   /// The mounted filesystems (`findmnt`); empty when it can't tell.
   Future<List<MountInfo>> mounts();
 
+  // ---------------------------------------------------------------- write
+
+  /// The entry at [path] without following a link at the end (null:
+  /// nothing there). Throws [RemoteFsError] for anything else.
+  Future<RemoteEntry?> lstat(String path);
+
+  /// A new folder; [FsFailure.exists] when something has that name.
+  Future<void> mkdir(String path);
+
+  /// Renames [from] to [to] on one filesystem. **Replaces** an existing
+  /// [to] (sftp-server's posix-rename): callers check first.
+  Future<void> rename(String from, String to);
+
+  /// Writes a small file at once; with [exclusive] it fails with
+  /// [FsFailure.exists] when [path] is already there.
+  Future<void> writeFile(String path, Uint8List bytes, {bool exclusive});
+
+  /// Streams [data] into [path] (created, or truncated); [onProgress] gets
+  /// the bytes acknowledged so far. Stops early (without an error) when
+  /// [cancelled] says so; returns the bytes written.
+  Future<int> upload(
+    String path,
+    Stream<Uint8List> data, {
+    void Function(int bytes)? onProgress,
+    bool Function()? cancelled,
+  });
+
+  /// Deletes [path] for good – a folder with everything in it, never
+  /// following links (`rm -rf --` on the desktop).
+  Future<void> deleteTree(String path);
+
+  /// The bytes under [path] (`du -sb`); null when it can't tell.
+  Future<int?> diskUsage(String path);
+
   /// Size and used bytes of the filesystem holding [path].
   Future<(int, int)?> usage(String path);
 
@@ -168,7 +203,19 @@ abstract interface class RemoteFs {
 }
 
 /// Why a file operation failed.
-enum FsFailure { notFound, denied, notADirectory, unreachable, other }
+enum FsFailure {
+  notFound,
+  denied,
+  notADirectory,
+  unreachable,
+
+  /// Something already has that name (a new folder, an exclusive file).
+  exists,
+
+  /// The move would cross filesystems (btrfs subvolumes, F0).
+  crossDevice,
+  other,
+}
 
 class RemoteFsError implements Exception {
   const RemoteFsError(this.failure, this.detail);
@@ -509,4 +556,131 @@ bool looksLikeText(Uint8List bytes) {
     if (bytes[i] == 0) return false;
   }
   return true;
+}
+
+// ---------------------------------------------------------------- names
+
+/// Why [name] can't be a file name on the desktop (null: it can).
+NameProblem? checkName(String name) {
+  if (name.trim().isEmpty) return NameProblem.empty;
+  if (name == '.' || name == '..') return NameProblem.dots;
+  if (name.contains('/') || name.contains('\x00')) return NameProblem.slash;
+  if (utf8Length(name) > 255) return NameProblem.tooLong;
+  return null;
+}
+
+enum NameProblem { empty, dots, slash, tooLong }
+
+int utf8Length(String s) {
+  var n = 0;
+  for (final r in s.runes) {
+    n += r < 0x80
+        ? 1
+        : r < 0x800
+        ? 2
+        : r < 0x10000
+        ? 3
+        : 4;
+  }
+  return n;
+}
+
+/// [name] split at its extension: `photo.jpg` → (`photo`, `.jpg`); a
+/// dotfile or a name without a dot has none; `x.tar.gz` keeps `.gz`.
+(String, String) splitExtension(String name) {
+  final i = name.lastIndexOf('.');
+  if (i <= 0 || i == name.length - 1) return (name, '');
+  return (name.substring(0, i), name.substring(i));
+}
+
+/// "Keep both": `name (2).ext`, `name (3).ext`… ([n] ≥ 2).
+String keepBothName(String name, int n) {
+  final (stem, ext) = splitExtension(name);
+  return '$stem ($n)$ext';
+}
+
+/// The first of [name], `name (2)`, `name (3)`… that is not [taken].
+String freeName(String name, bool Function(String) taken) {
+  if (!taken(name)) return name;
+  for (var n = 2; ; n++) {
+    final c = keepBothName(name, n);
+    if (!taken(c)) return c;
+  }
+}
+
+/// Is [path] inside [dir] (not [dir] itself)?
+bool isInside(String path, String dir) =>
+    dir == '/' ? path != '/' : path.startsWith('$dir/');
+
+// ---------------------------------------------------------------- trash
+
+/// The freedesktop trash in [home] (F0: `~/.local/share/Trash`, the one the
+/// desktop's file managers use).
+String trashDir(String home) => joinPath(home, '.local/share/Trash');
+
+/// A name in the trash: `name`, then `name.2.ext`, `name.3.ext`… (the way
+/// GIO names a second item of the same name).
+String trashName(String name, int n) {
+  if (n <= 1) return name;
+  final (stem, ext) = splitExtension(name);
+  return '$stem.$n$ext';
+}
+
+/// A path in a `.trashinfo` file: percent-encoded UTF-8, `/` kept (as
+/// GLib's `g_uri_escape_string(path, "/", FALSE)`).
+String encodeTrashPath(String path) {
+  final out = StringBuffer();
+  for (final b in utf8.encode(path)) {
+    final c = String.fromCharCode(b);
+    final keep =
+        (b >= 0x30 && b <= 0x39) ||
+        (b >= 0x41 && b <= 0x5A) ||
+        (b >= 0x61 && b <= 0x7A) ||
+        '-._~/'.contains(c);
+    out.write(
+      keep ? c : '%${b.toRadixString(16).toUpperCase().padLeft(2, '0')}',
+    );
+  }
+  return out.toString();
+}
+
+/// A `.trashinfo` file for [path] deleted at [at] (the desktop's local
+/// time, without a zone, as the spec says).
+String trashInfo(String path, DateTime at) {
+  String two(int v) => v.toString().padLeft(2, '0');
+  final date =
+      '${at.year.toString().padLeft(4, '0')}-${two(at.month)}-${two(at.day)}'
+      'T${two(at.hour)}:${two(at.minute)}:${two(at.second)}';
+  return '[Trash Info]\nPath=${encodeTrashPath(path)}\nDeletionDate=$date\n';
+}
+
+/// What a `.trashinfo` file says: the original path and when (local time);
+/// null when it is not one.
+({String path, DateTime? deleted})? parseTrashInfo(String text) {
+  var inGroup = false;
+  String? path;
+  DateTime? deleted;
+  for (final raw in const LineSplitter().convert(text)) {
+    final line = raw.trim();
+    if (line.startsWith('[')) {
+      inGroup = line == '[Trash Info]';
+      continue;
+    }
+    if (!inGroup) continue;
+    final i = line.indexOf('=');
+    if (i < 0) continue;
+    final key = line.substring(0, i);
+    final value = line.substring(i + 1);
+    if (key == 'Path') {
+      try {
+        path = Uri.decodeComponent(value);
+      } on Object {
+        path = value;
+      }
+    } else if (key == 'DeletionDate') {
+      deleted = DateTime.tryParse(value);
+    }
+  }
+  if (path == null || path.isEmpty) return null;
+  return (path: path, deleted: deleted);
 }

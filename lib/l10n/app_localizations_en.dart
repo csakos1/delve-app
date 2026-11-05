@@ -2884,4 +2884,273 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get filesPdfBrokenBody =>
       'It may be damaged, or not really a PDF. Download it to try another app.';
+
+  @override
+  String get filesUpload => 'Upload';
+
+  @override
+  String filesUploadTo(String folder) {
+    return 'Upload to $folder';
+  }
+
+  @override
+  String get filesUploadPhotosHint => 'From the gallery';
+
+  @override
+  String get filesUploadCameraHint => 'Take a photo';
+
+  @override
+  String get filesUploadFiles => 'Files';
+
+  @override
+  String get filesUploadFilesHint => 'Phone storage, Drive…';
+
+  @override
+  String filesUploaded(String folder) {
+    return 'Uploaded to $folder';
+  }
+
+  @override
+  String filesUploadFailed(String reason) {
+    return 'Couldn\'t upload: $reason';
+  }
+
+  @override
+  String filesUploadFailedFile(String name, String reason) {
+    return 'Couldn\'t upload $name: $reason';
+  }
+
+  @override
+  String get filesShowFolder => 'Show folder';
+
+  @override
+  String get filesNewFolder => 'New folder';
+
+  @override
+  String get filesCreate => 'Create';
+
+  @override
+  String get filesRename => 'Rename';
+
+  @override
+  String get filesRenameAction => 'Rename';
+
+  @override
+  String get filesNameEmpty => 'Enter a name';
+
+  @override
+  String get filesNameDots => '“.” and “..” can\'t be names';
+
+  @override
+  String get filesNameSlash => 'A name can\'t contain /';
+
+  @override
+  String get filesNameTooLong => 'Too long: 255 bytes at most';
+
+  @override
+  String filesNameTaken(String name) {
+    return '$name already exists here';
+  }
+
+  @override
+  String get filesWriteDenied => 'Permission denied (Files never uses sudo)';
+
+  @override
+  String get filesWriteOffline => 'No connection to the desktop';
+
+  @override
+  String get filesFolder => 'Folder';
+
+  @override
+  String get filesConflictTitle => ' already exists here';
+
+  @override
+  String get filesConflictHere => 'Here';
+
+  @override
+  String get filesConflictIncoming => 'New';
+
+  @override
+  String get filesConflictSkip => 'Skip';
+
+  @override
+  String get filesConflictSkipHint => 'Keep the one here, leave this one out';
+
+  @override
+  String get filesConflictReplace => 'Replace';
+
+  @override
+  String get filesConflictReplaceHint =>
+      'The one here goes to the desktop\'s trash';
+
+  @override
+  String get filesConflictReplaceFolder => 'A folder is never replaced';
+
+  @override
+  String get filesConflictKeepBoth => 'Keep both';
+
+  @override
+  String filesConflictKeepBothHint(String name) {
+    return 'Saves as $name';
+  }
+
+  @override
+  String filesConflictAll(int count) {
+    return 'Apply to all $count conflicts';
+  }
+
+  @override
+  String get filesConflictCancelUpload => 'Cancel upload';
+
+  @override
+  String get filesActTrash => 'Move to trash';
+
+  @override
+  String get filesActDeleteForever => 'Delete permanently…';
+
+  @override
+  String filesTrashed(String name) {
+    return '$name moved to the trash';
+  }
+
+  @override
+  String get filesUndo => 'Undo';
+
+  @override
+  String filesTrashFailed(String reason) {
+    return 'Couldn\'t move to the trash: $reason';
+  }
+
+  @override
+  String get filesDeleteForeverTitle => 'Delete permanently?';
+
+  @override
+  String get filesDeleteForever => 'Delete permanently';
+
+  @override
+  String get filesNoTrashBody =>
+      'Only your home folder has a trash. Files outside it are deleted at once, and this can\'t be undone.';
+
+  @override
+  String get filesNoTrashOtherFs =>
+      'This is on another filesystem than your home folder\'s trash, so it can\'t go there. It is deleted at once, and this can\'t be undone.';
+
+  @override
+  String filesDeleted(String name) {
+    return '$name deleted';
+  }
+
+  @override
+  String filesDeleteFailed(String reason) {
+    return 'Couldn\'t delete: $reason';
+  }
+
+  @override
+  String get filesTrash => 'Trash';
+
+  @override
+  String filesTrashCount(int count) {
+    return 'Trash ($count)';
+  }
+
+  @override
+  String get trashShared => 'shared with the desktop\'s file managers';
+
+  @override
+  String get trashNoneTitle => 'The trash is empty';
+
+  @override
+  String get trashNoneBody =>
+      'The desktop\'s file managers use the same trash.';
+
+  @override
+  String get trashErrorTitle => 'Couldn\'t read the trash';
+
+  @override
+  String trashDeletedAt(String time) {
+    return 'Deleted $time';
+  }
+
+  @override
+  String get trashRestore => 'Restore';
+
+  @override
+  String trashRestoreTo(String folder) {
+    return 'Restore to $folder';
+  }
+
+  @override
+  String trashRestored(String name, String folder) {
+    return '$name restored to $folder';
+  }
+
+  @override
+  String trashRestoreFailed(String reason) {
+    return 'Couldn\'t restore: $reason';
+  }
+
+  @override
+  String get trashDeleteBody =>
+      'It is deleted from the desktop\'s trash for good. This can\'t be undone.';
+
+  @override
+  String get trashEmpty => 'Empty trash';
+
+  @override
+  String get trashEmptyTitle => 'Empty the trash?';
+
+  @override
+  String get trashEmptyBody =>
+      'Everything in the desktop\'s trash is deleted for good, also what was deleted on the desktop. This can\'t be undone.';
+
+  @override
+  String trashEmptySure(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'I understand these $count items will be gone for good',
+      one: 'I understand this item will be gone for good',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trashEmptied => 'Trash emptied';
+
+  @override
+  String get saveTitle => 'Save to desktop folder';
+
+  @override
+  String saveFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get saveHere => 'Save here';
+
+  @override
+  String get shareSaveSection => 'Save to the desktop';
+
+  @override
+  String get shareSaveToDesktop => 'Save to desktop folder';
+
+  @override
+  String get shareSaveNotSetUp => 'Set up the terminal first';
+
+  @override
+  String get shareSaveNoFiles => 'Only photos and files can be saved';
+
+  @override
+  String get shareSaveChoose => 'Choose a folder on the desktop';
+
+  @override
+  String shareSaveLast(String folder) {
+    return 'Choose a folder · last used $folder';
+  }
 }
