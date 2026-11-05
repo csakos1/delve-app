@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,9 +32,28 @@ class DelveApp extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(routerProvider),
+      onNavigationNotification: delveHandlesBack,
       builder: (context, child) => SyncLifecycle(
         child: PushHost(child: ShareHost(child: child ?? const SizedBox())),
       ),
     );
   }
+}
+
+/// Android (predictive back) asks after every navigator change whether the
+/// app takes the back gesture. A page pushed over the tabs and popped again
+/// (a file preview) reports "no" from the root navigator although a tab
+/// below still has a [PopScope] waiting (Files: the folder before), and the
+/// system then closes the app. Delve always takes back: the router pops what
+/// it can, and at the root `SystemNavigator.pop` closes the app as before.
+bool delveHandlesBack(NavigationNotification notification) {
+  switch (WidgetsBinding.instance.lifecycleState) {
+    case null || AppLifecycleState.detached:
+      break;
+    case _:
+      unawaited(
+        SystemNavigator.setFrameworkHandlesBack(true).catchError((Object _) {}),
+      );
+  }
+  return true;
 }

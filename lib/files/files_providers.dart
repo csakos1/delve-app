@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../terminal/terminal_providers.dart';
 import 'device_files.dart';
 import 'files_service.dart';
+import 'pdf_pages.dart';
 import 'sftp_fs.dart';
 
 /// Opens the SFTP connection (tests: a fake desktop).
@@ -14,6 +15,9 @@ final filesDialerProvider = Provider<FilesDialer>(
 final deviceFilesProvider = Provider<DeviceFiles>(
   (ref) => const ChannelDeviceFiles(),
 );
+
+/// The PDF preview's pages (tests: a fake).
+final pdfPagesProvider = Provider<PdfPages>((ref) => const ChannelPdfPages());
 
 final filesTimingProvider = Provider<FilesTiming>((ref) => const FilesTiming());
 

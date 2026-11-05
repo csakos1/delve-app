@@ -3,7 +3,6 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../files/remote_fs.dart';
 import '../ui/screens/approvals_screen.dart';
 import '../ui/screens/archived_chats_screen.dart';
 import '../ui/screens/chat_screen.dart';
@@ -163,10 +162,11 @@ GoRouter buildRouter({
                   GoRoute(
                     path: 'preview',
                     parentNavigatorKey: rootKey,
-                    redirect: (_, state) =>
-                        state.extra is RemoteEntry ? null : Routes.files,
+                    redirect: (_, state) => previewArgsOf(state.extra) == null
+                        ? Routes.files
+                        : null,
                     builder: (_, state) =>
-                        FilePreviewScreen(entry: state.extra! as RemoteEntry),
+                        FilePreviewScreen(args: previewArgsOf(state.extra)!),
                   ),
                 ],
               ),

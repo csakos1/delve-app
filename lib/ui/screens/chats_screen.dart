@@ -201,6 +201,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     return Scaffold(
       body: TopLevelPage(
         title: l.navChats,
+        tintOnScroll: true,
         actions: [
           IconButton(
             key: const Key('chats.search'),

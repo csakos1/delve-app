@@ -101,6 +101,7 @@ class TestEnv {
       terminalKeepAliveProvider.overrideWithValue(terminal.keepAlive),
       filesDialerProvider.overrideWithValue(terminal.files),
       deviceFilesProvider.overrideWithValue(terminal.device),
+      pdfPagesProvider.overrideWithValue(terminal.pdf),
       filesTimingProvider.overrideWithValue(fastFilesTiming),
       if (push case final p?)
         pushStateProvider.overrideWith((ref) => Stream.value(p)),
@@ -135,6 +136,7 @@ class TestEnv {
         terminalKeepAliveProvider.overrideWithValue(terminal.keepAlive),
         filesDialerProvider.overrideWithValue(terminal.files),
         deviceFilesProvider.overrideWithValue(terminal.device),
+        pdfPagesProvider.overrideWithValue(terminal.pdf),
         filesTimingProvider.overrideWithValue(fastFilesTiming),
         if (push case final p?)
           pushStateProvider.overrideWith((ref) => Stream.value(p)),

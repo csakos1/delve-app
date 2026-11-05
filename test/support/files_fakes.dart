@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' show Size;
 
 import 'package:delve/files/device_files.dart';
 import 'package:delve/files/files_service.dart';
+import 'package:delve/files/pdf_pages.dart';
 import 'package:delve/files/remote_fs.dart';
 import 'package:delve/files/sftp_fs.dart';
 import 'package:delve/terminal/phone_key.dart';
@@ -56,6 +58,9 @@ class FakeRemoteFs implements RemoteFs {
   final Map<String, Uint8List> contents = {};
   final Set<String> denied = {};
   final List<String> listed = [];
+
+  /// The paths downloads (and preview fetches) read, in order.
+  final List<String> downloaded = [];
   final _done = Completer<void>();
   bool closed = false;
 
@@ -108,6 +113,7 @@ class FakeRemoteFs implements RemoteFs {
   }) async {
     final b = contents[path];
     if (b == null) throw RemoteFsError(FsFailure.notFound, path);
+    downloaded.add(path);
     if (holdDownloads case final h?) await h.future;
     var n = 0;
     const chunk = 4;
@@ -203,6 +209,44 @@ class FakeDeviceFiles implements DeviceFiles {
   }
 }
 
+/// A white 1 × 1 PNG: what the fake PDF renderer draws.
+final tinyPng = base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC',
+);
+
+/// The phone's PDF renderer: a fetched preview file `%PDF pages=N` has N
+/// A4 pages; [fail] makes the next open throw. Records renders and closes.
+class FakePdfPages implements PdfPages {
+  final List<(int, int, int)> rendered = [];
+  final List<int> closed = [];
+  PdfProblem? fail;
+  int _next = 1;
+
+  @override
+  Future<PdfInfo> open(String path) async {
+    if (fail case final f?) {
+      fail = null;
+      throw f;
+    }
+    final head = utf8.decode(
+      File(path).readAsBytesSync(),
+      allowMalformed: true,
+    );
+    final n = RegExp(r'^%PDF pages=(\d+)').firstMatch(head)?.group(1);
+    if (n == null) throw const PdfProblem(PdfProblemKind.broken, 'not a PDF');
+    return PdfInfo(_next++, List.filled(int.parse(n), const Size(595, 842)));
+  }
+
+  @override
+  Future<Uint8List> render(int doc, int page, int width) async {
+    rendered.add((doc, page, width));
+    return tinyPng;
+  }
+
+  @override
+  Future<void> close(int doc) async => closed.add(doc);
+}
+
 /// A small desktop like the F0 fixtures: home with folders, hidden files,
 /// a deep folder of PDFs, a symlink, /root denied.
 Map<String, List<RemoteEntry>> sampleTree() => {
@@ -241,6 +285,7 @@ Map<String, List<RemoteEntry>> sampleTree() => {
       14889779,
     ),
     fileEntry('/home/user/Documents/hajos/evkonyv/borito.png', 412000),
+    fileEntry('/home/user/Documents/hajos/evkonyv/hatlap.png', 380000),
   ],
   '/home/user/Downloads': [],
   '/home/user/delve-app': [fileEntry('/home/user/delve-app/pubspec.yaml', 900)],
@@ -266,4 +311,10 @@ FakeRemoteFs sampleFs() => FakeRemoteFs(sampleTree())
     List.filled(2000, 0x61),
   )
   ..contents['/home/user/.zshrc'] = Uint8List.fromList([1, 0, 2, 3])
+  ..contents['/home/user/Documents/hajos/evkonyv/borito.png'] =
+      Uint8List.fromList(List.filled(64, 7))
+  ..contents['/home/user/Documents/hajos/evkonyv/hatlap.png'] =
+      Uint8List.fromList(List.filled(48, 9))
+  ..contents['/home/user/Documents/hajos/evkonyv/beszedes_evkonyv.pdf'] =
+      Uint8List.fromList(utf8.encode('%PDF pages=12\n'))
   ..denied.add('/root');

@@ -432,7 +432,7 @@ FileType fileTypeOf(RemoteEntry e) {
 
 /// What the preview can show: text (incl. code and structured) or images
 /// the phone decodes.
-enum PreviewKind { text, image, none }
+enum PreviewKind { text, image, pdf, none }
 
 const _imagePreview = {'png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'};
 
@@ -440,6 +440,7 @@ PreviewKind previewKindOf(RemoteEntry e) {
   if (e.kind != EntryKind.file) return PreviewKind.none;
   final ext = extensionOf(e.name);
   if (_imagePreview.contains(ext)) return PreviewKind.image;
+  if (ext == 'pdf') return PreviewKind.pdf;
   return switch (fileTypeOf(e)) {
     FileType.text || FileType.code || FileType.structured => PreviewKind.text,
     // a name without an extension (README, Makefile, a dotfile) may be text:

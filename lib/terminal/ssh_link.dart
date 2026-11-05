@@ -276,6 +276,20 @@ Future<SshRunResult> _runOn(
   );
 }
 
+/// The ciphers the app offers, ChaCha20-Poly1305 first. dartssh2's default
+/// order starts with AES-GCM, whose GHASH (pointycastle) works bit by bit:
+/// a few MB/s, on the UI isolate, so a large file froze the app (the image
+/// preview, F1). OpenSSH offers ChaCha20 first anyway; GCM stays last.
+const kSshAlgorithms = SSHAlgorithms(
+  cipher: [
+    SSHCipherType.chacha20poly1305,
+    SSHCipherType.aes128ctr,
+    SSHCipherType.aes256ctr,
+    SSHCipherType.aes128gcm,
+    SSHCipherType.aes256gcm,
+  ],
+);
+
 /// dartssh2 4.1: TCP, key auth, an `xterm-256color` pty running tmux.
 class Dartssh2Dialer implements SshDialer {
   const Dartssh2Dialer({
@@ -402,6 +416,7 @@ class Dartssh2Dialer implements SshDialer {
       socket,
       username: target.user,
       identities: [key.keyPair],
+      algorithms: kSshAlgorithms,
       // dartssh2's keep-alive waits for the answer forever and ignores a
       // missing one; TerminalConnection probes with a timeout instead
       keepAliveInterval: null,

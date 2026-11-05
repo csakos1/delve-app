@@ -43,9 +43,7 @@ abstract final class FileIcons {
   static const IconData lock = Symbols.lock_rounded;
   static const IconData home = Symbols.home_rounded;
   static const IconData download = Symbols.download_rounded;
-  static const IconData drive = Symbols.hard_drive_rounded;
-  static const IconData boot = Symbols.power_settings_new_rounded;
-  static const IconData check = Symbols.check_rounded;
+  static const IconData documents = Symbols.description_rounded;
   static const IconData preview = Symbols.visibility_rounded;
   static const IconData copyPath = Symbols.content_copy_rounded;
   static const IconData goTo = Symbols.subdirectory_arrow_right_rounded;
@@ -439,7 +437,8 @@ class QuickLocation {
   final bool mono;
 }
 
-/// 48 dp row of 32 dp chips; the current location is an accent chip.
+/// 48 dp row of 32 dp chips; the current location is an accent chip (its
+/// own icon, no check mark).
 class QuickLocations extends StatelessWidget {
   const QuickLocations({
     super.key,
@@ -488,11 +487,7 @@ class QuickLocations extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   children: [
-                    SymbolIcon(
-                      on ? FileIcons.check : q.icon,
-                      size: 18,
-                      color: fg,
-                    ),
+                    SymbolIcon(q.icon, size: 18, color: fg),
                     const SizedBox(width: 6),
                     Text(
                       q.label,

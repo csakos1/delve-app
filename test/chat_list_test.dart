@@ -6,7 +6,9 @@ import 'package:delve/data/db/database.dart';
 import 'package:delve/data/db/store.dart';
 import 'package:delve/l10n/app_localizations_en.dart';
 import 'package:delve/sync/connection_status.dart';
+import 'package:delve/theme/delve_colors.dart';
 import 'package:delve/ui/format.dart';
+import 'package:delve/ui/screens/chats_screen.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -385,6 +387,45 @@ void main() {
           t.getTopRight(find.byWidget(e.widget)).dx,
       };
       expect(edges, {448 - 16.0});
+    });
+
+    testWidgets('the header tints while the list is scrolled', (t) async {
+      await pumpDelve(
+        t,
+        before: (env) async {
+          for (var i = 0; i < 30; i++) {
+            await env.db.putConversation(
+              conversation(
+                'c_$i',
+                title: 'Chat $i',
+                updated: t0.add(Duration(minutes: i)),
+              ),
+            );
+          }
+        },
+      );
+      final page = find.byType(ChatsScreen);
+      Color? header() =>
+          (t
+                      .widget<AnimatedContainer>(
+                        find.descendant(
+                          of: page,
+                          matching: find.byKey(const Key('page.header')),
+                        ),
+                      )
+                      .decoration!
+                  as BoxDecoration)
+              .color;
+      final list = find
+          .descendant(of: page, matching: find.byType(ListView))
+          .first;
+      expect(header(), delveColorScheme.surface);
+      await t.drag(list, const Offset(0, -300));
+      await t.pumpAndSettle();
+      expect(header(), delveColorScheme.surfaceContainer);
+      await t.drag(list, const Offset(0, 300));
+      await t.pumpAndSettle();
+      expect(header(), delveColorScheme.surface);
     });
 
     testWidgets('empty: message and a single New chat button', (t) async {

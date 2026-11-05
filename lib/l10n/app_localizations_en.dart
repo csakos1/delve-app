@@ -2605,6 +2605,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filesQuickDownloads => 'Downloads';
 
   @override
+  String get filesQuickDocuments => 'Documents';
+
+  @override
   String filesItems(int count, String n) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2857,4 +2860,28 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String filesPreviewPosition(int index, int count) {
+    return '$index / $count';
+  }
+
+  @override
+  String filesPdfPage(int page, int count) {
+    return 'Page $page / $count';
+  }
+
+  @override
+  String get filesPdfLocked => 'Password-protected PDF';
+
+  @override
+  String get filesPdfLockedBody =>
+      'The phone\'s viewer can\'t open PDFs with a password. Download it and open it in another app.';
+
+  @override
+  String get filesPdfBroken => 'Can\'t read this PDF';
+
+  @override
+  String get filesPdfBrokenBody =>
+      'It may be damaged, or not really a PDF. Download it to try another app.';
 }

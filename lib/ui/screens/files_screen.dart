@@ -19,6 +19,7 @@ import '../widgets/files_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/status_ui.dart';
+import 'file_preview_screen.dart';
 
 /// 23 Files: the desktop's filesystem as `csakos` sees it, over SFTP on the
 /// terminal's key and host, behind the terminal's lock (F1: browse,
@@ -156,9 +157,25 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
     _actions(e);
   }
 
+  /// An image opens with the folder's other images to swipe through (in the
+  /// list's order); a text file opens alone.
   void _preview(RemoteEntry e) {
     _terminal.lock.keepAlive();
-    unawaited(context.push(Routes.filePreview, extra: e));
+    final images = previewKindOf(e) == PreviewKind.image
+        ? [
+            for (final x in _service.entries ?? const <RemoteEntry>[])
+              if (previewKindOf(x) == PreviewKind.image) x,
+          ]
+        : const <RemoteEntry>[];
+    final at = images.indexWhere((x) => x.path == e.path);
+    unawaited(
+      context.push(
+        Routes.filePreview,
+        extra: at < 0
+            ? FilePreviewArgs([e])
+            : FilePreviewArgs(images, index: at),
+      ),
+    );
   }
 
   void _download(RemoteEntry e) => _service.download(e);
@@ -401,9 +418,12 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
           l.filesQuickDownloads,
           joinPath(home, 'Downloads'),
         ),
+        QuickLocation(
+          FileIcons.documents,
+          l.filesQuickDocuments,
+          joinPath(home, 'Documents'),
+        ),
       ],
-      const QuickLocation(FileIcons.drive, '/', '/', mono: true),
-      const QuickLocation(FileIcons.boot, '/boot', '/boot', mono: true),
     ];
   }
 
@@ -539,7 +559,6 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
     _syncTick(running != null);
     return TopLevelPage(
       title: l.navFiles,
-      tintOnScroll: true,
       actions: [
         if (progress != null)
           TransferChip(

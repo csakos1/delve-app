@@ -114,6 +114,25 @@ const kPreviewTextMax = 1024 * 1024;
 /// Images larger than this are not previewed (download them instead).
 const kPreviewImageMax = 40 * 1024 * 1024;
 
+/// PDFs larger than this are not previewed (download them instead).
+const kPreviewPdfMax = 150 * 1024 * 1024;
+
+/// The preview's cache name for [e]: a new size or time is a new file.
+String previewFileName(RemoteEntry e) {
+  final ext = extensionOf(e.name);
+  final key = [
+    e.path.hashCode.toRadixString(16),
+    e.size ?? 0,
+    e.modified?.millisecondsSinceEpoch ?? 0,
+  ].join('-');
+  return ext.isEmpty ? key : '$key.$ext';
+}
+
+/// The preview page was left while its image was still coming in.
+class PreviewCancelled implements Exception {
+  const PreviewCancelled();
+}
+
 /// The Files tab: the desktop's filesystem as `csakos` sees it, over SFTP
 /// on its own SSH connection with the terminal's key, host and pinned host
 /// key, behind the terminal's lock (F1). Lives as long as the app.
@@ -619,24 +638,55 @@ class FilesService extends ChangeNotifier {
     return (const Utf8Decoder(allowMalformed: true).convert(bytes), cut);
   }
 
-  /// An image fetched into the scratch folder for the preview.
-  Future<File> fetchImage(RemoteEntry e) async {
+  /// A file (an image, a PDF) fetched into the scratch folder for the
+  /// preview. The same file
+  /// (path, size, time) comes from the cache while the preview is open;
+  /// [cancelled] stops the transfer between chunks (the page was left) and
+  /// throws [PreviewCancelled].
+  Future<File> fetchPreview(
+    RemoteEntry e, {
+    void Function(int bytes)? onProgress,
+    bool Function()? cancelled,
+  }) async {
     terminal.lock.keepAlive();
+    final dir = Directory('${await device.scratchDir()}/preview');
+    final file = File('${dir.path}/${previewFileName(e)}');
+    if (file.existsSync()) return file;
     final fs = await _ensure();
     if (fs == null) {
       throw const RemoteFsError(FsFailure.unreachable, 'not connected');
     }
-    final dir = Directory('${await device.scratchDir()}/preview');
-    if (dir.existsSync()) dir.deleteSync(recursive: true);
     dir.createSync(recursive: true);
-    final file = File('${dir.path}/p.${extensionOf(e.name)}');
-    final sink = file.openWrite();
+    final part = File('${file.path}.${_nextPart++}.part');
+    final sink = part.openWrite();
+    var stopped = false;
     try {
-      await fs.download(e.path, sink);
+      await fs.download(
+        e.path,
+        sink,
+        onProgress: onProgress,
+        cancelled: () => stopped = cancelled?.call() ?? false,
+      );
     } finally {
       await sink.close();
     }
-    return file;
+    if (stopped) {
+      if (part.existsSync()) part.deleteSync();
+      throw const PreviewCancelled();
+    }
+    return part.renameSync(file.path);
+  }
+
+  int _nextPart = 0;
+
+  /// Removes the fetched preview files (the preview closed).
+  Future<void> clearPreviews() async {
+    try {
+      final dir = Directory('${await device.scratchDir()}/preview');
+      if (dir.existsSync()) await dir.delete(recursive: true);
+    } on Object {
+      // a fetch still finishing writes into it; the next cold start clears it
+    }
   }
 
   // ------------------------------------------------------------ download

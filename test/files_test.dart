@@ -123,7 +123,7 @@ void main() {
       expect(previewKindOf(fileEntry('/a.md', 1)), PreviewKind.text);
       expect(previewKindOf(fileEntry('/Makefile', 1)), PreviewKind.text);
       expect(previewKindOf(fileEntry('/a.jpg', 1)), PreviewKind.image);
-      expect(previewKindOf(fileEntry('/a.pdf', 1)), PreviewKind.none);
+      expect(previewKindOf(fileEntry('/a.pdf', 1)), PreviewKind.pdf);
       expect(previewKindOf(dirEntry('/a')), PreviewKind.none);
       expect(mimeOf('x.pdf'), 'application/pdf');
       expect(mimeOf('x.unknown'), 'application/octet-stream');
@@ -266,6 +266,38 @@ void main() {
       expect(cut, isFalse);
       final zshrc = files.entries!.firstWhere((e) => e.name == '.zshrc');
       expect(await files.readText(zshrc), isNull);
+    });
+
+    test('image preview: fetched once, a left page stops, cleared', () async {
+      final (files, fakes) = await makeService();
+      files.setVisible(visible: true);
+      await settle();
+      await files.open('/home/user/Documents/hajos/evkonyv');
+      await settle();
+      final fs = fakes.files.last!;
+      final [_, cover, back] = files.entries!;
+      expect((cover.name, back.name), ('borito.png', 'hatlap.png'));
+      final seen = <int>[];
+      final file = await files.fetchPreview(cover, onProgress: seen.add);
+      expect(file.readAsBytesSync(), fs.contents[cover.path]);
+      expect(seen.last, 64);
+      // the same file again: from the cache, no second transfer
+      final again = await files.fetchPreview(cover);
+      expect(again.path, file.path);
+      expect(fs.downloaded.where((p) => p == cover.path), hasLength(1));
+      // a page left while its image comes in: no file, PreviewCancelled
+      await expectLater(
+        files.fetchPreview(back, cancelled: () => true),
+        throwsA(isA<PreviewCancelled>()),
+      );
+      expect(file.parent.listSync().map((f) => f.path), [file.path]);
+      // a new size is a new file
+      expect(
+        previewFileName(cover),
+        isNot(previewFileName(fileEntry(cover.path, 1))),
+      );
+      await files.clearPreviews();
+      expect(file.parent.existsSync(), isFalse);
     });
 
     test('unreachable → offline with retries, then live', () async {

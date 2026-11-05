@@ -41,7 +41,8 @@ import java.util.concurrent.Executors
  *
  * A third one (FILES_CHANNEL) serves the Files tab (F1): a scratch folder
  * in the cache, moving a finished download into Downloads/Delve through
- * MediaStore (no storage permission), and opening it in another app.
+ * MediaStore (no storage permission), opening it in another app, and the
+ * PDF preview's pages (PdfPages).
  */
 class MainActivity : FlutterFragmentActivity() {
     private var channel: MethodChannel? = null
@@ -49,6 +50,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var files: MethodChannel? = null
     private var pending: Intent? = null
     private val io = Executors.newSingleThreadExecutor()
+    private val pdfs = PdfPages()
     private val main = Handler(Looper.getMainLooper())
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -109,8 +111,46 @@ class MainActivity : FlutterFragmentActivity() {
                     "open" -> result.success(
                         openUri(call.argument<String>("uri"), call.argument<String>("mime")),
                     )
+                    "pdfOpen" -> {
+                        val path = call.argument<String>("path")
+                        if (path == null) {
+                            result.error("args", "path", null)
+                        } else {
+                            pdfCall(result) { pdfs.open(path) }
+                        }
+                    }
+                    "pdfRender" -> {
+                        val id = call.argument<Int>("id")
+                        val page = call.argument<Int>("page")
+                        val width = call.argument<Int>("width")
+                        if (id == null || page == null || width == null) {
+                            result.error("args", "id, page and width", null)
+                        } else {
+                            pdfCall(result) { pdfs.render(id, page, width) }
+                        }
+                    }
+                    "pdfClose" -> {
+                        val id = call.argument<Int>("id")
+                        if (id == null) {
+                            result.error("args", "id", null)
+                        } else {
+                            pdfCall(result) { pdfs.close(id) }
+                        }
+                    }
                     else -> result.notImplemented()
                 }
+            }
+        }
+    }
+
+    /** Runs a PDF call on the PDF thread, answers on the main thread. */
+    private fun pdfCall(result: MethodChannel.Result, block: () -> Any?) {
+        pdfs.run(block) { outcome ->
+            main.post {
+                outcome.fold(
+                    { result.success(if (it is Unit) null else it) },
+                    { e -> result.error(PdfPages.code(e), e.message ?: "$e", null) },
+                )
             }
         }
     }
@@ -222,6 +262,7 @@ class MainActivity : FlutterFragmentActivity() {
         terminal?.setMethodCallHandler(null)
         files?.setMethodCallHandler(null)
         io.shutdown()
+        pdfs.shutdown()
         super.onDestroy()
     }
 

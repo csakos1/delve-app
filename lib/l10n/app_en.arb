@@ -1941,6 +1941,7 @@
   "navFiles": "Files",
   "filesQuickHome": "Home",
   "filesQuickDownloads": "Downloads",
+  "filesQuickDocuments": "Documents",
   "filesItems": "{count, plural, =1{1 item} other{{n} items}}",
   "@filesItems": {
     "placeholders": {
@@ -2152,5 +2153,31 @@
         "type": "int"
       }
     }
-  }
+  },
+  "filesPreviewPosition": "{index} / {count}",
+  "@filesPreviewPosition": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesPdfPage": "Page {page} / {count}",
+  "@filesPdfPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesPdfLocked": "Password-protected PDF",
+  "filesPdfLockedBody": "The phone's viewer can't open PDFs with a password. Download it and open it in another app.",
+  "filesPdfBroken": "Can't read this PDF",
+  "filesPdfBrokenBody": "It may be damaged, or not really a PDF. Download it to try another app."
 }

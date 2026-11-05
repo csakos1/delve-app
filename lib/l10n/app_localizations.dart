@@ -4228,6 +4228,12 @@ abstract class AppLocalizations {
   /// **'Downloads'**
   String get filesQuickDownloads;
 
+  /// No description provided for @filesQuickDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get filesQuickDocuments;
+
   /// No description provided for @filesItems.
   ///
   /// In en, this message translates to:
@@ -4617,6 +4623,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{lines, plural, =1{Read-only · 1 line · UTF-8} other{Read-only · {lines} lines · UTF-8}}'**
   String filesPreviewInfo(int lines);
+
+  /// No description provided for @filesPreviewPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'{index} / {count}'**
+  String filesPreviewPosition(int index, int count);
+
+  /// No description provided for @filesPdfPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} / {count}'**
+  String filesPdfPage(int page, int count);
+
+  /// No description provided for @filesPdfLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Password-protected PDF'**
+  String get filesPdfLocked;
+
+  /// No description provided for @filesPdfLockedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone\'s viewer can\'t open PDFs with a password. Download it and open it in another app.'**
+  String get filesPdfLockedBody;
+
+  /// No description provided for @filesPdfBroken.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t read this PDF'**
+  String get filesPdfBroken;
+
+  /// No description provided for @filesPdfBrokenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It may be damaged, or not really a PDF. Download it to try another app.'**
+  String get filesPdfBrokenBody;
 }
 
 class _AppLocalizationsDelegate
