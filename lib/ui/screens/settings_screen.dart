@@ -490,9 +490,11 @@ class _TerminalRowState extends ConsumerState<_TerminalRow> {
         child: _Item(
           icon: DelveIcons.terminal,
           title: l.settingsTerminal,
-          subtitle: _service.ready
-              ? l.settingsTerminalSub(_service.config.port)
-              : null,
+          subtitle: !_service.ready
+              ? null
+              : _service.keepConnected
+              ? l.settingsTerminalSubOn(_service.config.port)
+              : l.settingsTerminalSub(_service.config.port),
           trailing: SymbolIcon(
             DelveIcons.chevronRight,
             color: context.colors.onSurfaceVariant,

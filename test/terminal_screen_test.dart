@@ -717,6 +717,37 @@ void main() {
       expect(find.byKey(const Key('terminalSettings.list')), findsOneWidget);
     });
 
+    testWidgets('keep connected in background: the switch runs the service '
+        'and asks about the battery; the warning row while not exempt', (
+      t,
+    ) async {
+      final env = await openTerminal(t, setupDone: true);
+      final keep = env.terminal.keepAlive;
+      await openTerminalSettings(t);
+      final toggle = find.byKey(const Key('terminalSettings.background'));
+      expect(t.widget<SwitchListTile>(toggle).value, isFalse);
+      expect(t.widget<SwitchListTile>(toggle).onChanged, isNotNull);
+      await t.tap(toggle);
+      await frames(t, 6);
+      expect(t.widget<SwitchListTile>(toggle).value, isTrue);
+      expect(keep.starts, ['Terminal connected · delve-1']);
+      expect(keep.exemptRequests, 1);
+      expect(find.byKey(const Key('terminalSettings.battery')), findsOneWidget);
+      expect(
+        await TerminalSecrets(env.terminal.store).loadKeepConnected(),
+        isTrue,
+      );
+
+      keep.exempt = true;
+      await t.tap(find.byKey(const Key('terminalSettings.battery')));
+      await frames(t, 2);
+      expect(keep.exemptRequests, 2);
+
+      await t.tap(toggle);
+      await frames(t, 6);
+      expect(keep.running, isFalse);
+    });
+
     testWidgets('font size steps and is kept', (t) async {
       final env = await openTerminal(t, setupDone: true);
       await openTerminalSettings(t);

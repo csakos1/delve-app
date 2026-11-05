@@ -1616,6 +1616,7 @@
   "termTrust": "Trust and connect",
   "termConnect": "Connect",
   "termConnecting": "Connecting…",
+  "termReconnectingNow": "Reconnecting…",
   "termDenied": "Permission denied – is the line in authorized_keys?",
   "termCheckModes": "~/.ssh is 0700 and authorized_keys is 0600",
   "termCheckTailnet": "This phone is on the tailnet (Tailscale is on)",
@@ -1642,6 +1643,15 @@
   "termMenuSettings": "Terminal settings",
   "termMenuDisconnect": "Disconnect",
   "termMenuReconnect": "Reconnect",
+  "termMenuCopyTrace": "Copy connection trace",
+  "termTraceCopied": "{count, plural, =1{Copied 1 trace line} other{Copied {count} trace lines}}",
+  "@termTraceCopied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "termKeyCtrl": "Control",
   "termKeyAlt": "Alt",
   "termLockTitle": "Unlock the terminal",
@@ -1650,7 +1660,9 @@
   "termUnlockReason": "Unlock the Delve terminal",
   "termSettingsConnection": "Connection",
   "termBackground": "Keep connected in background",
-  "termBackgroundLater": "Comes in a later update",
+  "termBackgroundSub": "The tab in front stays connected while Delve is in the background, so it is ready at once when you come back. Uses a little more battery; a quiet notification shows it.",
+  "termBackgroundNoStart": "Android did not let the background connection start",
+  "termBackgroundBattery": "Allow Delve to run without battery limits, or Android may still cut the connection",
   "termHostPort": "Host & port",
   "termLockRow": "Lock",
   "termLockRowSub": "After 15 min of inactivity",
@@ -1676,6 +1688,14 @@
   "termSave": "Save",
   "settingsTerminalSub": "Background connection off · port {port}",
   "@settingsTerminalSub": {
+    "placeholders": {
+      "port": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsTerminalSubOn": "Background connection on · port {port}",
+  "@settingsTerminalSubOn": {
     "placeholders": {
       "port": {
         "type": "int"

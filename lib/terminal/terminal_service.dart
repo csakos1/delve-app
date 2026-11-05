@@ -7,8 +7,10 @@ import 'phone_key.dart';
 import 'secrets.dart';
 import 'ssh_link.dart';
 import 'terminal_connection.dart';
+import 'terminal_keep_alive.dart';
 import 'terminal_lock.dart';
 import 'terminal_tabs.dart';
+import 'terminal_trace.dart';
 
 export 'terminal_tabs.dart' show kFirstSession;
 
@@ -35,12 +37,18 @@ class TmuxCommandFailed implements Exception {
 /// for [TerminalTiming.keepPrevious], so switching back is instant; the
 /// others are parked ([OfflineReason.parked]) and connect when they come to
 /// the front.
+///
+/// With "Keep connected in background" on (T4), the tab in front stays
+/// connected while the app is away: [keepAlive] runs a foreground service
+/// with a wake lock while that tab is connected (or connecting), and the
+/// tab's connection keeps probing (and reconnecting) in the background.
 class TerminalService extends ChangeNotifier {
   TerminalService({
     required this.secrets,
     required SshDialer dialer,
     required this.biometrics,
     required this.defaultHost,
+    this.keepAlive,
     this.timing = const TerminalTiming(),
     DateTime Function()? now,
     Duration lockAfter = kTerminalLockAfter,
@@ -54,6 +62,7 @@ class TerminalService extends ChangeNotifier {
 
   final TerminalSecrets secrets;
   final Biometrics biometrics;
+  final TerminalKeepAlive? keepAlive;
   final TerminalTiming timing;
   final SshDialer _dialer;
   final DateTime Function()? _now;
@@ -122,6 +131,19 @@ class TerminalService extends ChangeNotifier {
   Future<void>? _loading;
   bool _disposed = false;
 
+  bool _keepOn = false;
+
+  /// "Keep connected in background" (Settings → Terminal, off by default).
+  bool get keepConnected => _keepOn;
+
+  /// Whether Android exempts Delve from battery optimization (null: not
+  /// asked yet). Without it a dozing phone may still lose the connection.
+  bool? batteryExempt;
+
+  /// The service's notification text while it runs (null: stopped).
+  String? _keepText;
+  bool _keepBusy = false;
+
   /// Reads the key (creating it the first time), the settings, the font
   /// and the tabs.
   Future<void> load() => _loading ??= _load();
@@ -134,11 +156,97 @@ class TerminalService extends ChangeNotifier {
         .toDouble();
     _pinned = await secrets.pinned(_config.hostPort);
     _ime = await secrets.loadImeHeights();
+    _keepOn = await secrets.loadKeepConnected();
     _restore(await secrets.loadTabs());
     if (!_config.verified) _ensureTab();
     _ready = true;
     _notify();
+    if (_keepOn) unawaited(refreshBatteryExempt());
   }
+
+  /// Settings: turn "Keep connected in background" on or off. Turning it on
+  /// asks Android once for the battery-optimization exemption.
+  Future<void> setKeepConnected({required bool on}) async {
+    await load();
+    if (on == _keepOn) return;
+    _keepOn = on;
+    terminalTrace.add('app', 'keep connected ${on ? 'on' : 'off'}');
+    _notify();
+    await secrets.saveKeepConnected(on: on);
+    _syncKeep();
+    if (on && !(await refreshBatteryExempt())) {
+      await keepAlive?.requestBatteryExempt();
+    }
+  }
+
+  /// Reads [batteryExempt] again (Settings shows it; the system dialog may
+  /// have changed it).
+  Future<bool> refreshBatteryExempt() async {
+    final exempt = await keepAlive?.batteryExempt() ?? false;
+    if (exempt != batteryExempt) {
+      batteryExempt = exempt;
+      _notify();
+    }
+    return exempt;
+  }
+
+  /// Settings: the system dialog for the battery exemption.
+  Future<void> requestBatteryExempt() async {
+    await keepAlive?.requestBatteryExempt();
+  }
+
+  /// Runs or stops the keep-alive service so it matches the setting and
+  /// the tab in front, and tells the tabs whether they are kept.
+  void _syncKeep() {
+    if (_disposed) return;
+    final front = current;
+    final phase = front?.connection.phase;
+    final want =
+        _keepOn &&
+        _started &&
+        front != null &&
+        (phase == TermPhase.live ||
+            phase == TermPhase.connecting ||
+            phase == TermPhase.reconnecting);
+    final text = want ? 'Terminal connected · ${front.session}' : null;
+    final running = _keepText != null;
+    for (final t in _tabs) {
+      t.connection.keepInBackground = running && want && t == front;
+    }
+    if (text == _keepText || _keepBusy) return;
+    // refused once (Android lets it start only from the foreground, or
+    // when exempt): again when the app comes back
+    if (text != null && _keepRefused) return;
+    final platform = keepAlive;
+    if (platform == null) return;
+    _keepBusy = true;
+    unawaited(() async {
+      try {
+        if (text == null) {
+          await platform.stop();
+          _keepText = null;
+          terminalTrace.add('app', 'keep-alive service stopped');
+        } else {
+          final ok = await platform.start(text);
+          _keepText = ok ? text : null;
+          _keepRefused = !ok;
+          terminalTrace.add(
+            'app',
+            ok ? 'keep-alive service running' : 'keep-alive service refused',
+          );
+        }
+      } finally {
+        _keepBusy = false;
+      }
+      // the state may have moved on meanwhile; the flags follow the result
+      _syncKeep();
+      _notify();
+    }());
+  }
+
+  /// The keep-alive service could not start (shown in Settings).
+  bool get keepRefused => _keepRefused;
+  bool _keepRefused = false;
 
   /// The saved tabs; the first one made before load is kept when it is the
   /// same (nothing has used it yet: start and setup wait for load).
@@ -179,7 +287,7 @@ class TerminalService extends ChangeNotifier {
       onInput: lock.keepAlive,
       statusRows: viewStatusRows(t.statusRows),
       wheelLines: wheelLinesFor(app: t.app),
-    ),
+    )..addListener(_syncKeep),
   );
 
   /// The Terminal tab opened: connect the active tab if setup is done
@@ -278,6 +386,7 @@ class TerminalService extends ChangeNotifier {
     if (index < 0 || index >= _tabs.length || index == _active) return;
     final left = current;
     _active = index;
+    terminalTrace.add(_tabs[index].session, 'tab selected');
     _keepPrevious(left);
     _persist();
     _activateCurrent();
@@ -389,8 +498,19 @@ class TerminalService extends ChangeNotifier {
   static String _why(SshRunResult r) =>
       r.error.isNotEmpty ? r.error : 'tmux exited with ${r.exitCode}';
 
-  /// The app went to the background or came back: every tab.
+  /// The app went to the background or came back: every tab. Kept
+  /// connected (T4), only the tab in front stays: the one left last is
+  /// parked at once.
   void setForeground({required bool foreground}) {
+    if (foreground) {
+      _keepRefused = false;
+      _syncKeep();
+    } else if (_keepText != null) {
+      final left = _previous;
+      _previous = null;
+      _keep?.cancel();
+      if (left != null && left != current) _park(left);
+    }
     for (final t in _tabs) {
       t.connection.setForeground(foreground: foreground);
     }
@@ -525,6 +645,7 @@ class TerminalService extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _keep?.cancel();
+    if (_keepText != null) unawaited(keepAlive?.stop());
     for (final t in _tabs) {
       t.connection.dispose();
     }

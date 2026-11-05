@@ -8,6 +8,7 @@ import 'phone_key.dart';
 import 'secrets.dart';
 import 'ssh_link.dart';
 import 'sticky_keys.dart';
+import 'terminal_trace.dart';
 import 'terminal_wheel.dart';
 import 'tmux_terminal.dart';
 
@@ -70,6 +71,7 @@ class TerminalTiming {
     this.probeTimeout = const Duration(seconds: 3),
     this.echoWait = const Duration(seconds: 1),
     this.keepPrevious = const Duration(seconds: 60),
+    this.backgroundProbeEvery = const Duration(seconds: 30),
   });
 
   /// Waits before reconnect attempt 1, 2, …; the last one repeats.
@@ -99,6 +101,11 @@ class TerminalTiming {
   /// The tab left last stays connected this long (T3: switching back is
   /// instant), the others are parked at once.
   final Duration keepPrevious;
+
+  /// Kept connected in the background (T4): a quiet connection is probed
+  /// this often – enough traffic to keep the Tailscale tunnel awake, rare
+  /// enough for the battery.
+  final Duration backgroundProbeEvery;
 
   Duration delay(int attempt) =>
       backoff[(attempt - 1).clamp(0, backoff.length - 1)];
@@ -348,9 +355,24 @@ class TerminalConnection extends ChangeNotifier {
   bool _wasLive = false;
   DateTime? _backgroundSince;
   bool _disposed = false;
+  int _awayProbes = 0;
+  final _openWatch = Stopwatch();
+  bool _awaitFirstOutput = false;
+
+  /// The tab's name in trace lines.
+  String get _tag => _target?.session ?? '-';
 
   SshTarget? get target => _target;
   bool get live => _phase == TermPhase.live;
+
+  /// "Keep connected in background" is on for this tab and the service
+  /// keeping the app awake runs (T4): leaving the app does not end the
+  /// connection; it is probed every [TerminalTiming.backgroundProbeEvery],
+  /// and a drop reconnects in the background too.
+  bool keepInBackground = false;
+
+  /// Working now: in front, or kept in the background.
+  bool get _awake => _foreground || keepInBackground;
 
   /// Connects to [target] with [key] from scratch (setup, settings change,
   /// "Try again").
@@ -405,6 +427,7 @@ class TerminalConnection extends ChangeNotifier {
 
   /// Closes the connection; tmux keeps running.
   Future<void> disconnect({OfflineReason reason = OfflineReason.user}) async {
+    terminalTrace.add(_tag, 'disconnect (${reason.name})');
     _gen++;
     _retry?.cancel();
     answerHostKey(trust: false);
@@ -419,7 +442,14 @@ class TerminalConnection extends ChangeNotifier {
     _foreground = foreground;
     final now = _now();
     if (!foreground) {
+      terminalTrace.add(
+        _tag,
+        'background, phase ${_phase.name}'
+        '${keepInBackground ? ', kept connected' : ''}',
+      );
       _backgroundSince = now;
+      _awayProbes = 0;
+      if (keepInBackground) return;
       if (_phase == TermPhase.reconnecting) {
         _retry?.cancel();
         offlineReason = OfflineReason.background;
@@ -429,7 +459,22 @@ class TerminalConnection extends ChangeNotifier {
     }
     final since = _backgroundSince;
     _backgroundSince = null;
-    final stale = since != null && now.difference(since) >= timing.staleAfter;
+    // kept connected: the link was looked after all along, a quick check
+    // is enough
+    final stale =
+        !keepInBackground &&
+        since != null &&
+        now.difference(since) >= timing.staleAfter;
+    final away = since == null
+        ? '?'
+        : '${now.difference(since).inMilliseconds} ms';
+    final why = _phase == TermPhase.offline ? ' (${offlineReason?.name})' : '';
+    terminalTrace.add(
+      _tag,
+      'foreground after $away, phase ${_phase.name}$why'
+      '${stale ? ', stale' : ''}'
+      '${keepInBackground ? ', kept ($_awayProbes probes answered)' : ''}',
+    );
     switch (_phase) {
       case TermPhase.live when stale:
         // the socket is most likely dead already: a fresh one, same session
@@ -441,6 +486,12 @@ class TerminalConnection extends ChangeNotifier {
         unawaited(_probe(hold: true));
       case TermPhase.offline when offlineReason == OfflineReason.background:
         _reconnect(immediately: true);
+      case TermPhase.reconnecting when retryAt != null && retryAt!.isAfter(now):
+        // kept connected, it dropped while away and waits for its next try:
+        // the user is here, try now
+        _retry?.cancel();
+        attempt = 0;
+        unawaited(_open());
       default:
         break;
     }
@@ -449,7 +500,8 @@ class TerminalConnection extends ChangeNotifier {
   /// The phone's network changed (Wi-Fi, mobile data, airplane mode, VPN):
   /// a live connection is checked now, a waiting reconnect tries now.
   void networkChanged() {
-    if (_disposed || !_foreground) return;
+    if (_disposed || !_awake) return;
+    terminalTrace.add(_tag, 'network changed, phase ${_phase.name}');
     switch (_phase) {
       case TermPhase.live:
         unawaited(_probe(hold: true));
@@ -485,11 +537,19 @@ class TerminalConnection extends ChangeNotifier {
     if (_probing) return;
     final gen = _gen;
     _probing = true;
+    final watch = Stopwatch()..start();
     final ok = await link.probe(timing.probeTimeout);
     _probing = false;
+    if (hold || !ok) {
+      terminalTrace.add(
+        _tag,
+        'probe ${ok ? 'answered' : 'no answer'} in ${watch.elapsedMilliseconds} ms',
+      );
+    }
     if (gen != _gen || _disposed) return;
     if (ok) {
       _rxAt = _now();
+      if (!_foreground) _awayProbes++;
       _release();
     } else {
       _lost('no answer from the desktop');
@@ -508,6 +568,7 @@ class TerminalConnection extends ChangeNotifier {
   }
 
   void _lost(String why) {
+    terminalTrace.add(_tag, 'lost: $why');
     _gen++;
     _drop(abort: true);
     detail = why;
@@ -530,6 +591,13 @@ class TerminalConnection extends ChangeNotifier {
   }
 
   void _received(String data) {
+    if (_awaitFirstOutput) {
+      _awaitFirstOutput = false;
+      terminalTrace.add(
+        _tag,
+        'first output ${_openWatch.elapsedMilliseconds} ms after the attempt began',
+      );
+    }
     _rxAt = _now();
     _typedAt = null;
     _echo?.cancel();
@@ -539,8 +607,9 @@ class TerminalConnection extends ChangeNotifier {
   }
 
   void _tick() {
-    if (!_foreground || _phase != TermPhase.live) return;
-    if (_now().difference(_rxAt) >= timing.probeEvery) unawaited(_probe());
+    if (!_awake || _phase != TermPhase.live) return;
+    final every = _foreground ? timing.probeEvery : timing.backgroundProbeEvery;
+    if (_now().difference(_rxAt) >= every) unawaited(_probe());
   }
 
   Future<void> _open() async {
@@ -556,6 +625,13 @@ class TerminalConnection extends ChangeNotifier {
     question = null;
     refusedKey = null;
     refusedPinned = null;
+    _openWatch
+      ..reset()
+      ..start();
+    terminalTrace.add(
+      _tag,
+      'attempt ${attempt == 0 ? 'first' : '#$attempt'} starts',
+    );
     _set(attempt > 0 ? TermPhase.reconnecting : TermPhase.connecting);
 
     Future<bool> verify(String type, String fingerprint) async {
@@ -614,6 +690,10 @@ class TerminalConnection extends ChangeNotifier {
     } on Object catch (e) {
       if (gen != _gen) return;
       detail = e is SshFailure ? e.detail : '$e';
+      terminalTrace.add(
+        _tag,
+        'attempt failed after ${_openWatch.elapsedMilliseconds} ms: $detail',
+      );
       if (_wasLive) {
         _reconnect();
       } else {
@@ -623,6 +703,8 @@ class TerminalConnection extends ChangeNotifier {
   }
 
   void _attach(SshLink link, int gen) {
+    terminalTrace.add(_tag, 'live after ${_openWatch.elapsedMilliseconds} ms');
+    _awaitFirstOutput = true;
     _link = link;
     _wasLive = true;
     attempt = 0;
@@ -651,6 +733,7 @@ class TerminalConnection extends ChangeNotifier {
 
   void _ended(SshEnd end, int gen) {
     if (gen != _gen) return;
+    terminalTrace.add(_tag, 'link ended: ${end.name}');
     _gen++;
     _drop();
     if (end == SshEnd.sessionEnded) {
@@ -665,7 +748,8 @@ class TerminalConnection extends ChangeNotifier {
   /// drop); in the background it waits for the app to come back.
   void _reconnect({bool immediately = false}) {
     if (_disposed) return;
-    if (!_foreground) {
+    if (!_awake) {
+      terminalTrace.add(_tag, 'dropped in the background: waits');
       offlineReason = OfflineReason.background;
       _set(TermPhase.offline);
       return;
@@ -674,6 +758,7 @@ class TerminalConnection extends ChangeNotifier {
     final wait = immediately && attempt == 1
         ? Duration.zero
         : timing.delay(attempt);
+    terminalTrace.add(_tag, 'retry #$attempt in ${wait.inMilliseconds} ms');
     retryAt = _now().add(wait);
     _set(TermPhase.reconnecting);
     _retry?.cancel();

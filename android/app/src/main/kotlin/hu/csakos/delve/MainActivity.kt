@@ -1,12 +1,15 @@
 package hu.csakos.delve
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.provider.OpenableColumns
+import android.provider.Settings
 import android.webkit.MimeTypeMap
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -27,9 +30,14 @@ import java.util.concurrent.Executors
  *
  * A FlutterFragmentActivity: local_auth's BiometricPrompt (the terminal's
  * lock) needs a FragmentActivity.
+ *
+ * A second channel (TERMINAL_CHANNEL) starts and stops TerminalKeepService
+ * (the terminal stays connected in the background, T4) and asks for the
+ * battery-optimization exemption it needs.
  */
 class MainActivity : FlutterFragmentActivity() {
     private var channel: MethodChannel? = null
+    private var terminal: MethodChannel? = null
     private var pending: Intent? = null
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
@@ -43,6 +51,60 @@ class MainActivity : FlutterFragmentActivity() {
                     else -> result.notImplemented()
                 }
             }
+        }
+        terminal = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            TERMINAL_CHANNEL,
+        ).also {
+            it.setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "start" -> result.success(startKeep(call.argument<String>("text") ?: ""))
+                    "stop" -> {
+                        stopService(Intent(this, TerminalKeepService::class.java))
+                        result.success(null)
+                    }
+                    "batteryExempt" -> result.success(batteryExempt())
+                    "requestBatteryExempt" -> result.success(requestBatteryExempt())
+                    else -> result.notImplemented()
+                }
+            }
+        }
+    }
+
+    /** Starts (or updates the text of) the keep-alive service; false: not allowed now. */
+    private fun startKeep(text: String): Boolean {
+        val intent = Intent(this, TerminalKeepService::class.java)
+            .setAction(TerminalKeepService.ACTION_START)
+            .putExtra(TerminalKeepService.EXTRA_TEXT, text)
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun batteryExempt(): Boolean {
+        val power = getSystemService(Context.POWER_SERVICE) as PowerManager
+        return power.isIgnoringBatteryOptimizations(packageName)
+    }
+
+    /** The system dialog that exempts Delve; false: it could not be shown. */
+    @android.annotation.SuppressLint("BatteryLife")
+    private fun requestBatteryExempt(): Boolean {
+        if (batteryExempt()) return true
+        return try {
+            startActivity(
+                Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                    .setData(Uri.parse("package:$packageName")),
+            )
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -62,6 +124,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onDestroy() {
         channel?.setMethodCallHandler(null)
+        terminal?.setMethodCallHandler(null)
         io.shutdown()
         super.onDestroy()
     }
@@ -220,6 +283,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     companion object {
         private const val CHANNEL = "hu.csakos.delve/share"
+        private const val TERMINAL_CHANNEL = "hu.csakos.delve/terminal"
         private const val SHARED_DIR = "shared"
 
         /** Attachments per message (decision 336). */

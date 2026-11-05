@@ -3526,6 +3526,12 @@ abstract class AppLocalizations {
   /// **'Connecting…'**
   String get termConnecting;
 
+  /// No description provided for @termReconnectingNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting…'**
+  String get termReconnectingNow;
+
   /// No description provided for @termDenied.
   ///
   /// In en, this message translates to:
@@ -3682,6 +3688,18 @@ abstract class AppLocalizations {
   /// **'Reconnect'**
   String get termMenuReconnect;
 
+  /// No description provided for @termMenuCopyTrace.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy connection trace'**
+  String get termMenuCopyTrace;
+
+  /// No description provided for @termTraceCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Copied 1 trace line} other{Copied {count} trace lines}}'**
+  String termTraceCopied(int count);
+
   /// No description provided for @termKeyCtrl.
   ///
   /// In en, this message translates to:
@@ -3730,11 +3748,23 @@ abstract class AppLocalizations {
   /// **'Keep connected in background'**
   String get termBackground;
 
-  /// No description provided for @termBackgroundLater.
+  /// No description provided for @termBackgroundSub.
   ///
   /// In en, this message translates to:
-  /// **'Comes in a later update'**
-  String get termBackgroundLater;
+  /// **'The tab in front stays connected while Delve is in the background, so it is ready at once when you come back. Uses a little more battery; a quiet notification shows it.'**
+  String get termBackgroundSub;
+
+  /// No description provided for @termBackgroundNoStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Android did not let the background connection start'**
+  String get termBackgroundNoStart;
+
+  /// No description provided for @termBackgroundBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Delve to run without battery limits, or Android may still cut the connection'**
+  String get termBackgroundBattery;
 
   /// No description provided for @termHostPort.
   ///
@@ -3879,6 +3909,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Background connection off · port {port}'**
   String settingsTerminalSub(int port);
+
+  /// No description provided for @settingsTerminalSubOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Background connection on · port {port}'**
+  String settingsTerminalSubOn(int port);
 
   /// No description provided for @termCheckLine.
   ///

@@ -123,6 +123,7 @@ class TerminalSecrets {
   static const fontKey = 'delve.terminal.font.v1';
   static const imeKey = 'delve.terminal.ime.v1';
   static const tabsKey = 'delve.terminal.tabs.v1';
+  static const keepKey = 'delve.terminal.keep.v1';
 
   final SecretStore _store;
 
@@ -179,6 +180,12 @@ class TerminalSecrets {
 
   Future<void> saveFontSize(double size) =>
       _store.write(fontKey, size.toString());
+
+  /// "Keep connected in background" (T4); off unless turned on.
+  Future<bool> loadKeepConnected() async => await _store.read(keepKey) == '1';
+
+  Future<void> saveKeepConnected({required bool on}) =>
+      _store.write(keepKey, on ? '1' : '0');
 
   /// The keyboard heights seen, by orientation (`portrait`, `landscape`):
   /// the terminal lays itself out for the end of a keyboard animation at its

@@ -17,6 +17,7 @@ import '../../terminal/terminal_providers.dart';
 import '../../terminal/terminal_service.dart';
 import '../../terminal/terminal_tabs.dart';
 import '../../terminal/terminal_theme.dart';
+import '../../terminal/terminal_trace.dart';
 import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
@@ -106,6 +107,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    terminalTrace.add('app', state.name);
     switch (state) {
       case AppLifecycleState.resumed:
         _service.setForeground(foreground: true);
@@ -349,7 +351,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
       _unlocking = true;
       _unlockProblem = null;
     });
+    terminalTrace.add('app', 'fingerprint asked');
     final out = await _service.unlock(l.termUnlockReason);
+    terminalTrace.add('app', 'fingerprint: ${out.result.name}');
     if (!mounted) return;
     setState(() {
       _unlocking = false;
@@ -625,6 +629,11 @@ class _Menu extends StatelessWidget {
           child: Text(l.termMenuSessions(service.config.host.split('.').first)),
         ),
         PopupMenuItem(value: 'settings', child: Text(l.termMenuSettings)),
+        PopupMenuItem(
+          key: const Key('terminal.menu.trace'),
+          value: 'trace',
+          child: Text(l.termMenuCopyTrace),
+        ),
         if (c != null && c.live)
           PopupMenuItem(value: 'disconnect', child: Text(l.termMenuDisconnect))
         else if (c != null && c.phase != TermPhase.refused)
@@ -640,6 +649,15 @@ class _Menu extends StatelessWidget {
         unawaited(c?.disconnect());
       case 'reconnect':
         c?.retryNow();
+      case 'trace':
+        final lines = terminalTrace.lines;
+        await Clipboard.setData(ClipboardData(text: terminalTrace.text));
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(content: Text(l.termTraceCopied(lines.length))),
+          );
     }
   }
 

@@ -2160,6 +2160,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get termConnecting => 'Connecting…';
 
   @override
+  String get termReconnectingNow => 'Reconnecting…';
+
+  @override
   String get termDenied =>
       'Permission denied – is the line in authorized_keys?';
 
@@ -2243,6 +2246,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get termMenuReconnect => 'Reconnect';
 
   @override
+  String get termMenuCopyTrace => 'Copy connection trace';
+
+  @override
+  String termTraceCopied(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Copied $count trace lines',
+      one: 'Copied 1 trace line',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get termKeyCtrl => 'Control';
 
   @override
@@ -2268,7 +2285,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get termBackground => 'Keep connected in background';
 
   @override
-  String get termBackgroundLater => 'Comes in a later update';
+  String get termBackgroundSub =>
+      'The tab in front stays connected while Delve is in the background, so it is ready at once when you come back. Uses a little more battery; a quiet notification shows it.';
+
+  @override
+  String get termBackgroundNoStart =>
+      'Android did not let the background connection start';
+
+  @override
+  String get termBackgroundBattery =>
+      'Allow Delve to run without battery limits, or Android may still cut the connection';
 
   @override
   String get termHostPort => 'Host & port';
@@ -2344,6 +2370,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String settingsTerminalSub(int port) {
     return 'Background connection off · port $port';
+  }
+
+  @override
+  String settingsTerminalSubOn(int port) {
+    return 'Background connection on · port $port';
   }
 
   @override

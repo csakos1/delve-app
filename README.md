@@ -171,6 +171,24 @@ reached over Tailscale only.
   that only trusts the pinned host key. A session started on the desktop is attached as it
   is: its status line stays and a wheel step is tmux's 5 lines (a drag follows it). With
   every tab closed the terminal offers a new session or the list.
+- T4: Settings → Terminal → Keep connected in background (off by default). On, the tab
+  in front stays connected while Delve is away: a foreground service with a partial wake
+  lock (TerminalKeepService.kt, `specialUse`) runs while that tab is connected or
+  connecting, its notification on a channel of the lowest importance (silent, no
+  status-bar icon, swipeable); the connection is probed every 30 s while away, which also
+  keeps the Tailscale tunnel awake (after a long sleep it took 7–17 s to come back, and a
+  fresh connection had to wait for it), and a drop reconnects in the background too. Only
+  the tab in front is kept; the one left last is parked. Turning it on asks Android once
+  for the battery-optimization exemption (Settings shows a warning while it is missing).
+  A reconnect now tries a new TCP connection every half second for up to 20 s – the first
+  one through wins – and its first try shows "Reconnecting…" without a countdown.
+- A connection trace for slow reconnects after a long time away. The
+  terminal keeps the last 400 timed lines – the app going away and coming back, network
+  changes (wifi, mobile, vpn), each attempt's steps (name lookup, TCP, host key, sign-in,
+  session, first output), probes, drops and retries – with no keystrokes or output; ⋯ →
+  Copy connection trace puts them on the clipboard, and each also goes to the log
+  (`adb logcat -s flutter`). The dialer now looks the name up on its own (IPv4 first),
+  then connects to the address.
 
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share
@@ -222,7 +240,8 @@ lib/
   terminal/                  the phone key and pins (secrets), the SSH link (dartssh2), the
                              connection with reconnects, sticky Ctrl/Alt, the lock, the
                              tabs (terminal_tabs.dart: saved tabs, the tmux session list
-                             and commands), the service (one per app) and its providers
+                             and commands), the service (one per app) and its providers,
+                             the connection trace (terminal_trace.dart)
   attachments/               pickers, photo resizing, uploads (ComposerAttachments),
                              the image cache
   share/                     Share to Delve: the method channel (share_channel.dart), the

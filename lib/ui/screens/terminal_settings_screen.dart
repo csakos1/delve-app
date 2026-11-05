@@ -28,10 +28,27 @@ class _TerminalSettingsScreenState
     extends ConsumerState<TerminalSettingsScreen> {
   late final TerminalService _service = ref.read(terminalServiceProvider);
 
+  // back from the system's battery dialog: it may have changed
+  late final AppLifecycleListener _life;
+
   @override
   void initState() {
     super.initState();
-    unawaited(_service.load());
+    _life = AppLifecycleListener(
+      onResume: () => unawaited(_service.refreshBatteryExempt()),
+    );
+    unawaited(_load());
+  }
+
+  Future<void> _load() async {
+    await _service.load();
+    if (_service.keepConnected) await _service.refreshBatteryExempt();
+  }
+
+  @override
+  void dispose() {
+    _life.dispose();
+    super.dispose();
   }
 
   void _snack(String text) => ScaffoldMessenger.of(context)
@@ -177,10 +194,28 @@ class _TerminalSettingsScreenState
                 key: const Key('terminalSettings.background'),
                 secondary: const SymbolIcon(DelveIcons.sync),
                 title: Text(l.termBackground),
-                subtitle: Text(l.termBackgroundLater),
-                value: false,
-                onChanged: null,
+                subtitle: Text(l.termBackgroundSub),
+                isThreeLine: true,
+                value: s.keepConnected,
+                onChanged: (on) => unawaited(s.setKeepConnected(on: on)),
               ),
+              if (s.keepConnected && s.keepRefused)
+                _Row(
+                  key: const Key('terminalSettings.backgroundRefused'),
+                  icon: DelveIcons.warning,
+                  iconColor: alert,
+                  title: l.termBackgroundNoStart,
+                  titleColor: alert,
+                ),
+              if (s.keepConnected && s.batteryExempt == false)
+                _Row(
+                  key: const Key('terminalSettings.battery'),
+                  icon: DelveIcons.warning,
+                  iconColor: alert,
+                  title: l.termBackgroundBattery,
+                  titleColor: alert,
+                  onTap: s.requestBatteryExempt,
+                ),
               _Row(
                 key: const Key('terminalSettings.target'),
                 icon: DelveIcons.server,

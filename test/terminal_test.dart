@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Directory, File, Platform, Process;
 import 'dart:typed_data';
@@ -10,6 +11,7 @@ import 'package:delve/terminal/terminal_connection.dart';
 import 'package:delve/terminal/terminal_lock.dart';
 import 'package:delve/terminal/terminal_service.dart';
 import 'package:delve/terminal/terminal_theme.dart';
+import 'package:delve/terminal/terminal_trace.dart';
 import 'package:delve/terminal/terminal_wheel.dart';
 import 'package:delve/terminal/tmux_terminal.dart';
 import 'package:flutter/painting.dart';
@@ -1442,6 +1444,178 @@ void main() {
     });
   });
 
+  group('connection trace (T4)', () {
+    test('lines carry the clock, the gap and the tag; old ones go', () {
+      var t = DateTime(2026, 11, 5, 9, 7, 3, 45);
+      final trace = TerminalTrace(max: 3, now: () => t);
+      trace.add('app', 'resumed');
+      t = t.add(const Duration(milliseconds: 1250));
+      trace.add('delve-1', 'attempt #1 starts');
+      expect(trace.lines, [
+        '09:07:03.045         [app] resumed',
+        '09:07:04.295   +1250 [delve-1] attempt #1 starts',
+      ]);
+      trace
+        ..add('net', 'wifi+vpn')
+        ..add('net', 'none');
+      expect(trace.lines, hasLength(3));
+      expect(trace.lines.first, contains('attempt #1'));
+      expect(trace.text.split('\n'), hasLength(3));
+      trace.clear();
+      expect(trace.lines, isEmpty);
+    });
+
+    test('a dead link, the retry and the new connection are traced', () async {
+      terminalTrace.clear();
+      final rig = Rig();
+      addTearDown(rig.dispose);
+      final first = await rig.live();
+      first.alive = false;
+      rig.connection.networkChanged();
+      await until(() => first.aborted, reason: 'aborted');
+      await until(() => rig.connection.phase == TermPhase.live);
+      rig.dialer.last.send('prompt');
+      await until(
+        () => terminalTrace.lines.any((l) => l.contains('first output')),
+      );
+      final text = terminalTrace.text;
+      for (final part in [
+        '[delve-1] network changed, phase live',
+        '[delve-1] probe no answer',
+        '[delve-1] lost: no answer from the desktop',
+        '[delve-1] retry #1 in 0 ms',
+        '[delve-1] attempt #1 starts',
+        '[delve-1] live after',
+      ]) {
+        expect(text, contains(part), reason: part);
+      }
+      expect(text, isNot(contains('prompt')), reason: 'no output kept');
+    });
+  });
+
+  group('kept connected in the background (T4)', () {
+    test(
+      'away: no drop, quiet probes, and no new connection on return',
+      () async {
+        final rig = Rig();
+        addTearDown(rig.dispose);
+        final link = await rig.live();
+        final c = rig.connection
+          ..keepInBackground = true
+          ..setForeground(foreground: false);
+        await until(() => link.probes > 0, reason: 'probed while away');
+        await settle(250); // > staleAfter
+        expect(c.phase, TermPhase.live);
+        expect(link.closed, isFalse);
+        c.setForeground(foreground: true);
+        await settle(30);
+        expect(c.phase, TermPhase.live);
+        expect(rig.dialer.opens, hasLength(1), reason: 'the same connection');
+        expect(terminalTrace.text, contains('probes answered'));
+      },
+    );
+
+    test('not kept: the same absence opens a new connection', () async {
+      final rig = Rig();
+      addTearDown(rig.dispose);
+      await rig.live();
+      rig.connection.setForeground(foreground: false);
+      await settle(250);
+      rig.connection.setForeground(foreground: true);
+      await until(() => rig.dialer.opens.length == 2, reason: 'reopened');
+    });
+
+    test('a drop while away reconnects while away', () async {
+      final rig = Rig();
+      addTearDown(rig.dispose);
+      final link = await rig.live();
+      rig.connection
+        ..keepInBackground = true
+        ..setForeground(foreground: false);
+      link.end(SshEnd.connectionLost);
+      await until(() => rig.dialer.opens.length == 2, reason: 'reconnected');
+      await until(() => rig.connection.phase == TermPhase.live);
+    });
+
+    test('a retry waiting when the user comes back runs at once', () async {
+      final rig = Rig(
+        timing: const TerminalTiming(
+          backoff: [Duration(milliseconds: 20), Duration(seconds: 30)],
+          probeEvery: Duration(seconds: 5),
+        ),
+      );
+      addTearDown(rig.dispose);
+      final link = await rig.live();
+      rig.dialer.failures.add(const SshUnreachable('timed out'));
+      rig.connection
+        ..keepInBackground = true
+        ..setForeground(foreground: false);
+      link.end(SshEnd.connectionLost);
+      await until(() => rig.connection.attempt == 2, reason: 'waits 30 s');
+      rig.connection.setForeground(foreground: true);
+      await until(() => rig.connection.phase == TermPhase.live);
+      expect(rig.dialer.opens, hasLength(3));
+    });
+  });
+
+  group('staggered connects (T4)', () {
+    test(
+      'a fresh try every step; the first through wins, late ones go',
+      () async {
+        final tries = <Completer<int>>[];
+        final discarded = <int>[];
+        final result = staggered<int>(
+          start: (_) => (tries..add(Completer<int>())).last.future,
+          discard: discarded.add,
+          every: const Duration(milliseconds: 20),
+          within: const Duration(seconds: 2),
+        );
+        await until(() => tries.length >= 3, reason: 'three tries');
+        tries[2].complete(3);
+        expect(await result, (3, 3));
+        final count = tries.length;
+        await settle(60);
+        expect(tries, hasLength(count), reason: 'no more tries after a win');
+        tries[0].complete(1);
+        await settle(10);
+        expect(discarded, [1]);
+      },
+    );
+
+    test('the first try at once, and nothing else when it works', () async {
+      var n = 0;
+      final result = await staggered<String>(
+        start: (_) async {
+          n++;
+          return 'ok';
+        },
+        discard: (_) {},
+        every: const Duration(milliseconds: 20),
+        within: const Duration(seconds: 1),
+      );
+      expect(result, ('ok', 1));
+      await settle(60);
+      expect(n, 1);
+    });
+
+    test('none through within the time: the last error', () async {
+      var n = 0;
+      await expectLater(
+        staggered<int>(
+          start: (_) async {
+            n++;
+            throw StateError('unreachable $n');
+          },
+          discard: (_) {},
+          every: const Duration(milliseconds: 20),
+          within: const Duration(milliseconds: 110),
+        ),
+        throwsA(isA<StateError>()),
+      );
+      expect(n, inInclusiveRange(4, 7));
+    });
+  });
+
   group('lock', () {
     test('input keeps an open terminal open but never opens a locked one', () {
       var now = DateTime.utc(2026, 11, 3, 20);
@@ -1504,6 +1678,64 @@ void main() {
     });
 
     tearDown(() => service.dispose());
+
+    test('keep connected: off by default; on runs the service for the tab '
+        'in front, asks for the battery exemption once, and is kept', () async {
+      await fakes.setUpDone();
+      final service = TerminalService(
+        secrets: TerminalSecrets(fakes.store),
+        dialer: fakes.dialer,
+        biometrics: fakes.biometrics,
+        keepAlive: fakes.keepAlive,
+        defaultHost: 'archlinux.example.ts.net',
+        timing: fastTerminalTiming,
+      );
+      addTearDown(service.dispose);
+      await service.start();
+      await until(() => service.connection.live);
+      expect(service.keepConnected, isFalse);
+      expect(fakes.keepAlive.starts, isEmpty);
+
+      await service.setKeepConnected(on: true);
+      await until(() => service.connection.keepInBackground);
+      expect(fakes.keepAlive.starts, ['Terminal connected · delve-1']);
+      expect(fakes.keepAlive.exemptRequests, 1);
+      expect(await TerminalSecrets(fakes.store).loadKeepConnected(), isTrue);
+
+      service.setForeground(foreground: false);
+      await settle(250); // > staleAfter
+      service.setForeground(foreground: true);
+      await settle(30);
+      expect(fakes.dialer.opens, hasLength(1), reason: 'kept, not reopened');
+
+      await service.setKeepConnected(on: false);
+      await until(() => !fakes.keepAlive.running);
+      expect(service.connection.keepInBackground, isFalse);
+    });
+
+    test('keep connected: a refused start is tried again on return', () async {
+      await fakes.setUpDone();
+      await TerminalSecrets(fakes.store).saveKeepConnected(on: true);
+      fakes.keepAlive.allow = false;
+      final service = TerminalService(
+        secrets: TerminalSecrets(fakes.store),
+        dialer: fakes.dialer,
+        biometrics: fakes.biometrics,
+        keepAlive: fakes.keepAlive,
+        defaultHost: 'archlinux.example.ts.net',
+        timing: fastTerminalTiming,
+      );
+      addTearDown(service.dispose);
+      await service.start();
+      await until(() => service.keepRefused);
+      expect(service.connection.keepInBackground, isFalse);
+      fakes.keepAlive.allow = true;
+      service
+        ..setForeground(foreground: false)
+        ..setForeground(foreground: true);
+      await until(() => service.connection.keepInBackground);
+      expect(fakes.keepAlive.starts, hasLength(1));
+    });
 
     test(
       'a new setup starts from the paired host and does not connect',

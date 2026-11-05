@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:dartssh2/dartssh2.dart';
 
 import 'phone_key.dart';
+import 'terminal_trace.dart';
 
 /// Where one terminal session goes: the account on the desktop and the tmux
 /// session it attaches.
@@ -277,9 +278,17 @@ Future<SshRunResult> _runOn(
 
 /// dartssh2 4.1: TCP, key auth, an `xterm-256color` pty running tmux.
 class Dartssh2Dialer implements SshDialer {
-  const Dartssh2Dialer({this.connectTimeout = const Duration(seconds: 8)});
+  const Dartssh2Dialer({
+    this.connectTimeout = const Duration(seconds: 20),
+    this.connectEvery = const Duration(milliseconds: 500),
+  });
 
+  /// How long one attempt keeps trying to reach the desktop.
   final Duration connectTimeout;
+
+  /// A new TCP connection every this long within an attempt, the first one
+  /// that gets through wins ([staggered]).
+  final Duration connectEvery;
 
   @override
   Future<SshLink> open(
@@ -289,13 +298,25 @@ class Dartssh2Dialer implements SshDialer {
     required int columns,
     required int rows,
   }) async {
-    final (client, socket, declined) = await _connect(target, key, verify);
+    final watch = Stopwatch()..start();
+    void step(String what) => terminalTrace.add(
+      target.session,
+      '$what at ${watch.elapsedMilliseconds} ms',
+    );
+    final (client, socket, declined) = await _connect(
+      target,
+      key,
+      verify,
+      step: step,
+    );
     try {
       await client.authenticated;
+      step('authenticated');
       final session = await client.execute(
         target.command,
         pty: SSHPtyConfig(width: columns, height: rows),
       );
+      step('session opened');
       return _Dartssh2Link(client, session, socket);
     } on Object catch (e) {
       unawaited(client.close());
@@ -325,14 +346,37 @@ class Dartssh2Dialer implements SshDialer {
   Future<(SSHClient, _TcpSocket, bool Function())> _connect(
     SshTarget target,
     PhoneKey key,
-    HostKeyCheck verify,
-  ) async {
+    HostKeyCheck verify, {
+    void Function(String what)? step,
+  }) async {
+    // the name is looked up on its own, so a trace shows whether the name
+    // (Tailscale's DNS) or the connection is slow after a long background
+    final List<InternetAddress> addresses;
+    try {
+      addresses = await InternetAddress.lookup(
+        target.host,
+      ).timeout(connectTimeout);
+    } on Object catch (e) {
+      step?.call('name lookup failed (${_short(e)})');
+      throw SshUnreachable('name lookup: ${_short(e)}');
+    }
+    final address = addresses.firstWhere(
+      (a) => a.type == InternetAddressType.IPv4,
+      orElse: () => addresses.first,
+    );
+    step?.call('name looked up');
     final _TcpSocket socket;
     try {
-      socket = _TcpSocket(
-        await Socket.connect(target.host, target.port, timeout: connectTimeout),
+      final (raw, tries) = await staggered<Socket>(
+        start: (left) => Socket.connect(address, target.port, timeout: left),
+        discard: (s) => s.destroy(),
+        every: connectEvery,
+        within: connectTimeout,
       );
+      socket = _TcpSocket(raw);
+      step?.call('tcp connected (try $tries)');
     } on Object catch (e) {
+      step?.call('tcp failed (${_short(e)})');
       throw SshUnreachable(_short(e));
     }
     var declined = false;
@@ -344,6 +388,7 @@ class Dartssh2Dialer implements SshDialer {
       // missing one; TerminalConnection probes with a timeout instead
       keepAliveInterval: null,
       onVerifyHostKey: (type, fingerprint) async {
+        step?.call('host key received');
         final ok = await verify(type, String.fromCharCodes(fingerprint));
         declined = !ok;
         return ok;
@@ -506,4 +551,74 @@ class _Dartssh2Link implements SshLink {
     _socket.abort();
     unawaited(_client.close().catchError((Object _) {}));
   }
+}
+
+/// Starts a try every [every] (the first at once) until one succeeds or
+/// [within] has passed; each try gets the time left. The first success
+/// wins, later ones are [discard]ed. Fails with the last try's error when
+/// none got through.
+///
+/// T4: after a long sleep the phone's Tailscale tunnel needs several seconds
+/// to come back, and the SYNs sent meanwhile are lost; one socket would
+/// then wait out the kernel's SYN backoff (1, 2, 4 s …) and its timeout.
+/// A fresh try every half second gets through soon after the tunnel is up.
+Future<(T, int)> staggered<T>({
+  required Future<T> Function(Duration left) start,
+  required void Function(T value) discard,
+  required Duration every,
+  required Duration within,
+}) {
+  final done = Completer<(T, int)>();
+  final watch = Stopwatch()..start();
+  var tries = 0;
+  var open = 0;
+  var expired = false;
+  Object? lastError;
+  StackTrace? lastStack;
+  Timer? next;
+
+  void failIfOver() {
+    if (done.isCompleted || open > 0 || !expired) return;
+    done.completeError(
+      lastError ?? TimeoutException('no answer', within),
+      lastStack,
+    );
+  }
+
+  late final Timer deadline;
+  void launch() {
+    if (done.isCompleted) return;
+    final left = within - watch.elapsed;
+    if (left <= Duration.zero) return;
+    tries++;
+    open++;
+    final n = tries;
+    start(left).then(
+      (value) {
+        open--;
+        if (done.isCompleted) {
+          discard(value);
+          return;
+        }
+        next?.cancel();
+        deadline.cancel();
+        done.complete((value, n));
+      },
+      onError: (Object e, StackTrace st) {
+        open--;
+        lastError = e;
+        lastStack = st;
+        failIfOver();
+      },
+    );
+    if (left > every) next = Timer(every, launch);
+  }
+
+  deadline = Timer(within, () {
+    expired = true;
+    next?.cancel();
+    failIfOver();
+  });
+  launch();
+  return done.future;
 }

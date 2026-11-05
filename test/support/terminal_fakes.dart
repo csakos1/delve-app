@@ -6,6 +6,7 @@ import 'package:delve/terminal/phone_key.dart';
 import 'package:delve/terminal/secrets.dart';
 import 'package:delve/terminal/ssh_link.dart';
 import 'package:delve/terminal/terminal_connection.dart';
+import 'package:delve/terminal/terminal_keep_alive.dart';
 import 'package:delve/terminal/terminal_lock.dart';
 
 /// A desktop host key for tests (made up).
@@ -19,14 +20,17 @@ class TerminalFakes {
     MemorySecretStore? store,
     FakeSshDialer? dialer,
     FakeBiometrics? biometrics,
+    FakeKeepAlive? keepAlive,
     this.timing = fastTerminalTiming,
   }) : store = store ?? MemorySecretStore(),
        dialer = dialer ?? FakeSshDialer(),
-       biometrics = biometrics ?? FakeBiometrics();
+       biometrics = biometrics ?? FakeBiometrics(),
+       keepAlive = keepAlive ?? FakeKeepAlive();
 
   final MemorySecretStore store;
   final FakeSshDialer dialer;
   final FakeBiometrics biometrics;
+  final FakeKeepAlive keepAlive;
   final TerminalTiming timing;
 
   /// Network changes (Wi-Fi, airplane mode); lives as long as the test.
@@ -61,6 +65,7 @@ const fastTerminalTiming = TerminalTiming(
   probeEvery: Duration(milliseconds: 300),
   probeTimeout: Duration(milliseconds: 60),
   echoWait: Duration(milliseconds: 50),
+  backgroundProbeEvery: Duration(milliseconds: 600),
 );
 
 /// A session on the fake desktop's tmux.
@@ -331,5 +336,43 @@ class FakeBiometrics implements Biometrics {
       result,
       result == UnlockResult.failed ? 'lockout' : null,
     );
+  }
+}
+
+/// The keep-alive service (T4): records starts and stops.
+class FakeKeepAlive implements TerminalKeepAlive {
+  /// Whether a start is allowed (Android refuses one from the background).
+  bool allow = true;
+  bool exempt = false;
+
+  /// The notification texts of the starts, in order.
+  final starts = <String>[];
+  int stops = 0;
+  int exemptRequests = 0;
+
+  /// Running now (the last call was a successful start).
+  bool running = false;
+
+  @override
+  Future<bool> start(String text) async {
+    if (!allow) return false;
+    starts.add(text);
+    running = true;
+    return true;
+  }
+
+  @override
+  Future<void> stop() async {
+    stops++;
+    running = false;
+  }
+
+  @override
+  Future<bool> batteryExempt() async => exempt;
+
+  @override
+  Future<bool> requestBatteryExempt() async {
+    exemptRequests++;
+    return true;
   }
 }

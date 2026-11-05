@@ -140,6 +140,19 @@ class TerminalStateLine extends StatelessWidget {
           style: DelveText.monoSmall.copyWith(color: cs.onSurfaceVariant),
         ),
       ),
+      // the first try right after a drop or coming back (T4): it runs now,
+      // nothing to count down, and nothing to warn about yet
+      TermPhase.reconnecting when c.attempt <= 1 => line(
+        key: const Key('terminal.state.reconnecting'),
+        background: cs.surfaceContainerLow,
+        icon: DelveIcons.progress,
+        iconColor: cs.onSurfaceVariant,
+        text: l.termReconnectingNow,
+        right: Text(
+          where,
+          style: DelveText.monoSmall.copyWith(color: cs.onSurfaceVariant),
+        ),
+      ),
       TermPhase.reconnecting => line(
         key: const Key('terminal.state.reconnecting'),
         background: d.warnBg,

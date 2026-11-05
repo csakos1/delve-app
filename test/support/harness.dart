@@ -96,6 +96,7 @@ class TestEnv {
       biometricsProvider.overrideWithValue(terminal.biometrics),
       terminalTimingProvider.overrideWithValue(terminal.timing),
       terminalNetworkProvider.overrideWithValue(terminal.network.stream),
+      terminalKeepAliveProvider.overrideWithValue(terminal.keepAlive),
       if (push case final p?)
         pushStateProvider.overrideWith((ref) => Stream.value(p)),
       if (status case final s?)
@@ -126,6 +127,7 @@ class TestEnv {
         biometricsProvider.overrideWithValue(terminal.biometrics),
         terminalTimingProvider.overrideWithValue(terminal.timing),
         terminalNetworkProvider.overrideWithValue(terminal.network.stream),
+        terminalKeepAliveProvider.overrideWithValue(terminal.keepAlive),
         if (push case final p?)
           pushStateProvider.overrideWith((ref) => Stream.value(p)),
         if (status case final s?)
