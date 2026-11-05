@@ -211,6 +211,23 @@ void main() {
       expect(saved.active, 1);
     });
 
+    test("a new tab in a folder (the editor's Open in terminal): its shell "
+        'starts there; the folder is not saved', () async {
+      final svc = await desk.start();
+      await until(() => svc.connection.live);
+      final tab = await svc.newTab(startDir: '/home/user/delve-app');
+      await until(() => tab.connection.live);
+      expect(desk.dialer.opens.last.session, tab.session);
+      expect(desk.dialer.opens.last.startDir, '/home/user/delve-app');
+      expect(
+        desk.dialer.opens.last.command,
+        contains("-c '/home/user/delve-app'"),
+      );
+      expect(desk.dialer.opens.first.startDir, isNull);
+      final saved = await desk.secrets.loadTabs();
+      expect(saved.tabs.last.session, tab.session);
+    });
+
     test('a third tab parks the first at once; coming back connects it '
         'again', () async {
       final svc = await desk.start();

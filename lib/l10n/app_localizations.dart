@@ -5085,6 +5085,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a folder · last used {folder}'**
   String shareSaveLast(String folder);
+
+  /// No description provided for @editorEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editorEdit;
+
+  /// No description provided for @editorEditTooBig.
+  ///
+  /// In en, this message translates to:
+  /// **'Over 1 MB – download it'**
+  String get editorEditTooBig;
+
+  /// No description provided for @editorSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get editorSave;
+
+  /// No description provided for @editorSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get editorSaving;
+
+  /// No description provided for @editorUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get editorUndo;
+
+  /// No description provided for @editorRedo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get editorRedo;
+
+  /// No description provided for @editorMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get editorMore;
+
+  /// No description provided for @editorWrap.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrap lines'**
+  String get editorWrap;
+
+  /// No description provided for @editorFindLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Find · later'**
+  String get editorFindLater;
+
+  /// No description provided for @editorReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload from desktop'**
+  String get editorReload;
+
+  /// No description provided for @editorReloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reload: {reason}'**
+  String editorReloadFailed(String reason);
+
+  /// No description provided for @editorDiscardChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes'**
+  String get editorDiscardChanges;
+
+  /// No description provided for @editorEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited'**
+  String get editorEdited;
+
+  /// No description provided for @editorUnsaved.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, unsaved changes'**
+  String editorUnsaved(String name);
+
+  /// No description provided for @editorStatusEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing'**
+  String get editorStatusEditing;
+
+  /// No description provided for @editorStatusSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {time}'**
+  String editorStatusSaved(String time);
+
+  /// No description provided for @editorStatusNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Not saved'**
+  String get editorStatusNotSaved;
+
+  /// No description provided for @editorStatusOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · Save is back when connected'**
+  String get editorStatusOffline;
+
+  /// No description provided for @editorPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Ln {line}, Col {col}'**
+  String editorPosition(int line, int col);
+
+  /// No description provided for @editorLines.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 line} other{{count} lines}}'**
+  String editorLines(int count);
+
+  /// No description provided for @editorChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 line changed} other{{count} lines changed}}'**
+  String editorChanged(int count);
+
+  /// No description provided for @editorSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to the desktop'**
+  String get editorSaved;
+
+  /// No description provided for @editorSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not saved: {reason}'**
+  String editorSaveFailed(String reason);
+
+  /// No description provided for @editorBlockTooBig.
+  ///
+  /// In en, this message translates to:
+  /// **'Over 1 MB: shown in part, not editable'**
+  String get editorBlockTooBig;
+
+  /// No description provided for @editorBlockNotText.
+  ///
+  /// In en, this message translates to:
+  /// **'Not UTF-8 text: not editable'**
+  String get editorBlockNotText;
+
+  /// No description provided for @editorBlockReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only for {user}'**
+  String editorBlockReadOnly(String user);
+
+  /// No description provided for @editorInfoNotText.
+  ///
+  /// In en, this message translates to:
+  /// **'{lines, plural, =1{Read-only · 1 line · not UTF-8} other{Read-only · {lines} lines · not UTF-8}}'**
+  String editorInfoNotText(int lines);
+
+  /// No description provided for @editorOpenInTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in terminal'**
+  String get editorOpenInTerminal;
+
+  /// No description provided for @editorDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'{folder} doesn\'t let {user} save here'**
+  String editorDenied(String user, String folder);
+
+  /// No description provided for @editorSaveCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a copy to ~'**
+  String get editorSaveCopy;
+
+  /// No description provided for @editorCopyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy all'**
+  String get editorCopyAll;
+
+  /// No description provided for @editorCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied the whole file'**
+  String get editorCopied;
+
+  /// No description provided for @editorCopySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy saved as {path}'**
+  String editorCopySaved(String path);
+
+  /// No description provided for @editorConflictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **' changed on the desktop'**
+  String get editorConflictTitle;
+
+  /// No description provided for @editorConflictDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'On the desktop'**
+  String get editorConflictDesktop;
+
+  /// No description provided for @editorConflictOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'When you opened it'**
+  String get editorConflictOpened;
+
+  /// No description provided for @editorConflictYours.
+  ///
+  /// In en, this message translates to:
+  /// **'Your edit'**
+  String get editorConflictYours;
+
+  /// No description provided for @editorConflictDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'deleted'**
+  String get editorConflictDeleted;
+
+  /// No description provided for @editorOverwrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Overwrite'**
+  String get editorOverwrite;
+
+  /// No description provided for @editorOverwriteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your edit over the desktop\'s version'**
+  String get editorOverwriteHint;
+
+  /// No description provided for @editorReloadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Load the desktop\'s version} =1{Load the desktop\'s version · 1 changed line lost} other{Load the desktop\'s version · {count} changed lines lost}}'**
+  String editorReloadHint(int count);
+
+  /// No description provided for @editorDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes?'**
+  String get editorDiscardTitle;
+
+  /// No description provided for @editorDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 changed line in {name} is not saved to the desktop.} other{{count} changed lines in {name} are not saved to the desktop.}}'**
+  String editorDiscardBody(int count, String name);
+
+  /// No description provided for @editorDiscardAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get editorDiscardAction;
+
+  /// No description provided for @editorKeepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get editorKeepEditing;
+
+  /// No description provided for @editorLockedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your edit is kept. Unlock to go on.'**
+  String get editorLockedBody;
+
+  /// No description provided for @editorKeyTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab, 4 spaces'**
+  String get editorKeyTab;
+
+  /// No description provided for @editorKeyLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get editorKeyLeft;
+
+  /// No description provided for @editorKeyRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Right'**
+  String get editorKeyRight;
+
+  /// No description provided for @editorKeyUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Up'**
+  String get editorKeyUp;
+
+  /// No description provided for @editorKeyDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Down'**
+  String get editorKeyDown;
+
+  /// No description provided for @editorKeyHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Line start'**
+  String get editorKeyHome;
+
+  /// No description provided for @editorKeyEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Line end'**
+  String get editorKeyEnd;
 }
 
 class _AppLocalizationsDelegate

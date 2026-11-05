@@ -17,14 +17,18 @@ import '../widgets/files_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/pdf_view.dart';
 import '../widgets/zoom.dart';
+import 'text_file_screen.dart';
 
 /// What the preview opens: one file, or a folder's images to swipe through
 /// (starting at [index]).
 class FilePreviewArgs {
-  const FilePreviewArgs(this.entries, {this.index = 0});
+  const FilePreviewArgs(this.entries, {this.index = 0, this.edit = false});
 
   final List<RemoteEntry> entries;
   final int index;
+
+  /// A text file opens in the editor (the actions sheet's Edit, 23n).
+  final bool edit;
 }
 
 /// The preview route's `extra`: [FilePreviewArgs], or a single
@@ -33,6 +37,7 @@ FilePreviewArgs? previewArgsOf(Object? extra) => switch (extra) {
   final FilePreviewArgs a when a.entries.isNotEmpty => FilePreviewArgs(
     a.entries,
     index: a.index.clamp(0, a.entries.length - 1),
+    edit: a.edit,
   ),
   final RemoteEntry e => FilePreviewArgs([e]),
   _ => null,
@@ -43,9 +48,9 @@ FilePreviewArgs? previewArgsOf(Object? extra) => switch (extra) {
 /// wide screen does not need more.
 const kPreviewDecodeMax = 3072;
 
-/// 23h: a text file (read-only, mono, line numbers), an image (pinch to
-/// zoom; the folder's other images a swipe away) or a PDF (its pages
-/// rendered by the phone), with Download.
+/// 23h: a text file ([TextFileScreen]: read-only, then edited, 23n), an
+/// image (pinch to zoom; the folder's other images a swipe away) or a PDF
+/// (its pages rendered by the phone), with Download.
 class FilePreviewScreen extends ConsumerStatefulWidget {
   const FilePreviewScreen({super.key, required this.args});
 
@@ -63,10 +68,9 @@ class _FilePreviewScreenState extends ConsumerState<FilePreviewScreen> {
   late final PreviewKind _kind = previewKindOf(_entries[_index]);
   late final bool _gallery = _kind == PreviewKind.image;
   late final bool _pdf = _kind == PreviewKind.pdf;
+  late final bool _text = _kind == PreviewKind.text;
   int _pdfPage = 0;
   int _pdfCount = 0;
-  Future<Object?>? _load;
-  bool _lineNumbers = true;
   bool _zoomed = false;
   bool _pinching = false;
   int _down = 0;
@@ -77,7 +81,6 @@ class _FilePreviewScreenState extends ConsumerState<FilePreviewScreen> {
   void initState() {
     super.initState();
     _service = ref.read(filesServiceProvider);
-    if (!_gallery && !_pdf) _load = _fetch();
   }
 
   @override
@@ -87,12 +90,6 @@ class _FilePreviewScreenState extends ConsumerState<FilePreviewScreen> {
     if (_gallery || _pdf) unawaited(_service.clearPreviews());
     super.dispose();
   }
-
-  /// A text file's start; null (not text, or not a kind it shows) is the
-  /// "Not a text file" message.
-  Future<Object?> _fetch() => previewKindOf(_entry) == PreviewKind.text
-      ? _service.readText(_entry)
-      : Future<Object?>.value();
 
   void _download() {
     final l = AppLocalizations.of(context);
@@ -106,6 +103,9 @@ class _FilePreviewScreenState extends ConsumerState<FilePreviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_text) {
+      return TextFileScreen(entry: _entry, edit: widget.args.edit);
+    }
     final l = AppLocalizations.of(context);
     final e = _entry;
     final cs = context.colors;
@@ -155,14 +155,6 @@ class _FilePreviewScreenState extends ConsumerState<FilePreviewScreen> {
             icon: const SymbolIcon(FileIcons.download),
             onPressed: _download,
           ),
-          if (!dark)
-            IconButton(
-              key: const Key('preview.lineNumbers'),
-              tooltip: l.filesLineNumbers,
-              isSelected: _lineNumbers,
-              icon: const SymbolIcon(FileIcons.numbers),
-              onPressed: () => setState(() => _lineNumbers = !_lineNumbers),
-            ),
         ],
       ),
       body: _gallery
@@ -217,44 +209,15 @@ class _FilePreviewScreenState extends ConsumerState<FilePreviewScreen> {
     if (pinching != _pinching) setState(() => _pinching = pinching);
   }
 
-  Widget _single(AppLocalizations l) => FutureBuilder<Object?>(
-    future: _load,
-    builder: (context, snap) {
-      if (snap.connectionState != ConnectionState.done) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      if (snap.hasError) {
-        return FilesMessage(
-          key: const Key('preview.error'),
-          icon: DelveIcons.error,
-          title: l.filesPreviewFailed,
-          body: Text('${snap.error}'),
-          actions: [
-            FilledButton.tonal(
-              onPressed: () => setState(() => _load = _fetch()),
-              child: Text(l.filesRetry),
-            ),
-          ],
-        );
-      }
-      return switch (snap.data) {
-        (final String text, final bool cut) => _TextView(
-          text: text,
-          cut: cut,
-          lineNumbers: _lineNumbers,
-          onDownload: _download,
-        ),
-        _ => FilesMessage(
-          key: const Key('preview.binary'),
-          icon: FileIcons.other,
-          title: l.filesPreviewBinary,
-          body: Text(l.filesPreviewBinaryBody),
-          actions: [
-            FilledButton(onPressed: _download, child: Text(l.filesActDownload)),
-          ],
-        ),
-      };
-    },
+  /// Not a kind it shows: "Not a text file", with Download.
+  Widget _single(AppLocalizations l) => FilesMessage(
+    key: const Key('preview.binary'),
+    icon: FileIcons.other,
+    title: l.filesPreviewBinary,
+    body: Text(l.filesPreviewBinaryBody),
+    actions: [
+      FilledButton(onPressed: _download, child: Text(l.filesActDownload)),
+    ],
   );
 }
 
@@ -503,106 +466,6 @@ class _Loading extends StatelessWidget {
       },
     ),
   );
-}
-
-class _TextView extends StatelessWidget {
-  const _TextView({
-    required this.text,
-    required this.cut,
-    required this.lineNumbers,
-    required this.onDownload,
-  });
-
-  final String text;
-  final bool cut;
-  final bool lineNumbers;
-  final VoidCallback onDownload;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final d = context.delve;
-    var lines = text.split('\n');
-    if (lines.length > 1 && lines.last.isEmpty) {
-      lines = lines.sublist(0, lines.length - 1);
-    }
-    final style = DelveText.mono.copyWith(color: d.codeFg, height: 20 / 13);
-    final gutter = DelveText.mono.copyWith(color: d.textMuted, height: 20 / 13);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: Container(
-            key: const Key('preview.text'),
-            margin: const EdgeInsets.symmetric(horizontal: DelveTokens.space2),
-            decoration: BoxDecoration(
-              color: context.colors.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(DelveTokens.rmd),
-            ),
-            child: SelectionArea(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(
-                  vertical: DelveTokens.space3,
-                ),
-                itemCount: lines.length,
-                itemBuilder: (context, i) => Padding(
-                  padding: const EdgeInsets.only(right: DelveTokens.space3),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (lineNumbers)
-                        SizedBox(
-                          width:
-                              FilesTokens.previewGutter +
-                              (lines.length >= 1000 ? 10 : 0),
-                          child: SelectionContainer.disabled(
-                            child: Text(
-                              '${i + 1}',
-                              textAlign: TextAlign.right,
-                              style: gutter,
-                            ),
-                          ),
-                        ),
-                      const SizedBox(width: DelveTokens.space3),
-                      Expanded(child: Text(lines[i], style: style)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            DelveTokens.space4,
-            DelveTokens.space2,
-            DelveTokens.space2,
-            DelveTokens.space2,
-          ),
-          child: SafeArea(
-            top: false,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    cut ? l.filesPreviewCut : l.filesPreviewInfo(lines.length),
-                    style: context.text.labelMedium!.copyWith(
-                      color: d.textMuted,
-                    ),
-                  ),
-                ),
-                if (cut)
-                  TextButton(
-                    onPressed: onDownload,
-                    child: Text(l.filesActDownload),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 class _ImageView extends StatefulWidget {

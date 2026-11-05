@@ -37,16 +37,21 @@ RemoteEntry dirEntry(
   owner: owner,
 );
 
-RemoteEntry fileEntry(String path, int size, {int mode = 0x81A4}) =>
-    RemoteEntry(
-      name: baseName(path),
-      path: path,
-      kind: EntryKind.file,
-      size: size,
-      modified: _t0,
-      mode: mode,
-      owner: 'csakos',
-    );
+RemoteEntry fileEntry(
+  String path,
+  int size, {
+  int mode = 0x81A4,
+  String owner = 'csakos',
+  DateTime? modified,
+}) => RemoteEntry(
+  name: baseName(path),
+  path: path,
+  kind: EntryKind.file,
+  size: size,
+  modified: modified ?? _t0,
+  mode: mode,
+  owner: owner,
+);
 
 /// The desktop's filesystem in memory: folders, files with content, folders
 /// `csakos` can't read.
@@ -180,7 +185,8 @@ class FakeRemoteFs implements RemoteFs {
   }
 
   void _writable(String path) {
-    if (denied.contains(parentPath(path))) {
+    final dir = parentPath(path);
+    if (denied.contains(dir) || readOnly.contains(dir)) {
       throw RemoteFsError(FsFailure.denied, 'Permission denied: $path');
     }
   }
@@ -253,10 +259,76 @@ class FakeRemoteFs implements RemoteFs {
     }
   }
 
+  /// Every write is a second later (a save changes the file's time).
+  int _writes = 0;
+
+  /// Writes a file; one that is there keeps its owner and mode.
   void _file(String path, Uint8List bytes) {
-    _put(fileEntry(path, bytes.length));
+    final was = _find(path);
+    _put(
+      fileEntry(
+        path,
+        bytes.length,
+        mode: was?.mode ?? 0x81A4,
+        owner: was?.owner ?? 'csakos',
+        modified: _t0.add(Duration(seconds: ++_writes)),
+      ),
+    );
     contents[path] = bytes;
   }
+
+  /// The desktop edits [path] meanwhile (a conflict for the editor).
+  void touch(String path, String text) =>
+      _file(path, Uint8List.fromList(utf8.encode(text)));
+
+  /// Paths the login can't write (the file's own bits; a folder in
+  /// [denied] is not writable either).
+  final Set<String> readOnly = {};
+
+  /// (path, mode) of each [setMode], in order.
+  final List<(String, int)> modesSet = [];
+
+  /// The paths [sync] flushed.
+  final List<String> synced = [];
+
+  @override
+  Future<void> setMode(String path, int mode) async {
+    _alive();
+    final e = _find(path);
+    if (e == null) throw RemoteFsError(FsFailure.notFound, path);
+    modesSet.add((path, mode & 0xFFF));
+    _put(
+      RemoteEntry(
+        name: e.name,
+        path: e.path,
+        kind: e.kind,
+        size: e.size,
+        modified: e.modified,
+        mode: (e.mode ?? 0) & ~0xFFF | (mode & 0xFFF),
+        owner: e.owner,
+        link: e.link,
+      ),
+    );
+  }
+
+  @override
+  Future<List<PathAccess?>?> access(List<String> paths) async {
+    _alive();
+    return [
+      for (final p in paths)
+        if (_find(p) case final e?)
+          PathAccess(
+            writable: !readOnly.contains(p) && !denied.contains(p),
+            owner: e.owner ?? 'csakos',
+            mode: e.mode,
+          )
+        else
+          null,
+    ];
+  }
+
+  @override
+  Future<void> sync(String path) async => synced.add(path);
 
   @override
   Future<void> writeFile(
@@ -266,6 +338,9 @@ class FakeRemoteFs implements RemoteFs {
   }) async {
     _alive();
     _writable(path);
+    if (readOnly.contains(path)) {
+      throw RemoteFsError(FsFailure.denied, 'Permission denied: $path');
+    }
     if (exclusive && _find(path) != null) {
       throw RemoteFsError(FsFailure.exists, path);
     }

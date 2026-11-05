@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:delve/files/pdf_pages.dart';
 import 'package:delve/terminal/ssh_link.dart';
 import 'package:delve/terminal/terminal_lock.dart';
@@ -635,6 +637,220 @@ void main() {
       await frames(t);
       expect(row('tool1'), findsNothing);
       expect(row('tool2'), findsOneWidget);
+    });
+  });
+
+  group('editor (F2b)', () {
+    Finder row(String name) => find.byKey(Key('files.row.$name'));
+    final field = find.byKey(const Key('editor.field'));
+
+    String text(WidgetTester t) => t.widget<TextField>(field).controller!.text;
+
+    String details(WidgetTester t) =>
+        t.widget<Text>(find.byKey(const Key('editor.status.details'))).data!;
+
+    String onDesktop(TerminalFakes fakes, String path) =>
+        utf8.decode(fakes.files.last!.contents[path]!);
+
+    /// The actions sheet's Edit on [name].
+    Future<void> edit(WidgetTester t, String name) async {
+      await t.tap(find.byKey(Key('files.menu.$name')));
+      await frames(t);
+      await t.tap(find.byKey(const Key('files.act.edit')));
+      await frames(t, 20);
+      expect(field, findsOneWidget);
+    }
+
+    testWidgets('Edit: type, the dot and Save; saved to the desktop', (
+      t,
+    ) async {
+      final fakes = await openFiles(t);
+      await edit(t, 'notes.txt');
+      expect(find.byKey(const Key('editor.dirty')), findsNothing);
+      expect(find.byKey(const Key('editor.save')), findsNothing);
+      expect(find.byKey(const Key('editor.status.word')), findsOneWidget);
+      expect(find.text('Editing'), findsOneWidget);
+      expect(details(t), contains('2 lines · UTF-8'));
+      await t.enterText(field, 'line one\nline 2\n');
+      await frames(t);
+      expect(find.byKey(const Key('editor.dirty')), findsOneWidget);
+      expect(find.byKey(const Key('editor.save')), findsOneWidget);
+      expect(details(t), contains('Ln 3, Col 1'));
+      expect(details(t), endsWith('1 line changed'));
+      await t.tap(find.byKey(const Key('editor.save')));
+      await frames(t);
+      expect(onDesktop(fakes, '/home/user/notes.txt'), 'line one\nline 2\n');
+      expect(find.text('Saved to the desktop'), findsOneWidget);
+      expect(find.byKey(const Key('editor.dirty')), findsNothing);
+      expect(find.byKey(const Key('editor.save')), findsNothing);
+      expect(find.textContaining('Saved '), findsWidgets);
+      expect(details(t), isNot(contains('changed')));
+      // nothing unsaved: back goes straight to the list
+      await t.tap(find.byType(BackButton));
+      await frames(t, 20);
+      expect(find.byKey(const Key('files.list')), findsOneWidget);
+    });
+
+    testWidgets('the desktop changed it: Reload, or Overwrite', (t) async {
+      final fakes = await openFiles(t);
+      final fs = fakes.files.last!;
+      await edit(t, 'notes.txt');
+      await t.enterText(field, 'mine\n');
+      await frames(t);
+      fs.touch('/home/user/notes.txt', 'theirs\n');
+      await t.tap(find.byKey(const Key('editor.save')));
+      await frames(t);
+      expect(find.byKey(const Key('editor.conflict')), findsOneWidget);
+      expect(find.byKey(const Key('editor.conflict.desktop')), findsOneWidget);
+      await t.tap(find.byKey(const Key('editor.conflict.reload')));
+      await frames(t);
+      expect(text(t), 'theirs\n');
+      expect(find.byKey(const Key('editor.dirty')), findsNothing);
+
+      await t.enterText(field, 'mine again\n');
+      await frames(t);
+      fs.touch('/home/user/notes.txt', 'theirs 2\n');
+      await t.tap(find.byKey(const Key('editor.save')));
+      await frames(t);
+      await t.tap(find.byKey(const Key('editor.conflict.cancel')));
+      await frames(t);
+      expect(find.text('Not saved'), findsOneWidget);
+      expect(onDesktop(fakes, '/home/user/notes.txt'), 'theirs 2\n');
+      await t.tap(find.byKey(const Key('editor.save')));
+      await frames(t);
+      await t.tap(find.byKey(const Key('editor.conflict.overwrite')));
+      await frames(t);
+      expect(onDesktop(fakes, '/home/user/notes.txt'), 'mine again\n');
+      expect(find.byKey(const Key('editor.dirty')), findsNothing);
+    });
+
+    testWidgets('back with an edit asks: Keep editing, then Discard', (
+      t,
+    ) async {
+      final fakes = await openFiles(t);
+      await edit(t, 'notes.txt');
+      await t.enterText(field, 'gone\n');
+      await frames(t);
+      await t.tap(find.byType(BackButton));
+      await frames(t);
+      expect(find.byKey(const Key('editor.discard')), findsOneWidget);
+      expect(find.text('Discard changes?'), findsOneWidget);
+      expect(
+        find.text('2 changed lines in notes.txt are not saved to the desktop.'),
+        findsOneWidget,
+      );
+      await t.tap(find.byKey(const Key('editor.discard.keep')));
+      await frames(t);
+      expect(text(t), 'gone\n');
+      await t.tap(find.byType(BackButton));
+      await frames(t);
+      await t.tap(find.byKey(const Key('editor.discard.discard')));
+      await frames(t, 20);
+      expect(find.byKey(const Key('files.list')), findsOneWidget);
+      expect(onDesktop(fakes, '/home/user/notes.txt'), 'line one\nline two\n');
+    });
+
+    testWidgets('back with an edit: Save, then the list', (t) async {
+      final fakes = await openFiles(t);
+      await edit(t, 'notes.txt');
+      await t.enterText(field, 'kept\n');
+      await frames(t);
+      await t.tap(find.byType(BackButton));
+      await frames(t);
+      await t.tap(find.byKey(const Key('editor.discard.save')));
+      await frames(t, 20);
+      expect(find.byKey(const Key('files.list')), findsOneWidget);
+      expect(onDesktop(fakes, '/home/user/notes.txt'), 'kept\n');
+    });
+
+    testWidgets('the menu: line numbers, wrap, discard changes', (t) async {
+      await openFiles(t);
+      await edit(t, 'notes.txt');
+      await t.enterText(field, 'x\n');
+      await frames(t);
+      await t.tap(find.byKey(const Key('editor.menu')));
+      await frames(t);
+      expect(find.text('Find · later'), findsOneWidget);
+      await t.tap(find.byKey(const Key('editor.menu.wrap')));
+      await frames(t);
+      expect(find.byKey(const Key('editor.hscroll')), findsNothing);
+      await t.tap(find.byKey(const Key('editor.menu')));
+      await frames(t);
+      await t.tap(find.byKey(const Key('editor.menu.discard')));
+      await frames(t);
+      expect(text(t), 'line one\nline two\n');
+      expect(find.byKey(const Key('editor.dirty')), findsNothing);
+    });
+
+    testWidgets('the key row over the keyboard: Tab is four spaces', (t) async {
+      await openFiles(t);
+      await edit(t, 'notes.txt');
+      expect(find.byKey(const Key('editor.keys')), findsNothing);
+      t.view.viewInsets = const FakeViewPadding(bottom: 800);
+      addTearDown(t.view.resetViewInsets);
+      await t.enterText(field, 'ab');
+      await frames(t);
+      expect(find.byKey(const Key('editor.keys')), findsOneWidget);
+      await t.tap(find.byKey(const Key('editor.key.left')));
+      await t.pump();
+      await t.tap(find.byKey(const Key('editor.key.tab')));
+      await frames(t);
+      expect(text(t), 'a    b');
+      expect(field, findsOneWidget);
+    });
+
+    testWidgets('read-only: the banner, Edit off, Open in terminal in the '
+        "file's folder", (t) async {
+      final fakes = await openFiles(t);
+      fakes.files.last!.readOnly.add('/home/user/notes.txt');
+      await t.tap(row('notes.txt'));
+      await frames(t, 20);
+      expect(find.byKey(const Key('editor.readOnly')), findsOneWidget);
+      expect(
+        find.text('Read-only for csakos · csakos -rw-r--r--'),
+        findsOneWidget,
+      );
+      expect(
+        t.widget<IconButton>(find.byKey(const Key('preview.edit'))).onPressed,
+        isNull,
+      );
+      await t.tap(find.text('Open in terminal'));
+      await frames(t, 30);
+      expect(fakes.dialer.opens.last.startDir, '/home/user');
+      expect(fakes.dialer.opens.last.command, contains("-c '/home/user'"));
+    });
+
+    testWidgets('the folder refuses the save: the banner, a copy to ~', (
+      t,
+    ) async {
+      final fakes = await openFiles(t);
+      final fs = fakes.files.last!;
+      fs.tree['/home/user/Documents']!.add(
+        fileEntry('/home/user/Documents/plan.txt', 3),
+      );
+      fs.contents['/home/user/Documents/plan.txt'] = Uint8List.fromList(
+        utf8.encode('a\n\n'),
+      );
+      await t.tap(row('Documents'));
+      await frames(t);
+      await edit(t, 'plan.txt');
+      fs.readOnly.add('/home/user/Documents');
+      await t.enterText(field, 'b\n');
+      await frames(t);
+      await t.tap(find.byKey(const Key('editor.save')));
+      await frames(t);
+      expect(find.byKey(const Key('editor.denied')), findsOneWidget);
+      expect(
+        find.text("~/Documents doesn't let csakos save here"),
+        findsOneWidget,
+      );
+      expect(find.text('Not saved'), findsOneWidget);
+      await t.tap(find.byKey(const Key('editor.saveCopy')));
+      await frames(t);
+      expect(onDesktop(fakes, '/home/user/plan.txt'), 'b\n');
+      expect(find.text('Copy saved as ~/plan.txt'), findsOneWidget);
+      // the edit is still there, unsaved
+      expect(find.byKey(const Key('editor.dirty')), findsOneWidget);
     });
   });
 }

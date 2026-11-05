@@ -3153,4 +3153,221 @@ class AppLocalizationsEn extends AppLocalizations {
   String shareSaveLast(String folder) {
     return 'Choose a folder · last used $folder';
   }
+
+  @override
+  String get editorEdit => 'Edit';
+
+  @override
+  String get editorEditTooBig => 'Over 1 MB – download it';
+
+  @override
+  String get editorSave => 'Save';
+
+  @override
+  String get editorSaving => 'Saving…';
+
+  @override
+  String get editorUndo => 'Undo';
+
+  @override
+  String get editorRedo => 'Redo';
+
+  @override
+  String get editorMore => 'More';
+
+  @override
+  String get editorWrap => 'Wrap lines';
+
+  @override
+  String get editorFindLater => 'Find · later';
+
+  @override
+  String get editorReload => 'Reload from desktop';
+
+  @override
+  String editorReloadFailed(String reason) {
+    return 'Couldn\'t reload: $reason';
+  }
+
+  @override
+  String get editorDiscardChanges => 'Discard changes';
+
+  @override
+  String get editorEdited => 'Edited';
+
+  @override
+  String editorUnsaved(String name) {
+    return '$name, unsaved changes';
+  }
+
+  @override
+  String get editorStatusEditing => 'Editing';
+
+  @override
+  String editorStatusSaved(String time) {
+    return 'Saved $time';
+  }
+
+  @override
+  String get editorStatusNotSaved => 'Not saved';
+
+  @override
+  String get editorStatusOffline => 'Offline · Save is back when connected';
+
+  @override
+  String editorPosition(int line, int col) {
+    return 'Ln $line, Col $col';
+  }
+
+  @override
+  String editorLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lines',
+      one: '1 line',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String editorChanged(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lines changed',
+      one: '1 line changed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get editorSaved => 'Saved to the desktop';
+
+  @override
+  String editorSaveFailed(String reason) {
+    return 'Not saved: $reason';
+  }
+
+  @override
+  String get editorBlockTooBig => 'Over 1 MB: shown in part, not editable';
+
+  @override
+  String get editorBlockNotText => 'Not UTF-8 text: not editable';
+
+  @override
+  String editorBlockReadOnly(String user) {
+    return 'Read-only for $user';
+  }
+
+  @override
+  String editorInfoNotText(int lines) {
+    String _temp0 = intl.Intl.pluralLogic(
+      lines,
+      locale: localeName,
+      other: 'Read-only · $lines lines · not UTF-8',
+      one: 'Read-only · 1 line · not UTF-8',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get editorOpenInTerminal => 'Open in terminal';
+
+  @override
+  String editorDenied(String user, String folder) {
+    return '$folder doesn\'t let $user save here';
+  }
+
+  @override
+  String get editorSaveCopy => 'Save a copy to ~';
+
+  @override
+  String get editorCopyAll => 'Copy all';
+
+  @override
+  String get editorCopied => 'Copied the whole file';
+
+  @override
+  String editorCopySaved(String path) {
+    return 'Copy saved as $path';
+  }
+
+  @override
+  String get editorConflictTitle => ' changed on the desktop';
+
+  @override
+  String get editorConflictDesktop => 'On the desktop';
+
+  @override
+  String get editorConflictOpened => 'When you opened it';
+
+  @override
+  String get editorConflictYours => 'Your edit';
+
+  @override
+  String get editorConflictDeleted => 'deleted';
+
+  @override
+  String get editorOverwrite => 'Overwrite';
+
+  @override
+  String get editorOverwriteHint =>
+      'Save your edit over the desktop\'s version';
+
+  @override
+  String editorReloadHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Load the desktop\'s version · $count changed lines lost',
+      one: 'Load the desktop\'s version · 1 changed line lost',
+      zero: 'Load the desktop\'s version',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get editorDiscardTitle => 'Discard changes?';
+
+  @override
+  String editorDiscardBody(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changed lines in $name are not saved to the desktop.',
+      one: '1 changed line in $name is not saved to the desktop.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get editorDiscardAction => 'Discard';
+
+  @override
+  String get editorKeepEditing => 'Keep editing';
+
+  @override
+  String get editorLockedBody => 'Your edit is kept. Unlock to go on.';
+
+  @override
+  String get editorKeyTab => 'Tab, 4 spaces';
+
+  @override
+  String get editorKeyLeft => 'Left';
+
+  @override
+  String get editorKeyRight => 'Right';
+
+  @override
+  String get editorKeyUp => 'Up';
+
+  @override
+  String get editorKeyDown => 'Down';
+
+  @override
+  String get editorKeyHome => 'Line start';
+
+  @override
+  String get editorKeyEnd => 'Line end';
 }

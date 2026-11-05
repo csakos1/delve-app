@@ -13,6 +13,7 @@ import 'device_files.dart';
 import 'remote_fs.dart';
 import 'sftp_fs.dart';
 
+part 'files_edit.dart';
 part 'files_ops.dart';
 
 /// Where the Files tab's connection is.

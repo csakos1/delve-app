@@ -33,6 +33,10 @@ class TerminalTab {
 
   final TerminalConnection connection;
 
+  /// Where the tab's new session starts (Files' "Open in terminal"); only
+  /// used when the session is made. Not saved.
+  String? startDir;
+
   SavedTab get saved =>
       SavedTab(session: session, app: app, statusRows: statusRows);
 }

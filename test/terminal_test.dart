@@ -148,6 +148,30 @@ void main() {
       expect(shellQuote("a b'c"), r"'a b'\''c'");
     });
 
+    test("a new app session's shell starts in a folder (the editor's Open "
+        'in terminal); none given: unchanged', () {
+      const inDir = SshTarget(
+        host: 'archlinux.example.ts.net',
+        port: 2222,
+        user: 'csakos',
+        session: 'delve-2',
+        startDir: "/home/user/it's here",
+      );
+      final cmd = inDir.command;
+      expect(
+        cmd,
+        contains(
+          "tmux -u new-session -d -s 'delve-2' -c '/home/user/it'\\''s here' ",
+        ),
+      );
+      expect(
+        cmd,
+        contains(r"\; new-window -k -t ':^' -c '/home/user/it'\''s here' \; "),
+      );
+      expect(inDir.copyWith(session: 'delve-3').startDir, inDir.startDir);
+      expect(target.command, isNot(contains(' -c ')));
+    });
+
     test('the shell runs it as tmux commands: has-session, then a new '
         'session with its history set before its first window, then the '
         'attach with the hook and each binding whole (a fake tmux on '

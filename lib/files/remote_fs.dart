@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../terminal/ssh_link.dart' show shellQuote;
+
 /// What a directory entry is ([RemoteEntry.kind]).
 enum EntryKind { directory, file, other }
 
@@ -193,6 +195,17 @@ abstract interface class RemoteFs {
   /// Size and used bytes of the filesystem holding [path].
   Future<(int, int)?> usage(String path);
 
+  /// [path]'s permission bits become those of [mode] (`& 0o7777`).
+  Future<void> setMode(String path, int mode);
+
+  /// For each of [paths]: may the login write it (`test -w`), its owner
+  /// and mode (`stat`); null for a path that is not there. Null when it
+  /// can't tell (the command failed).
+  Future<List<PathAccess?>?> access(List<String> paths);
+
+  /// Flushes [path] to the disk (`sync --`); best effort, never throws.
+  Future<void> sync(String path);
+
   /// An answer from the desktop within [timeout].
   Future<bool> probe(Duration timeout);
 
@@ -200,6 +213,53 @@ abstract interface class RemoteFs {
   Future<void> get done;
 
   Future<void> close();
+}
+
+/// What the login may do with a path, and whose it is (the editor: 23n).
+class PathAccess {
+  const PathAccess({required this.writable, required this.owner, this.mode});
+
+  final bool writable;
+  final String owner;
+
+  /// `st_mode` (type and permission bits).
+  final int? mode;
+
+  String? get modeText => mode == null ? null : modeString(mode!);
+}
+
+/// The shell command behind [RemoteFs.access]: per path one line, `-`
+/// (not there) or `<w> <mode hex> <owner>`.
+String accessCommand(List<String> paths) =>
+    [for (final p in paths) _accessLine(shellQuote(p)), 'true'].join('; ');
+
+String _accessLine(String q) =>
+    'if [ -e $q ] || [ -L $q ]; then '
+    'if [ -w $q ]; then w=1; else w=0; fi; '
+    'stat -c "\$w %f %U" -- $q 2>/dev/null || echo -; '
+    'else echo -; fi';
+
+/// The lines of [accessCommand]'s output; null when they don't fit.
+List<PathAccess?>? parseAccess(String output, int count) {
+  final lines = output.split('\n').where((l) => l.isNotEmpty).toList();
+  if (lines.length != count) return null;
+  final out = <PathAccess?>[];
+  for (final line in lines) {
+    if (line == '-') {
+      out.add(null);
+      continue;
+    }
+    final m = RegExp(r'^([01]) ([0-9a-fA-F]+) (.+)$').firstMatch(line);
+    if (m == null) return null;
+    out.add(
+      PathAccess(
+        writable: m[1] == '1',
+        mode: int.tryParse(m[2]!, radix: 16),
+        owner: m[3]!,
+      ),
+    );
+  }
+  return out;
 }
 
 /// Why a file operation failed.

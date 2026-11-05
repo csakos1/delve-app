@@ -17,6 +17,7 @@ class SshTarget {
     required this.user,
     required this.session,
     this.app = true,
+    this.startDir,
   });
 
   final String host;
@@ -32,6 +33,10 @@ class SshTarget {
   /// attached as it is (T3).
   final bool app;
 
+  /// Where a new app session's shell starts (Files' "Open in terminal");
+  /// null: the home folder. A session that exists is attached as it is.
+  final String? startDir;
+
   String get hostPort => '$host:$port';
 
   SshTarget copyWith({String? session, bool? app}) => SshTarget(
@@ -40,6 +45,7 @@ class SshTarget {
     user: user,
     session: session ?? this.session,
     app: app ?? this.app,
+    startDir: startDir,
   );
 
   /// The pty command. An exec channel starts a non-login shell without
@@ -63,6 +69,7 @@ class SshTarget {
   /// before), and by a session hook on windows opened later.
   String get command {
     final exact = shellQuote('=$session');
+    final dir = startDir == null ? '' : ' -c ${shellQuote(startDir!)}';
     final attach = [
       'exec tmux -u attach-session -t $exact',
       if (app) ...[
@@ -77,10 +84,12 @@ class SshTarget {
       'export LANG=en_US.UTF-8',
       if (app)
         'tmux -u has-session -t $exact 2>/dev/null || '
-            'tmux -u new-session -d -s ${shellQuote(session)} '
+            'tmux -u new-session -d -s ${shellQuote(session)}$dir '
             r'\; set-option history-limit '
             '$kAppHistoryLimit '
-            r"\; new-window -k -t ':^' \; "
+            r"\; new-window -k -t ':^'"
+            '$dir '
+            r'\; '
             '$tmuxNoScrollOnClear',
       attach,
     ].join('; ');

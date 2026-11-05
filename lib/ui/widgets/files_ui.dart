@@ -24,6 +24,22 @@ abstract final class FilesTokens {
   static const double transferChip = 32;
   static const double transferBar = 4;
   static const double previewGutter = 34;
+
+  // the editor (23n, files.editor.sizes)
+  static const double editorSave = 40;
+  static const double editorSaveRadius = 12;
+  static const double editorSaveIcon = 18;
+  static const double dirtyDot = 8;
+  static const double dirtyDotGap = 6;
+  static const double editorStatusRow = 32;
+  static const double editorStatusIcon = 14;
+  static const double editorWellInset = 8;
+  static const double editorGutterPadding = 10;
+  static const double editorChangedBar = 2;
+  static const double editorCaret = 2;
+  static const double editorKeyRow = 48;
+  static const double editorKeyPill = 32;
+  static const double editorLineHeight = 20 / 13;
 }
 
 abstract final class FileIcons {
@@ -71,6 +87,25 @@ abstract final class FileIcons {
   static const IconData skip = Symbols.redo_rounded;
   static const IconData replace = Symbols.find_replace_rounded;
   static const IconData keepBoth = Symbols.library_add_rounded;
+
+  // the editor (23n)
+  static const IconData edit = Symbols.edit_rounded;
+  static const IconData save = Symbols.save_rounded;
+  static const IconData undo = Symbols.undo_rounded;
+  static const IconData redo = Symbols.redo_rounded;
+  static const IconData editConflict = Symbols.sync_problem_rounded;
+  static const IconData overwrite = Symbols.upload_file_rounded;
+  static const IconData reload = Symbols.refresh_rounded;
+  static const IconData discard = Symbols.edit_off_rounded;
+  static const IconData saveCopy = Symbols.save_as_rounded;
+  static const IconData wrap = Symbols.wrap_text_rounded;
+  static const IconData find = Symbols.search_rounded;
+  static const IconData saving = Symbols.progress_activity_rounded;
+  static const IconData left = Symbols.arrow_back_rounded;
+  static const IconData right = Symbols.arrow_forward_rounded;
+  static const IconData up = Symbols.arrow_upward_rounded;
+  static const IconData down = Symbols.arrow_downward_rounded;
+  static const IconData copyAll = Symbols.content_copy_rounded;
 }
 
 IconData fileIcon(FileType t) => switch (t) {

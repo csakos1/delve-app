@@ -395,8 +395,9 @@ class TerminalService extends ChangeNotifier {
 
   /// A new tab with a new app session, `delve-N` with the smallest N not
   /// taken by a tab or a session on the desktop (when the list can be read;
-  /// a name that exists would attach that session instead).
-  Future<TerminalTab> newTab() async {
+  /// a name that exists would attach that session instead). Its shell
+  /// starts in [startDir] (the home folder when null).
+  Future<TerminalTab> newTab({String? startDir}) async {
     await load();
     final taken = {for (final t in _tabs) t.session};
     try {
@@ -404,7 +405,8 @@ class TerminalService extends ChangeNotifier {
     } on Object {
       // offline: the tabs' names only
     }
-    final tab = _makeTab(SavedTab(session: nextSessionName(taken)));
+    final tab = _makeTab(SavedTab(session: nextSessionName(taken)))
+      ..startDir = startDir;
     _tabs.add(tab);
     select(_tabs.length - 1);
     return tab;
@@ -576,6 +578,7 @@ class TerminalService extends ChangeNotifier {
     user: _config.user,
     session: t.session,
     app: t.app,
+    startDir: t.startDir,
   );
 
   void _connect(TerminalTab t) {

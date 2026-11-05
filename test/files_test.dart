@@ -647,4 +647,199 @@ void main() {
       expect(isInside('/home/username', '/home/user'), isFalse);
     });
   });
+
+  group('editing (F2b)', () {
+    Future<(FilesService, FakeRemoteFs)> live() async {
+      final (files, fakes) = await makeService();
+      files.setVisible(visible: true);
+      await until(() => files.entries != null);
+      await settle();
+      return (files, fakes.files.last!);
+    }
+
+    RemoteEntry entry(FilesService f, String name) =>
+        f.entries!.firstWhere((e) => e.name == name);
+
+    void put(FakeRemoteFs fs, String path, List<int> bytes, {int? mode}) {
+      fs.tree[parentPath(path)]!.add(
+        fileEntry(path, bytes.length, mode: mode ?? 0x81A4),
+      );
+      fs.contents[path] = Uint8List.fromList(bytes);
+    }
+
+    test(
+      'open: text, size, time, mode, access; the reasons Edit is off',
+      () async {
+        final (files, fs) = await live();
+        final f = (await files.openText(entry(files, 'notes.txt')))!;
+        expect(f.text, 'line one\nline two\n');
+        expect(f.editable, isTrue);
+        expect(f.size, 18);
+        expect(f.mode, 0x81A4);
+        expect(f.access!.owner, 'csakos');
+        expect(f.folderAccess!.writable, isTrue);
+
+        put(fs, '/home/user/big.txt', List.filled(kEditMax + 10, 0x61));
+        put(fs, '/home/user/latin1.txt', [0x63, 0x61, 0x66, 0xE9, 0x0A]);
+        fs.readOnly.add('/home/user/notes.txt');
+        await files.refresh();
+        await settle();
+        final big = (await files.openText(entry(files, 'big.txt')))!;
+        expect(big.block, EditBlock.tooBig);
+        expect(big.cut, isTrue);
+        expect(big.text.length, kEditMax);
+        final latin = (await files.openText(entry(files, 'latin1.txt')))!;
+        expect(latin.block, EditBlock.notText);
+        expect(latin.text, 'caf�\n');
+        final ro = (await files.openText(entry(files, 'notes.txt')))!;
+        expect(ro.block, EditBlock.readOnly);
+        expect(ro.blocking!.writable, isFalse);
+        expect(ro.blocking!.modeText, '-rw-r--r--');
+        files.setShowHidden(show: true);
+        expect(await files.openText(entry(files, '.zshrc')), isNull);
+      },
+    );
+
+    test('save: .part with the mode, flushed, renamed over; the next save '
+        'starts from it', () async {
+      final (files, fs) = await live();
+      final notes = entry(files, 'notes.txt');
+      final f = (await files.openText(notes))!;
+      final saved = await files.saveText(f, 'line one\nline 2\n');
+      expect(
+        utf8.decode(fs.contents['/home/user/notes.txt']!),
+        'line one\nline 2\n',
+      );
+      expect(fs.modesSet, [('/home/user/.notes.txt.part', 0x1A4)]);
+      expect(fs.synced, ['/home/user/.notes.txt.part']);
+      expect(fs.contents.containsKey('/home/user/.notes.txt.part'), isFalse);
+      expect(
+        fs.tree['/home/user']!.where((e) => e.name.endsWith('.part')),
+        isEmpty,
+      );
+      expect(saved.text, 'line one\nline 2\n');
+      expect(saved.size, 16);
+      expect(saved.modified, isNot(f.modified));
+      // no conflict with its own save
+      await files.saveText(saved, 'x\n');
+      expect(utf8.decode(fs.contents['/home/user/notes.txt']!), 'x\n');
+    });
+
+    test('a conflict: the desktop changed it; force overwrites', () async {
+      final (files, fs) = await live();
+      // the listing reloads after a save: the entry is taken once
+      final notes = entry(files, 'notes.txt');
+      final f = (await files.openText(notes))!;
+      fs.touch('/home/user/notes.txt', 'from the desktop\n');
+      await expectLater(
+        files.saveText(f, 'mine\n'),
+        throwsA(isA<EditConflict>().having((e) => e.now?.size, 'now.size', 17)),
+      );
+      expect(
+        utf8.decode(fs.contents['/home/user/notes.txt']!),
+        'from the desktop\n',
+      );
+      await files.saveText(f, 'mine\n', force: true);
+      expect(utf8.decode(fs.contents['/home/user/notes.txt']!), 'mine\n');
+      // deleted meanwhile: a conflict too
+      final g = (await files.openText(notes))!;
+      await fs.deleteTree('/home/user/notes.txt');
+      await expectLater(
+        files.saveText(g, 'again\n'),
+        throwsA(isA<EditConflict>().having((e) => e.now, 'now', isNull)),
+      );
+    });
+
+    test('a folder that refuses the .part: EditDenied with its owner; '
+        'a copy goes to home', () async {
+      final (files, fs) = await live();
+      fs.tree['/home/user/Documents']!.add(
+        fileEntry('/home/user/Documents/plan.txt', 3),
+      );
+      fs.contents['/home/user/Documents/plan.txt'] = Uint8List.fromList(
+        utf8.encode('a\n\n'),
+      );
+      await files.open('/home/user/Documents');
+      await settle();
+      final f = (await files.openText(entry(files, 'plan.txt')))!;
+      expect(f.editable, isTrue);
+      fs.readOnly.add('/home/user/Documents');
+      await expectLater(
+        files.saveText(f, 'b\n'),
+        throwsA(
+          isA<EditDenied>()
+              .having((e) => e.dir, 'dir', '/home/user/Documents')
+              .having((e) => e.folder?.writable, 'writable', isFalse),
+        ),
+      );
+      expect(
+        utf8.decode(fs.contents['/home/user/Documents/plan.txt']!),
+        'a\n\n',
+      );
+      final copy = await files.saveCopy(f, 'b\n');
+      expect(copy, '/home/user/plan.txt');
+      expect(utf8.decode(fs.contents[copy]!), 'b\n');
+      // a second copy takes the next free name
+      expect(await files.saveCopy(f, 'c\n'), '/home/user/plan (2).txt');
+    });
+
+    test("another user's file (group-writable) is written in place: it "
+        'stays theirs', () async {
+      final (files, fs) = await live();
+      final i = fs.tree['/home/user']!.indexWhere((e) => e.name == 'notes.txt');
+      fs.tree['/home/user']![i] = fileEntry(
+        '/home/user/notes.txt',
+        18,
+        owner: 'root',
+        mode: 0x81B4,
+      );
+      await files.refresh();
+      await settle();
+      final f = (await files.openText(entry(files, 'notes.txt')))!;
+      expect(f.access!.owner, 'root');
+      await files.saveText(f, 'shared\n');
+      expect(utf8.decode(fs.contents['/home/user/notes.txt']!), 'shared\n');
+      expect(fs.modesSet, isEmpty);
+      expect(fs.synced, ['/home/user/notes.txt']);
+      final now = (await fs.lstat('/home/user/notes.txt'))!;
+      expect(now.owner, 'root');
+      expect(now.mode, 0x81B4);
+    });
+
+    test('access: one line per path, - for a missing one', () {
+      final cmd = accessCommand(['/home/user/a b.txt', '/home/user']);
+      expect(cmd, contains("[ -w '/home/user/a b.txt' ]"));
+      expect(cmd, contains('stat -c "\$w %f %U" --'));
+      expect(cmd, endsWith('; true'));
+      final out = parseAccess('1 81a4 csakos\n-\n0 41ed root\n', 3)!;
+      expect(out[0]!.writable, isTrue);
+      expect(out[0]!.mode, 0x81A4);
+      expect(out[0]!.owner, 'csakos');
+      expect(out[1], isNull);
+      expect(out[2]!.writable, isFalse);
+      expect(out[2]!.modeText, 'drwxr-xr-x');
+      expect(parseAccess('1 81a4 csakos\n', 2), isNull);
+      expect(parseAccess('yes\n', 1), isNull);
+    });
+
+    test('Edit in the listing: over 1 MB, or a mode that leaves the login '
+        'out', () {
+      RemoteEntry e({required String owner, required int mode}) =>
+          fileEntry('/x/a.txt', 1, owner: owner, mode: mode);
+      expect(
+        listingWritable(e(owner: 'csakos', mode: 0x81A4), 'csakos'),
+        isTrue,
+      );
+      expect(
+        listingWritable(e(owner: 'csakos', mode: 0x8124), 'csakos'),
+        isFalse,
+      );
+      expect(
+        listingWritable(e(owner: 'root', mode: 0x81A4), 'csakos'),
+        isFalse,
+      );
+      expect(listingWritable(e(owner: 'root', mode: 0x81B4), 'csakos'), isTrue);
+      expect(listingWritable(e(owner: 'csakos', mode: 0x8124), 'root'), isTrue);
+    });
+  });
 }

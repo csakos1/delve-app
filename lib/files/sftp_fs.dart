@@ -393,6 +393,39 @@ class SftpRemoteFs implements RemoteFs {
   }
 
   @override
+  Future<void> setMode(String path, int mode) => _guard(
+    path,
+    () => _sftp.setStat(
+      path,
+      SftpFileAttrs(mode: SftpFileMode.value(mode & 0xFFF)),
+    ),
+  );
+
+  @override
+  Future<List<PathAccess?>?> access(List<String> paths) async {
+    try {
+      return parseAccess(
+        await _exec(paths.join(', '), accessCommand(paths)),
+        paths.length,
+      );
+    } on RemoteFsError catch (e) {
+      if (e.failure == FsFailure.unreachable) rethrow;
+      return null;
+    }
+  }
+
+  @override
+  Future<void> sync(String path) async {
+    try {
+      // coreutils `sync FILE` is an fsync of that file (sftp-server's
+      // fsync@openssh.com is not in dartssh2)
+      await _exec(path, 'sync -- ${shellQuote(path)}');
+    } on RemoteFsError {
+      // the rename is what makes the save; a missed flush is not an error
+    }
+  }
+
+  @override
   Future<bool> probe(Duration timeout) async {
     if (_client.isClosed) return false;
     try {

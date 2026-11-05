@@ -198,7 +198,7 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
 
   /// An image opens with the folder's other images to swipe through (in the
   /// list's order); a text file opens alone.
-  void _preview(RemoteEntry e) {
+  void _preview(RemoteEntry e, {bool edit = false}) {
     _terminal.lock.keepAlive();
     final images = previewKindOf(e) == PreviewKind.image
         ? [
@@ -211,13 +211,47 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
       context.push(
         Routes.filePreview,
         extra: at < 0
-            ? FilePreviewArgs([e])
+            ? FilePreviewArgs([e], edit: edit)
             : FilePreviewArgs(images, index: at),
       ),
     );
   }
 
   void _download(RemoteEntry e) => _service.download(e);
+
+  /// 23n: Edit, off with the reason the listing already shows (over 1 MB,
+  /// or a mode that leaves the login out); the editor checks the rest.
+  Widget _editRow(
+    RemoteEntry e,
+    AppLocalizations l,
+    Widget Function(
+      String key,
+      IconData icon,
+      String label,
+      VoidCallback onTap, {
+      String? hint,
+      bool alert,
+      bool enabled,
+    })
+    row,
+  ) {
+    final user = _service.user;
+    final size = e.size;
+    final tooBig = size != null && size > kEditMax;
+    final readOnly = !tooBig && !listingWritable(e, user);
+    return row(
+      'edit',
+      FileIcons.edit,
+      l.editorEdit,
+      () => _preview(e, edit: true),
+      hint: tooBig
+          ? l.editorEditTooBig
+          : readOnly
+          ? l.editorBlockReadOnly(user)
+          : null,
+      enabled: !tooBig && !readOnly,
+    );
+  }
 
   Future<void> _copyPath(RemoteEntry e) async {
     final l = AppLocalizations.of(context);
@@ -362,8 +396,10 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
             VoidCallback onTap, {
             String? hint,
             bool alert = false,
+            bool enabled = true,
           }) => ListTile(
             key: Key('files.act.$key'),
+            enabled: enabled,
             minTileHeight: DelveTokens.touchTarget,
             leading: SymbolIcon(
               icon,
@@ -465,6 +501,8 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
                       l.filesActPreview,
                       () => _preview(e),
                     ),
+                  if (previewKindOf(e) == PreviewKind.text && !e.isDir)
+                    _editRow(e, l, row),
                   if (e.isLink && !e.linkBroken)
                     row('target', FileIcons.goTo, l.filesActGoToTarget, () {
                       final target = normalizePath(
@@ -838,7 +876,7 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
           if (s.loading || s.phase == FilesPhase.connecting)
             const LinearProgressIndicator(minHeight: 2)
           else if (s.phase == FilesPhase.offline)
-            _StateLine(service: s)
+            FilesStateLine(service: s)
           else
             const SizedBox(height: 2),
           if (s.entries != null || s.mountHere != null)
@@ -1033,8 +1071,8 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
 
 /// Offline: "Reconnecting · attempt 2 · next in 4 s" with Retry (the
 /// terminal's language, 22c).
-class _StateLine extends StatelessWidget {
-  const _StateLine({required this.service});
+class FilesStateLine extends StatelessWidget {
+  const FilesStateLine({super.key, required this.service});
 
   final FilesService service;
 
