@@ -67,7 +67,7 @@ Future<TestEnv> openTerminal(
 }
 
 void main() {
-  testWidgets('the Terminal tab sits between Chats and Dashboard', (t) async {
+  testWidgets('the Terminal tab sits between Chats and Files', (t) async {
     await pumpDelve(t, settle: false);
     final labels = [
       for (final e in t.widgetList<NavigationDestination>(
@@ -75,7 +75,7 @@ void main() {
       ))
         e.label,
     ];
-    expect(labels, ['Chats', 'Terminal', 'Dashboard', 'More']);
+    expect(labels, ['Chats', 'Terminal', 'Files', 'Dashboard', 'More']);
   });
 
   testWidgets('setup shows the key line, the paired host and port 2222', (

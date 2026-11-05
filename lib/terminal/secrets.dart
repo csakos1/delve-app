@@ -127,6 +127,9 @@ class TerminalSecrets {
 
   final SecretStore _store;
 
+  /// The store itself (the Files tab keeps its settings there too).
+  SecretStore get store => _store;
+
   /// The stored key, or a new one (stored before it is returned).
   Future<PhoneKey> loadOrCreateKey() async {
     final raw = await _store.read(keyKey);

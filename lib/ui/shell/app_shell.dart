@@ -10,7 +10,7 @@ import '../widgets/page_scaffolds.dart';
 /// The shell branch of the Terminal tab.
 const kTerminalBranch = 1;
 
-/// Bottom navigation for the top-level screens: Chats · Terminal ·
+/// Bottom navigation for the top-level screens: Chats · Terminal · Files ·
 /// Dashboard · More. Chats carries a warn dot while an approval waits (its
 /// count is in the Chats header).
 class AppShell extends ConsumerWidget {
@@ -73,6 +73,7 @@ class AppShell extends ConsumerWidget {
                   : null,
             ),
             dest(DelveIcons.terminal, l.navTerminal),
+            dest(DelveIcons.files, l.navFiles),
             dest(DelveIcons.dashboard, l.navDashboard),
             dest(DelveIcons.more, l.navMore),
           ],

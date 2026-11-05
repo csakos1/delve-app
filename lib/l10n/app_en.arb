@@ -1937,5 +1937,220 @@
   "termKillBody": "Every window in it, and whatever runs there, stops on the desktop. This can't be undone.",
   "termKill": "Kill",
   "termNoTabsTitle": "No tabs open",
-  "termNoTabsBody": "Your tmux sessions keep running on the desktop. Open one here, or start a new one."
+  "termNoTabsBody": "Your tmux sessions keep running on the desktop. Open one here, or start a new one.",
+  "navFiles": "Files",
+  "filesQuickHome": "Home",
+  "filesQuickDownloads": "Downloads",
+  "filesItems": "{count, plural, =1{1 item} other{{n} items}}",
+  "@filesItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "filesShownHidden": "{shown} shown · {hidden} hidden",
+  "@filesShownHidden": {
+    "placeholders": {
+      "shown": {
+        "type": "String"
+      },
+      "hidden": {
+        "type": "String"
+      }
+    }
+  },
+  "filesUsedPct": "{pct} % used",
+  "@filesUsedPct": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "filesLinkTo": "link → {target}",
+  "@filesLinkTo": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "filesBrokenLink": "broken link → {target}",
+  "@filesBrokenLink": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "filesDeniedRow": "Permission denied · {owner}",
+  "@filesDeniedRow": {
+    "placeholders": {
+      "owner": {
+        "type": "String"
+      }
+    }
+  },
+  "filesSortName": "Name",
+  "filesSortSize": "Size",
+  "filesSortDate": "Date modified",
+  "filesMenuHidden": "Show hidden files",
+  "filesMenuSortBy": "Sort by",
+  "filesMenuRefresh": "Refresh",
+  "filesActOpen": "Open",
+  "filesActDownload": "Download",
+  "filesActDownloadHint": "To {folder}",
+  "@filesActDownloadHint": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "filesActPreview": "Preview",
+  "filesActGoToTarget": "Go to target",
+  "filesActCopyPath": "Copy path",
+  "filesPathCopied": "Path copied",
+  "filesEmptyTitle": "This folder is empty",
+  "filesEmptyHidden": "{count, plural, =1{1 hidden item} other{{count} hidden items}}",
+  "@filesEmptyHidden": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesDeniedTitle": "Permission denied",
+  "filesDeniedOwned": " belongs to {owner} ({mode}). Files never uses sudo.",
+  "@filesDeniedOwned": {
+    "placeholders": {
+      "owner": {
+        "type": "String"
+      },
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "filesDeniedPlain": " can't be opened as your user. Files never uses sudo.",
+  "filesGoRoot": "Go to /",
+  "filesGoHome": "Go to home folder",
+  "filesNotFoundTitle": "Folder not found",
+  "filesErrorTitle": "Couldn't open this folder",
+  "filesRetry": "Retry",
+  "filesReconnecting": "Reconnecting · attempt {n}",
+  "@filesReconnecting": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "filesNextIn": "next in {s} s",
+  "@filesNextIn": {
+    "placeholders": {
+      "s": {
+        "type": "int"
+      }
+    }
+  },
+  "filesNotSetUpTitle": "Set up the terminal first",
+  "filesNotSetUpBody": "Files uses the terminal's connection to your desktop: this phone's key, the host and the trusted host key.",
+  "filesOpenTerminal": "Open Terminal",
+  "filesHostKeyTitle": "The desktop's host key changed",
+  "filesHostKeyBody": "Files won't connect until the terminal trusts the desktop again. The Terminal tab shows the details.",
+  "filesKeyDeniedTitle": "The desktop refused this phone's key",
+  "filesKeyDeniedBody": "Check that the key line is still in authorized_keys (Terminal settings show it).",
+  "filesLockTitle": "Unlock Files",
+  "filesLockBody": "Locked after 15 min of inactivity. One unlock opens Files and the Terminal.",
+  "filesUnlockReason": "Unlock Delve Files",
+  "filesTransfers": "Transfers",
+  "filesTransferChip": "{n} of {total}",
+  "@filesTransferChip": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "filesTransfersSummary": "{active} running · {done} done",
+  "@filesTransfersSummary": {
+    "placeholders": {
+      "active": {
+        "type": "int"
+      },
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "filesClearFinished": "Clear finished",
+  "filesTransferQueued": "Queued",
+  "filesTransferDone": "Done",
+  "filesTransferFailed": "Failed",
+  "filesTransferCancelled": "Cancelled",
+  "filesTransferOf": "{done} of {total}",
+  "@filesTransferOf": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "filesTransferInDownloads": "in Downloads/Delve",
+  "filesTransferCancel": "Cancel",
+  "filesTransferRetry": "Retry",
+  "filesOpen": "Open",
+  "filesSaved": "Saved to {folder}",
+  "@filesSaved": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "filesNoApp": "No app on this phone opens this file",
+  "filesDownloadFailed": "Couldn't download {name}: {reason}",
+  "@filesDownloadFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "filesDownloadQueued": "Downloading to {folder}",
+  "@filesDownloadQueued": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "filesLineNumbers": "Line numbers",
+  "filesPreviewFailed": "Couldn't read the file",
+  "filesPreviewTooBig": "Too big to preview here",
+  "filesPreviewBinary": "Not a text file",
+  "filesPreviewBinaryBody": "Download it to open it in another app.",
+  "filesPreviewCut": "Read-only · the first 1 MB",
+  "filesPreviewInfo": "{lines, plural, =1{Read-only · 1 line · UTF-8} other{Read-only · {lines} lines · UTF-8}}",
+  "@filesPreviewInfo": {
+    "placeholders": {
+      "lines": {
+        "type": "int"
+      }
+    }
+  }
 }

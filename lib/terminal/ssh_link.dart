@@ -343,6 +343,24 @@ class Dartssh2Dialer implements SshDialer {
     }
   }
 
+  /// An authenticated connection with no channel open yet (the Files tab's
+  /// SFTP, F1); the same name lookup, staggered TCP and host-key check as a
+  /// terminal tab. [abort] drops it at once (see [SshLink.abort]).
+  Future<(SSHClient, void Function() abort)> connectClient(
+    SshTarget target, {
+    required PhoneKey key,
+    required HostKeyCheck verify,
+  }) async {
+    final (client, socket, declined) = await _connect(target, key, verify);
+    try {
+      await client.authenticated;
+      return (client, socket.abort);
+    } on Object catch (e) {
+      unawaited(client.close().catchError((Object _) {}));
+      throw _failure(e, declined());
+    }
+  }
+
   Future<(SSHClient, _TcpSocket, bool Function())> _connect(
     SshTarget target,
     PhoneKey key,

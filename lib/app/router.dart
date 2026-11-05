@@ -3,12 +3,15 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../files/remote_fs.dart';
 import '../ui/screens/approvals_screen.dart';
 import '../ui/screens/archived_chats_screen.dart';
 import '../ui/screens/chat_screen.dart';
 import '../ui/screens/chats_screen.dart';
 import '../ui/screens/connection_log_screen.dart';
 import '../ui/screens/dashboard_screen.dart';
+import '../ui/screens/file_preview_screen.dart';
+import '../ui/screens/files_screen.dart';
 import '../ui/screens/more_screen.dart';
 import '../ui/screens/observability_screen.dart';
 import '../ui/screens/pairing_screen.dart';
@@ -27,14 +30,19 @@ import '../ui/shell/app_shell.dart';
 import 'session.dart';
 
 /// Route paths. Top-level screens live in the shell (bottom nav: Chats ·
-/// Terminal · Dashboard · More); Chat, Approvals and the More sub-pages are
-/// pushed on the root navigator, so they have none.
+/// Terminal · Files · Dashboard · More); Chat, Approvals, the file preview
+/// and the More sub-pages are pushed on the root navigator, so they have
+/// none.
 abstract final class Routes {
   static const splash = '/splash';
   static const pair = '/pair';
   static const serverTooOld = '/server-too-old';
   static const chats = '/chats';
   static const terminal = '/terminal';
+  static const files = '/files';
+
+  /// 23h, with the entry as `extra`.
+  static const filePreview = '/files/preview';
   static const dashboard = '/dashboard';
   static const more = '/more';
 
@@ -143,6 +151,24 @@ GoRouter buildRouter({
               GoRoute(
                 path: Routes.terminal,
                 builder: (_, _) => const TerminalScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.files,
+                builder: (_, _) => const FilesScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'preview',
+                    parentNavigatorKey: rootKey,
+                    redirect: (_, state) =>
+                        state.extra is RemoteEntry ? null : Routes.files,
+                    builder: (_, state) =>
+                        FilePreviewScreen(entry: state.extra! as RemoteEntry),
+                  ),
+                ],
               ),
             ],
           ),

@@ -2594,4 +2594,267 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get termNoTabsBody =>
       'Your tmux sessions keep running on the desktop. Open one here, or start a new one.';
+
+  @override
+  String get navFiles => 'Files';
+
+  @override
+  String get filesQuickHome => 'Home';
+
+  @override
+  String get filesQuickDownloads => 'Downloads';
+
+  @override
+  String filesItems(int count, String n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$n items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filesShownHidden(String shown, String hidden) {
+    return '$shown shown · $hidden hidden';
+  }
+
+  @override
+  String filesUsedPct(int pct) {
+    return '$pct % used';
+  }
+
+  @override
+  String filesLinkTo(String target) {
+    return 'link → $target';
+  }
+
+  @override
+  String filesBrokenLink(String target) {
+    return 'broken link → $target';
+  }
+
+  @override
+  String filesDeniedRow(String owner) {
+    return 'Permission denied · $owner';
+  }
+
+  @override
+  String get filesSortName => 'Name';
+
+  @override
+  String get filesSortSize => 'Size';
+
+  @override
+  String get filesSortDate => 'Date modified';
+
+  @override
+  String get filesMenuHidden => 'Show hidden files';
+
+  @override
+  String get filesMenuSortBy => 'Sort by';
+
+  @override
+  String get filesMenuRefresh => 'Refresh';
+
+  @override
+  String get filesActOpen => 'Open';
+
+  @override
+  String get filesActDownload => 'Download';
+
+  @override
+  String filesActDownloadHint(String folder) {
+    return 'To $folder';
+  }
+
+  @override
+  String get filesActPreview => 'Preview';
+
+  @override
+  String get filesActGoToTarget => 'Go to target';
+
+  @override
+  String get filesActCopyPath => 'Copy path';
+
+  @override
+  String get filesPathCopied => 'Path copied';
+
+  @override
+  String get filesEmptyTitle => 'This folder is empty';
+
+  @override
+  String filesEmptyHidden(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hidden items',
+      one: '1 hidden item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesDeniedTitle => 'Permission denied';
+
+  @override
+  String filesDeniedOwned(String owner, String mode) {
+    return ' belongs to $owner ($mode). Files never uses sudo.';
+  }
+
+  @override
+  String get filesDeniedPlain =>
+      ' can\'t be opened as your user. Files never uses sudo.';
+
+  @override
+  String get filesGoRoot => 'Go to /';
+
+  @override
+  String get filesGoHome => 'Go to home folder';
+
+  @override
+  String get filesNotFoundTitle => 'Folder not found';
+
+  @override
+  String get filesErrorTitle => 'Couldn\'t open this folder';
+
+  @override
+  String get filesRetry => 'Retry';
+
+  @override
+  String filesReconnecting(int n) {
+    return 'Reconnecting · attempt $n';
+  }
+
+  @override
+  String filesNextIn(int s) {
+    return 'next in $s s';
+  }
+
+  @override
+  String get filesNotSetUpTitle => 'Set up the terminal first';
+
+  @override
+  String get filesNotSetUpBody =>
+      'Files uses the terminal\'s connection to your desktop: this phone\'s key, the host and the trusted host key.';
+
+  @override
+  String get filesOpenTerminal => 'Open Terminal';
+
+  @override
+  String get filesHostKeyTitle => 'The desktop\'s host key changed';
+
+  @override
+  String get filesHostKeyBody =>
+      'Files won\'t connect until the terminal trusts the desktop again. The Terminal tab shows the details.';
+
+  @override
+  String get filesKeyDeniedTitle => 'The desktop refused this phone\'s key';
+
+  @override
+  String get filesKeyDeniedBody =>
+      'Check that the key line is still in authorized_keys (Terminal settings show it).';
+
+  @override
+  String get filesLockTitle => 'Unlock Files';
+
+  @override
+  String get filesLockBody =>
+      'Locked after 15 min of inactivity. One unlock opens Files and the Terminal.';
+
+  @override
+  String get filesUnlockReason => 'Unlock Delve Files';
+
+  @override
+  String get filesTransfers => 'Transfers';
+
+  @override
+  String filesTransferChip(int n, int total) {
+    return '$n of $total';
+  }
+
+  @override
+  String filesTransfersSummary(int active, int done) {
+    return '$active running · $done done';
+  }
+
+  @override
+  String get filesClearFinished => 'Clear finished';
+
+  @override
+  String get filesTransferQueued => 'Queued';
+
+  @override
+  String get filesTransferDone => 'Done';
+
+  @override
+  String get filesTransferFailed => 'Failed';
+
+  @override
+  String get filesTransferCancelled => 'Cancelled';
+
+  @override
+  String filesTransferOf(String done, String total) {
+    return '$done of $total';
+  }
+
+  @override
+  String get filesTransferInDownloads => 'in Downloads/Delve';
+
+  @override
+  String get filesTransferCancel => 'Cancel';
+
+  @override
+  String get filesTransferRetry => 'Retry';
+
+  @override
+  String get filesOpen => 'Open';
+
+  @override
+  String filesSaved(String folder) {
+    return 'Saved to $folder';
+  }
+
+  @override
+  String get filesNoApp => 'No app on this phone opens this file';
+
+  @override
+  String filesDownloadFailed(String name, String reason) {
+    return 'Couldn\'t download $name: $reason';
+  }
+
+  @override
+  String filesDownloadQueued(String folder) {
+    return 'Downloading to $folder';
+  }
+
+  @override
+  String get filesLineNumbers => 'Line numbers';
+
+  @override
+  String get filesPreviewFailed => 'Couldn\'t read the file';
+
+  @override
+  String get filesPreviewTooBig => 'Too big to preview here';
+
+  @override
+  String get filesPreviewBinary => 'Not a text file';
+
+  @override
+  String get filesPreviewBinaryBody => 'Download it to open it in another app.';
+
+  @override
+  String get filesPreviewCut => 'Read-only · the first 1 MB';
+
+  @override
+  String filesPreviewInfo(int lines) {
+    String _temp0 = intl.Intl.pluralLogic(
+      lines,
+      locale: localeName,
+      other: 'Read-only · $lines lines · UTF-8',
+      one: 'Read-only · 1 line · UTF-8',
+    );
+    return '$_temp0';
+  }
 }

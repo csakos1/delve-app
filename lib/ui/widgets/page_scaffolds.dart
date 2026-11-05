@@ -216,6 +216,7 @@ class SymbolIcon extends StatelessWidget {
 abstract final class DelveIcons {
   static const IconData chats = Symbols.chat_bubble_rounded;
   static const IconData dashboard = Symbols.dashboard_rounded;
+  static const IconData files = Symbols.folder_rounded;
   static const IconData approvals = Symbols.gpp_maybe_rounded;
   static const IconData more = Symbols.more_horiz_rounded;
   static const IconData system = Symbols.memory_rounded;

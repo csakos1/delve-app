@@ -1,5 +1,7 @@
 package hu.csakos.delve
 
+import android.content.ActivityNotFoundException
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -8,6 +10,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.os.Environment
+import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.webkit.MimeTypeMap
@@ -34,10 +38,15 @@ import java.util.concurrent.Executors
  * A second channel (TERMINAL_CHANNEL) starts and stops TerminalKeepService
  * (the terminal stays connected in the background, T4) and asks for the
  * battery-optimization exemption it needs.
+ *
+ * A third one (FILES_CHANNEL) serves the Files tab (F1): a scratch folder
+ * in the cache, moving a finished download into Downloads/Delve through
+ * MediaStore (no storage permission), and opening it in another app.
  */
 class MainActivity : FlutterFragmentActivity() {
     private var channel: MethodChannel? = null
     private var terminal: MethodChannel? = null
+    private var files: MethodChannel? = null
     private var pending: Intent? = null
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
@@ -68,6 +77,88 @@ class MainActivity : FlutterFragmentActivity() {
                     else -> result.notImplemented()
                 }
             }
+        }
+        files = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            FILES_CHANNEL,
+        ).also {
+            it.setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "scratchDir" -> {
+                        val dir = File(cacheDir, FILES_DIR)
+                        dir.mkdirs()
+                        result.success(dir.absolutePath)
+                    }
+                    "publish" -> {
+                        val path = call.argument<String>("path")
+                        val name = call.argument<String>("name")
+                        val mime = call.argument<String>("mime")
+                        if (path == null || name == null) {
+                            result.error("args", "path and name", null)
+                        } else {
+                            io.execute {
+                                try {
+                                    val uri = publish(File(path), name, mime)
+                                    main.post { result.success(uri) }
+                                } catch (e: Exception) {
+                                    main.post { result.error("publish", e.message ?: "$e", null) }
+                                }
+                            }
+                        }
+                    }
+                    "open" -> result.success(
+                        openUri(call.argument<String>("uri"), call.argument<String>("mime")),
+                    )
+                    else -> result.notImplemented()
+                }
+            }
+        }
+    }
+
+    /**
+     * Moves [src] into Downloads/Delve as [name] (MediaStore renames it when
+     * the name is taken) and returns the entry's content URI. Pending until
+     * the copy is complete, so no half file shows up in other apps.
+     */
+    @android.annotation.TargetApi(Build.VERSION_CODES.Q)
+    private fun publish(src: File, name: String, mime: String?): String {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            throw IllegalStateException("Android 10 or newer is needed")
+        }
+        val resolver = contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.Downloads.DISPLAY_NAME, name)
+            if (mime != null) put(MediaStore.Downloads.MIME_TYPE, mime)
+            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Delve")
+            put(MediaStore.Downloads.IS_PENDING, 1)
+        }
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+            ?: throw IllegalStateException("MediaStore refused the entry")
+        try {
+            val out = resolver.openOutputStream(uri) ?: throw IllegalStateException("not writable")
+            out.use { dst -> src.inputStream().use { it.copyTo(dst, 256 * 1024) } }
+            values.clear()
+            values.put(MediaStore.Downloads.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+        } catch (e: Exception) {
+            resolver.delete(uri, null, null)
+            throw e
+        } finally {
+            src.delete()
+        }
+        return uri.toString()
+    }
+
+    private fun openUri(uri: String?, mime: String?): Boolean {
+        if (uri == null) return false
+        val intent = Intent(Intent.ACTION_VIEW)
+            .setDataAndType(Uri.parse(uri), mime ?: "*/*")
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        return try {
+            startActivity(intent)
+            true
+        } catch (e: ActivityNotFoundException) {
+            false
         }
     }
 
@@ -111,8 +202,12 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) {
-            // copies of earlier shares; the executor runs this before any take
-            io.execute { File(cacheDir, SHARED_DIR).deleteRecursively() }
+            // copies of earlier shares and leftovers of downloads; the
+            // executor runs this before any take
+            io.execute {
+                File(cacheDir, SHARED_DIR).deleteRecursively()
+                File(cacheDir, FILES_DIR).deleteRecursively()
+            }
             keep(intent)
         }
     }
@@ -125,6 +220,7 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onDestroy() {
         channel?.setMethodCallHandler(null)
         terminal?.setMethodCallHandler(null)
+        files?.setMethodCallHandler(null)
         io.shutdown()
         super.onDestroy()
     }
@@ -284,6 +380,8 @@ class MainActivity : FlutterFragmentActivity() {
     companion object {
         private const val CHANNEL = "hu.csakos.delve/share"
         private const val TERMINAL_CHANNEL = "hu.csakos.delve/terminal"
+        private const val FILES_CHANNEL = "hu.csakos.delve/files"
+        private const val FILES_DIR = "files"
         private const val SHARED_DIR = "shared"
 
         /** Attachments per message (decision 336). */

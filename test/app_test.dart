@@ -5,12 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/harness.dart';
 
 void main() {
-  testWidgets('starts on Chats with the four top-level destinations', (
+  testWidgets('starts on Chats with the five top-level destinations', (
     tester,
   ) async {
     await pumpDelve(tester);
     expect(find.byType(NavigationBar), findsOneWidget);
-    for (final label in ['Chats', 'Terminal', 'Dashboard', 'More']) {
+    for (final label in ['Chats', 'Terminal', 'Files', 'Dashboard', 'More']) {
       expect(find.text(label), findsWidgets, reason: label);
     }
     expect(find.text('New chat'), findsOneWidget);

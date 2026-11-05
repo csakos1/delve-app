@@ -7,6 +7,7 @@ import 'package:delve/attachments/image_prep.dart';
 import 'package:delve/attachments/picker.dart';
 import 'package:delve/data/credentials.dart';
 import 'package:delve/data/db/database.dart';
+import 'package:delve/files/files_providers.dart';
 import 'package:delve/push/push_controller.dart';
 import 'package:delve/push/push_providers.dart';
 import 'package:delve/share/share_channel.dart';
@@ -21,6 +22,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fake_server.dart';
+import 'files_fakes.dart';
 import 'terminal_fakes.dart';
 
 AppDatabase memoryDb() => AppDatabase(
@@ -97,6 +99,9 @@ class TestEnv {
       terminalTimingProvider.overrideWithValue(terminal.timing),
       terminalNetworkProvider.overrideWithValue(terminal.network.stream),
       terminalKeepAliveProvider.overrideWithValue(terminal.keepAlive),
+      filesDialerProvider.overrideWithValue(terminal.files),
+      deviceFilesProvider.overrideWithValue(terminal.device),
+      filesTimingProvider.overrideWithValue(fastFilesTiming),
       if (push case final p?)
         pushStateProvider.overrideWith((ref) => Stream.value(p)),
       if (status case final s?)
@@ -128,6 +133,9 @@ class TestEnv {
         terminalTimingProvider.overrideWithValue(terminal.timing),
         terminalNetworkProvider.overrideWithValue(terminal.network.stream),
         terminalKeepAliveProvider.overrideWithValue(terminal.keepAlive),
+        filesDialerProvider.overrideWithValue(terminal.files),
+        deviceFilesProvider.overrideWithValue(terminal.device),
+        filesTimingProvider.overrideWithValue(fastFilesTiming),
         if (push case final p?)
           pushStateProvider.overrideWith((ref) => Stream.value(p)),
         if (status case final s?)

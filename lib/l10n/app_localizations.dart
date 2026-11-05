@@ -4209,6 +4209,414 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your tmux sessions keep running on the desktop. Open one here, or start a new one.'**
   String get termNoTabsBody;
+
+  /// No description provided for @navFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get navFiles;
+
+  /// No description provided for @filesQuickHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get filesQuickHome;
+
+  /// No description provided for @filesQuickDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads'**
+  String get filesQuickDownloads;
+
+  /// No description provided for @filesItems.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item} other{{n} items}}'**
+  String filesItems(int count, String n);
+
+  /// No description provided for @filesShownHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} shown · {hidden} hidden'**
+  String filesShownHidden(String shown, String hidden);
+
+  /// No description provided for @filesUsedPct.
+  ///
+  /// In en, this message translates to:
+  /// **'{pct} % used'**
+  String filesUsedPct(int pct);
+
+  /// No description provided for @filesLinkTo.
+  ///
+  /// In en, this message translates to:
+  /// **'link → {target}'**
+  String filesLinkTo(String target);
+
+  /// No description provided for @filesBrokenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'broken link → {target}'**
+  String filesBrokenLink(String target);
+
+  /// No description provided for @filesDeniedRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied · {owner}'**
+  String filesDeniedRow(String owner);
+
+  /// No description provided for @filesSortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get filesSortName;
+
+  /// No description provided for @filesSortSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get filesSortSize;
+
+  /// No description provided for @filesSortDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date modified'**
+  String get filesSortDate;
+
+  /// No description provided for @filesMenuHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Show hidden files'**
+  String get filesMenuHidden;
+
+  /// No description provided for @filesMenuSortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get filesMenuSortBy;
+
+  /// No description provided for @filesMenuRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get filesMenuRefresh;
+
+  /// No description provided for @filesActOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get filesActOpen;
+
+  /// No description provided for @filesActDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get filesActDownload;
+
+  /// No description provided for @filesActDownloadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'To {folder}'**
+  String filesActDownloadHint(String folder);
+
+  /// No description provided for @filesActPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get filesActPreview;
+
+  /// No description provided for @filesActGoToTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to target'**
+  String get filesActGoToTarget;
+
+  /// No description provided for @filesActCopyPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy path'**
+  String get filesActCopyPath;
+
+  /// No description provided for @filesPathCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Path copied'**
+  String get filesPathCopied;
+
+  /// No description provided for @filesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder is empty'**
+  String get filesEmptyTitle;
+
+  /// No description provided for @filesEmptyHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hidden item} other{{count} hidden items}}'**
+  String filesEmptyHidden(int count);
+
+  /// No description provided for @filesDeniedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission denied'**
+  String get filesDeniedTitle;
+
+  /// No description provided for @filesDeniedOwned.
+  ///
+  /// In en, this message translates to:
+  /// **' belongs to {owner} ({mode}). Files never uses sudo.'**
+  String filesDeniedOwned(String owner, String mode);
+
+  /// No description provided for @filesDeniedPlain.
+  ///
+  /// In en, this message translates to:
+  /// **' can\'t be opened as your user. Files never uses sudo.'**
+  String get filesDeniedPlain;
+
+  /// No description provided for @filesGoRoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to /'**
+  String get filesGoRoot;
+
+  /// No description provided for @filesGoHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to home folder'**
+  String get filesGoHome;
+
+  /// No description provided for @filesNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder not found'**
+  String get filesNotFoundTitle;
+
+  /// No description provided for @filesErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open this folder'**
+  String get filesErrorTitle;
+
+  /// No description provided for @filesRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get filesRetry;
+
+  /// No description provided for @filesReconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting · attempt {n}'**
+  String filesReconnecting(int n);
+
+  /// No description provided for @filesNextIn.
+  ///
+  /// In en, this message translates to:
+  /// **'next in {s} s'**
+  String filesNextIn(int s);
+
+  /// No description provided for @filesNotSetUpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up the terminal first'**
+  String get filesNotSetUpTitle;
+
+  /// No description provided for @filesNotSetUpBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Files uses the terminal\'s connection to your desktop: this phone\'s key, the host and the trusted host key.'**
+  String get filesNotSetUpBody;
+
+  /// No description provided for @filesOpenTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Terminal'**
+  String get filesOpenTerminal;
+
+  /// No description provided for @filesHostKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop\'s host key changed'**
+  String get filesHostKeyTitle;
+
+  /// No description provided for @filesHostKeyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Files won\'t connect until the terminal trusts the desktop again. The Terminal tab shows the details.'**
+  String get filesHostKeyBody;
+
+  /// No description provided for @filesKeyDeniedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop refused this phone\'s key'**
+  String get filesKeyDeniedTitle;
+
+  /// No description provided for @filesKeyDeniedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check that the key line is still in authorized_keys (Terminal settings show it).'**
+  String get filesKeyDeniedBody;
+
+  /// No description provided for @filesLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Files'**
+  String get filesLockTitle;
+
+  /// No description provided for @filesLockBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked after 15 min of inactivity. One unlock opens Files and the Terminal.'**
+  String get filesLockBody;
+
+  /// No description provided for @filesUnlockReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Delve Files'**
+  String get filesUnlockReason;
+
+  /// No description provided for @filesTransfers.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfers'**
+  String get filesTransfers;
+
+  /// No description provided for @filesTransferChip.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} of {total}'**
+  String filesTransferChip(int n, int total);
+
+  /// No description provided for @filesTransfersSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{active} running · {done} done'**
+  String filesTransfersSummary(int active, int done);
+
+  /// No description provided for @filesClearFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear finished'**
+  String get filesClearFinished;
+
+  /// No description provided for @filesTransferQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get filesTransferQueued;
+
+  /// No description provided for @filesTransferDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get filesTransferDone;
+
+  /// No description provided for @filesTransferFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get filesTransferFailed;
+
+  /// No description provided for @filesTransferCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get filesTransferCancelled;
+
+  /// No description provided for @filesTransferOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total}'**
+  String filesTransferOf(String done, String total);
+
+  /// No description provided for @filesTransferInDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'in Downloads/Delve'**
+  String get filesTransferInDownloads;
+
+  /// No description provided for @filesTransferCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get filesTransferCancel;
+
+  /// No description provided for @filesTransferRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get filesTransferRetry;
+
+  /// No description provided for @filesOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get filesOpen;
+
+  /// No description provided for @filesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to {folder}'**
+  String filesSaved(String folder);
+
+  /// No description provided for @filesNoApp.
+  ///
+  /// In en, this message translates to:
+  /// **'No app on this phone opens this file'**
+  String get filesNoApp;
+
+  /// No description provided for @filesDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t download {name}: {reason}'**
+  String filesDownloadFailed(String name, String reason);
+
+  /// No description provided for @filesDownloadQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading to {folder}'**
+  String filesDownloadQueued(String folder);
+
+  /// No description provided for @filesLineNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Line numbers'**
+  String get filesLineNumbers;
+
+  /// No description provided for @filesPreviewFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the file'**
+  String get filesPreviewFailed;
+
+  /// No description provided for @filesPreviewTooBig.
+  ///
+  /// In en, this message translates to:
+  /// **'Too big to preview here'**
+  String get filesPreviewTooBig;
+
+  /// No description provided for @filesPreviewBinary.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a text file'**
+  String get filesPreviewBinary;
+
+  /// No description provided for @filesPreviewBinaryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Download it to open it in another app.'**
+  String get filesPreviewBinaryBody;
+
+  /// No description provided for @filesPreviewCut.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only · the first 1 MB'**
+  String get filesPreviewCut;
+
+  /// No description provided for @filesPreviewInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'{lines, plural, =1{Read-only · 1 line · UTF-8} other{Read-only · {lines} lines · UTF-8}}'**
+  String filesPreviewInfo(int lines);
 }
 
 class _AppLocalizationsDelegate

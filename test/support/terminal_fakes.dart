@@ -9,6 +9,8 @@ import 'package:delve/terminal/terminal_connection.dart';
 import 'package:delve/terminal/terminal_keep_alive.dart';
 import 'package:delve/terminal/terminal_lock.dart';
 
+import 'files_fakes.dart';
+
 /// A desktop host key for tests (made up).
 const testHostKeyType = 'ssh-ed25519';
 const testHostKey = 'SHA256:lNXKPGqfbrXcM78QpsVLDmbXDclaa7Sgp9g7y1/4n0g';
@@ -21,17 +23,25 @@ class TerminalFakes {
     FakeSshDialer? dialer,
     FakeBiometrics? biometrics,
     FakeKeepAlive? keepAlive,
+    FakeFilesDialer? files,
+    FakeDeviceFiles? device,
     this.timing = fastTerminalTiming,
   }) : store = store ?? MemorySecretStore(),
        dialer = dialer ?? FakeSshDialer(),
        biometrics = biometrics ?? FakeBiometrics(),
-       keepAlive = keepAlive ?? FakeKeepAlive();
+       keepAlive = keepAlive ?? FakeKeepAlive(),
+       files = files ?? FakeFilesDialer(sampleFs),
+       device = device ?? FakeDeviceFiles();
 
   final MemorySecretStore store;
   final FakeSshDialer dialer;
   final FakeBiometrics biometrics;
   final FakeKeepAlive keepAlive;
   final TerminalTiming timing;
+
+  /// The Files tab's desktop (F1) and the phone's Downloads.
+  final FakeFilesDialer files;
+  final FakeDeviceFiles device;
 
   /// Network changes (Wi-Fi, airplane mode); lives as long as the test.
   // ignore: close_sinks
