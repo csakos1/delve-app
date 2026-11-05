@@ -5,28 +5,31 @@ import 'package:flutter/widgets.dart';
 
 import '../../theme/delve_theme.dart';
 
-/// The transform that zooms [scale]× into [point] (a double tap, in the
-/// viewer) of an image laid out at [image] in a viewer of size [view], from
-/// no zoom: the tapped spot stays under the finger, but where the zoomed
-/// picture is larger than the viewer it covers it (no black band beside it),
-/// and where it is smaller it is centred.
+/// The transform that zooms [scale]× into [point] (in the content, as laid
+/// out without a transform) of an image laid out at [image] in a viewer of
+/// size [view]: the spot stays [under] the finger (in the viewer; by default
+/// where it is laid out, i.e. from no zoom), but where the zoomed picture is
+/// larger than the viewer it covers it (no black band beside it), and where
+/// it is smaller it is centred.
 Matrix4 zoomInto({
   required Offset point,
   required Rect image,
   required Size view,
   required double scale,
+  Offset? under,
 }) {
-  double axis(double p, double lo, double hi, double extent) {
+  final finger = under ?? point;
+  double axis(double p, double u, double lo, double hi, double extent) {
     final a = lo * scale;
     final b = hi * scale;
     if (b - a <= extent) return (extent - (b - a)) / 2 - a;
     final at = math.min(math.max(p, lo), hi);
-    return math.max(extent - b, math.min(-a, at - scale * at));
+    return math.max(extent - b, math.min(-a, u - scale * at));
   }
 
   return Matrix4.diagonal3Values(scale, scale, 1)..setTranslationRaw(
-    axis(point.dx, image.left, image.right, view.width),
-    axis(point.dy, image.top, image.bottom, view.height),
+    axis(point.dx, finger.dx, image.left, image.right, view.width),
+    axis(point.dy, finger.dy, image.top, image.bottom, view.height),
     0,
   );
 }

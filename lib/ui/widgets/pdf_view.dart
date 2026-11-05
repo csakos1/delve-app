@@ -17,11 +17,90 @@ const kPdfRenderMax = 2400;
 /// Rendered pages kept besides the ones on screen.
 const kPdfCachedPages = 8;
 
+/// The friction of a fling (the [InteractiveViewer]'s default, 0.0000135,
+/// stops a fast fling within a fraction of a page): a fling travels about a
+/// third of its speed in pixels, close to a list's.
+const kPdfFlingDrag = 0.05;
+
+/// The viewer multiplies the fling friction by this for a pinch's coasting:
+/// with it the pinch keeps the default (0.0000135 × 200). It also scales a
+/// mouse wheel or trackpad zoom, which a phone has not.
+const kPdfScaleFactor = 0.0027 / kPdfFlingDrag;
+
 const _gap = 8.0;
 
-/// The pages of a PDF in a scrolling column on the preview's dark ground:
-/// rendered by the phone as they come into view (one at a time, the nearest
-/// first), pinch or double tap to zoom; [onPage] tells which page is in view.
+/// The pages laid out one under the other in a view of [view] size.
+class PdfLayout {
+  PdfLayout(List<Size> pages, this.view) {
+    pageWidth = math.max(1.0, view.width - 2 * _gap);
+    var y = _gap;
+    for (final p in pages) {
+      final h = p.width > 0 ? pageWidth * p.height / p.width : pageWidth;
+      tops.add(y);
+      heights.add(h);
+      y += h + _gap;
+    }
+    height = math.max(y, view.height);
+  }
+
+  final Size view;
+  late final double pageWidth;
+  final tops = <double>[];
+  final heights = <double>[];
+
+  /// The column's height (at least the view's: the viewer would otherwise
+  /// zoom a short document in to fill it).
+  late final double height;
+
+  Rect get content => Offset.zero & Size(view.width, height);
+
+  /// For the transform [m]: the pages to build (on screen, one screen above
+  /// and two below) and the page in view (the last whose top is above a
+  /// third of the screen).
+  ({int first, int last, int page}) window(Matrix4 m) {
+    final n = tops.length;
+    if (n == 0) return (first: 0, last: -1, page: 0);
+    final s = m.getMaxScaleOnAxis();
+    final top = -m.getTranslation().y / s;
+    final h = view.height / s;
+    var first = 0;
+    while (first < n - 1 && tops[first] + heights[first] < top - h) {
+      first++;
+    }
+    var last = first;
+    while (last < n - 1 && tops[last + 1] <= top + 2 * h) {
+      last++;
+    }
+    var page = 0;
+    while (page < n - 1 && tops[page + 1] <= top + h / 3) {
+      page++;
+    }
+    return (first: first, last: last, page: page);
+  }
+}
+
+/// The double-tap target in a PDF: [kDoubleTapZoom]× into the tapped spot,
+/// or back to the page's width with the spot kept under the finger (not back
+/// to the document's top). A drag moves both ways at once while zoomed.
+Matrix4 pdfDoubleTapTarget({
+  required Matrix4 current,
+  required Offset tap,
+  required PdfLayout layout,
+}) {
+  final zoomed = current.getMaxScaleOnAxis() > 1.01;
+  return zoomInto(
+    point: MatrixUtils.transformPoint(Matrix4.inverted(current), tap),
+    under: tap,
+    image: layout.content,
+    view: layout.view,
+    scale: zoomed ? 1 : kDoubleTapZoom,
+  );
+}
+
+/// The pages of a PDF in one zoomable column on the preview's dark ground:
+/// one viewer moves it every way (scroll, pan in any direction, pinch,
+/// double tap), and pages are rendered by the phone as they come into view
+/// (one at a time, the nearest first); [onPage] tells which page is in view.
 class PdfView extends StatefulWidget {
   const PdfView({
     super.key,
@@ -39,35 +118,30 @@ class PdfView extends StatefulWidget {
 }
 
 class _PdfViewState extends State<PdfView> with SingleTickerProviderStateMixin {
-  final _scroll = ScrollController();
   final _zoom = TransformationController();
-  final _viewKey = GlobalKey();
   late final ZoomAnimator _animator;
   Offset? _tapAt;
-  bool _zoomed = false;
-  bool _pinching = false;
-  int _down = 0;
+
+  PdfLayout? _layout;
+  ({int first, int last, int page})? _window;
+  int _page = 0;
+  bool _syncQueued = false;
 
   /// Rendered pages at [_width] pixels, least recently shown first.
   final _cache = <int, Uint8List>{};
   final _failed = <int>{};
 
-  /// Pages built now (on screen or just around it), in the order they came.
-  final _shown = <int>[];
+  /// Pages built now (on screen or just around it).
+  final _shown = <int>{};
   int _width = 0;
   bool _pumping = false;
   bool _disposed = false;
 
-  List<double> _tops = const [];
-  int _page = 0;
-  bool _pageQueued = false;
-
   @override
   void initState() {
     super.initState();
-    _zoom.addListener(_scaled);
+    _zoom.addListener(_moved);
     _animator = ZoomAnimator(this, _zoom);
-    _scroll.addListener(_scrolled);
   }
 
   @override
@@ -75,71 +149,53 @@ class _PdfViewState extends State<PdfView> with SingleTickerProviderStateMixin {
     _disposed = true;
     _animator.dispose();
     _zoom
-      ..removeListener(_scaled)
+      ..removeListener(_moved)
       ..dispose();
-    _scroll.dispose();
     super.dispose();
   }
 
-  void _scaled() {
-    final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.01;
-    if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+  /// The column moved or zoomed: build other pages if the window changed.
+  void _moved() {
+    final layout = _layout;
+    if (layout == null) return;
+    final w = layout.window(_zoom.value);
+    if (w != _window) setState(() {});
   }
 
-  /// The page whose top is above a third of the view.
-  void _scrolled() {
-    if (_tops.isEmpty || !_scroll.hasClients) return;
-    final p = _scroll.position;
-    final at = p.pixels + p.viewportDimension / 3;
-    var page = 0;
-    while (page + 1 < _tops.length && _tops[page + 1] <= at) {
-      page++;
+  /// After a frame: the pages built are the ones to render; the page in
+  /// view is told.
+  void _sync() {
+    _syncQueued = false;
+    final w = _window;
+    if (!mounted || w == null) return;
+    final now = {for (var i = w.first; i <= w.last; i++) i};
+    for (final p in now.difference(_shown)) {
+      final picture = _cache.remove(p); // to the recent end
+      if (picture != null) _cache[p] = picture;
     }
-    if (page == _page) return;
-    _page = page;
-    // told after the frame: the position also moves while laid out
-    if (_pageQueued) return;
-    _pageQueued = true;
-    WidgetsBinding.instance
-      ..addPostFrameCallback((_) {
-        _pageQueued = false;
-        if (mounted) widget.onPage(_page);
-      })
-      ..ensureVisualUpdate();
-  }
-
-  void _fingers(int delta) {
-    _down = math.max(0, _down + delta);
-    // two fingers: a pinch until all are lifted (the list would take it)
-    final pinching = _down >= 2 || (_pinching && _down > 0);
-    if (pinching != _pinching) setState(() => _pinching = pinching);
+    _shown
+      ..clear()
+      ..addAll(now);
+    _schedule();
+    if (w.page != _page) {
+      _page = w.page;
+      widget.onPage(_page);
+    }
   }
 
   void _doubleTap() {
-    final view = _viewKey.currentContext?.findRenderObject() as RenderBox?;
-    if (view == null || !view.hasSize) return;
+    final layout = _layout;
+    if (layout == null) return;
     _animator.animateTo(
-      doubleTapTarget(
+      pdfDoubleTapTarget(
         current: _zoom.value,
-        tap: _tapAt,
-        content: Offset.zero & view.size,
-        view: view.size,
+        tap: _tapAt ?? layout.view.center(Offset.zero),
+        layout: layout,
       ),
     );
   }
 
   // ------------------------------------------------------------ rendering
-
-  void _show(int page) {
-    _shown
-      ..remove(page)
-      ..add(page);
-    final picture = _cache.remove(page); // to the recent end
-    if (picture != null) _cache[page] = picture;
-    _schedule();
-  }
-
-  void _hide(int page) => _shown.remove(page);
 
   void _schedule() {
     if (_pumping || _disposed) return;
@@ -148,7 +204,7 @@ class _PdfViewState extends State<PdfView> with SingleTickerProviderStateMixin {
   }
 
   /// Renders the built pages that are not here yet, one at a time: the
-  /// one nearest the page in view first (of two, the newer).
+  /// one nearest the page in view first (of two, the later).
   Future<void> _pump() async {
     try {
       while (!_disposed) {
@@ -188,6 +244,22 @@ class _PdfViewState extends State<PdfView> with SingleTickerProviderStateMixin {
     }
   }
 
+  /// The screen turned (another width): the same page stays at the top, at
+  /// no zoom.
+  void _relaid(PdfLayout old, PdfLayout layout) {
+    final page = old.window(_zoom.value).page;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final top = layout.tops.isEmpty ? 0.0 : layout.tops[page] - _gap;
+      final lowest = math.max(0.0, layout.height - layout.view.height);
+      _zoom.value = Matrix4.translationValues(
+        0,
+        -math.min(math.max(top, 0.0), lowest),
+        0,
+      );
+    });
+  }
+
   // ---------------------------------------------------------------- build
 
   @override
@@ -195,69 +267,64 @@ class _PdfViewState extends State<PdfView> with SingleTickerProviderStateMixin {
     final pages = widget.info.pages;
     return LayoutBuilder(
       builder: (context, box) {
-        final pageWidth = math.max(1.0, box.maxWidth - 2 * _gap);
-        final heights = [
-          for (final p in pages)
-            p.width > 0 ? pageWidth * p.height / p.width : pageWidth,
-        ];
-        final tops = <double>[];
-        var y = _gap;
-        for (final h in heights) {
-          tops.add(y);
-          y += h + _gap;
+        final view = box.biggest;
+        var layout = _layout;
+        if (layout == null || layout.view != view) {
+          final old = layout;
+          layout = PdfLayout(pages, view);
+          _layout = layout;
+          if (old != null && old.view.width != view.width) {
+            _relaid(old, layout);
+          }
         }
-        _tops = tops;
         final dpr = MediaQuery.devicePixelRatioOf(context);
         final width = math.min(
           kPdfRenderMax,
-          (pageWidth * dpr * kPdfRenderScale).round(),
+          (layout.pageWidth * dpr * kPdfRenderScale).round(),
         );
         if (width != _width) {
           // first layout, or the screen turned: render again at the new size
           _width = width;
           _cache.clear();
           _failed.clear();
-          WidgetsBinding.instance.addPostFrameCallback((_) => _schedule());
         }
-        return Listener(
-          onPointerDown: (_) => _fingers(1),
-          onPointerUp: (_) => _fingers(-1),
-          onPointerCancel: (_) => _fingers(-1),
-          child: GestureDetector(
-            onDoubleTapDown: (d) => _tapAt = d.localPosition,
-            onDoubleTap: _doubleTap,
-            child: InteractiveViewer(
-              key: _viewKey,
-              transformationController: _zoom,
-              panEnabled: _zoomed,
-              minScale: 1,
-              maxScale: 5,
-              onInteractionStart: (_) => _animator.stop(),
-              child: ListView.builder(
-                key: const Key('preview.pdf'),
-                controller: _scroll,
-                physics: _pinching
-                    ? const NeverScrollableScrollPhysics()
-                    : null,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: _gap,
-                  vertical: _gap,
-                ),
-                itemCount: pages.length,
-                itemBuilder: (context, i) => Padding(
-                  padding: EdgeInsets.only(
-                    bottom: i == pages.length - 1 ? 0 : _gap,
-                  ),
-                  child: _PdfPage(
-                    key: ValueKey(i),
-                    index: i,
-                    height: heights[i],
-                    picture: _cache[i],
-                    failed: _failed.contains(i),
-                    onShow: _show,
-                    onHide: _hide,
-                  ),
-                ),
+        final w = layout.window(_zoom.value);
+        _window = w;
+        if (!_syncQueued) {
+          _syncQueued = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) => _sync());
+        }
+        return GestureDetector(
+          onDoubleTapDown: (d) => _tapAt = d.localPosition,
+          onDoubleTap: _doubleTap,
+          child: InteractiveViewer(
+            key: const Key('preview.pdf'),
+            transformationController: _zoom,
+            constrained: false,
+            minScale: 1,
+            maxScale: 5,
+            interactionEndFrictionCoefficient: kPdfFlingDrag,
+            scaleFactor: kPdfScaleFactor,
+            onInteractionStart: (_) => _animator.stop(),
+            child: SizedBox(
+              width: view.width,
+              height: layout.height,
+              child: Stack(
+                children: [
+                  for (var i = w.first; i <= w.last; i++)
+                    Positioned(
+                      key: ValueKey(i),
+                      left: _gap,
+                      top: layout.tops[i],
+                      width: layout.pageWidth,
+                      height: layout.heights[i],
+                      child: _PdfPage(
+                        index: i,
+                        picture: _cache[i],
+                        failed: _failed.contains(i),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -269,74 +336,44 @@ class _PdfViewState extends State<PdfView> with SingleTickerProviderStateMixin {
 
 /// One page: white paper with its picture, or a quiet placeholder until it
 /// is rendered.
-class _PdfPage extends StatefulWidget {
+class _PdfPage extends StatelessWidget {
   const _PdfPage({
-    super.key,
     required this.index,
-    required this.height,
     required this.picture,
     required this.failed,
-    required this.onShow,
-    required this.onHide,
   });
 
   final int index;
-  final double height;
   final Uint8List? picture;
   final bool failed;
-  final ValueChanged<int> onShow;
-  final ValueChanged<int> onHide;
-
-  @override
-  State<_PdfPage> createState() => _PdfPageState();
-}
-
-class _PdfPageState extends State<_PdfPage> {
-  @override
-  void initState() {
-    super.initState();
-    widget.onShow(widget.index);
-  }
-
-  @override
-  void dispose() {
-    widget.onHide(widget.index);
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
-    final picture = widget.picture;
-    return SizedBox(
-      key: Key('preview.pdf.page.${widget.index}'),
-      height: widget.height,
-      child: ColoredBox(
-        color: Colors.white,
-        child: picture != null
-            ? Image.memory(
-                picture,
-                fit: BoxFit.fill,
-                gaplessPlayback: true,
-                filterQuality: FilterQuality.medium,
-                errorBuilder: (context, _, _) => Center(
-                  child: SymbolIcon(
-                    DelveIcons.error,
-                    color: context.delve.textMuted,
-                  ),
+    final picture = this.picture;
+    return ColoredBox(
+      key: Key('preview.pdf.page.$index'),
+      color: Colors.white,
+      child: picture != null
+          ? Image.memory(
+              picture,
+              fit: BoxFit.fill,
+              gaplessPlayback: true,
+              filterQuality: FilterQuality.medium,
+              errorBuilder: (context, _, _) => Center(
+                child: SymbolIcon(
+                  DelveIcons.error,
+                  color: context.delve.textMuted,
                 ),
-              )
-            : Center(
-                child: widget.failed
-                    ? SymbolIcon(
-                        DelveIcons.error,
-                        color: context.delve.textMuted,
-                      )
-                    : const SizedBox.square(
-                        dimension: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
               ),
-      ),
+            )
+          : Center(
+              child: failed
+                  ? SymbolIcon(DelveIcons.error, color: context.delve.textMuted)
+                  : const SizedBox.square(
+                      dimension: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+            ),
     );
   }
 }

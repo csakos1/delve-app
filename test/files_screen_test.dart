@@ -212,7 +212,8 @@ void main() {
   });
 
   testWidgets('a PDF: its pages rendered as they come into view, the page '
-      'in the title, two fingers hold the list, closed after', (t) async {
+      'in the title, zoomed it moves every way and reaches the top, '
+      'closed after', (t) async {
     final fakes = await openFiles(t);
     for (final row in ['Documents', 'hajos', 'evkonyv']) {
       await t.tap(find.byKey(Key('files.row.$row')));
@@ -240,23 +241,41 @@ void main() {
     );
     // pages further down: rendered when they come, the title follows
     await t.drag(pdf, const Offset(0, -2500));
-    await frames(t);
+    await frames(t, 40);
     expect(subtitle(), matches(RegExp(r'^Page ([2-9]|1[0-2]) / 12 · ')));
     expect(fakes.pdf.rendered.map((r) => r.$2), contains(greaterThan(1)));
-    // two fingers down: a pinch, the list stands still until both are up
-    ListView list() => t.widget<ListView>(pdf);
+    // double tap: zoomed in; one viewer moves the column, so a drag goes
+    // both ways at once
+    Matrix4 m() =>
+        t.widget<InteractiveViewer>(pdf).transformationController!.value;
     final mid = t.getCenter(pdf);
-    final one = await t.startGesture(mid - const Offset(40, 0), pointer: 7);
-    await t.pump();
-    expect(list().physics, isNull);
-    final two = await t.startGesture(mid + const Offset(40, 0), pointer: 8);
-    await t.pump();
-    expect(list().physics, isA<NeverScrollableScrollPhysics>());
-    await one.up();
-    await two.up();
-    await t.pump();
-    expect(list().physics, isNull);
+    await t.tapAt(mid);
+    await t.pump(const Duration(milliseconds: 60));
+    await t.tapAt(mid);
+    await frames(t, 20);
+    expect(m().getMaxScaleOnAxis(), closeTo(2.5, 0.01));
+    final before = m().getTranslation();
+    await t.dragFrom(mid, const Offset(-120, -120));
+    await frames(t, 40);
+    final after = m().getTranslation();
+    expect(after.x, lessThan(before.x));
+    expect(after.y, lessThan(before.y));
+    // zoomed, dragging down reaches the very top of the document
+    for (var i = 0; i < 60 && m().getTranslation().y < 0; i++) {
+      await t.dragFrom(mid, const Offset(0, 600));
+      await frames(t, 4);
+    }
+    expect(m().getTranslation().y, 0);
+    expect(m().getMaxScaleOnAxis(), closeTo(2.5, 0.01));
     await frames(t);
+    expect(subtitle(), startsWith('Page 1 / 12 · '));
+    // a double tap again: back to the page's width, where it was
+    await t.tapAt(mid);
+    await t.pump(const Duration(milliseconds: 60));
+    await t.tapAt(mid);
+    await frames(t, 20);
+    expect(m().getMaxScaleOnAxis(), closeTo(1, 0.01));
+    expect(m().getTranslation().x, 0);
     // back: the document is closed
     await t.tap(find.byType(BackButton));
     await frames(t, 20);

@@ -38,6 +38,18 @@ Future<(FilesService, TerminalFakes)> makeService({
 Future<void> settle([int ms = 60]) =>
     Future<void>.delayed(Duration(milliseconds: ms));
 
+/// Waits (real time) until [done] holds – a slow machine (the CI) may need
+/// longer than a fixed pause; after [timeout] the next expect tells why.
+Future<void> until(
+  bool Function() done, {
+  Duration timeout = const Duration(seconds: 10),
+}) async {
+  final end = DateTime.now().add(timeout);
+  while (!done() && DateTime.now().isBefore(end)) {
+    await settle(10);
+  }
+}
+
 void main() {
   group('paths', () {
     test('normalize, parent, base, segments, tilde', () {
@@ -150,6 +162,7 @@ void main() {
     test('lists home, hides dotfiles, counts, mount', () async {
       final (files, _) = await makeService();
       files.setVisible(visible: true);
+      await until(() => files.entries != null);
       await settle();
       expect(files.phase, FilesPhase.live);
       expect(files.path, '/home/user');
@@ -176,6 +189,7 @@ void main() {
     test('folders, symlinks (real path), back, denied', () async {
       final (files, _) = await makeService();
       files.setVisible(visible: true);
+      await until(() => files.entries != null);
       await settle();
       await files.enter(
         files.entries!.firstWhere((e) => e.name == 'Documents'),
@@ -202,6 +216,7 @@ void main() {
     test('sort key and direction; prefs are kept', () async {
       final (files, fakes) = await makeService();
       files.setVisible(visible: true);
+      await until(() => files.entries != null);
       await settle();
       files.sortBy(SortKey.size);
       expect(files.ascending, isFalse);
@@ -218,6 +233,7 @@ void main() {
     test('download → Downloads/Delve, one at a time, cancel', () async {
       final (files, fakes) = await makeService();
       files.setVisible(visible: true);
+      await until(() => files.entries != null);
       await settle();
       final fs = fakes.files.last!..holdDownloads = Completer<void>();
       final notes = files.entries!.firstWhere((e) => e.name == 'notes.txt');
@@ -228,14 +244,14 @@ void main() {
       final a = files.download(notes);
       final b = files.download(big);
       final c = files.download(big);
-      await settle();
+      await until(() => a.state == TransferState.running);
       expect(a.state, TransferState.running);
       expect(b.state, TransferState.queued);
       expect(files.transferProgress, (1, 3));
       files.cancel(c);
       expect(c.state, TransferState.cancelled);
       fs.holdDownloads!.complete();
-      await settle(150);
+      await until(() => b.state == TransferState.done && done.length == 2);
       expect(a.state, TransferState.done);
       expect(b.state, TransferState.done);
       expect(b.bytes, 2000);
@@ -258,6 +274,7 @@ void main() {
     test('text preview: first bytes, binary refused', () async {
       final (files, _) = await makeService();
       files.setVisible(visible: true);
+      await until(() => files.entries != null);
       await settle();
       files.setShowHidden(show: true);
       final notes = files.entries!.firstWhere((e) => e.name == 'notes.txt');
@@ -271,6 +288,7 @@ void main() {
     test('image preview: fetched once, a left page stops, cleared', () async {
       final (files, fakes) = await makeService();
       files.setVisible(visible: true);
+      await until(() => files.entries != null);
       await settle();
       await files.open('/home/user/Documents/hajos/evkonyv');
       await settle();
@@ -309,7 +327,7 @@ void main() {
       expect(files.phase, FilesPhase.offline);
       expect(files.attempt, 1);
       expect(files.nextAttemptAt, isNotNull);
-      await settle(200);
+      await until(() => files.phase == FilesPhase.live);
       expect(files.phase, FilesPhase.live);
       expect(dialer.attempts, 3);
       expect(files.entries, isNotEmpty);
@@ -318,11 +336,12 @@ void main() {
     test('a dropped connection reconnects and lists again', () async {
       final (files, fakes) = await makeService();
       files.setVisible(visible: true);
+      await until(() => files.entries != null);
       await settle();
       fakes.files.last!.drop();
       await settle(5);
       expect(files.phase, FilesPhase.offline);
-      await settle(150);
+      await until(() => files.phase == FilesPhase.live);
       expect(files.phase, FilesPhase.live);
       expect(fakes.files.opened.length, 2);
       await files.refresh();
@@ -351,10 +370,11 @@ void main() {
     test('closes in the background, probes on return', () async {
       final (files, fakes) = await makeService();
       files.setVisible(visible: true);
+      await until(() => files.entries != null);
       await settle();
       final first = fakes.files.last!;
       files.setForeground(foreground: false);
-      await settle(300);
+      await until(() => first.closed && files.phase == FilesPhase.idle);
       expect(first.closed, isTrue);
       expect(files.phase, FilesPhase.idle);
       files.setForeground(foreground: true);
