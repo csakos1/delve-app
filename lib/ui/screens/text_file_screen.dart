@@ -29,6 +29,10 @@ import 'files_screen.dart';
 ///
 /// The edit lives in this screen only (Ákos, F2b): a lost connection keeps
 /// it until it is saved or discarded; the app being killed loses it.
+///
+/// Back while editing (Android back, the app bar's arrow) goes to the
+/// read-only view, not out of the file; unsaved changes ask first. Done
+/// (only with nothing unsaved, in Save's place) does the same.
 class TextFileScreen extends ConsumerStatefulWidget {
   const TextFileScreen({super.key, required this.entry, this.edit = false});
 
@@ -72,7 +76,7 @@ class _TextFileScreenState extends ConsumerState<TextFileScreen> {
   bool _locked = false;
   bool _unlocking = false;
 
-  /// Back after Discard / Save: the pop is let through.
+  /// Back behind the lock after Discard / Save: the pop is let through.
   bool _leave = false;
 
   @override
@@ -350,6 +354,46 @@ class _TextFileScreenState extends ConsumerState<TextFileScreen> {
 
   // ----------------------------------------------------------- leaving
 
+  /// Editing → the read-only view (Done, or back with nothing unsaved).
+  void _stopEditing() {
+    if (!_editing || _dirty || _saving || _locked) return;
+    _focus.unfocus();
+    _diffTimer?.cancel();
+    setState(() {
+      _editing = false;
+      _diff = LineDiff.none;
+      _notSaved = false;
+      _denied = null;
+    });
+  }
+
+  /// Back while editing: to the view; unsaved changes ask first (23n4) –
+  /// Discard drops them, Save saves, and both end in the view.
+  Future<void> _backToView() async {
+    if (_saving) return;
+    if (!_dirty) {
+      _stopEditing();
+      return;
+    }
+    final changed = diffLines(_base, _text.text).count;
+    final choice = await showDiscardDialog(
+      context,
+      name: widget.entry.name,
+      changed: changed == 0 ? 1 : changed,
+      canSave: !_offline && !_saving,
+    );
+    if (!mounted || choice == null) return;
+    switch (choice) {
+      case DiscardChoice.save:
+        if (!await _save()) return;
+      case DiscardChoice.discard:
+        _discardChanges();
+    }
+    if (mounted) _stopEditing();
+  }
+
+  /// Behind the lock: back leaves the file, as before (the view would show
+  /// it without the unlock).
   Future<void> _leaving() async {
     final changed = diffLines(_base, _text.text).count;
     final choice = await showDiscardDialog(
@@ -399,9 +443,10 @@ class _TextFileScreenState extends ConsumerState<TextFileScreen> {
     final l = AppLocalizations.of(context);
     final cs = context.colors;
     return PopScope(
-      canPop: _leave || !_dirty,
+      canPop: _leave || !_editing || (_locked && !_dirty),
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) unawaited(_leaving());
+        if (didPop) return;
+        unawaited(_editing && !_locked ? _backToView() : _leaving());
       },
       child: Scaffold(
         backgroundColor: cs.surface,
@@ -578,11 +623,25 @@ class _TextFileScreenState extends ConsumerState<TextFileScreen> {
           ),
         )
       else
-        IconButton(
-          key: const Key('preview.download'),
-          tooltip: l.filesActDownload,
-          icon: const SymbolIcon(FileIcons.download),
-          onPressed: _download,
+        // nothing unsaved: back to the read-only view
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space1),
+          child: TextButton.icon(
+            key: const Key('editor.done'),
+            onPressed: _locked ? null : _stopEditing,
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, FilesTokens.editorSave),
+              tapTargetSize: MaterialTapTargetSize.padded,
+              padding: const EdgeInsets.symmetric(
+                horizontal: DelveTokens.space3,
+              ),
+            ),
+            icon: const SymbolIcon(
+              DelveIcons.check,
+              size: FilesTokens.editorSaveIcon,
+            ),
+            label: Text(l.editorDone),
+          ),
         ),
       PopupMenuButton<String>(
         key: const Key('editor.menu'),

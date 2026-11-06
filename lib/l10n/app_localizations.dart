@@ -5356,6 +5356,12 @@ abstract class AppLocalizations {
   /// **'Keep editing'**
   String get editorKeepEditing;
 
+  /// No description provided for @editorDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get editorDone;
+
   /// No description provided for @editorLockedBody.
   ///
   /// In en, this message translates to:

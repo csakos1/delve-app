@@ -685,8 +685,47 @@ void main() {
       expect(find.byKey(const Key('editor.save')), findsNothing);
       expect(find.textContaining('Saved '), findsWidgets);
       expect(details(t), isNot(contains('changed')));
-      // nothing unsaved: back goes straight to the list
+      // nothing unsaved: back goes to the read-only view with the saved text,
+      // a second back to the list
       await t.tap(find.byType(BackButton));
+      await frames(t);
+      expect(field, findsNothing);
+      expect(find.byKey(const Key('preview.edit')), findsOneWidget);
+      expect(find.text('line 2'), findsOneWidget);
+      await t.tap(find.byType(BackButton));
+      await frames(t, 20);
+      expect(find.byKey(const Key('files.list')), findsOneWidget);
+    });
+
+    testWidgets('Done: only with nothing unsaved; Android back to the view', (
+      t,
+    ) async {
+      await openFiles(t);
+      await edit(t, 'notes.txt');
+      final done = find.byKey(const Key('editor.done'));
+      expect(done, findsOneWidget);
+      await t.enterText(field, 'changed\n');
+      await frames(t);
+      expect(done, findsNothing);
+      expect(find.byKey(const Key('editor.save')), findsOneWidget);
+      await t.tap(find.byKey(const Key('editor.save')));
+      await frames(t);
+      expect(find.byKey(const Key('editor.save')), findsNothing);
+      await t.tap(done);
+      await frames(t);
+      expect(field, findsNothing);
+      expect(find.byKey(const Key('preview.text')), findsOneWidget);
+      expect(find.text('changed'), findsOneWidget);
+      // Edit again, then Android back: the view, not the list
+      await t.tap(find.byKey(const Key('preview.edit')));
+      await frames(t);
+      expect(field, findsOneWidget);
+      expect(text(t), 'changed\n');
+      await t.binding.handlePopRoute();
+      await frames(t);
+      expect(field, findsNothing);
+      expect(find.byKey(const Key('preview.text')), findsOneWidget);
+      await t.binding.handlePopRoute();
       await frames(t, 20);
       expect(find.byKey(const Key('files.list')), findsOneWidget);
     });
@@ -746,11 +785,17 @@ void main() {
       await frames(t);
       await t.tap(find.byKey(const Key('editor.discard.discard')));
       await frames(t, 20);
-      expect(find.byKey(const Key('files.list')), findsOneWidget);
+      // the view, with the desktop's text
+      expect(field, findsNothing);
+      expect(find.byKey(const Key('preview.text')), findsOneWidget);
+      expect(find.text('line two'), findsOneWidget);
       expect(onDesktop(fakes, '/home/user/notes.txt'), 'line one\nline two\n');
+      await t.tap(find.byType(BackButton));
+      await frames(t, 20);
+      expect(find.byKey(const Key('files.list')), findsOneWidget);
     });
 
-    testWidgets('back with an edit: Save, then the list', (t) async {
+    testWidgets('back with an edit: Save, then the view', (t) async {
       final fakes = await openFiles(t);
       await edit(t, 'notes.txt');
       await t.enterText(field, 'kept\n');
@@ -759,8 +804,10 @@ void main() {
       await frames(t);
       await t.tap(find.byKey(const Key('editor.discard.save')));
       await frames(t, 20);
-      expect(find.byKey(const Key('files.list')), findsOneWidget);
       expect(onDesktop(fakes, '/home/user/notes.txt'), 'kept\n');
+      expect(field, findsNothing);
+      expect(find.byKey(const Key('preview.text')), findsOneWidget);
+      expect(find.text('kept'), findsOneWidget);
     });
 
     testWidgets('the menu: line numbers, wrap, discard changes', (t) async {

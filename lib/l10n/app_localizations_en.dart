@@ -3348,6 +3348,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editorKeepEditing => 'Keep editing';
 
   @override
+  String get editorDone => 'Done';
+
+  @override
   String get editorLockedBody => 'Your edit is kept. Unlock to go on.';
 
   @override
