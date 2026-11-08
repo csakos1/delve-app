@@ -335,12 +335,27 @@ Future<Map<String, ConflictChoice>?> resolveUploadConflicts(
   BuildContext context, {
   required Map<String, RemoteEntry> here,
   required List<PickedAttachment> files,
+}) => resolveConflicts(
+  context,
+  here: here,
+  incoming: [for (final f in files) (FilesOps.uploadName(f.name), f.size)],
+  cancelLabel: AppLocalizations.of(context).filesConflictCancelUpload,
+);
+
+/// Asks about each incoming (name, size) whose name is taken in [here]
+/// (23f, one at a time, "Apply to all" covers the rest; a folder here is
+/// never replaced). Null: cancelled.
+Future<Map<String, ConflictChoice>?> resolveConflicts(
+  BuildContext context, {
+  required Map<String, RemoteEntry> here,
+  required List<(String, int?)> incoming,
+  required String cancelLabel,
 }) async {
-  final l = AppLocalizations.of(context);
-  final taken = <String, PickedAttachment>{};
-  for (final f in files) {
-    final name = FilesOps.uploadName(f.name);
-    if (here.containsKey(name)) taken.putIfAbsent(name, () => f);
+  final taken = <String, int?>{};
+  for (final (name, size) in incoming) {
+    if (here.containsKey(name) && !taken.containsKey(name)) {
+      taken[name] = size;
+    }
   }
   final choices = <String, ConflictChoice>{};
   final names = taken.keys.toList();
@@ -350,9 +365,9 @@ Future<Map<String, ConflictChoice>?> resolveUploadConflicts(
       context,
       name: name,
       here: here[name]!,
-      incomingSize: taken[name]!.size,
+      incomingSize: taken[name],
       count: names.length - i,
-      cancelLabel: l.filesConflictCancelUpload,
+      cancelLabel: cancelLabel,
     );
     if (answer == null) return null;
     if (!context.mounted) return null;
@@ -401,6 +416,45 @@ Future<bool> uploadAsking(
   if (choices == null) return false;
   service.upload(dir, files, here: here, choices: choices);
   return true;
+}
+
+/// Pastes the clip into [dir] after asking about taken names (23f);
+/// null when cancelled or the folder could not be read (a snackbar says
+/// why).
+Future<PasteResult?> pasteAsking(
+  BuildContext context,
+  FilesService service,
+  String dir,
+) async {
+  final l = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  void say(Object e) => messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(content: Text(l.filesPasteFailed(writeErrorText(l, e)))),
+    );
+  final Map<String, RemoteEntry> here;
+  try {
+    here = await service.entriesIn(dir);
+  } on RemoteFsError catch (e) {
+    say(e);
+    return null;
+  }
+  if (!context.mounted) return null;
+  final conflicts = service.pasteConflicts(dir, here);
+  final choices = await resolveConflicts(
+    context,
+    here: here,
+    incoming: [for (final e in conflicts) (e.name, e.isDir ? null : e.size)],
+    cancelLabel: l.filesConflictCancelPaste,
+  );
+  if (choices == null) return null;
+  try {
+    return await service.paste(dir, here: here, choices: choices);
+  } on RemoteFsError catch (e) {
+    say(e);
+    return null;
+  }
 }
 
 /// A filled alert button (the strong, irreversible choice).

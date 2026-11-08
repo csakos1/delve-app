@@ -19,6 +19,7 @@ const fastFilesTiming = FilesTiming(
   probeTimeout: Duration(milliseconds: 50),
   closeAfterBackground: Duration(milliseconds: 200),
   countBatch: Duration(milliseconds: 10),
+  copyPoll: Duration(milliseconds: 20),
 );
 
 final _t0 = DateTime.utc(2026, 11, 4, 21, 7);
@@ -385,6 +386,48 @@ class FakeRemoteFs implements RemoteFs {
     return n;
   }
 
+  /// Copies (F3) copy at once, then wait for this when set (to see them
+  /// running, measure them and cancel them).
+  Completer<void>? holdCopies;
+
+  /// (from, to) of each copy, in order.
+  final List<(String, String)> copied = [];
+
+  /// Copies of these paths fail like `cp` without read access.
+  final Set<String> copyFails = {};
+
+  /// Copies still running (not done, not cancelled).
+  int copiesRunning = 0;
+
+  @override
+  RemoteJob copy(String from, String to) => _FakeJob(this, from, to);
+
+  RemoteEntry _at(RemoteEntry c, String path) => RemoteEntry(
+    name: baseName(path),
+    path: path,
+    kind: c.kind,
+    size: c.size,
+    modified: c.modified,
+    mode: c.mode,
+    owner: c.owner,
+    link: c.link,
+  );
+
+  void _copyTree(String from, String to) {
+    String moved(String p) => p == from ? to : '$to${p.substring(from.length)}';
+    _put(_at(_find(from)!, to));
+    for (final k in tree.keys.toList()) {
+      if (k == from || isInside(k, from)) {
+        tree[moved(k)] = [for (final c in tree[k]!) _at(c, moved(c.path))];
+      }
+    }
+    for (final k in contents.keys.toList()) {
+      if (k == from || isInside(k, from)) {
+        contents[moved(k)] = Uint8List.fromList(contents[k]!);
+      }
+    }
+  }
+
   @override
   Future<bool> probe(Duration timeout) async => !_done.isCompleted;
 
@@ -395,6 +438,54 @@ class FakeRemoteFs implements RemoteFs {
   Future<void> close() async {
     closed = true;
     drop();
+  }
+}
+
+/// `cp -a` in memory: the copy is there at once, the job ends when
+/// [FakeRemoteFs.holdCopies] lets it (or it is cancelled).
+class _FakeJob implements RemoteJob {
+  _FakeJob(this.fs, this.from, this.to) {
+    done = _run();
+  }
+
+  final FakeRemoteFs fs;
+  final String from;
+  final String to;
+  final _stop = Completer<void>();
+
+  @override
+  late final Future<void> done;
+
+  Future<void> _run() async {
+    await Future<void>.delayed(Duration.zero);
+    fs._alive();
+    fs._writable(to);
+    if (fs._find(from) == null) throw RemoteFsError(FsFailure.notFound, from);
+    if (fs._find(to) != null) {
+      throw RemoteFsError(FsFailure.other, "cp: '$to' exists");
+    }
+    fs.copied.add((from, to));
+    if (fs.copyFails.contains(from)) {
+      throw RemoteFsError(
+        FsFailure.denied,
+        "cp: cannot open '$from' for reading: Permission denied",
+      );
+    }
+    fs._copyTree(from, to);
+    fs.copiesRunning++;
+    try {
+      if (fs.holdCopies case final h?) {
+        await Future.any([h.future, _stop.future]);
+      }
+    } finally {
+      fs.copiesRunning--;
+    }
+  }
+
+  @override
+  Future<void> cancel() async {
+    if (!_stop.isCompleted) _stop.complete();
+    await done.catchError((Object _) {});
   }
 }
 
@@ -433,6 +524,12 @@ class FakeDeviceFiles implements DeviceFiles {
 
   Directory? _dir;
   final List<(String, String, Uint8List)> published = [];
+
+  /// The folder under Downloads/Delve of each of [published] (null: none).
+  final List<String?> publishedIn = [];
+
+  /// Folders under Downloads/Delve that already hold this app's files.
+  final Set<String> takenFolders = {};
   final List<String> openedUris = [];
   bool canOpen = true;
 
@@ -441,11 +538,27 @@ class FakeDeviceFiles implements DeviceFiles {
       (_dir ??= Directory.systemTemp.createTempSync('delve-files-')).path;
 
   @override
-  Future<String> publish(String path, String name, String mime) async {
+  Future<String> publish(
+    String path,
+    String name,
+    String mime, {
+    String? folder,
+  }) async {
     final f = File(path);
     published.add((name, mime, f.readAsBytesSync()));
+    publishedIn.add(folder);
+    if (folder != null) takenFolders.add(folder.split('/').first);
     f.deleteSync();
     return 'content://media/external/downloads/${published.length}';
+  }
+
+  @override
+  Future<String> freeFolder(String name) async {
+    var c = name;
+    for (var n = 2; takenFolders.contains(c); n++) {
+      c = '$name ($n)';
+    }
+    return c;
   }
 
   @override

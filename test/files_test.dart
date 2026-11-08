@@ -842,4 +842,317 @@ void main() {
       expect(listingWritable(e(owner: 'csakos', mode: 0x8124), 'root'), isTrue);
     });
   });
+
+  group('copy, move, several items (F3)', () {
+    Future<(FilesService, FakeRemoteFs, TerminalFakes)> live() async {
+      final (files, fakes) = await makeService();
+      files.setVisible(visible: true);
+      await until(() => files.entries != null);
+      await settle();
+      return (files, fakes.files.last!, fakes);
+    }
+
+    RemoteEntry entry(FilesService f, String name) =>
+        f.entries!.firstWhere((e) => e.name == name);
+
+    String text(FakeRemoteFs fs, String path) =>
+        utf8.decode(fs.contents[path]!);
+
+    Future<Transfer> finish(Transfer t) async {
+      await until(() => !t.active);
+      return t;
+    }
+
+    test('the clip: paste problems, cleared by Paste and Cancel', () async {
+      final (files, _, _) = await live();
+      expect(files.clip, isNull);
+      files.setClip([entry(files, 'notes.txt')], cut: true);
+      expect(files.clip!.from, '/home/user');
+      expect(files.clip!.cut, isTrue);
+      expect(files.pasteProblem('/home/user'), PasteProblem.sameFolder);
+      expect(files.pasteProblem('/home/user/Downloads'), isNull);
+      files.setClip([entry(files, 'Documents')], cut: false);
+      // a copy into its own folder is fine (the next free name)
+      expect(files.pasteProblem('/home/user'), isNull);
+      expect(
+        files.pasteProblem('/home/user/Documents'),
+        PasteProblem.intoItself,
+      );
+      expect(
+        files.pasteProblem('/home/user/Documents/hajos'),
+        PasteProblem.intoItself,
+      );
+      files.clearClip();
+      expect(files.clip, isNull);
+    });
+
+    test('copy a file: cp -a into a hidden part, renamed; measured', () async {
+      final (files, fs, _) = await live();
+      files.setClip([entry(files, 'notes.txt')], cut: false);
+      final here = await files.entriesIn('/home/user/Downloads');
+      final r = await files.paste('/home/user/Downloads', here: here);
+      expect(files.clip, isNull);
+      final [t] = r.queued;
+      expect(t.kind, TransferKind.copy);
+      await finish(t);
+      expect(t.state, TransferState.done);
+      expect(fs.copied.single.$1, '/home/user/notes.txt');
+      expect(
+        fs.copied.single.$2,
+        startsWith('/home/user/Downloads/.notes.txt.'),
+      );
+      expect(fs.copied.single.$2, endsWith('.part'));
+      expect(
+        text(fs, '/home/user/Downloads/notes.txt'),
+        'line one\nline two\n',
+      );
+      expect(text(fs, '/home/user/notes.txt'), 'line one\nline two\n');
+      expect(fs.tree['/home/user/Downloads']!.map((e) => e.name), [
+        'notes.txt',
+      ]);
+      expect(t.total, 18);
+      expect(t.bytes, 18);
+    });
+
+    test('copy into its own folder: the next free name, no question', () async {
+      final (files, fs, _) = await live();
+      files.setClip([
+        entry(files, 'notes.txt'),
+        entry(files, 'Documents'),
+      ], cut: false);
+      final here = await files.entriesIn('/home/user');
+      expect(files.pasteConflicts('/home/user', here), isEmpty);
+      final r = await files.paste('/home/user', here: here);
+      for (final t in r.queued) {
+        await finish(t);
+      }
+      expect(r.queued.map((t) => t.name), ['notes (2).txt', 'Documents (2)']);
+      expect(fs.contents['/home/user/notes (2).txt'], isNotNull);
+      expect(
+        fs.contents['/home/user/Documents (2)/hajos/evkonyv/borito.png'],
+        hasLength(64),
+      );
+    });
+
+    test('move on one filesystem: a rename now, nothing queued', () async {
+      final (files, fs, _) = await live();
+      files.setClip([
+        entry(files, 'notes.txt'),
+        entry(files, 'delve-app'),
+      ], cut: true);
+      final here = await files.entriesIn('/home/user/Downloads');
+      final r = await files.paste('/home/user/Downloads', here: here);
+      expect(r.moved, 2);
+      expect(r.queued, isEmpty);
+      expect(files.transfers, isEmpty);
+      expect(fs.copied, isEmpty);
+      expect(fs.contents['/home/user/Downloads/notes.txt'], isNotNull);
+      expect(fs.tree['/home/user/Downloads/delve-app'], hasLength(1));
+      expect(fs.tree['/home/user/delve-app'], isNull);
+      // the folder they left is the one on screen: listed again
+      expect(files.entries!.map((e) => e.name), isNot(contains('notes.txt')));
+    });
+
+    test(
+      'move across filesystems: copy, rename, then the source deleted',
+      () async {
+        final (files, fs, _) = await live();
+        fs.otherDevices.add('/tmp');
+        files.setClip([entry(files, 'notes.txt')], cut: true);
+        final r = await files.paste(
+          '/tmp',
+          here: await files.entriesIn('/tmp'),
+        );
+        expect(r.moved, 0);
+        final [t] = r.queued;
+        expect(t.kind, TransferKind.move);
+        await finish(t);
+        expect(t.state, TransferState.done);
+        expect(t.warning, isNull);
+        expect(text(fs, '/tmp/notes.txt'), 'line one\nline two\n');
+        expect(fs.contents['/home/user/notes.txt'], isNull);
+        expect(fs.deletedTrees, contains('/home/user/notes.txt'));
+        expect(fs.tree['/tmp']!.map((e) => e.name), ['notes.txt']);
+      },
+    );
+
+    test('taken names: Skip, Replace (the old one to the trash), Keep both; '
+        'a folder here is never replaced', () async {
+      final (files, fs, _) = await live();
+      const d = '/home/user/Downloads';
+      await fs.writeFile('$d/notes.txt', Uint8List.fromList([1, 2, 3]));
+      await fs.writeFile('$d/file2.log', Uint8List.fromList([4]));
+      await fs.mkdir('$d/file10.log');
+      files.setClip([
+        entry(files, 'notes.txt'),
+        entry(files, 'file2.log'),
+        entry(files, 'file10.log'),
+      ], cut: false);
+      final here = await files.entriesIn(d);
+      expect(files.pasteConflicts(d, here).map((e) => e.name), [
+        'notes.txt',
+        'file2.log',
+        'file10.log',
+      ]);
+      final r = await files.paste(
+        d,
+        here: here,
+        choices: {
+          'notes.txt': ConflictChoice.replace,
+          'file2.log': ConflictChoice.skip,
+          'file10.log': ConflictChoice.replace,
+        },
+      );
+      expect(r.skipped, 1);
+      for (final t in r.queued) {
+        await finish(t);
+      }
+      expect(r.queued.map((t) => t.name), ['notes.txt', 'file10 (2).log']);
+      expect(text(fs, '$d/notes.txt'), 'line one\nline two\n');
+      const trash = '/home/user/.local/share/Trash';
+      expect(fs.contents['$trash/files/notes.txt'], [1, 2, 3]);
+      expect(fs.contents['$d/file2.log'], [4]);
+      expect(fs.tree['$d/file10.log'], isEmpty);
+      // (the sample's file10.log has no bytes: its entry is what is copied)
+      expect(fs.tree[d]!.map((e) => e.name), contains('file10 (2).log'));
+    });
+
+    test(
+      'move with Replace on one filesystem: the old one to the trash',
+      () async {
+        final (files, fs, _) = await live();
+        const d = '/home/user/Downloads';
+        await fs.writeFile('$d/notes.txt', Uint8List.fromList([9]));
+        files.setClip([entry(files, 'notes.txt')], cut: true);
+        final r = await files.paste(
+          d,
+          here: await files.entriesIn(d),
+          choices: {'notes.txt': ConflictChoice.replace},
+        );
+        expect(r.moved, 1);
+        expect(text(fs, '$d/notes.txt'), 'line one\nline two\n');
+        expect(fs.contents['/home/user/.local/share/Trash/files/notes.txt'], [
+          9,
+        ]);
+        expect(fs.contents['/home/user/notes.txt'], isNull);
+        expect(fs.tree[d]!.map((e) => e.name), ['notes.txt']);
+      },
+    );
+
+    test('cancel a copy: cp stopped, its part removed', () async {
+      final (files, fs, _) = await live();
+      fs.holdCopies = Completer<void>();
+      files.setClip([entry(files, 'Documents')], cut: false);
+      final r = await files.paste(
+        '/home/user/Downloads',
+        here: await files.entriesIn('/home/user/Downloads'),
+      );
+      final [t] = r.queued;
+      await until(() => fs.copiesRunning == 1 && t.bytes > 0);
+      expect(t.state, TransferState.running);
+      expect(t.bytes, t.total);
+      files.cancel(t);
+      await finish(t);
+      expect(t.state, TransferState.cancelled);
+      expect(fs.copiesRunning, 0);
+      await until(() => fs.deletedTrees.isNotEmpty);
+      expect(fs.deletedTrees.single, fs.copied.single.$2);
+      expect(fs.tree['/home/user/Downloads'], isEmpty);
+    });
+
+    test('a copy that fails: Failed with why, no part left', () async {
+      final (files, fs, _) = await live();
+      fs.copyFails.add('/home/user/notes.txt');
+      files.setClip([entry(files, 'notes.txt')], cut: false);
+      final r = await files.paste(
+        '/home/user/Downloads',
+        here: await files.entriesIn('/home/user/Downloads'),
+      );
+      final t = await finish(r.queued.single);
+      expect(t.state, TransferState.failed);
+      expect(t.error, 'Permission denied');
+      expect(fs.tree['/home/user/Downloads'], isEmpty);
+    });
+
+    test(
+      'a folder download: its folders under Downloads/Delve/‹name›, links '
+      'left out, unreadable folders counted; a second one is ‹name› (2)',
+      () async {
+        final (files, fs, fakes) = await live();
+        const p = '/home/user/proj';
+        fs.tree['/home/user']!.add(dirEntry(p));
+        fs.tree[p] = [
+          fileEntry('$p/a.txt', 3),
+          dirEntry('$p/src'),
+          dirEntry('$p/secret'),
+          const RemoteEntry(
+            name: 'up',
+            path: '$p/up',
+            kind: EntryKind.directory,
+            link: '..',
+          ),
+        ];
+        fs.tree['$p/src'] = [fileEntry('$p/src/main:x.dart', 2)];
+        fs.tree['$p/secret'] = [];
+        fs.denied.add('$p/secret');
+        fs.contents['$p/a.txt'] = Uint8List.fromList([1, 2, 3]);
+        fs.contents['$p/src/main:x.dart'] = Uint8List.fromList([4, 5]);
+        final t = files.download(dirEntry(p));
+        expect(t.folder, isTrue);
+        await finish(t);
+        expect(t.state, TransferState.done);
+        expect(t.files, 2);
+        expect(t.filesDone, 2);
+        expect(t.unreadable, 1);
+        expect(t.leftOut, 1);
+        expect(t.phoneFolder, 'proj');
+        expect(t.total, 5);
+        expect(t.bytes, 5);
+        final device = fakes.device;
+        expect(device.published.map((x) => x.$1), ['a.txt', 'main_x.dart']);
+        expect(device.publishedIn, ['proj', 'proj/src']);
+        expect(device.published.last.$3, [4, 5]);
+        final again = await finish(files.download(dirEntry(p)));
+        expect(again.phoneFolder, 'proj (2)');
+        expect(device.publishedIn.skip(2), ['proj (2)', 'proj (2)/src']);
+      },
+    );
+
+    test(
+      'several items: download all, trash all with Undo, delete for good',
+      () async {
+        final (files, fs, fakes) = await live();
+        final queued = files.downloadAll([
+          entry(files, 'notes.txt'),
+          entry(files, 'file2.log'),
+        ]);
+        for (final t in queued) {
+          await finish(t);
+        }
+        expect(fakes.device.published.map((x) => x.$1), [
+          'notes.txt',
+          'file2.log',
+        ]);
+        final r = await files.moveAllToTrash([
+          entry(files, 'notes.txt'),
+          entry(files, 'file2.log'),
+        ]);
+        expect(r.items, hasLength(2));
+        expect(r.noTrash, isEmpty);
+        expect(fs.contents['/home/user/notes.txt'], isNull);
+        expect(await files.restoreAll(r.items), isEmpty);
+        expect(fs.contents['/home/user/notes.txt'], isNotNull);
+        expect(fs.contents['/home/user/file2.log'], hasLength(2000));
+        // outside home: no trash
+        await fs.writeFile('/tmp/a', Uint8List.fromList([1]));
+        await fs.writeFile('/tmp/b', Uint8List.fromList([2]));
+        final tmp = [...fs.tree['/tmp']!];
+        final r2 = await files.moveAllToTrash(tmp);
+        expect(r2.items, isEmpty);
+        expect(r2.noTrash, hasLength(2));
+        expect(await files.deleteAllPermanently(tmp), isEmpty);
+        expect(fs.tree['/tmp'], isEmpty);
+      },
+    );
+  });
 }

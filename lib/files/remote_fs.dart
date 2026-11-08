@@ -206,6 +206,12 @@ abstract interface class RemoteFs {
   /// Flushes [path] to the disk (`sync --`); best effort, never throws.
   Future<void> sync(String path);
 
+  /// Copies [from] to [to] on the desktop (`cp -a`: a folder with
+  /// everything in it, links copied as links, modes and times kept). [to]
+  /// must not exist. The job can be stopped; what it left is the caller's
+  /// to remove.
+  RemoteJob copy(String from, String to);
+
   /// An answer from the desktop within [timeout].
   Future<bool> probe(Duration timeout);
 
@@ -213,6 +219,16 @@ abstract interface class RemoteFs {
   Future<void> get done;
 
   Future<void> close();
+}
+
+/// A command running on the desktop (a copy, F3).
+abstract interface class RemoteJob {
+  /// Completes when it ends; throws [RemoteFsError] when it failed (not
+  /// after [cancel]).
+  Future<void> get done;
+
+  /// Stops it (best effort); [done] then completes without an error.
+  Future<void> cancel();
 }
 
 /// What the login may do with a path, and whose it is (the editor: 23n).
@@ -671,6 +687,30 @@ String freeName(String name, bool Function(String) taken) {
 /// Is [path] inside [dir] (not [dir] itself)?
 bool isInside(String path, String dir) =>
     dir == '/' ? path != '/' : path.startsWith('$dir/');
+
+/// [s] cut to at most [max] UTF-8 bytes (whole characters).
+String clipUtf8(String s, int max) {
+  var n = 0;
+  final out = StringBuffer();
+  for (final r in s.runes) {
+    final len = utf8Length(String.fromCharCode(r));
+    if (n + len > max) break;
+    n += len;
+    out.writeCharCode(r);
+  }
+  return out.toString();
+}
+
+/// The hidden name a copy is made under before it gets [name] (F3):
+/// `.name.<id>.part`, short enough for a 255-byte name.
+String partName(String name, int id) => '.${clipUtf8(name, 200)}.$id.part';
+
+/// [name] as a file or folder name on the phone's shared storage (the
+/// characters FAT and Android's MediaStore refuse become `_`).
+String phoneName(String name) {
+  final n = name.replaceAll(RegExp(r'[\x00-\x1f"*/:<>?\\|\x7f]'), '_').trim();
+  return n.isEmpty || n == '.' || n == '..' ? '_' : n;
+}
 
 // ---------------------------------------------------------------- trash
 

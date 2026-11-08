@@ -8,8 +8,19 @@ abstract interface class DeviceFiles {
 
   /// Moves the finished download at [path] into Downloads/Delve as [name]
   /// (MediaStore: no storage permission; a name already there gets a
-  /// number). Returns the new entry's `content://` URI.
-  Future<String> publish(String path, String name, String mime);
+  /// number), or into [folder] under it (`photos/2024`, F3). Returns the new
+  /// entry's `content://` URI.
+  Future<String> publish(
+    String path,
+    String name,
+    String mime, {
+    String? folder,
+  });
+
+  /// [name], or `name (2)`, `name (3)`… – the first folder under
+  /// Downloads/Delve that holds none of this app's downloads yet (a folder
+  /// download goes there).
+  Future<String> freeFolder(String name);
 
   /// Opens [uri] in another app; false when none can.
   Future<bool> open(String uri, String mime);
@@ -26,12 +37,21 @@ class ChannelDeviceFiles implements DeviceFiles {
       (await _channel.invokeMethod<String>('scratchDir'))!;
 
   @override
-  Future<String> publish(String path, String name, String mime) async =>
-      (await _channel.invokeMethod<String>('publish', {
-        'path': path,
-        'name': name,
-        'mime': mime,
-      }))!;
+  Future<String> publish(
+    String path,
+    String name,
+    String mime, {
+    String? folder,
+  }) async => (await _channel.invokeMethod<String>('publish', {
+    'path': path,
+    'name': name,
+    'mime': mime,
+    'folder': ?folder,
+  }))!;
+
+  @override
+  Future<String> freeFolder(String name) async =>
+      (await _channel.invokeMethod<String>('freeFolder', {'name': name}))!;
 
   @override
   Future<bool> open(String uri, String mime) async =>

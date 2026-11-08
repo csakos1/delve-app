@@ -5409,6 +5409,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Line end'**
   String get editorKeyEnd;
+
+  /// No description provided for @filesActCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get filesActCopy;
+
+  /// No description provided for @filesActMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get filesActMove;
+
+  /// No description provided for @filesActDownloadFolderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'To {folder}, with its folders'**
+  String filesActDownloadFolderHint(String folder);
+
+  /// No description provided for @filesSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String filesSelected(int count);
+
+  /// No description provided for @filesSelectedOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {total} selected'**
+  String filesSelectedOf(int count, int total);
+
+  /// No description provided for @filesSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get filesSelectAll;
+
+  /// No description provided for @filesCopyPaths.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy paths'**
+  String get filesCopyPaths;
+
+  /// No description provided for @filesPathsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Path copied} other{{count} paths copied}}'**
+  String filesPathsCopied(int count);
+
+  /// No description provided for @filesPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get filesPaste;
+
+  /// No description provided for @filesPasteCopyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Copy 1 item here} other{Copy {count} items here}}'**
+  String filesPasteCopyTitle(int count);
+
+  /// No description provided for @filesPasteMoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Move 1 item here} other{Move {count} items here}}'**
+  String filesPasteMoveTitle(int count);
+
+  /// No description provided for @filesPasteFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'from {folder}'**
+  String filesPasteFrom(String folder);
+
+  /// No description provided for @filesPasteSameFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in this folder – open another one'**
+  String get filesPasteSameFolder;
+
+  /// No description provided for @filesPasteIntoItself.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t go into itself – open another folder'**
+  String get filesPasteIntoItself;
+
+  /// No description provided for @filesPasteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t paste: {reason}'**
+  String filesPasteFailed(String reason);
+
+  /// No description provided for @filesConflictCancelPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel paste'**
+  String get filesConflictCancelPaste;
+
+  /// No description provided for @filesMovedHere.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Moved 1 item here} other{Moved {count} items here}}'**
+  String filesMovedHere(int count);
+
+  /// No description provided for @filesMoveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t move {name}: {reason}'**
+  String filesMoveFailed(String name, String reason);
+
+  /// No description provided for @filesCopiedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to {folder}'**
+  String filesCopiedTo(String folder);
+
+  /// No description provided for @filesMovedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to {folder}'**
+  String filesMovedTo(String folder);
+
+  /// No description provided for @filesMovedSourceKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to {folder}, but the original stayed: {reason}'**
+  String filesMovedSourceKept(String folder, String reason);
+
+  /// No description provided for @filesCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t copy {name}: {reason}'**
+  String filesCopyFailed(String name, String reason);
+
+  /// No description provided for @filesTrashedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item moved to the trash} other{{count} items moved to the trash}}'**
+  String filesTrashedCount(int count);
+
+  /// No description provided for @filesTrashFailedName.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t move {name} to the trash: {reason}'**
+  String filesTrashFailedName(String name, String reason);
+
+  /// No description provided for @filesDeletedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item deleted} other{{count} items deleted}}'**
+  String filesDeletedCount(int count);
+
+  /// No description provided for @filesDeleteFailedName.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete {name}: {reason}'**
+  String filesDeleteFailedName(String name, String reason);
+
+  /// No description provided for @filesTransferReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get filesTransferReading;
+
+  /// No description provided for @filesTransferFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file found} other{{count} files found}}'**
+  String filesTransferFound(int count);
+
+  /// No description provided for @filesTransferFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} files'**
+  String filesTransferFiles(int done, int total);
+
+  /// No description provided for @filesTransferFilesDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file} other{{count} files}}'**
+  String filesTransferFilesDone(int count);
+
+  /// No description provided for @filesTransferUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unreadable'**
+  String filesTransferUnreadable(int count);
+
+  /// No description provided for @filesTransferLeftOut.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 link left out} other{{count} links left out}}'**
+  String filesTransferLeftOut(int count);
 }
 
 class _AppLocalizationsDelegate

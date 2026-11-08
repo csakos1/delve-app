@@ -95,15 +95,31 @@ class MainActivity : FlutterFragmentActivity() {
                         val path = call.argument<String>("path")
                         val name = call.argument<String>("name")
                         val mime = call.argument<String>("mime")
+                        val folder = call.argument<String>("folder")
                         if (path == null || name == null) {
                             result.error("args", "path and name", null)
                         } else {
                             io.execute {
                                 try {
-                                    val uri = publish(File(path), name, mime)
+                                    val uri = publish(File(path), name, mime, folder)
                                     main.post { result.success(uri) }
                                 } catch (e: Exception) {
                                     main.post { result.error("publish", e.message ?: "$e", null) }
+                                }
+                            }
+                        }
+                    }
+                    "freeFolder" -> {
+                        val name = call.argument<String>("name")
+                        if (name == null) {
+                            result.error("args", "name", null)
+                        } else {
+                            io.execute {
+                                try {
+                                    val free = freeFolder(name)
+                                    main.post { result.success(free) }
+                                } catch (e: Exception) {
+                                    main.post { result.error("freeFolder", e.message ?: "$e", null) }
                                 }
                             }
                         }
@@ -156,12 +172,13 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     /**
-     * Moves [src] into Downloads/Delve as [name] (MediaStore renames it when
-     * the name is taken) and returns the entry's content URI. Pending until
-     * the copy is complete, so no half file shows up in other apps.
+     * Moves [src] into Downloads/Delve (or [folder] under it) as [name]
+     * (MediaStore renames it when the name is taken) and returns the entry's
+     * content URI. Pending until the copy is complete, so no half file shows
+     * up in other apps.
      */
     @android.annotation.TargetApi(Build.VERSION_CODES.Q)
-    private fun publish(src: File, name: String, mime: String?): String {
+    private fun publish(src: File, name: String, mime: String?, folder: String?): String {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             throw IllegalStateException("Android 10 or newer is needed")
         }
@@ -169,7 +186,8 @@ class MainActivity : FlutterFragmentActivity() {
         val values = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, name)
             if (mime != null) put(MediaStore.Downloads.MIME_TYPE, mime)
-            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Delve")
+            val under = if (folder.isNullOrEmpty()) "" else "/$folder"
+            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Delve" + under)
             put(MediaStore.Downloads.IS_PENDING, 1)
         }
         val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
@@ -187,6 +205,37 @@ class MainActivity : FlutterFragmentActivity() {
             src.delete()
         }
         return uri.toString()
+    }
+
+    /**
+     * [name], or "name (2)", "name (3)"… – the first folder under
+     * Downloads/Delve with none of this app's entries in it (MediaStore only
+     * shows an app its own downloads without a storage permission).
+     */
+    @android.annotation.TargetApi(Build.VERSION_CODES.Q)
+    private fun freeFolder(name: String): String {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return name
+        val base = Environment.DIRECTORY_DOWNLOADS + "/Delve/"
+        fun like(s: String) = s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        fun taken(candidate: String): Boolean {
+            val dir = base + candidate + "/"
+            contentResolver.query(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                arrayOf(MediaStore.Downloads._ID),
+                "${MediaStore.Downloads.RELATIVE_PATH} LIKE ? ESCAPE '\\'",
+                arrayOf(like(dir) + "%"),
+                null,
+            )?.use { return it.count > 0 }
+            return false
+        }
+        if (!taken(name)) return name
+        var n = 2
+        while (n < 1000) {
+            val candidate = "$name ($n)"
+            if (!taken(candidate)) return candidate
+            n++
+        }
+        return "$name ($n)"
     }
 
     private fun openUri(uri: String?, mime: String?): Boolean {

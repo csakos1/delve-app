@@ -3373,4 +3373,202 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editorKeyEnd => 'Line end';
+
+  @override
+  String get filesActCopy => 'Copy';
+
+  @override
+  String get filesActMove => 'Move';
+
+  @override
+  String filesActDownloadFolderHint(String folder) {
+    return 'To $folder, with its folders';
+  }
+
+  @override
+  String filesSelected(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String filesSelectedOf(int count, int total) {
+    return '$count of $total selected';
+  }
+
+  @override
+  String get filesSelectAll => 'Select all';
+
+  @override
+  String get filesCopyPaths => 'Copy paths';
+
+  @override
+  String filesPathsCopied(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count paths copied',
+      one: 'Path copied',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesPaste => 'Paste';
+
+  @override
+  String filesPasteCopyTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Copy $count items here',
+      one: 'Copy 1 item here',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filesPasteMoveTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Move $count items here',
+      one: 'Move 1 item here',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filesPasteFrom(String folder) {
+    return 'from $folder';
+  }
+
+  @override
+  String get filesPasteSameFolder =>
+      'Already in this folder – open another one';
+
+  @override
+  String get filesPasteIntoItself =>
+      'Can\'t go into itself – open another folder';
+
+  @override
+  String filesPasteFailed(String reason) {
+    return 'Couldn\'t paste: $reason';
+  }
+
+  @override
+  String get filesConflictCancelPaste => 'Cancel paste';
+
+  @override
+  String filesMovedHere(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Moved $count items here',
+      one: 'Moved 1 item here',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filesMoveFailed(String name, String reason) {
+    return 'Couldn\'t move $name: $reason';
+  }
+
+  @override
+  String filesCopiedTo(String folder) {
+    return 'Copied to $folder';
+  }
+
+  @override
+  String filesMovedTo(String folder) {
+    return 'Moved to $folder';
+  }
+
+  @override
+  String filesMovedSourceKept(String folder, String reason) {
+    return 'Copied to $folder, but the original stayed: $reason';
+  }
+
+  @override
+  String filesCopyFailed(String name, String reason) {
+    return 'Couldn\'t copy $name: $reason';
+  }
+
+  @override
+  String filesTrashedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items moved to the trash',
+      one: '1 item moved to the trash',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filesTrashFailedName(String name, String reason) {
+    return 'Couldn\'t move $name to the trash: $reason';
+  }
+
+  @override
+  String filesDeletedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items deleted',
+      one: '1 item deleted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filesDeleteFailedName(String name, String reason) {
+    return 'Couldn\'t delete $name: $reason';
+  }
+
+  @override
+  String get filesTransferReading => 'Reading';
+
+  @override
+  String filesTransferFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files found',
+      one: '1 file found',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filesTransferFiles(int done, int total) {
+    return '$done of $total files';
+  }
+
+  @override
+  String filesTransferFilesDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filesTransferUnreadable(int count) {
+    return '$count unreadable';
+  }
+
+  @override
+  String filesTransferLeftOut(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count links left out',
+      one: '1 link left out',
+    );
+    return '$_temp0';
+  }
 }

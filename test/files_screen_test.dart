@@ -900,4 +900,180 @@ void main() {
       expect(find.byKey(const Key('editor.dirty')), findsOneWidget);
     });
   });
+
+  group('several items, copy and move (F3)', () {
+    Finder row(String name) => find.byKey(Key('files.row.$name'));
+    String count(WidgetTester t) =>
+        t.widget<Text>(find.byKey(const Key('files.select.count'))).data!;
+    final pasteBar = find.byKey(const Key('files.pasteBar'));
+    final paste = find.byKey(const Key('files.pasteBar.paste'));
+    final downloads = find.byKey(const Key('files.quick./home/user/Downloads'));
+
+    testWidgets('long press selects, a tap adds, Select all; back ends it', (
+      t,
+    ) async {
+      await openFiles(t);
+      expect(find.byKey(const Key('files.upload')), findsOneWidget);
+      await t.longPress(row('notes.txt'));
+      await frames(t);
+      expect(count(t), '1 selected');
+      expect(find.byKey(const Key('files.check.notes.txt')), findsOneWidget);
+      expect(find.byKey(const Key('files.menu.notes.txt')), findsNothing);
+      expect(find.byKey(const Key('files.upload')), findsNothing);
+      await t.tap(row('file2.log'));
+      await frames(t);
+      expect(count(t), '2 selected');
+      expect(header(t), '2 of 6 selected · 2 KB');
+      // a tap on a folder selects it (it does not open)
+      await t.tap(row('Documents'));
+      await frames(t);
+      expect(count(t), '3 selected');
+      expect(find.byKey(const Key('files.crumb./home/user')), findsOneWidget);
+      await t.tap(row('Documents'));
+      await frames(t);
+      await t.tap(find.byKey(const Key('files.select.menu')));
+      await frames(t);
+      await t.tap(find.byKey(const Key('files.select.all')));
+      await frames(t);
+      expect(count(t), '6 selected');
+      await t.binding.handlePopRoute();
+      await frames(t);
+      expect(find.byKey(const Key('files.select.count')), findsNothing);
+      expect(find.byKey(const Key('files.menu.notes.txt')), findsOneWidget);
+      expect(find.byKey(const Key('files.list')), findsOneWidget);
+      // the last one unticked ends it too
+      await t.longPress(row('notes.txt'));
+      await frames(t);
+      await t.tap(row('notes.txt'));
+      await frames(t);
+      expect(find.byKey(const Key('files.select.count')), findsNothing);
+    });
+
+    testWidgets('Move: the paste bar goes along to another folder, Paste '
+        'there is a rename', (t) async {
+      final fakes = await openFiles(t);
+      await t.longPress(row('notes.txt'));
+      await frames(t);
+      await t.tap(find.byKey(const Key('files.select.move')));
+      await frames(t);
+      expect(find.byKey(const Key('files.select.count')), findsNothing);
+      expect(pasteBar, findsOneWidget);
+      expect(find.text('Move 1 item here'), findsOneWidget);
+      expect(
+        find.text('Already in this folder – open another one'),
+        findsOneWidget,
+      );
+      expect(t.widget<ButtonStyleButton>(paste).onPressed, isNull);
+      expect(find.byKey(const Key('files.upload')), findsNothing);
+      await t.tap(downloads);
+      await frames(t);
+      expect(find.text('from ~'), findsOneWidget);
+      await t.tap(paste);
+      await frames(t, 20);
+      expect(pasteBar, findsNothing);
+      expect(row('notes.txt'), findsOneWidget);
+      expect(find.byKey(const Key('files.moved')), findsOneWidget);
+      final fs = fakes.files.last!;
+      expect(fs.contents['/home/user/Downloads/notes.txt'], hasLength(18));
+      expect(fs.contents['/home/user/notes.txt'], isNull);
+    });
+
+    testWidgets('Copy from the actions sheet: a taken name asks, the copy '
+        'runs in Transfers', (t) async {
+      final fakes = await openFiles(t);
+      final fs = fakes.files.last!;
+      await fs.writeFile(
+        '/home/user/Downloads/notes.txt',
+        Uint8List.fromList([1]),
+      );
+      await t.tap(find.byKey(const Key('files.menu.notes.txt')));
+      await frames(t);
+      await t.tap(find.byKey(const Key('files.act.copy')));
+      await frames(t);
+      expect(find.text('Copy 1 item here'), findsOneWidget);
+      await t.tap(downloads);
+      await frames(t);
+      await t.tap(paste);
+      await frames(t);
+      expect(find.byKey(const Key('files.conflict')), findsOneWidget);
+      expect(find.text('Cancel paste'), findsOneWidget);
+      await t.tap(find.byKey(const Key('files.conflict.keepBoth')));
+      await frames(t, 20);
+      expect(fs.contents['/home/user/Downloads/notes (2).txt'], hasLength(18));
+      expect(fs.contents['/home/user/Downloads/notes.txt'], [1]);
+      expect(row('notes (2).txt'), findsOneWidget);
+      expect(find.text('Copied to ~/Downloads'), findsOneWidget);
+      await t.tap(find.byKey(const Key('files.transfers')));
+      await frames(t);
+      expect(find.text('notes (2).txt'), findsWidgets);
+      expect(find.text('Show folder'), findsOneWidget);
+    });
+
+    testWidgets('Cancel on the paste bar clears it', (t) async {
+      await openFiles(t);
+      await t.tap(find.byKey(const Key('files.menu.Documents')));
+      await frames(t);
+      await t.tap(find.byKey(const Key('files.act.copy')));
+      await frames(t);
+      await t.tap(row('Documents'));
+      await frames(t);
+      // into itself: off
+      expect(
+        find.text("Can't go into itself – open another folder"),
+        findsOneWidget,
+      );
+      expect(t.widget<ButtonStyleButton>(paste).onPressed, isNull);
+      await t.tap(find.byKey(const Key('files.pasteBar.cancel')));
+      await frames(t);
+      expect(pasteBar, findsNothing);
+    });
+
+    testWidgets('Trash several: one snackbar, Undo brings them all back', (
+      t,
+    ) async {
+      final fakes = await openFiles(t);
+      await t.longPress(row('notes.txt'));
+      await frames(t);
+      await t.tap(row('file2.log'));
+      await frames(t);
+      await t.tap(find.byKey(const Key('files.select.trash')));
+      await frames(t);
+      expect(find.text('2 items moved to the trash'), findsOneWidget);
+      expect(row('notes.txt'), findsNothing);
+      expect(row('file2.log'), findsNothing);
+      await t.tap(find.text('Undo'));
+      await frames(t);
+      expect(row('notes.txt'), findsOneWidget);
+      expect(row('file2.log'), findsOneWidget);
+      expect(
+        fakes.files.last!.contents['/home/user/file2.log'],
+        hasLength(2000),
+      );
+    });
+
+    testWidgets('Download a folder: its folders under Downloads/Delve', (
+      t,
+    ) async {
+      final fakes = await openFiles(t);
+      await t.longPress(row('Documents'));
+      await frames(t);
+      await t.tap(find.byKey(const Key('files.select.download')));
+      await frames(t);
+      expect(find.byKey(const Key('files.select.count')), findsNothing);
+      await untilIo(t, () => fakes.device.published.length == 3);
+      await frames(t);
+      expect(fakes.device.publishedIn, everyElement('Documents/hajos/evkonyv'));
+      expect(
+        fakes.device.published.map((x) => x.$1),
+        unorderedEquals(['beszedes_evkonyv.pdf', 'borito.png', 'hatlap.png']),
+      );
+      await untilIo(
+        t,
+        () => find
+            .text('Saved to Downloads/Delve/Documents')
+            .evaluate()
+            .isNotEmpty,
+      );
+    });
+  });
 }

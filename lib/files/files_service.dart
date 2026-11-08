@@ -15,6 +15,7 @@ import 'sftp_fs.dart';
 
 part 'files_edit.dart';
 part 'files_ops.dart';
+part 'files_paste.dart';
 
 /// Where the Files tab's connection is.
 enum FilesPhase {
@@ -50,9 +51,18 @@ class ListProblem {
 
 enum TransferState { queued, running, done, failed, cancelled }
 
-enum TransferKind { download, upload }
+enum TransferKind {
+  download,
+  upload,
 
-/// One download to the phone, or one upload to the desktop.
+  /// On the desktop (F3): a copy, or a move across filesystems (copy, then
+  /// the source is deleted).
+  copy,
+  move,
+}
+
+/// One download to the phone, one upload to the desktop, or a copy on the
+/// desktop.
 class Transfer {
   Transfer._(
     this.id,
@@ -60,25 +70,45 @@ class Transfer {
     this.kind = TransferKind.download,
     this.source,
     this.replace = false,
-  }) : _size = entry.size,
-       remotePath = entry.path;
+    String? target,
+  }) : _size = entry.isDir ? null : entry.size,
+       remotePath = target ?? entry.path;
 
   final int id;
 
-  /// A download: the desktop's file. An upload: the file it becomes (its
-  /// name and size as picked).
+  /// A download: the desktop's file or folder. An upload: the file it
+  /// becomes (its name and size as picked). A copy or move: what is copied.
   final RemoteEntry entry;
   final TransferKind kind;
 
   /// An upload's file on the phone.
   final PickedAttachment? source;
 
-  /// An upload that replaces the file of that name (it goes to the trash
-  /// once the new one is there).
+  /// An upload, copy or move that replaces the file of that name (it goes
+  /// to the trash once the new one is there).
   final bool replace;
 
-  /// Where an upload lands (another free name if one appeared meanwhile).
+  /// Where an upload, copy or move lands (another free name if one appeared
+  /// meanwhile).
   String remotePath;
+
+  /// A folder download: its files (null while they are being counted), how
+  /// many are on the phone, and how many could not be read. Links and
+  /// special files are left out ([leftOut]).
+  int? files;
+  int filesDone = 0;
+  int unreadable = 0;
+  int leftOut = 0;
+
+  /// A folder download: the files found so far while it is being read.
+  int found = 0;
+
+  /// A folder download's folder in Downloads/Delve.
+  String? phoneFolder;
+
+  /// Done, with something to say (a move whose source could not be
+  /// deleted, a folder with files that could not be read).
+  String? warning;
 
   int? _size;
   TransferState state = TransferState.queued;
@@ -88,13 +118,19 @@ class Transfer {
 
   bool get upload => kind == TransferKind.upload;
 
+  /// Lands on the desktop (Show folder): an upload, a copy, a move.
+  bool get toDesktop => kind != TransferKind.download;
+
+  /// A folder download.
+  bool get folder => kind == TransferKind.download && entry.isDir;
+
   /// The Downloads/Delve entry once done.
   String? uri;
   DateTime? startedAt;
   DateTime? endedAt;
   bool _cancel = false;
 
-  String get name => upload ? baseName(remotePath) : entry.name;
+  String get name => toDesktop ? baseName(remotePath) : entry.name;
   bool get active =>
       state == TransferState.queued || state == TransferState.running;
 
@@ -126,6 +162,8 @@ class FilesTiming {
     this.probeTimeout = const Duration(seconds: 3),
     this.closeAfterBackground = const Duration(seconds: 60),
     this.countBatch = const Duration(milliseconds: 120),
+    this.copyPoll = const Duration(seconds: 1),
+    this.clipLife = const Duration(minutes: 10),
   });
 
   final List<Duration> backoff;
@@ -137,6 +175,12 @@ class FilesTiming {
 
   /// Folder item counts that arrive within this long redraw once.
   final Duration countBatch;
+
+  /// A copy on the desktop: how often its progress is measured (`du`).
+  final Duration copyPoll;
+
+  /// Copy / Move waits this long for Paste (23e: 10 min).
+  final Duration clipLife;
 }
 
 /// The text preview reads at most this much (design: "files over 1 MB
@@ -283,6 +327,9 @@ class FilesService extends ChangeNotifier {
   /// A download that ended (done, failed): the screen's snackbar.
   Stream<Transfer> get finished => _finished.stream;
 
+  /// The last progress redraw (at most five a second).
+  DateTime _progressAt = DateTime.fromMillisecondsSinceEpoch(0);
+
   Transfer? get runningTransfer =>
       _transfers.where((t) => t.state == TransferState.running).firstOrNull;
 
@@ -298,6 +345,11 @@ class FilesService extends ChangeNotifier {
 
   /// Transfers since the queue was last empty (for "1 of 2").
   final Set<int> _batch = {};
+
+  // ---------------------------------------------------------------- clip
+
+  FilesClip? _clip;
+  Timer? _clipTimer;
 
   // ---------------------------------------------------------------- start
 
@@ -730,7 +782,7 @@ class FilesService extends ChangeNotifier {
 
   // ------------------------------------------------------------ download
 
-  /// Queues [e] for Downloads/Delve.
+  /// Queues [e] for Downloads/Delve (a folder: with its folders, F3).
   Transfer download(RemoteEntry e) => _enqueue(Transfer._(_nextTransfer++, e));
 
   Transfer _enqueue(Transfer t) {
@@ -756,19 +808,21 @@ class FilesService extends ChangeNotifier {
   void retryTransfer(Transfer t) {
     if (t.active) return;
     _transfers.remove(t);
-    if (t.upload) {
-      _enqueue(
-        Transfer._(
-          _nextTransfer++,
-          t.entry,
-          kind: TransferKind.upload,
-          source: t.source,
-          replace: t.replace,
-        ),
-      );
-    } else {
+    if (t.kind == TransferKind.download) {
       download(t.entry);
+      return;
     }
+    _enqueue(
+      Transfer._(
+        _nextTransfer++,
+        t.entry,
+        kind: t.kind,
+        source: t.source,
+        replace: t.replace,
+        // an upload picks its name again; a copy keeps the one it was given
+        target: t.upload ? null : t.remotePath,
+      ),
+    );
   }
 
   void clearFinished() {
@@ -808,7 +862,16 @@ class FilesService extends ChangeNotifier {
   }
 
   Future<void> _runOne(RemoteFs fs, Transfer t) async {
-    if (t.upload) return _runUpload(fs, t);
+    switch (t.kind) {
+      case TransferKind.upload:
+        return _runUpload(fs, t);
+      case TransferKind.copy || TransferKind.move:
+        return _runCopy(fs, t);
+      case TransferKind.download when t.entry.isDir:
+        return _runFolder(fs, t);
+      case TransferKind.download:
+        break;
+    }
     t.state = TransferState.running;
     t.startedAt = _now();
     t.bytes = 0;
@@ -882,6 +945,7 @@ class FilesService extends ChangeNotifier {
     _retry?.cancel();
     _idleClose?.cancel();
     _countNotify?.cancel();
+    _clipTimer?.cancel();
     for (final t in _transfers) {
       t._cancel = true;
     }

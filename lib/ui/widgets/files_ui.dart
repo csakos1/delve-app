@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../files/device_files.dart';
 import '../../files/files_service.dart';
 import '../../files/remote_fs.dart';
 import '../../l10n/app_localizations.dart';
@@ -40,6 +41,14 @@ abstract final class FilesTokens {
   static const double editorKeyRow = 48;
   static const double editorKeyPill = 32;
   static const double editorLineHeight = 20 / 13;
+
+  // F3 (23d, 23e)
+  static const double check = 18;
+  static const double checkRadius = 3;
+  static const double checkIcon = 16;
+  static const double pasteBar = 64;
+  static const double pasteBarRadius = 16;
+  static const double pasteBarInset = 8;
 }
 
 abstract final class FileIcons {
@@ -87,6 +96,13 @@ abstract final class FileIcons {
   static const IconData skip = Symbols.redo_rounded;
   static const IconData replace = Symbols.find_replace_rounded;
   static const IconData keepBoth = Symbols.library_add_rounded;
+
+  // F3
+  static const IconData copy = Symbols.content_copy_rounded;
+  static const IconData move = Symbols.content_cut_rounded;
+  static const IconData paste = Symbols.content_paste_rounded;
+  static const IconData check = Symbols.check_rounded;
+  static const IconData selectAll = Symbols.select_all_rounded;
 
   // the editor (23n)
   static const IconData edit = Symbols.edit_rounded;
@@ -201,6 +217,8 @@ class FileTile extends StatelessWidget {
 }
 
 /// 56 dp row: tile, name (one line, middle ellipsis), one meta line, ⋮.
+/// In selection mode (23d): a checkbox before the tile, no ⋮, selected
+/// rows on accent-container.
 class FileRow extends StatelessWidget {
   const FileRow({
     super.key,
@@ -208,8 +226,11 @@ class FileRow extends StatelessWidget {
     required this.meta,
     required this.onTap,
     required this.onMenu,
+    this.onLongPress,
     this.locked = false,
     this.mono = false,
+    this.selecting = false,
+    this.selected = false,
   });
 
   final RemoteEntry entry;
@@ -223,64 +244,226 @@ class FileRow extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onMenu;
 
+  /// Long press (selection mode starts with this row); null: the menu.
+  final VoidCallback? onLongPress;
+  final bool selecting;
+  final bool selected;
+
   @override
   Widget build(BuildContext context) {
     final cs = context.colors;
     final muted = context.delve.textMuted;
     final dim = entry.hidden || locked;
-    return InkWell(
-      key: Key('files.row.${entry.name}'),
-      onTap: onTap,
-      onLongPress: onMenu,
-      child: SizedBox(
-        height: FilesTokens.row,
-        child: Padding(
-          padding: const EdgeInsets.only(left: DelveTokens.space4, right: 4),
-          child: Row(
-            children: [
-              FileTile(entry: entry, locked: locked),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    MiddleEllipsis(
-                      entry.name,
-                      style: context.text.bodyMedium!.copyWith(
-                        color: dim ? cs.onSurfaceVariant : cs.onSurface,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        if (entry.isLink) ...[
-                          SymbolIcon(FileIcons.link, size: 14, color: muted),
-                          const SizedBox(width: 4),
-                        ],
-                        Expanded(
-                          child: Text(
-                            meta,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: mono
-                                ? DelveText.monoSmall.copyWith(color: muted)
-                                : context.text.labelMedium!.copyWith(
-                                    color: muted,
-                                  ),
-                          ),
+    return Material(
+      color: selected ? cs.primaryContainer : Colors.transparent,
+      child: InkWell(
+        key: Key('files.row.${entry.name}'),
+        onTap: onTap,
+        onLongPress: onLongPress ?? onMenu,
+        child: SizedBox(
+          height: FilesTokens.row,
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: DelveTokens.space4,
+              right: selecting ? DelveTokens.space4 : 4,
+            ),
+            child: Row(
+              children: [
+                if (selecting) ...[
+                  SelectBox(
+                    key: Key('files.check.${entry.name}'),
+                    on: selected,
+                  ),
+                  const SizedBox(width: 14),
+                ],
+                FileTile(entry: entry, locked: locked),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      MiddleEllipsis(
+                        entry.name,
+                        style: context.text.bodyMedium!.copyWith(
+                          color: dim ? cs.onSurfaceVariant : cs.onSurface,
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      Row(
+                        children: [
+                          if (entry.isLink) ...[
+                            SymbolIcon(FileIcons.link, size: 14, color: muted),
+                            const SizedBox(width: 4),
+                          ],
+                          Expanded(
+                            child: Text(
+                              meta,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: mono
+                                  ? DelveText.monoSmall.copyWith(color: muted)
+                                  : context.text.labelMedium!.copyWith(
+                                      color: muted,
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              IconButton(
-                key: Key('files.menu.${entry.name}'),
-                tooltip: MaterialLocalizations.of(context).showMenuTooltip,
-                icon: const SymbolIcon(Symbols.more_vert_rounded),
-                onPressed: onMenu,
-              ),
-            ],
+                if (!selecting)
+                  IconButton(
+                    key: Key('files.menu.${entry.name}'),
+                    tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+                    icon: const SymbolIcon(Symbols.more_vert_rounded),
+                    onPressed: onMenu,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 18 dp checkbox (23d): radius 3, 2 dp outline; on = accent fill and a
+/// check on-accent.
+class SelectBox extends StatelessWidget {
+  const SelectBox({super.key, required this.on});
+
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    return Semantics(
+      checked: on,
+      child: AnimatedContainer(
+        duration: DelveTokens.short,
+        width: FilesTokens.check,
+        height: FilesTokens.check,
+        decoration: BoxDecoration(
+          color: on ? cs.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(FilesTokens.checkRadius),
+          border: on ? null : Border.all(color: cs.outline, width: 2),
+        ),
+        child: on
+            ? SymbolIcon(
+                FileIcons.check,
+                size: FilesTokens.checkIcon,
+                color: cs.onPrimary,
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+/// 23e: after Copy / Move – "Copy 3 items here" with the source folder,
+/// Cancel and Paste (off where it can't go, with the reason instead of the
+/// source).
+class PasteBar extends StatelessWidget {
+  const PasteBar({
+    super.key,
+    required this.cut,
+    required this.title,
+    required this.detail,
+    required this.onCancel,
+    required this.onPaste,
+    this.problem = false,
+  });
+
+  final bool cut;
+  final String title;
+
+  /// The source folder (mono), or why Paste is off here.
+  final String detail;
+
+  /// [detail] is a reason, not a path.
+  final bool problem;
+  final VoidCallback onCancel;
+
+  /// Null: Paste is off.
+  final VoidCallback? onPaste;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    final d = context.delve;
+    final l = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(FilesTokens.pasteBarInset),
+      child: Material(
+        key: const Key('files.pasteBar'),
+        color: cs.surfaceContainerHigh,
+        elevation: 1,
+        shadowColor: Colors.black,
+        borderRadius: BorderRadius.circular(FilesTokens.pasteBarRadius),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: FilesTokens.pasteBar),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DelveTokens.space4,
+              DelveTokens.space2,
+              DelveTokens.space2,
+              DelveTokens.space2,
+            ),
+            child: Row(
+              children: [
+                SymbolIcon(
+                  cut ? FileIcons.move : FileIcons.copy,
+                  size: 22,
+                  color: cs.onSurfaceVariant,
+                ),
+                const SizedBox(width: DelveTokens.space3),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        key: const Key('files.pasteBar.title'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.text.titleSmall,
+                      ),
+                      Text(
+                        detail,
+                        key: const Key('files.pasteBar.detail'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: problem
+                            ? context.text.labelMedium!.copyWith(
+                                color: d.warnFg,
+                              )
+                            : DelveText.monoSmall.copyWith(color: d.textMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  key: const Key('files.pasteBar.cancel'),
+                  onPressed: onCancel,
+                  child: Text(l.cancel),
+                ),
+                const SizedBox(width: DelveTokens.space1),
+                FilledButton.icon(
+                  key: const Key('files.pasteBar.paste'),
+                  onPressed: onPaste,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 40),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DelveTokens.space4,
+                    ),
+                  ),
+                  icon: const SymbolIcon(FileIcons.paste, size: 18),
+                  label: Text(l.filesPaste),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -700,12 +883,20 @@ class TransferRow extends StatelessWidget {
     final t = transfer;
     final d = context.delve;
     final muted = d.textMuted;
-    final way = t.upload ? FileIcons.upload : FileIcons.download;
+    final way = switch (t.kind) {
+      TransferKind.download => FileIcons.download,
+      TransferKind.upload => FileIcons.upload,
+      TransferKind.copy => FileIcons.copy,
+      TransferKind.move => FileIcons.move,
+    };
+    final reading = t.folder && t.files == null;
     final (IconData icon, Color color, String word) = switch (t.state) {
       TransferState.running => (
         way,
         context.colors.primary,
-        '${((t.fraction ?? 0) * 100).round()} %',
+        reading
+            ? l.filesTransferReading
+            : '${((t.fraction ?? 0) * 100).round()} %',
       ),
       TransferState.queued => (
         FileIcons.queued,
@@ -725,18 +916,28 @@ class TransferRow extends StatelessWidget {
       ),
     };
     final total = t.total;
+    final files = t.files;
     final detail = switch (t.state) {
+      TransferState.running when reading => l.filesTransferFound(t.found),
       TransferState.running => [
-        total == null
-            ? sizeText(t.bytes)
-            : l.filesTransferOf(sizeText(t.bytes), sizeText(total)),
+        if (total == null)
+          sizeText(t.bytes)
+        else
+          l.filesTransferOf(sizeText(t.bytes), sizeText(total)),
+        if (files != null) l.filesTransferFiles(t.filesDone, files),
         if (t.speed(now) case final s?) '${sizeText(s.round())}/s',
       ].join(' · '),
       TransferState.queued => total == null ? '' : sizeText(total),
       TransferState.done => [
-        if (total != null) sizeText(total),
-        if (t.upload)
+        ?t.warning,
+        if (files != null) l.filesTransferFilesDone(t.filesDone),
+        if (t.unreadable > 0) l.filesTransferUnreadable(t.unreadable),
+        if (t.leftOut > 0) l.filesTransferLeftOut(t.leftOut),
+        if (total != null && t.warning == null) sizeText(total),
+        if (t.toDesktop)
           tildePath(parentPath(t.remotePath), home)
+        else if (t.phoneFolder case final f?)
+          '$kDownloadFolder/$f'
         else
           l.filesTransferInDownloads,
       ].join(' · '),
@@ -750,10 +951,12 @@ class TransferRow extends StatelessWidget {
         icon: const SymbolIcon(FileIcons.close),
         onPressed: onCancel,
       ),
+      // a folder on the phone has nothing to open it in
+      TransferState.done when t.folder => null,
       TransferState.done => TextButton(
         key: Key('files.transfer.open.${t.id}'),
         onPressed: onOpen,
-        child: Text(t.upload ? l.filesShowFolder : l.filesOpen),
+        child: Text(t.toDesktop ? l.filesShowFolder : l.filesOpen),
       ),
       TransferState.failed => TextButton(
         key: Key('files.transfer.retry.${t.id}'),
@@ -787,7 +990,16 @@ class TransferRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    SymbolIcon(icon, size: 16, filled: true, color: color),
+                    SymbolIcon(
+                      t.state == TransferState.done && t.warning != null
+                          ? FileIcons.failed
+                          : icon,
+                      size: 16,
+                      filled: true,
+                      color: t.state == TransferState.done && t.warning != null
+                          ? d.warnFg
+                          : color,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       word,
@@ -815,7 +1027,7 @@ class TransferRow extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(2),
                     child: LinearProgressIndicator(
-                      value: t.fraction,
+                      value: reading ? null : t.fraction,
                       minHeight: FilesTokens.transferBar,
                     ),
                   ),

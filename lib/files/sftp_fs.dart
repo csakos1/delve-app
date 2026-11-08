@@ -346,15 +346,7 @@ class SftpRemoteFs implements RemoteFs {
     }
     const text = Utf8Decoder(allowMalformed: true);
     if (r.exitCode == 0) return text.convert(r.stdout);
-    final err = text.convert(r.stderr).trim();
-    throw RemoteFsError(
-      err.contains('Permission denied')
-          ? FsFailure.denied
-          : err.contains('No such file')
-          ? FsFailure.notFound
-          : FsFailure.other,
-      err.isEmpty ? '$path (exit ${r.exitCode})' : err,
-    );
+    throw _failure(path, r.exitCode, text.convert(r.stderr));
   }
 
   @override
@@ -426,6 +418,14 @@ class SftpRemoteFs implements RemoteFs {
   }
 
   @override
+  RemoteJob copy(String from, String to) => _SshJob(
+    this,
+    from,
+    // the shell's pid is cp's after exec: what Cancel kills
+    'echo \$\$; exec cp -a -- ${shellQuote(from)} ${shellQuote(to)}',
+  );
+
+  @override
   Future<bool> probe(Duration timeout) async {
     if (_client.isClosed) return false;
     try {
@@ -447,6 +447,18 @@ class SftpRemoteFs implements RemoteFs {
     } on Object {
       _abort();
     }
+  }
+
+  static RemoteFsError _failure(String path, int? code, String stderr) {
+    final err = stderr.trim();
+    return RemoteFsError(
+      err.contains('Permission denied')
+          ? FsFailure.denied
+          : err.contains('No such file')
+          ? FsFailure.notFound
+          : FsFailure.other,
+      err.isEmpty ? '$path (exit $code)' : err,
+    );
   }
 
   static DateTime? _time(int? seconds) => seconds == null
@@ -472,5 +484,98 @@ class SftpRemoteFs implements RemoteFs {
         '$e',
       );
     }
+  }
+}
+
+/// A command on its own exec channel: its first output line is its pid
+/// (`echo \$\$; exec …`), which Cancel kills over another channel.
+class _SshJob implements RemoteJob {
+  _SshJob(this._fs, this._path, String command) {
+    _done = _run(command);
+  }
+
+  final SftpRemoteFs _fs;
+  final String _path;
+  late final Future<void> _done;
+  final _pid = Completer<int?>();
+  SSHSession? _session;
+  bool _cancelled = false;
+
+  @override
+  Future<void> get done => _done;
+
+  Future<void> _run(String command) async {
+    final SSHSession s;
+    try {
+      s = await _fs._client.execute(command);
+    } on Object catch (e) {
+      if (!_pid.isCompleted) _pid.complete(null);
+      throw RemoteFsError(
+        _fs._client.isClosed ? FsFailure.unreachable : FsFailure.other,
+        '$e',
+      );
+    }
+    _session = s;
+    final head = BytesBuilder(copy: false);
+    final out = s.stdout.listen(
+      (b) {
+        if (_pid.isCompleted) return;
+        head.add(b);
+        final text = latin1.decode(head.toBytes());
+        final nl = text.indexOf('\n');
+        if (nl >= 0) _pid.complete(int.tryParse(text.substring(0, nl).trim()));
+      },
+      onDone: () {
+        if (!_pid.isCompleted) _pid.complete(null);
+      },
+      onError: (Object _) {},
+    );
+    final err = BytesBuilder(copy: false);
+    final errDone = s.stderr
+        .listen(err.add, onError: (Object _) {})
+        .asFuture<void>()
+        .catchError((Object _) {});
+    try {
+      await s.done;
+    } on Object catch (e) {
+      if (_cancelled) return;
+      throw RemoteFsError(
+        _fs._client.isClosed ? FsFailure.unreachable : FsFailure.other,
+        '$e',
+      );
+    } finally {
+      await out.cancel();
+      if (!_pid.isCompleted) _pid.complete(null);
+    }
+    await errDone.timeout(const Duration(seconds: 2), onTimeout: () {});
+    if (_cancelled) return;
+    if (_fs._client.isClosed && s.exitCode == null) {
+      throw RemoteFsError(FsFailure.unreachable, 'connection closed: $_path');
+    }
+    if (s.exitCode == 0) return;
+    throw SftpRemoteFs._failure(
+      _path,
+      s.exitCode,
+      const Utf8Decoder(allowMalformed: true).convert(err.takeBytes()),
+    );
+  }
+
+  @override
+  Future<void> cancel() async {
+    if (_cancelled) return;
+    _cancelled = true;
+    final pid = await _pid.future.timeout(
+      const Duration(seconds: 5),
+      onTimeout: () => null,
+    );
+    if (pid != null && pid > 1) {
+      try {
+        await _fs._exec(_path, 'kill -TERM $pid 2>/dev/null; true');
+      } on RemoteFsError {
+        // gone already, or the connection is: the channel closes below
+      }
+    }
+    _session?.close();
+    await _done.catchError((Object _) {});
   }
 }

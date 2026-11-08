@@ -25,7 +25,8 @@ import 'file_preview_screen.dart';
 
 /// 23 Files: the desktop's filesystem as `csakos` sees it, over SFTP on the
 /// terminal's key and host, behind the terminal's lock (F1: browse,
-/// download, preview; F2a: upload, new folder, rename, trash).
+/// download, preview; F2a: upload, new folder, rename, trash; F3: several
+/// items, Copy / Move → Paste, folder downloads).
 class FilesScreen extends ConsumerStatefulWidget {
   const FilesScreen({super.key});
 
@@ -43,6 +44,11 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
   bool _unlocking = false;
   String? _unlockProblem;
   Timer? _tick;
+
+  /// Selection mode (23d): the selected paths, in the folder [_selectedIn].
+  final Set<String> _selected = {};
+  String? _selectedIn;
+  bool get _selecting => _selected.isNotEmpty;
 
   @override
   void initState() {
@@ -87,8 +93,9 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
     if (!mounted || !_visible) return;
     final l = AppLocalizations.of(context);
     final m = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
-    if (t.upload) {
+    if (t.toDesktop) {
       final dir = parentPath(t.remotePath);
+      final where = tildePath(dir, _service.home);
       if (t.state == TransferState.done) {
         m.showSnackBar(
           SnackBar(
@@ -103,7 +110,13 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
                 ),
                 const SizedBox(width: DelveTokens.space2),
                 Expanded(
-                  child: Text(l.filesUploaded(tildePath(dir, _service.home))),
+                  child: Text(switch (t.kind) {
+                    TransferKind.copy => l.filesCopiedTo(where),
+                    TransferKind.move when t.warning != null =>
+                      l.filesMovedSourceKept(where, t.warning!),
+                    TransferKind.move => l.filesMovedTo(where),
+                    _ => l.filesUploaded(where),
+                  }),
                 ),
               ],
             ),
@@ -118,10 +131,25 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
       } else {
         m.showSnackBar(
           SnackBar(
-            content: Text(l.filesUploadFailedFile(t.name, t.error ?? '')),
+            content: Text(
+              t.upload
+                  ? l.filesUploadFailedFile(t.name, t.error ?? '')
+                  : l.filesCopyFailed(t.entry.name, t.error ?? ''),
+            ),
           ),
         );
       }
+      return;
+    }
+    if (t.state == TransferState.done && t.folder) {
+      m.showSnackBar(
+        SnackBar(
+          key: const Key('files.saved'),
+          content: Text(
+            l.filesSaved('$kDownloadFolder/${t.phoneFolder ?? t.name}'),
+          ),
+        ),
+      );
       return;
     }
     if (t.state == TransferState.done) {
@@ -185,6 +213,10 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
   void _open(String path) => unawaited(_service.open(path));
 
   void _tapRow(RemoteEntry e) {
+    if (_selecting) {
+      _toggle(e);
+      return;
+    }
     if (e.isDir) {
       unawaited(_service.enter(e));
       return;
@@ -218,6 +250,151 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
   }
 
   void _download(RemoteEntry e) => _service.download(e);
+
+  // ---------------------------------------------------------- selection
+
+  void _toggle(RemoteEntry e) {
+    _terminal.lock.keepAlive();
+    setState(() {
+      _selectedIn = _service.path;
+      if (!_selected.remove(e.path)) _selected.add(e.path);
+    });
+  }
+
+  void _endSelection() {
+    if (_selected.isEmpty) return;
+    setState(_selected.clear);
+  }
+
+  /// The selected entries, in the list's order.
+  List<RemoteEntry> get _selection => [
+    for (final e in _service.entries ?? const <RemoteEntry>[])
+      if (_selected.contains(e.path)) e,
+  ];
+
+  void _selectAll() => setState(() {
+    _selectedIn = _service.path;
+    _selected.addAll([
+      for (final e in _service.entries ?? const <RemoteEntry>[]) e.path,
+    ]);
+  });
+
+  void _clip(List<RemoteEntry> items, {required bool cut}) {
+    if (items.isEmpty) return;
+    _service.setClip(items, cut: cut);
+    _endSelection();
+  }
+
+  void _downloadAll(List<RemoteEntry> items) {
+    final l = AppLocalizations.of(context);
+    final queued = _service.downloadAll(items);
+    _endSelection();
+    if (queued.isNotEmpty) _snack(l.filesDownloadQueued(kDownloadFolder));
+  }
+
+  Future<void> _copyPaths(List<RemoteEntry> items) async {
+    final l = AppLocalizations.of(context);
+    await Clipboard.setData(
+      ClipboardData(text: [for (final e in items) e.path].join('\n')),
+    );
+    if (!mounted) return;
+    _endSelection();
+    _snack(l.filesPathsCopied(items.length));
+  }
+
+  Future<void> _trashAll(List<RemoteEntry> items) async {
+    if (items.isEmpty) return;
+    final l = AppLocalizations.of(context);
+    _endSelection();
+    if (items.length == 1) return _toTrashOrDelete(items.single);
+    if (!items.any(_service.canTrash)) return _deleteAllForever(items);
+    final TrashResult r;
+    try {
+      r = await _service.moveAllToTrash(items);
+    } on Exception catch (err) {
+      _snack(l.filesTrashFailed(writeErrorText(l, err)));
+      return;
+    }
+    if (!mounted) return;
+    if (r.failed.isNotEmpty) {
+      final (name, err) = r.failed.first;
+      _snack(l.filesTrashFailedName(name, writeErrorText(l, err)));
+    } else if (r.items.isNotEmpty) {
+      final trashed = r.items;
+      _snack(
+        l.filesTrashedCount(trashed.length),
+        key: const Key('files.trashed'),
+        action: SnackBarAction(
+          label: l.filesUndo,
+          onPressed: () => unawaited(_undoTrashAll(trashed)),
+        ),
+      );
+    }
+    if (r.noTrash.isNotEmpty) {
+      await _deleteAllForever(r.noTrash, otherFs: true);
+    }
+  }
+
+  Future<void> _toTrashOrDelete(RemoteEntry e) =>
+      _service.canTrash(e) ? _toTrash(e) : _deleteForever(e);
+
+  Future<void> _undoTrashAll(List<TrashItem> items) async {
+    final l = AppLocalizations.of(context);
+    final failed = await _service.restoreAll(items);
+    if (failed.isNotEmpty) {
+      _snack(l.trashRestoreFailed(writeErrorText(l, failed.first.$2)));
+    }
+  }
+
+  /// 23j for several items (no trash for them).
+  Future<void> _deleteAllForever(
+    List<RemoteEntry> items, {
+    bool otherFs = false,
+  }) async {
+    if (items.length == 1) {
+      return _deleteForever(items.single, otherFs: otherFs);
+    }
+    final l = AppLocalizations.of(context);
+    final size = _filesSize(items);
+    final ok = await confirmDeleteForever(
+      context,
+      what: [
+        itemsText(l, items.length),
+        if (size > 0) sizeText(size),
+        tildePath(parentPath(items.first.path), _service.home),
+      ].join(' · '),
+      body: otherFs ? l.filesNoTrashOtherFs : l.filesNoTrashBody,
+    );
+    if (!ok || !mounted) return;
+    final failed = await _service.deleteAllPermanently(items);
+    if (failed.isEmpty) {
+      _snack(l.filesDeletedCount(items.length));
+    } else {
+      final (name, err) = failed.first;
+      _snack(l.filesDeleteFailedName(name, writeErrorText(l, err)));
+    }
+  }
+
+  /// The bytes of the files among [items] (folders are not counted).
+  static int _filesSize(List<RemoteEntry> items) => items.fold(
+    0,
+    (n, e) => e.kind == EntryKind.file && !e.isLink ? n + (e.size ?? 0) : n,
+  );
+
+  Future<void> _paste() async {
+    final dir = _service.path;
+    if (dir == null) return;
+    _terminal.lock.keepAlive();
+    final l = AppLocalizations.of(context);
+    final r = await pasteAsking(context, _service, dir);
+    if (r == null || !mounted) return;
+    if (r.failed.isNotEmpty) {
+      final (name, err) = r.failed.first;
+      _snack(l.filesMoveFailed(name, writeErrorText(l, err)));
+    } else if (r.moved > 0 && r.queued.isEmpty) {
+      _snack(l.filesMovedHere(r.moved), key: const Key('files.moved'));
+    }
+  }
 
   /// 23n: Edit, off with the reason the listing already shows (over 1 MB,
   /// or a mode that leaves the login out); the editor checks the rest.
@@ -486,13 +663,17 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
                     row('open', FileIcons.folderOpen, l.filesActOpen, () {
                       unawaited(_service.enter(e));
                     }),
-                  if (e.kind == EntryKind.file)
+                  if (e.kind != EntryKind.other)
                     row(
                       'download',
                       FileIcons.download,
                       l.filesActDownload,
                       () => _download(e),
-                      hint: l.filesActDownloadHint(kDownloadFolder),
+                      hint: e.isDir
+                          ? l.filesActDownloadFolderHint(
+                              '$kDownloadFolder/${phoneName(e.name)}',
+                            )
+                          : l.filesActDownloadHint(kDownloadFolder),
                     ),
                   if (previewKindOf(e) != PreviewKind.none)
                     row(
@@ -512,16 +693,28 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
                       _open(e.isDir ? target : parentPath(target));
                     }),
                   row(
-                    'copyPath',
-                    FileIcons.copyPath,
-                    l.filesActCopyPath,
-                    () => unawaited(_copyPath(e)),
-                  ),
-                  row(
                     'rename',
                     FileIcons.rename,
                     l.filesRename,
                     () => unawaited(_rename(e)),
+                  ),
+                  row(
+                    'copy',
+                    FileIcons.copy,
+                    l.filesActCopy,
+                    () => _clip([e], cut: false),
+                  ),
+                  row(
+                    'move',
+                    FileIcons.move,
+                    l.filesActMove,
+                    () => _clip([e], cut: true),
+                  ),
+                  row(
+                    'copyPath',
+                    FileIcons.copyPath,
+                    l.filesActCopyPath,
+                    () => unawaited(_copyPath(e)),
                   ),
                   const Divider(height: 1),
                   if (_service.canTrash(e))
@@ -655,7 +848,7 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
         builder: (ctx) => _TransfersSheet(
           service: _service,
           onOpen: (t) {
-            if (t.upload) {
+            if (t.toDesktop) {
               Navigator.of(ctx).pop();
               _open(parentPath(t.remotePath));
             } else {
@@ -735,7 +928,11 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
       floatingActionButton: ListenableBuilder(
         listenable: Listenable.merge([_service, _terminal]),
         // an empty folder has its own Upload button
-        builder: (context, _) => _canWrite && _service.entries!.isNotEmpty
+        builder: (context, _) =>
+            _canWrite &&
+                _service.entries!.isNotEmpty &&
+                !_selecting &&
+                _service.clip == null
             ? FloatingActionButton.extended(
                 key: const Key('files.upload'),
                 backgroundColor: context.colors.primary,
@@ -815,9 +1012,14 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
             );
           }
           return PopScope(
-            canPop: !s.canGoBack,
+            canPop: !s.canGoBack && !_selecting,
             onPopInvokedWithResult: (didPop, _) {
-              if (!didPop) s.back();
+              if (didPop) return;
+              if (_selecting) {
+                _endSelection();
+              } else {
+                s.back();
+              }
             },
             child: _browser(context, l),
           );
@@ -843,8 +1045,17 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
     final running = s.runningTransfer;
     final progress = s.transferProgress;
     _syncTick(running != null);
+    // the selection belongs to one folder, and to what is still in it
+    if (_selectedIn != path) {
+      _selected.clear();
+    } else if (s.entries case final list?) {
+      final there = {for (final e in list) e.path};
+      _selected.removeWhere((p) => !there.contains(p));
+    }
+    final clip = s.clip;
     return TopLevelPage(
       title: l.navFiles,
+      bar: _selecting ? _selectionBar(context, l) : null,
       actions: [
         if (progress != null)
           TransferChip(
@@ -881,7 +1092,7 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
             const SizedBox(height: 2),
           if (s.entries != null || s.mountHere != null)
             FilesListHeader(
-              text: _headerText(l),
+              text: _selecting ? _selectionText(l) : _headerText(l),
               sortLabel: switch (s.sort) {
                 SortKey.name => l.filesSortName,
                 SortKey.size => l.filesSortSize,
@@ -891,14 +1102,143 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
               onSort: () => s.sortBy(s.sort),
             ),
           Expanded(
-            child: AnimatedOpacity(
-              duration: DelveTokens.short,
-              opacity: s.phase == FilesPhase.offline ? 0.5 : 1,
-              child: IgnorePointer(
-                ignoring: s.phase == FilesPhase.offline,
-                child: _list(context, l),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: AnimatedOpacity(
+                    duration: DelveTokens.short,
+                    opacity: s.phase == FilesPhase.offline ? 0.5 : 1,
+                    child: IgnorePointer(
+                      ignoring: s.phase == FilesPhase.offline,
+                      child: _list(context, l),
+                    ),
+                  ),
+                ),
+                if (clip != null && !_selecting)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: _pasteBar(l, clip),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pasteBar(AppLocalizations l, FilesClip clip) {
+    final s = _service;
+    final dir = s.path;
+    final n = clip.items.length;
+    final problem = dir == null ? null : s.pasteProblem(dir);
+    final ready = dir != null && problem == null && _canWrite;
+    return PasteBar(
+      cut: clip.cut,
+      title: clip.cut ? l.filesPasteMoveTitle(n) : l.filesPasteCopyTitle(n),
+      detail: switch (problem) {
+        PasteProblem.sameFolder => l.filesPasteSameFolder,
+        PasteProblem.intoItself => l.filesPasteIntoItself,
+        null => l.filesPasteFrom(tildePath(clip.from, s.home)),
+      },
+      problem: problem != null,
+      onCancel: s.clearClip,
+      onPaste: ready ? () => unawaited(_paste()) : null,
+    );
+  }
+
+  /// "3 of 7 selected · 18.4 MB".
+  String _selectionText(AppLocalizations l) {
+    final items = _selection;
+    final size = _filesSize(items);
+    return [
+      l.filesSelectedOf(items.length, _service.entries?.length ?? 0),
+      if (size > 0) sizeText(size),
+    ].join(' · ');
+  }
+
+  /// 23d: × · "3 selected" · Download · Copy · Move · Trash · ⋮.
+  Widget _selectionBar(BuildContext context, AppLocalizations l) {
+    final items = _selection;
+    final trashable = items.any(_service.canTrash);
+    Widget act(String key, IconData icon, String tip, VoidCallback onTap) =>
+        IconButton(
+          key: Key('files.select.$key'),
+          tooltip: tip,
+          icon: SymbolIcon(icon),
+          onPressed: _canWrite ? onTap : null,
+        );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DelveTokens.space1,
+        DelveTokens.space2,
+        DelveTokens.space1,
+        DelveTokens.space1,
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            key: const Key('files.select.close'),
+            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+            icon: const SymbolIcon(FileIcons.close),
+            onPressed: _endSelection,
+          ),
+          const SizedBox(width: DelveTokens.space1),
+          Expanded(
+            child: Text(
+              l.filesSelected(items.length),
+              key: const Key('files.select.count'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.text.titleLarge!.copyWith(
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
+          ),
+          act(
+            'download',
+            FileIcons.download,
+            l.filesActDownload,
+            () => _downloadAll(items),
+          ),
+          act('copy', FileIcons.copy, l.filesActCopy, () {
+            _clip(items, cut: false);
+          }),
+          act('move', FileIcons.move, l.filesActMove, () {
+            _clip(items, cut: true);
+          }),
+          act(
+            'trash',
+            trashable ? FileIcons.trash : FileIcons.deleteForever,
+            trashable ? l.filesActTrash : l.filesActDeleteForever,
+            () => unawaited(_trashAll(items)),
+          ),
+          PopupMenuButton<String>(
+            key: const Key('files.select.menu'),
+            tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+            icon: const SymbolIcon(DelveIcons.moreVert),
+            onSelected: (v) {
+              switch (v) {
+                case 'all':
+                  _selectAll();
+                case 'paths':
+                  unawaited(_copyPaths(items));
+              }
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                key: const Key('files.select.all'),
+                value: 'all',
+                child: Text(l.filesSelectAll),
+              ),
+              PopupMenuItem(
+                key: const Key('files.select.paths'),
+                value: 'paths',
+                child: Text(l.filesCopyPaths),
+              ),
+            ],
           ),
         ],
       ),
@@ -985,8 +1325,11 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
                 meta: meta,
                 mono: e.isLink,
                 locked: locked,
+                selecting: _selecting,
+                selected: _selected.contains(e.path),
                 onTap: () => _tapRow(e),
                 onMenu: () => _actions(e),
+                onLongPress: () => _toggle(e),
               );
             },
           ),

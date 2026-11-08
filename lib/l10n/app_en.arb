@@ -2543,5 +2543,219 @@
   "editorKeyUp": "Up",
   "editorKeyDown": "Down",
   "editorKeyHome": "Line start",
-  "editorKeyEnd": "Line end"
+  "editorKeyEnd": "Line end",
+  "filesActCopy": "Copy",
+  "filesActMove": "Move",
+  "filesActDownloadFolderHint": "To {folder}, with its folders",
+  "@filesActDownloadFolderHint": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "filesSelected": "{count} selected",
+  "@filesSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesSelectedOf": "{count} of {total} selected",
+  "@filesSelectedOf": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "filesSelectAll": "Select all",
+  "filesCopyPaths": "Copy paths",
+  "filesPathsCopied": "{count, plural, =1{Path copied} other{{count} paths copied}}",
+  "@filesPathsCopied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesPaste": "Paste",
+  "filesPasteCopyTitle": "{count, plural, =1{Copy 1 item here} other{Copy {count} items here}}",
+  "@filesPasteCopyTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesPasteMoveTitle": "{count, plural, =1{Move 1 item here} other{Move {count} items here}}",
+  "@filesPasteMoveTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesPasteFrom": "from {folder}",
+  "@filesPasteFrom": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "filesPasteSameFolder": "Already in this folder – open another one",
+  "filesPasteIntoItself": "Can't go into itself – open another folder",
+  "filesPasteFailed": "Couldn't paste: {reason}",
+  "@filesPasteFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "filesConflictCancelPaste": "Cancel paste",
+  "filesMovedHere": "{count, plural, =1{Moved 1 item here} other{Moved {count} items here}}",
+  "@filesMovedHere": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesMoveFailed": "Couldn't move {name}: {reason}",
+  "@filesMoveFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "filesCopiedTo": "Copied to {folder}",
+  "@filesCopiedTo": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "filesMovedTo": "Moved to {folder}",
+  "@filesMovedTo": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "filesMovedSourceKept": "Copied to {folder}, but the original stayed: {reason}",
+  "@filesMovedSourceKept": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "filesCopyFailed": "Couldn't copy {name}: {reason}",
+  "@filesCopyFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "filesTrashedCount": "{count, plural, =1{1 item moved to the trash} other{{count} items moved to the trash}}",
+  "@filesTrashedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesTrashFailedName": "Couldn't move {name} to the trash: {reason}",
+  "@filesTrashFailedName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "filesDeletedCount": "{count, plural, =1{1 item deleted} other{{count} items deleted}}",
+  "@filesDeletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesDeleteFailedName": "Couldn't delete {name}: {reason}",
+  "@filesDeleteFailedName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "filesTransferReading": "Reading",
+  "filesTransferFound": "{count, plural, =1{1 file found} other{{count} files found}}",
+  "@filesTransferFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesTransferFiles": "{done} of {total} files",
+  "@filesTransferFiles": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "filesTransferFilesDone": "{count, plural, =1{1 file} other{{count} files}}",
+  "@filesTransferFilesDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesTransferUnreadable": "{count} unreadable",
+  "@filesTransferUnreadable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesTransferLeftOut": "{count, plural, =1{1 link left out} other{{count} links left out}}",
+  "@filesTransferLeftOut": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
