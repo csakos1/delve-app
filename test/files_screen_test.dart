@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:delve/files/pdf_pages.dart';
+import 'package:delve/files/transfer_notice.dart';
 import 'package:delve/terminal/ssh_link.dart';
 import 'package:delve/terminal/terminal_lock.dart';
 import 'package:delve/theme/delve_colors.dart';
@@ -1007,6 +1008,35 @@ void main() {
       await frames(t);
       expect(find.text('notes (2).txt'), findsWidgets);
       expect(find.text('Show folder'), findsOneWidget);
+    });
+
+    testWidgets("the transfers notification's Open: the Files tab with the "
+        'Transfers sheet', (t) async {
+      final fakes = await openFiles(t);
+      await t.tap(find.byKey(const Key('files.menu.notes.txt')));
+      await frames(t);
+      await t.tap(find.byKey(const Key('files.act.copy')));
+      await frames(t);
+      await t.tap(downloads);
+      await frames(t);
+      await t.tap(paste);
+      await frames(t, 20);
+      expect(find.text('Copied to ~/Downloads'), findsOneWidget);
+      await t.tap(navItem('Chats'));
+      await frames(t);
+      expect(find.byKey(const Key('files.clearFinished')), findsNothing);
+      fakes.notice.tap(TransferNoticeAction.open);
+      await frames(t);
+      expect(find.byKey(const Key('files.clearFinished')), findsOneWidget);
+      expect(find.text('notes.txt'), findsWidgets);
+      // once: a rebuild does not open it again
+      await t.tapAt(const Offset(10, 10));
+      await frames(t);
+      expect(find.byKey(const Key('files.clearFinished')), findsNothing);
+      await t.tap(find.byKey(const Key('files.quick./home/user')));
+      await frames(t);
+      expect(row('Documents'), findsOneWidget);
+      expect(find.byKey(const Key('files.clearFinished')), findsNothing);
     });
 
     testWidgets('Cancel on the paste bar clears it', (t) async {

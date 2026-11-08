@@ -103,6 +103,7 @@ class TestEnv {
       deviceFilesProvider.overrideWithValue(terminal.device),
       pdfPagesProvider.overrideWithValue(terminal.pdf),
       filesTimingProvider.overrideWithValue(fastFilesTiming),
+      transferNoticeProvider.overrideWithValue(terminal.notice),
       if (push case final p?)
         pushStateProvider.overrideWith((ref) => Stream.value(p)),
       if (status case final s?)
@@ -138,6 +139,7 @@ class TestEnv {
         deviceFilesProvider.overrideWithValue(terminal.device),
         pdfPagesProvider.overrideWithValue(terminal.pdf),
         filesTimingProvider.overrideWithValue(fastFilesTiming),
+        transferNoticeProvider.overrideWithValue(terminal.notice),
         if (push case final p?)
           pushStateProvider.overrideWith((ref) => Stream.value(p)),
         if (status case final s?)

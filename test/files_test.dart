@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:delve/attachments/picker.dart';
 import 'package:delve/files/files_service.dart';
 import 'package:delve/files/remote_fs.dart';
+import 'package:delve/files/transfer_notice.dart';
 import 'package:delve/terminal/secrets.dart';
 import 'package:delve/terminal/ssh_link.dart';
 import 'package:delve/terminal/terminal_service.dart';
@@ -17,6 +18,7 @@ Future<(FilesService, TerminalFakes)> makeService({
   bool setUp = true,
   FakeFilesDialer? dialer,
   DateTime Function()? now,
+  FilesTiming timing = fastFilesTiming,
 }) async {
   final fakes = TerminalFakes(files: dialer);
   if (setUp) await fakes.setUpDone();
@@ -32,7 +34,8 @@ Future<(FilesService, TerminalFakes)> makeService({
     terminal: terminal,
     dialer: fakes.files,
     device: fakes.device,
-    timing: fastFilesTiming,
+    timing: timing,
+    notice: fakes.notice,
     now: now,
   );
   addTearDown(files.dispose);
@@ -1154,5 +1157,202 @@ void main() {
         expect(fs.tree['/tmp'], isEmpty);
       },
     );
+  });
+
+  group('in the background (F3b)', () {
+    Future<(FilesService, FakeRemoteFs, TerminalFakes)> live({
+      FilesTiming timing = fastFilesTiming,
+    }) async {
+      final (files, fakes) = await makeService(timing: timing);
+      files.setVisible(visible: true);
+      await until(() => files.entries != null);
+      await settle();
+      return (files, fakes.files.last!, fakes);
+    }
+
+    RemoteEntry entry(FilesService f, String name) =>
+        f.entries!.firstWhere((e) => e.name == name);
+
+    test('the notification follows the queue; on screen no summary', () async {
+      final (files, fs, fakes) = await live();
+      final notice = fakes.notice;
+      fs.holdDownloads = Completer<void>();
+      final a = files.download(entry(files, 'notes.txt'));
+      final b = files.download(entry(files, 'file2.log'));
+      await until(() => notice.running);
+      final first = notice.shown.first;
+      expect(first.title, 'Downloading notes.txt');
+      expect(first.sub, '1 of 2');
+      expect(first.permille, 0);
+      expect(first.cancelLabel, 'Cancel all');
+      expect(first.openLabel, 'Open');
+      fs.holdDownloads!.complete();
+      await until(() => !a.active && !b.active && !notice.running);
+      expect(b.state, TransferState.done);
+      final second = notice.shown.firstWhere(
+        (s) => s.title == 'Downloading file2.log',
+      );
+      expect(second.sub, '2 of 2');
+      expect(notice.stops, 1);
+      expect(notice.summaries, isEmpty);
+    });
+
+    test('a quick transfer never shows it', () async {
+      const slow = FilesTiming(
+        backoff: [Duration(milliseconds: 20)],
+        probeTimeout: Duration(milliseconds: 50),
+        countBatch: Duration(milliseconds: 10),
+        copyPoll: Duration(milliseconds: 20),
+        noticeDelay: Duration(seconds: 5),
+      );
+      final (files, _, fakes) = await live(timing: slow);
+      final t = files.download(entry(files, 'notes.txt'));
+      await until(() => !t.active);
+      await settle();
+      expect(t.state, TransferState.done);
+      expect(fakes.notice.shown, isEmpty);
+      expect(fakes.notice.stops, 0);
+    });
+
+    test('app away: at once; one download → "Saved to Downloads/Delve" '
+        'with Open', () async {
+      final (files, fs, fakes) = await live();
+      final notice = fakes.notice;
+      fs.holdDownloads = Completer<void>();
+      files.setForeground(foreground: false);
+      final t = files.download(entry(files, 'notes.txt'));
+      await settle(10);
+      expect(notice.running, isTrue);
+      expect(notice.shown.single.title, 'Downloading notes.txt');
+      expect(notice.shown.single.sub, '');
+      fs.holdDownloads!.complete();
+      await until(() => notice.summaries.isNotEmpty);
+      expect(notice.running, isFalse);
+      final s = notice.summaries.single;
+      expect(s.title, 'Saved to Downloads/Delve');
+      expect(s.text, 'notes.txt');
+      expect(s.uri, t.uri);
+      expect(s.uri, isNotNull);
+      expect(s.mime, 'text/plain');
+    });
+
+    test('app away: one done, one failed – the summary counts', () async {
+      final (files, _, fakes) = await live();
+      files.setForeground(foreground: false);
+      final a = files.download(entry(files, 'notes.txt'));
+      // no contents in the fake: not found
+      final b = files.download(entry(files, 'file10.log'));
+      await until(() => fakes.notice.summaries.isNotEmpty);
+      expect(a.state, TransferState.done);
+      expect(b.state, TransferState.failed);
+      final s = fakes.notice.summaries.single;
+      expect(s.title, 'Transfers finished');
+      expect(s.text, '1 transfer done · 1 failed');
+      expect(s.uri, isNull);
+    });
+
+    test(
+      'Cancel all from the notification; all cancelled: no summary',
+      () async {
+        final (files, fs, fakes) = await live();
+        final notice = fakes.notice;
+        fs.holdDownloads = Completer<void>();
+        files.setForeground(foreground: false);
+        final a = files.download(entry(files, 'notes.txt'));
+        final b = files.download(entry(files, 'file2.log'));
+        await until(() => notice.running);
+        notice.tap(TransferNoticeAction.cancelAll);
+        expect(b.state, TransferState.cancelled);
+        fs.holdDownloads!.complete();
+        await until(() => !a.active && !notice.running);
+        expect(a.state, TransferState.cancelled);
+        await settle();
+        expect(notice.stops, 1);
+        expect(notice.summaries, isEmpty);
+        expect(fakes.device.published, isEmpty);
+      },
+    );
+
+    test('Android refuses a start from the background: once, then again '
+        'when the app is back', () async {
+      final (files, fs, fakes) = await live();
+      final notice = fakes.notice..allow = false;
+      fs.holdDownloads = Completer<void>();
+      files.setForeground(foreground: false);
+      final t = files.download(entry(files, 'notes.txt'));
+      await settle();
+      expect(notice.refused, 1);
+      expect(notice.running, isFalse);
+      notice.allow = true;
+      files.setForeground(foreground: true);
+      await until(() => notice.running);
+      expect(notice.refused, 1);
+      expect(notice.shown.single.title, 'Downloading notes.txt');
+      fs.holdDownloads!.complete();
+      await until(() => !t.active && !notice.running);
+      expect(t.state, TransferState.done);
+      expect(notice.summaries, isEmpty);
+    });
+
+    test('offline with the app away: the queue gives up, the service '
+        'stops', () async {
+      final (files, fs, fakes) = await live();
+      final notice = fakes.notice;
+      final notes = entry(files, 'notes.txt');
+      fakes.files.fail.addAll(
+        List.filled(100, const SshUnreachable('timed out')),
+      );
+      fs.drop();
+      await until(() => files.phase == FilesPhase.offline);
+      final t = files.download(notes);
+      await until(() => notice.running);
+      expect(notice.shown.first.title, 'Waiting for the desktop');
+      expect(notice.shown.first.text, '1 transfer queued');
+      files.setForeground(foreground: false);
+      await until(() => !t.active && !notice.running);
+      expect(t.state, TransferState.failed);
+      expect(t.error, 'Connection lost');
+      await until(() => notice.summaries.isNotEmpty);
+      expect(notice.summaries.single.title, 'Transfers failed');
+      expect(
+        notice.summaries.single.text,
+        "Couldn't download notes.txt: Connection lost",
+      );
+    });
+
+    test(
+      "Open from the notification is the app's: the queue goes on",
+      () async {
+        final (files, fs, fakes) = await live();
+        fs.holdDownloads = Completer<void>();
+        final t = files.download(entry(files, 'notes.txt'));
+        await until(() => fakes.notice.running);
+        fakes.notice.tap(TransferNoticeAction.open);
+        await settle(10);
+        expect(t.active, isTrue);
+        fs.holdDownloads!.complete();
+        await until(() => !t.active);
+        expect(t.state, TransferState.done);
+      },
+    );
+
+    test('the notification state: per mille, steps', () {
+      const s = TransferNoticeState(
+        title: 't',
+        progress: 0.4567,
+        cancelLabel: 'c',
+        openLabel: 'o',
+      );
+      expect(s.permille, 457);
+      expect(s.toMap()['progress'], 457);
+      const none = TransferNoticeState(
+        title: 't',
+        cancelLabel: 'c',
+        openLabel: 'o',
+      );
+      expect(none.permille, -1);
+      expect(s.sameStepAs(none), isFalse);
+      expect(s.sameAs(s), isTrue);
+    });
   });
 }

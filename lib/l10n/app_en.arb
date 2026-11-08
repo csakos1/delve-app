@@ -2757,5 +2757,73 @@
         "type": "int"
       }
     }
+  },
+  "filesNoticeDownloading": "Downloading {name}",
+  "@filesNoticeDownloading": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesNoticeUploading": "Uploading {name}",
+  "@filesNoticeUploading": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesNoticeCopying": "Copying {name}",
+  "@filesNoticeCopying": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesNoticeMoving": "Moving {name}",
+  "@filesNoticeMoving": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesNoticeWaiting": "Waiting for the desktop",
+  "filesNoticeQueued": "{count, plural, =1{1 transfer queued} other{{count} transfers queued}}",
+  "@filesNoticeQueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesNoticeCancelAll": "Cancel all",
+  "filesNoticeFinished": "Transfers finished",
+  "filesNoticeAllFailed": "Transfers failed",
+  "filesNoticeDone": "{count, plural, =1{1 transfer done} other{{count} transfers done}}",
+  "@filesNoticeDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesNoticeFailed": "{count} failed",
+  "@filesNoticeFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesNoticeItems": "{count, plural, =1{1 item} other{{count} items}}",
+  "@filesNoticeItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

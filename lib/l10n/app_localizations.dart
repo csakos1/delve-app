@@ -5601,6 +5601,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 link left out} other{{count} links left out}}'**
   String filesTransferLeftOut(int count);
+
+  /// No description provided for @filesNoticeDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading {name}'**
+  String filesNoticeDownloading(String name);
+
+  /// No description provided for @filesNoticeUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading {name}'**
+  String filesNoticeUploading(String name);
+
+  /// No description provided for @filesNoticeCopying.
+  ///
+  /// In en, this message translates to:
+  /// **'Copying {name}'**
+  String filesNoticeCopying(String name);
+
+  /// No description provided for @filesNoticeMoving.
+  ///
+  /// In en, this message translates to:
+  /// **'Moving {name}'**
+  String filesNoticeMoving(String name);
+
+  /// No description provided for @filesNoticeWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the desktop'**
+  String get filesNoticeWaiting;
+
+  /// No description provided for @filesNoticeQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 transfer queued} other{{count} transfers queued}}'**
+  String filesNoticeQueued(int count);
+
+  /// No description provided for @filesNoticeCancelAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel all'**
+  String get filesNoticeCancelAll;
+
+  /// No description provided for @filesNoticeFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfers finished'**
+  String get filesNoticeFinished;
+
+  /// No description provided for @filesNoticeAllFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfers failed'**
+  String get filesNoticeAllFailed;
+
+  /// No description provided for @filesNoticeDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 transfer done} other{{count} transfers done}}'**
+  String filesNoticeDone(int count);
+
+  /// No description provided for @filesNoticeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} failed'**
+  String filesNoticeFailed(int count);
+
+  /// No description provided for @filesNoticeItems.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item} other{{count} items}}'**
+  String filesNoticeItems(int count);
 }
 
 class _AppLocalizationsDelegate

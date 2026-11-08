@@ -43,11 +43,20 @@ import java.util.concurrent.Executors
  * in the cache, moving a finished download into Downloads/Delve through
  * MediaStore (no storage permission), opening it in another app, and the
  * PDF preview's pages (PdfPages).
+ *
+ * A fourth one (TRANSFERS_CHANNEL) runs TransfersService (F3b): Dart shows,
+ * updates and stops its notification and posts the "finished" one; the
+ * notification's Cancel all comes back as "cancelAll", its Open (and a tap)
+ * as "open" – or, when the app was not running, waits for "takeOpen".
  */
 class MainActivity : FlutterFragmentActivity() {
     private var channel: MethodChannel? = null
     private var terminal: MethodChannel? = null
     private var files: MethodChannel? = null
+    private var transfers: MethodChannel? = null
+
+    /** The app was opened from a transfers notification (until Dart asks). */
+    private var openTransfers = false
     private var pending: Intent? = null
     private val io = Executors.newSingleThreadExecutor()
     private val pdfs = PdfPages()
@@ -156,6 +165,42 @@ class MainActivity : FlutterFragmentActivity() {
                     else -> result.notImplemented()
                 }
             }
+        }
+        transfers = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            TRANSFERS_CHANNEL,
+        ).also { ch ->
+            ch.setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "show" -> result.success(
+                        TransfersService.show(
+                            this,
+                            TransfersService.Progress.from(call.arguments as? Map<*, *> ?: emptyMap<String, Any>()),
+                        ),
+                    )
+                    "stop" -> {
+                        TransfersService.stop(this)
+                        result.success(null)
+                    }
+                    "finished" -> {
+                        TransfersService.finished(
+                            this,
+                            title = call.argument<String>("title") ?: "",
+                            text = call.argument<String>("text") ?: "",
+                            uri = call.argument<String>("uri"),
+                            mime = call.argument<String>("mime"),
+                            openLabel = call.argument<String>("open") ?: "Open",
+                        )
+                        result.success(null)
+                    }
+                    "takeOpen" -> {
+                        result.success(openTransfers)
+                        openTransfers = false
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+            TransfersService.listener = { event -> ch.invokeMethod(event, null) }
         }
     }
 
@@ -298,18 +343,27 @@ class MainActivity : FlutterFragmentActivity() {
                 File(cacheDir, FILES_DIR).deleteRecursively()
             }
             keep(intent)
+            if (intent?.action == TransfersService.ACTION_OPEN) openTransfers = true
         }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (keep(intent)) channel?.invokeMethod("changed", null)
+        if (intent.action == TransfersService.ACTION_OPEN) {
+            val ch = transfers
+            if (ch == null) openTransfers = true else ch.invokeMethod("open", null)
+        }
     }
 
     override fun onDestroy() {
         channel?.setMethodCallHandler(null)
         terminal?.setMethodCallHandler(null)
         files?.setMethodCallHandler(null)
+        transfers?.setMethodCallHandler(null)
+        // the transfers run in this activity's Flutter engine, which goes too
+        TransfersService.listener = null
+        TransfersService.stop(this)
         io.shutdown()
         pdfs.shutdown()
         super.onDestroy()
@@ -471,6 +525,7 @@ class MainActivity : FlutterFragmentActivity() {
         private const val CHANNEL = "hu.csakos.delve/share"
         private const val TERMINAL_CHANNEL = "hu.csakos.delve/terminal"
         private const val FILES_CHANNEL = "hu.csakos.delve/files"
+        private const val TRANSFERS_CHANNEL = "hu.csakos.delve/transfers"
         private const val FILES_DIR = "files"
         private const val SHARED_DIR = "shared"
 

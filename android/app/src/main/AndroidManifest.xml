@@ -5,6 +5,8 @@
     <!-- T4: the terminal stays connected in the background (TerminalKeepService) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <!-- F3b: Files transfers go on in the background (TransfersService) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
     <application
@@ -59,6 +61,12 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Keeps the user's SSH terminal session to their own computer connected while the app is in the background, as the user chose in the settings" />
         </service>
+        <!-- F3b: a download, upload or copy of the Files tab goes on while the
+             app is in the background; runs only while a transfer does -->
+        <service
+            android:name=".TransfersService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
         <!-- FCM registration through register()/onRegistered (firebase_messaging 17) -->
         <meta-data
             android:name="firebase_messaging_installation_id_enabled"

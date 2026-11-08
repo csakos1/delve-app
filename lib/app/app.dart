@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../files/transfers_host.dart';
 import '../l10n/app_localizations.dart';
 import '../push/push_host.dart';
 import '../share/share_host.dart';
@@ -34,7 +35,11 @@ class DelveApp extends ConsumerWidget {
       routerConfig: ref.watch(routerProvider),
       onNavigationNotification: delveHandlesBack,
       builder: (context, child) => SyncLifecycle(
-        child: PushHost(child: ShareHost(child: child ?? const SizedBox())),
+        child: PushHost(
+          child: ShareHost(
+            child: TransfersHost(child: child ?? const SizedBox()),
+          ),
+        ),
       ),
     );
   }

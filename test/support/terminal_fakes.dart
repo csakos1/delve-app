@@ -26,6 +26,7 @@ class TerminalFakes {
     FakeFilesDialer? files,
     FakeDeviceFiles? device,
     FakePdfPages? pdf,
+    FakeTransferNotice? notice,
     this.timing = fastTerminalTiming,
   }) : store = store ?? MemorySecretStore(),
        dialer = dialer ?? FakeSshDialer(),
@@ -33,7 +34,8 @@ class TerminalFakes {
        keepAlive = keepAlive ?? FakeKeepAlive(),
        files = files ?? FakeFilesDialer(sampleFs),
        device = device ?? FakeDeviceFiles(),
-       pdf = pdf ?? FakePdfPages();
+       pdf = pdf ?? FakePdfPages(),
+       notice = notice ?? FakeTransferNotice();
 
   final MemorySecretStore store;
   final FakeSshDialer dialer;
@@ -47,6 +49,9 @@ class TerminalFakes {
 
   /// The phone's PDF renderer (the preview).
   final FakePdfPages pdf;
+
+  /// The transfers' background service and notification (F3b).
+  final FakeTransferNotice notice;
 
   /// Network changes (Wi-Fi, airplane mode); lives as long as the test.
   // ignore: close_sinks

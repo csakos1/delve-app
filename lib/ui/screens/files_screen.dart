@@ -26,7 +26,8 @@ import 'file_preview_screen.dart';
 /// 23 Files: the desktop's filesystem as `csakos` sees it, over SFTP on the
 /// terminal's key and host, behind the terminal's lock (F1: browse,
 /// download, preview; F2a: upload, new folder, rename, trash; F3: several
-/// items, Copy / Move → Paste, folder downloads).
+/// items, Copy / Move → Paste, folder downloads; F3b: the transfers go on in
+/// the background, and their notification's Open shows the Transfers sheet).
 class FilesScreen extends ConsumerStatefulWidget {
   const FilesScreen({super.key});
 
@@ -38,6 +39,7 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
     with WidgetsBindingObserver {
   late final FilesService _service = ref.read(filesServiceProvider);
   late final TerminalService _terminal = ref.read(terminalServiceProvider);
+  late final ValueNotifier<bool> _wanted = ref.read(transfersWantedProvider);
   StreamSubscription<Transfer>? _finished;
   bool _visible = false;
   bool _promptLock = true;
@@ -944,7 +946,7 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
             : const SizedBox.shrink(),
       ),
       body: ListenableBuilder(
-        listenable: Listenable.merge([_service, _terminal]),
+        listenable: Listenable.merge([_service, _terminal, _wanted]),
         builder: (context, _) {
           final s = _service;
           if (!_terminal.ready) {
@@ -1045,6 +1047,15 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
     final running = s.runningTransfer;
     final progress = s.transferProgress;
     _syncTick(running != null);
+    // the transfers notification's Open (F3b); cleared after the frame (a
+    // change during a build would redraw this builder)
+    if (_visible && _wanted.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_wanted.value) return;
+        _wanted.value = false;
+        _transfers();
+      });
+    }
     // the selection belongs to one folder, and to what is still in it
     if (_selectedIn != path) {
       _selected.clear();

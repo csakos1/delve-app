@@ -3571,4 +3571,74 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String filesNoticeDownloading(String name) {
+    return 'Downloading $name';
+  }
+
+  @override
+  String filesNoticeUploading(String name) {
+    return 'Uploading $name';
+  }
+
+  @override
+  String filesNoticeCopying(String name) {
+    return 'Copying $name';
+  }
+
+  @override
+  String filesNoticeMoving(String name) {
+    return 'Moving $name';
+  }
+
+  @override
+  String get filesNoticeWaiting => 'Waiting for the desktop';
+
+  @override
+  String filesNoticeQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transfers queued',
+      one: '1 transfer queued',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filesNoticeCancelAll => 'Cancel all';
+
+  @override
+  String get filesNoticeFinished => 'Transfers finished';
+
+  @override
+  String get filesNoticeAllFailed => 'Transfers failed';
+
+  @override
+  String filesNoticeDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count transfers done',
+      one: '1 transfer done',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String filesNoticeFailed(int count) {
+    return '$count failed';
+  }
+
+  @override
+  String filesNoticeItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
 }

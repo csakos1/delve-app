@@ -9,6 +9,7 @@ import 'package:delve/files/files_service.dart';
 import 'package:delve/files/pdf_pages.dart';
 import 'package:delve/files/remote_fs.dart';
 import 'package:delve/files/sftp_fs.dart';
+import 'package:delve/files/transfer_notice.dart';
 import 'package:delve/terminal/phone_key.dart';
 import 'package:delve/terminal/ssh_link.dart';
 
@@ -20,6 +21,9 @@ const fastFilesTiming = FilesTiming(
   closeAfterBackground: Duration(milliseconds: 200),
   countBatch: Duration(milliseconds: 10),
   copyPoll: Duration(milliseconds: 20),
+  noticeDelay: Duration(milliseconds: 30),
+  noticeEvery: Duration(milliseconds: 50),
+  backgroundAttempts: 3,
 );
 
 final _t0 = DateTime.utc(2026, 11, 4, 21, 7);
@@ -677,3 +681,61 @@ FakeRemoteFs sampleFs() => FakeRemoteFs(sampleTree())
   ..contents['/home/user/Documents/hajos/evkonyv/beszedes_evkonyv.pdf'] =
       Uint8List.fromList(utf8.encode('%PDF pages=12\n'))
   ..denied.add('/root');
+
+/// The transfers' background service (F3b): records what the notification
+/// showed; [tap] plays its actions.
+class FakeTransferNotice implements TransferNotice {
+  /// Whether a start is allowed (Android refuses one from the background).
+  bool allow = true;
+
+  /// The app was started from the notification.
+  bool openAtStart = false;
+
+  /// Every update of the ongoing notification, in order.
+  final shown = <TransferNoticeState>[];
+
+  /// The notifications after the queue emptied with the app away.
+  final summaries = <TransferSummary>[];
+  int refused = 0;
+  int stops = 0;
+
+  /// The service runs (the last call was a successful show).
+  bool running = false;
+
+  /// Lives as long as the test.
+  // ignore: close_sinks
+  final _actions = StreamController<TransferNoticeAction>.broadcast(sync: true);
+
+  void tap(TransferNoticeAction action) => _actions.add(action);
+
+  @override
+  Future<bool> show(TransferNoticeState state) async {
+    if (!allow && !running) {
+      refused++;
+      return false;
+    }
+    shown.add(state);
+    running = true;
+    return true;
+  }
+
+  @override
+  Future<void> stop() async {
+    stops++;
+    running = false;
+  }
+
+  @override
+  Future<void> finished(TransferSummary summary) async =>
+      summaries.add(summary);
+
+  @override
+  Stream<TransferNoticeAction> get actions => _actions.stream;
+
+  @override
+  Future<bool> takeOpen() async {
+    final o = openAtStart;
+    openAtStart = false;
+    return o;
+  }
+}

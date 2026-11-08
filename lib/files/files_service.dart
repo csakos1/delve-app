@@ -3,17 +3,21 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' show Locale;
 
 import 'package:flutter/foundation.dart';
 
 import '../attachments/picker.dart';
+import '../l10n/app_localizations.dart';
 import '../terminal/ssh_link.dart';
 import '../terminal/terminal_service.dart';
 import 'device_files.dart';
 import 'remote_fs.dart';
 import 'sftp_fs.dart';
+import 'transfer_notice.dart';
 
 part 'files_edit.dart';
+part 'files_notice.dart';
 part 'files_ops.dart';
 part 'files_paste.dart';
 
@@ -164,6 +168,9 @@ class FilesTiming {
     this.countBatch = const Duration(milliseconds: 120),
     this.copyPoll = const Duration(seconds: 1),
     this.clipLife = const Duration(minutes: 10),
+    this.noticeDelay = const Duration(seconds: 1),
+    this.noticeEvery = const Duration(seconds: 1),
+    this.backgroundAttempts = 8,
   });
 
   final List<Duration> backoff;
@@ -181,6 +188,19 @@ class FilesTiming {
 
   /// Copy / Move waits this long for Paste (23e: 10 min).
   final Duration clipLife;
+
+  /// The transfers notification (F3b) shows once something has been in the
+  /// queue this long – a quick one never flashes it (at once when the app
+  /// goes away).
+  final Duration noticeDelay;
+
+  /// Its progress updates at most this often.
+  final Duration noticeEvery;
+
+  /// Offline with the app away: after this many attempts the queued
+  /// transfers fail (and the background service stops) instead of the
+  /// phone trying on for good.
+  final int backgroundAttempts;
 }
 
 /// The text preview reads at most this much (design: "files over 1 MB
@@ -218,13 +238,23 @@ class FilesService extends ChangeNotifier {
     required FilesDialer dialer,
     required this.device,
     this.timing = const FilesTiming(),
+    this.notice = const NoTransferNotice(),
     DateTime Function()? now,
   }) : _dialer = dialer,
-       _now = now ?? DateTime.now;
+       _now = now ?? DateTime.now {
+    _noticeActions = notice.actions.listen((a) {
+      // Open is the app's (TransfersHost)
+      if (a == TransferNoticeAction.cancelAll && !_disposed) _noticeCancelAll();
+    });
+  }
 
   final TerminalService terminal;
   final DeviceFiles device;
   final FilesTiming timing;
+
+  /// The transfers in the background: the foreground service and its
+  /// notification (F3b).
+  final TransferNotice notice;
   final FilesDialer _dialer;
   final DateTime Function() _now;
 
@@ -346,6 +376,24 @@ class FilesService extends ChangeNotifier {
   /// Transfers since the queue was last empty (for "1 of 2").
   final Set<int> _batch = {};
 
+  // ------------------------------------------------------------- notice
+
+  /// The notification as last sent (null: not shown).
+  TransferNoticeState? _noticeLast;
+  DateTime _noticeAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// Since when something is in the queue (null: nothing).
+  DateTime? _noticeSince;
+  Timer? _noticeTimer;
+  bool _noticeOn = false;
+
+  /// Android refused the start (the app was away): no more tries until the
+  /// app is back.
+  bool _noticeRefused = false;
+  Future<void> _noticeChain = Future.value();
+
+  StreamSubscription<TransferNoticeAction>? _noticeActions;
+
   // ---------------------------------------------------------------- clip
 
   FilesClip? _clip;
@@ -404,6 +452,7 @@ class FilesService extends ChangeNotifier {
   void setForeground({required bool foreground}) {
     _foreground = foreground;
     _idleClose?.cancel();
+    _noticeForeground();
     if (!foreground) {
       _idleClose = Timer(timing.closeAfterBackground, () {
         if (!_foreground && !_transferRunning) unawaited(_drop());
@@ -504,9 +553,12 @@ class FilesService extends ChangeNotifier {
     } on SshHostKeyRejected catch (e) {
       _problem = e.detail;
       _setPhase(FilesPhase.hostKeyChanged);
+      // no retry: what waits would wait for good (and keep the service on)
+      _failQueued(e.detail);
     } on SshAuthDenied catch (e) {
       _problem = e.detail;
       _setPhase(FilesPhase.denied);
+      _failQueued(e.detail);
     } on Object catch (e) {
       _problem = e is SshFailure ? e.detail : '$e';
       _scheduleRetry();
@@ -529,7 +581,11 @@ class FilesService extends ChangeNotifier {
   void _scheduleRetry() {
     _attempt++;
     _setPhase(FilesPhase.offline);
-    if (!_visible && !_transferRunning) return;
+    final waiting = _transfers.any((t) => t.state == TransferState.queued);
+    if (waiting && !_foreground && _attempt >= timing.backgroundAttempts) {
+      _failQueued('Connection lost');
+    }
+    if (!_visible && !_transferRunning && !_hasActive) return;
     final waits = timing.backoff;
     final wait = waits[(_attempt - 1).clamp(0, waits.length - 1)];
     _nextAt = _now().add(wait);
@@ -795,6 +851,28 @@ class FilesService extends ChangeNotifier {
     return t;
   }
 
+  bool get _hasActive => _transfers.any((t) => t.active);
+
+  /// The notification's Cancel all.
+  void cancelAll() {
+    for (final t in _transfers.where((t) => t.active).toList()) {
+      cancel(t);
+    }
+  }
+
+  /// Offline for long with the app away: the queued transfers fail.
+  void _failQueued(String why) {
+    final now = _now();
+    for (final t in _transfers) {
+      if (t.state != TransferState.queued) continue;
+      t.state = TransferState.failed;
+      t.error = why;
+      t.endedAt = now;
+      _finished.add(t);
+    }
+    _notify();
+  }
+
   void cancel(Transfer t) {
     if (!t.active) return;
     t._cancel = true;
@@ -936,7 +1014,9 @@ class FilesService extends ChangeNotifier {
   // ---------------------------------------------------------------- misc
 
   void _notify() {
-    if (!_disposed) notifyListeners();
+    if (_disposed) return;
+    notifyListeners();
+    _noticeTick();
   }
 
   @override
@@ -946,6 +1026,9 @@ class FilesService extends ChangeNotifier {
     _idleClose?.cancel();
     _countNotify?.cancel();
     _clipTimer?.cancel();
+    _noticeTimer?.cancel();
+    if (_noticeOn) unawaited(notice.stop());
+    unawaited(_noticeActions?.cancel());
     for (final t in _transfers) {
       t._cancel = true;
     }
