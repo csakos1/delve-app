@@ -1,0 +1,56 @@
+{
+ "error": {
+  "message": "No allowed providers are available for the selected model. Providers serving z-ai/glm-5.3-flash-20260826: relace, wafer, open-inference, darkbloom, tenstorrent, gmicloud, near-ai, novita, streamlake, particle-ai, primeintellect, inference-net, phala, digitalocean, reka, coreweave, nextbit, morph, makora, mistral, cohere, nebius, modal, baseten, crusoe, atlas-cloud, fireworks, friendli, siliconflow, together, parasail, venice, deepinfra, z-ai, inceptron, sail-research, but your request's provider.only preference permits only: delve-no-such-provider.",
+  "code": 404,
+  "metadata": {
+   "available_providers": [
+    "relace",
+    "wafer",
+    "open-inference",
+    "darkbloom",
+    "tenstorrent",
+    "gmicloud",
+    "near-ai",
+    "novita",
+    "streamlake",
+    "particle-ai",
+    "primeintellect",
+    "inference-net",
+    "phala",
+    "digitalocean",
+    "reka",
+    "coreweave",
+    "nextbit",
+    "morph",
+    "makora",
+    "mistral",
+    "cohere",
+    "nebius",
+    "modal",
+    "baseten",
+    "crusoe",
+    "atlas-cloud",
+    "fireworks",
+    "friendli",
+    "siliconflow",
+    "together",
+    "parasail",
+    "venice",
+    "deepinfra",
+    "z-ai",
+    "inceptron",
+    "sail-research"
+   ],
+   "requested_providers": [
+    "delve-no-such-provider"
+   ],
+   "routing_funnel": [
+    {
+     "step": "Initial Endpoints",
+     "endpoint_count": 41
+    }
+   ],
+   "failed_routing_step": "Filter by Allowed Providers"
+  }
+ }
+}

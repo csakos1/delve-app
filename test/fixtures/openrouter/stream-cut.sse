@@ -1,0 +1,102 @@
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":"# The","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" Last Light\n\nEdmund Voss had kept the lighthouse on","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" Cape Merrow for forty-one years, and in","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" all that time, he had never once let the light fail","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":".\n\nHe'd arrived in 1962, a young man of","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" twenty-two with calloused hands and a recently broken heart,","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" and the sea had taken him in the way the","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" sea takes in everything—without judgment, without ceremony","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":". The old keeper, a Scot named MacAllister, had","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" taught him the mechanics of the light: the winding","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" of the clockwork, the polishing of the lens","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":", the careful attention to the mercury bath that let","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" the great lens float and turn. When the station","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" was automated in 1988, Edmund was offered retirement","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" and a transfer. He refused both. He stayed","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" on as caretaker, and the Coast Guard, having","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" no better candidate, let him.\n\nThe lighthouse was ninety","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":"-eight feet tall, and Edmund climbed its one hundred and fourteen","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" steps every morning, whether the light needed tending or not","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":". He'd outlived his wife, Margaret","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":", who had hated the island and left after only","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" two years, and his daughter, Claire, who phoned on","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" Sundays from her home in Portland, her voice thin","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" and distant across the signal that bounced off the tower","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":".\n\n\"Dad, I'm serious this time. You can","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":"'t live out there alone forever.\"\n\n\"The light needs","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" keeping,\" he'd say, and Claire would sigh,","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" and the conversation would move on to weather, to","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" her garden, to the price of lumber.\n\nBut","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" on the last night of October, Edmund woke at","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" three in the morning to a sound he hadn't heard","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" in decades: the foghorn's failure. Not the steady","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":", mournful note it should have sung, but","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" a stuttering gasp, then silence. He","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" rose, dressed in his wool coat and rubber boots, and","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" climbed the tower with his lantern.\n\nThe generator had","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" coughed its last. The backup was dead too","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":". Edmund stood in the lamp room in the dark, the","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" fog pressing against the glass like a living thing, and felt","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" the weight of the situation settle over him. Som","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":"ewhere out there, in this soup, were boats.","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" Lobstermen, maybe a freighter, the","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" ferry from the mainland.\n\nHe did what he had always","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" done. He worked.\n\nThe old oil lamp—the","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" original, from 1871—still sat in the storage","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" room below, kept in working order by a man who had never","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" believed in the word \"obsolete.\" He carried it up","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" the stairs, filled it, trimmed the wick, and lit","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" it with hands that shook only slightly. The flame caught","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":", and Edmund set the lamp in the old mount, and by","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+
+data: {"id":"gen-1794177894-4W340eEZ2QM6x869XPl9","object":"chat.completion.chunk","created":1794177894,"model":"z-ai/glm-5.3-flash","provider":"OpenInference","choices":[{"index":0,"delta":{"content":" hand, he began to turn the crank that rotated","role":"assistant"},"finish_reason":null,"native_finish_reason":null}]}
+

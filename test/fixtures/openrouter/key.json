@@ -1,0 +1,61 @@
+{
+ "data": {
+  "label": "masked-key-label",
+  "is_management_key": false,
+  "is_provisioning_key": false,
+  "limit": 100,
+  "limit_reset": null,
+  "limit_remaining": 96.324405201,
+  "include_byok_in_limit": false,
+  "budgets": [
+   {
+    "scope": "key_limit",
+    "guardrail_id": null,
+    "budget_id": null,
+    "limit_usd": 100,
+    "spend_usd": 3.675594799,
+    "remaining_usd": 96.324405201,
+    "reset_interval": null,
+    "resets_at": null,
+    "include_byok": false
+   }
+  ],
+  "effective_budget": {
+   "scope": "key_limit",
+   "guardrail_id": null,
+   "budget_id": null,
+   "limit_usd": 100,
+   "spend_usd": 3.675594799,
+   "remaining_usd": 96.324405201,
+   "reset_interval": null,
+   "resets_at": null,
+   "include_byok": false
+  },
+  "usage": 3.675594799,
+  "usage_daily": 1.631038799,
+  "usage_weekly": 3.675594799,
+  "usage_monthly": 3.675594799,
+  "byok_usage": 0,
+  "byok_usage_daily": 0,
+  "byok_usage_weekly": 0,
+  "byok_usage_monthly": 0,
+  "is_free_tier": false,
+  "expires_at": "2027-05-05T22:18:39.413Z",
+  "creator_user_id": "redacted",
+  "organization_id": null,
+  "workspace_id": "redacted",
+  "allowed_data_regions": [
+   "global"
+  ],
+  "free_model_daily_requests": {
+   "used": 0,
+   "limit": 1000,
+   "remaining": 1000
+  },
+  "rate_limit": {
+   "requests": -1,
+   "interval": "10s",
+   "note": "This field is deprecated and safe to ignore."
+  }
+ }
+}
