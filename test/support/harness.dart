@@ -8,6 +8,8 @@ import 'package:delve/attachments/picker.dart';
 import 'package:delve/data/credentials.dart';
 import 'package:delve/data/db/database.dart';
 import 'package:delve/files/files_providers.dart';
+import 'package:delve/general/general_database.dart';
+import 'package:delve/general/general_providers.dart';
 import 'package:delve/push/push_controller.dart';
 import 'package:delve/push/push_providers.dart';
 import 'package:delve/share/share_channel.dart';
@@ -21,6 +23,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fake_openrouter.dart';
 import 'fake_server.dart';
 import 'files_fakes.dart';
 import 'terminal_fakes.dart';
@@ -51,14 +54,25 @@ class TestEnv {
     this.attachments,
     this.share,
     TerminalFakes? terminal,
+    String? generalKey,
   }) : terminal = terminal ?? TerminalFakes(),
        db = memoryDb(),
        store = MemoryCredentialStore(credentials),
-       server = FakeServer();
+       server = FakeServer(),
+       general = memoryGeneralDb(),
+       generalKeys = MemoryGeneralKeyStore(generalKey),
+       openRouter = FakeOpenRouter();
 
   final AppDatabase db;
   final MemoryCredentialStore store;
   final FakeServer server;
+
+  /// The General chats (on the phone) and the phone's OpenRouter key.
+  final GeneralDatabase general;
+  final MemoryGeneralKeyStore generalKeys;
+
+  /// OpenRouter as the General chat sees it.
+  final FakeOpenRouter openRouter;
 
   /// Links the app opened (url_launcher is off in tests).
   final LinkLog links = LinkLog();
@@ -104,6 +118,9 @@ class TestEnv {
       pdfPagesProvider.overrideWithValue(terminal.pdf),
       filesTimingProvider.overrideWithValue(fastFilesTiming),
       transferNoticeProvider.overrideWithValue(terminal.notice),
+      generalDatabaseProvider.overrideWithValue(general),
+      generalKeyStoreProvider.overrideWithValue(generalKeys),
+      openRouterAdapterProvider.overrideWithValue(openRouter),
       if (push case final p?)
         pushStateProvider.overrideWith((ref) => Stream.value(p)),
       if (status case final s?)
@@ -140,6 +157,9 @@ class TestEnv {
         pdfPagesProvider.overrideWithValue(terminal.pdf),
         filesTimingProvider.overrideWithValue(fastFilesTiming),
         transferNoticeProvider.overrideWithValue(terminal.notice),
+        generalDatabaseProvider.overrideWithValue(general),
+        generalKeyStoreProvider.overrideWithValue(generalKeys),
+        openRouterAdapterProvider.overrideWithValue(openRouter),
         if (push case final p?)
           pushStateProvider.overrideWith((ref) => Stream.value(p)),
         if (status case final s?)
@@ -156,7 +176,11 @@ class TestEnv {
     return c;
   }
 
-  Future<void> dispose() => db.close();
+  Future<void> dispose() async {
+    openRouter.close();
+    await general.close();
+    await db.close();
+  }
 }
 
 /// The design's phone (448 × 998 dp) instead of the 800 × 600 default.
@@ -176,6 +200,7 @@ Future<TestEnv> pumpDelve(
   AttachmentFakes? attachments,
   ShareSource? share,
   TerminalFakes? terminal,
+  String? generalKey,
   Future<void> Function(TestEnv env)? before,
   bool settle = true,
 }) async {
@@ -187,6 +212,7 @@ Future<TestEnv> pumpDelve(
     attachments: attachments,
     share: share,
     terminal: terminal,
+    generalKey: generalKey,
   );
   addTearDown(env.dispose);
   setDesignSize(tester);

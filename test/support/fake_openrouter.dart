@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:delve/general/general_database.dart';
+import 'package:delve/general/general_key_store.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
@@ -12,6 +13,25 @@ import 'package:drift/native.dart';
 GeneralDatabase memoryGeneralDb() => GeneralDatabase(
   DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true),
 );
+
+/// The phone's OpenRouter key in memory (no secure storage in tests).
+class MemoryGeneralKeyStore implements GeneralKeyStore {
+  MemoryGeneralKeyStore([this.key]);
+  String? key;
+
+  @override
+  Future<String?> read() async => key;
+
+  @override
+  Future<void> write(String key) async => this.key = key;
+
+  @override
+  Future<void> clear() async => key = null;
+}
+
+/// A key that passes [looksLikeOpenRouterKey]. Built at run time from
+/// zeros: a random-looking literal is a secret to gitleaks.
+final testOpenRouterKey = 'sk-or-v1-${'0' * 40}4f2a';
 
 /// A recorded OpenRouter answer (`test/fixtures/openrouter/`, from G0).
 String openRouterFixture(String name) =>

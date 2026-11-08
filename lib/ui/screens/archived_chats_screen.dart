@@ -6,9 +6,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/chat_list.dart';
 import '../../app/router.dart';
+import '../../data/db/database.dart';
+import '../../general/general_database.dart';
+import '../../general/general_providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../format.dart';
+import '../general/general_format.dart';
+import '../general/general_widgets.dart';
 import '../widgets/chat_row.dart';
 import '../widgets/page_scaffolds.dart';
 
@@ -91,6 +96,23 @@ class _ArchivedChatsScreenState extends ConsumerState<ArchivedChatsScreen> {
     return true;
   }
 
+  /// A General chat back to Chats (on this phone, nothing to wait for).
+  Future<bool> _restoreGeneral(String id) async {
+    final l = AppLocalizations.of(context);
+    final service = ref.read(generalChatServiceProvider);
+    await service.archive(id, archived: false);
+    if (mounted) {
+      _snack(
+        l.archivedRestored,
+        action: SnackBarAction(
+          label: l.chatsUndo,
+          onPressed: () => unawaited(service.archive(id)),
+        ),
+      );
+    }
+    return true;
+  }
+
   Future<void> _archiveAgain(ChatListPager pager, String id) async {
     final l = AppLocalizations.of(context);
     try {
@@ -105,11 +127,37 @@ class _ArchivedChatsScreenState extends ConsumerState<ArchivedChatsScreen> {
     final l = AppLocalizations.of(context);
     final items = ref.watch(chatListProvider(true)).value;
     final paging = ref.watch(chatListPagerProvider(true));
+    final general =
+        ref.watch(generalChatsProvider(true)).value ?? const <GeneralChatRow>[];
+    final models = {
+      for (final m
+          in ref.watch(generalModelsProvider).value ?? const <OrModelRow>[])
+        m.id: m,
+    };
+    // agent and General, newest first (General chats older than the agent
+    // page loaded so far wait for the next page)
+    final agentMore =
+        items != null &&
+        !paging.exhausted &&
+        items.length >= ChatListPager.pageSize;
+    final floor = agentMore && items.isNotEmpty
+        ? items
+              .map((i) => i.conversation.updatedAt)
+              .reduce((a, b) => a.isBefore(b) ? a : b)
+        : null;
+    final entries = <(DateTime, ChatListItem?, GeneralChatRow?)>[
+      for (final i in items ?? const <ChatListItem>[])
+        (i.conversation.updatedAt, i, null),
+      for (final g in general)
+        if (floor == null || !g.updatedAt.isBefore(floor))
+          (g.updatedAt, null, g),
+    ]..sort((a, b) => b.$1.compareTo(a.$1));
 
     final Widget body;
-    if (items == null || (items.isEmpty && paging.loading)) {
+    if (entries.isEmpty &&
+        (items == null || (items.isEmpty && paging.loading))) {
       body = const SizedBox.shrink();
-    } else if (items.isEmpty) {
+    } else if (entries.isEmpty) {
       body = Center(
         child: Padding(
           padding: const EdgeInsets.all(DelveTokens.space8),
@@ -134,21 +182,38 @@ class _ArchivedChatsScreenState extends ConsumerState<ArchivedChatsScreen> {
         ),
       );
     } else {
-      final more = !paging.exhausted && items.length >= ChatListPager.pageSize;
+      final more = agentMore;
       body = RefreshIndicator(
         onRefresh: _refresh,
         child: ListView.builder(
           key: const Key('archived.list'),
           physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: items.length + (more ? 1 : 0),
+          itemCount: entries.length + (more ? 1 : 0),
           itemBuilder: (context, i) {
-            if (i == items.length) {
+            if (i == entries.length) {
               return LoadMoreFooter(
                 loading: paging.loading,
                 onVisible: _loadMore,
               );
             }
-            final id = items[i].conversation.id;
+            final (_, item, g) = entries[i];
+            if (g != null) {
+              return Dismissible(
+                key: ValueKey('archived.general.${g.id}'),
+                direction: DismissDirection.endToStart,
+                confirmDismiss: (_) => _restoreGeneral(g.id),
+                background: SwipeBackground(
+                  icon: DelveIcons.unarchive,
+                  label: l.archivedRestore,
+                ),
+                child: GeneralListRow(
+                  chat: g,
+                  modelName: modelShortName(g.modelId, models[g.modelId]),
+                  onTap: () => context.push(Routes.generalChat(g.id)),
+                ),
+              );
+            }
+            final id = item!.conversation.id;
             return Dismissible(
               key: ValueKey('archived.$id'),
               direction: DismissDirection.endToStart,
@@ -158,7 +223,7 @@ class _ArchivedChatsScreenState extends ConsumerState<ArchivedChatsScreen> {
                 label: l.archivedRestore,
               ),
               child: ChatRow(
-                item: items[i],
+                item: item,
                 onTap: () => context.push(Routes.chat(id)),
               ),
             );

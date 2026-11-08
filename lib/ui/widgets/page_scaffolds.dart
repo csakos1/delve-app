@@ -317,4 +317,13 @@ abstract final class DelveIcons {
   static const IconData tabClose = Symbols.tab_close_rounded;
   static const IconData rename = Symbols.edit_rounded;
   static const IconData kill = Symbols.delete_forever_rounded;
+  static const IconData cloud = Symbols.cloud_rounded;
+  static const IconData computer = Symbols.computer_rounded;
+  static const IconData modelSwitch = Symbols.swap_horiz_rounded;
+  static const IconData star = Symbols.star_rounded;
+  static const IconData stopped = Symbols.stop_circle_rounded;
+  static const IconData wallet = Symbols.account_balance_wallet_rounded;
+  static const IconData shield = Symbols.shield_rounded;
+  static const IconData image = Symbols.image_rounded;
+  static const IconData delete = Symbols.delete_rounded;
 }

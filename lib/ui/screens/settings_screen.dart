@@ -10,6 +10,7 @@ import '../../api/api_error.dart';
 import '../../api/models/models.dart';
 import '../../app/router.dart';
 import '../../app/session.dart';
+import '../../general/general_providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../push/push_controller.dart';
 import '../../push/push_providers.dart';
@@ -19,6 +20,7 @@ import '../../terminal/terminal_providers.dart';
 import '../../terminal/terminal_service.dart';
 import '../../theme/delve_theme.dart';
 import '../format.dart';
+import '../general/general_format.dart';
 import '../widgets/connection_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
@@ -103,6 +105,8 @@ class SettingsScreen extends ConsumerWidget {
             _Notifications(device: device),
             _Section(l.settingsTerminal),
             const _TerminalRow(),
+            _Section(l.settingsGeneralSection),
+            const _GeneralRow(),
             _Section(l.settingsThinkingRoute),
             _ThinkingRoute(status: status, failed: failed),
             _Section(l.settingsVersions),
@@ -499,6 +503,36 @@ class _TerminalRowState extends ConsumerState<_TerminalRow> {
             DelveIcons.chevronRight,
             color: context.colors.onSurfaceVariant,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 16 → 24g: the General chat's key and default model.
+class _GeneralRow extends ConsumerWidget {
+  const _GeneralRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final hasKey = ref.watch(generalKeyProvider).value != null;
+    final id = ref.watch(generalDefaultModelProvider);
+    final models = ref.watch(generalModelsProvider).value ?? const [];
+    final name = modelShortName(
+      id,
+      models.where((m) => m.id == id).firstOrNull,
+    );
+    return InkWell(
+      key: const Key('settings.general'),
+      onTap: () => context.push(Routes.generalSettings),
+      child: _Item(
+        icon: DelveIcons.cloud,
+        title: l.settingsGeneral,
+        subtitle: hasKey ? l.settingsGeneralSub(name) : l.settingsGeneralNoKey,
+        trailing: SymbolIcon(
+          DelveIcons.chevronRight,
+          color: context.colors.onSurfaceVariant,
         ),
       ),
     );

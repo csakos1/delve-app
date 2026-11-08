@@ -15,6 +15,8 @@ import '../../attachments/composer_attachments.dart';
 import '../../attachments/image_prep.dart';
 import '../../attachments/picker.dart';
 import '../../data/db/database.dart';
+import '../../general/general_database.dart' show GeneralMetaKeys;
+import '../../general/general_providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../sync/connection_status.dart';
 import '../../sync/live_runs.dart';
@@ -26,10 +28,13 @@ import '../chat/chat_items.dart';
 import '../chat/composer.dart';
 import '../chat/usage.dart';
 import '../format.dart';
+import '../general/general_widgets.dart'
+    show ChatKind, ChatKindSwitch, chatKindOf;
 import '../widgets/chat_row.dart';
 import '../widgets/delve_mark.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
+import 'general_chat_screen.dart';
 
 final _createdMessageProvider = StreamProvider.autoDispose
     .family<MessageRow?, String>(
@@ -92,6 +97,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   /// Thinking for a new chat (sent with its first message).
   bool _newThinking = false;
+
+  /// A new chat: Agent or General as chosen here; null: the remembered
+  /// choice.
+  ChatKind? _kind;
 
   /// An existing chat's Thinking switch while the server has not confirmed
   /// it yet.
@@ -355,11 +364,50 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     onOpenAttachment: _openAttachment,
   );
 
+  /// A plain new chat offers Agent / General (not one opened with a draft
+  /// or a shared first message, and not once its first message is sent).
+  bool get _offersKinds =>
+      widget.conversationId == null &&
+      widget.draft == null &&
+      _firstClientMsgId == null;
+
+  void _chooseKind(ChatKind kind) {
+    setState(() => _kind = kind);
+    unawaited(
+      ref
+          .read(generalDatabaseProvider)
+          .setMeta(GeneralMetaKeys.newChatKind, kind.name),
+    );
+  }
+
+  Widget _kindSwitch(ChatKind kind) =>
+      ChatKindSwitch(value: kind, onChanged: _chooseKind);
+
   @override
   Widget build(BuildContext context) {
     final id = widget.conversationId;
-    if (id == null) return _buildNew(context);
-    return _buildChat(context, id);
+    if (id != null) return _buildChat(context, id);
+    if (_offersKinds) {
+      final remembered = ref.watch(
+        generalMetaProvider(GeneralMetaKeys.newChatKind),
+      );
+      final kind =
+          _kind ?? (remembered.isLoading ? null : chatKindOf(remembered.value));
+      if (kind == null) {
+        // one frame, while the remembered choice is read
+        return Scaffold(
+          appBar: _ChatAppBar(title: AppLocalizations.of(context).newChat),
+        );
+      }
+      if (kind == ChatKind.general) {
+        return GeneralChatScreen(
+          key: const Key('general.new'),
+          chatId: null,
+          kindSwitch: _kindSwitch(kind),
+        );
+      }
+    }
+    return _buildNew(context);
   }
 
   // --- new chat (03) ----------------------------------------------------------
@@ -421,6 +469,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       appBar: _ChatAppBar(title: l.newChat),
       body: Column(
         children: [
+          if (_offersKinds && sent == null) _kindSwitch(ChatKind.agent),
           Expanded(
             child: UnderBarFade(
               fadeKey: const Key('chat.fade'),

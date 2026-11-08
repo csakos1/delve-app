@@ -12,6 +12,8 @@ import '../ui/screens/dashboard_screen.dart';
 import '../ui/screens/file_preview_screen.dart';
 import '../ui/screens/files_screen.dart';
 import '../ui/screens/folder_picker_screen.dart';
+import '../ui/screens/general_chat_screen.dart';
+import '../ui/screens/general_settings_screen.dart';
 import '../ui/screens/more_screen.dart';
 import '../ui/screens/observability_screen.dart';
 import '../ui/screens/pairing_screen.dart';
@@ -54,6 +56,9 @@ abstract final class Routes {
   static const approvals = '/chats/approvals';
   static const newChat = '/chats/new';
   static String chat(String id) => '/chats/c/${Uri.encodeComponent(id)}';
+
+  /// 24: a General chat (on this phone).
+  static String generalChat(String id) => '/chats/g/${Uri.encodeComponent(id)}';
   static const system = '/more/system';
   static const schedules = '/more/schedules';
   static const newSchedule = '/more/schedules/new';
@@ -68,6 +73,9 @@ abstract final class Routes {
 
   /// 22h Terminal settings: from Settings and from the Terminal tab.
   static const terminalSettings = '/more/settings/terminal';
+
+  /// 24g Settings → General (the OpenRouter key).
+  static const generalSettings = '/more/settings/general';
   static const archived = '/more/archived';
 
   /// Share to Delve (design 17), on the root navigator.
@@ -157,6 +165,12 @@ GoRouter buildRouter({
                         ChatScreen(conversationId: state.pathParameters['id']),
                   ),
                   GoRoute(
+                    path: 'g/:id',
+                    parentNavigatorKey: rootKey,
+                    builder: (_, state) =>
+                        GeneralChatScreen(chatId: state.pathParameters['id']),
+                  ),
+                  GoRoute(
                     path: 'approvals',
                     parentNavigatorKey: rootKey,
                     builder: (_, _) => const ApprovalsScreen(),
@@ -234,6 +248,11 @@ GoRouter buildRouter({
                             path: 'terminal',
                             parentNavigatorKey: rootKey,
                             builder: (_, _) => const TerminalSettingsScreen(),
+                          ),
+                          GoRoute(
+                            path: 'general',
+                            parentNavigatorKey: rootKey,
+                            builder: (_, _) => const GeneralSettingsScreen(),
                           ),
                         ],
                         if (page == MorePage.watches)

@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -87,5 +91,79 @@ final generalChatServiceProvider = Provider<GeneralChatService>((ref) {
     client: () => ref.read(openRouterClientProvider),
   );
   ref.onDispose(service.dispose);
+  // answers a killed app left streaming, before anything else runs
+  unawaited(service.settleOnce());
   return service;
+});
+
+// ---- what the screens watch (they only watch the database)
+
+/// General chats, newest first; the argument picks the archived ones.
+final generalChatsProvider = StreamProvider.family<List<GeneralChatRow>, bool>(
+  (ref, archived) =>
+      ref.watch(generalDatabaseProvider).watchChats(archived: archived),
+);
+
+final generalChatProvider = StreamProvider.autoDispose
+    .family<GeneralChatRow?, String>(
+      (ref, id) => ref.watch(generalDatabaseProvider).watchChat(id),
+    );
+
+final generalMessagesProvider = StreamProvider.autoDispose
+    .family<List<GeneralMessageRow>, String>(
+      (ref, chatId) => ref.watch(generalDatabaseProvider).watchMessages(chatId),
+    );
+
+final generalImagesProvider = StreamProvider.autoDispose
+    .family<List<GeneralImageRef>, String>(
+      (ref, chatId) => ref.watch(generalDatabaseProvider).watchImages(chatId),
+    );
+
+/// The bytes of one General image (JPEG, from the database).
+final generalImageBytesProvider = FutureProvider.autoDispose
+    .family<Uint8List, String>((ref, id) async {
+      final bytes = await ref
+          .watch(generalDatabaseProvider)
+          .attachmentBytes(id);
+      if (bytes == null) throw StateError('no image $id');
+      return bytes;
+    });
+
+/// The cached model list, by name.
+final generalModelsProvider = StreamProvider<List<OrModelRow>>(
+  (ref) => ref.watch(generalDatabaseProvider).watchModels(),
+);
+
+/// One small setting of [GeneralMeta] (null: not set).
+final generalMetaProvider = StreamProvider.family<String?, String>(
+  (ref, key) => ref.watch(generalDatabaseProvider).watchMeta(key),
+);
+
+/// The favourites in their order (the defaults until the user edits them).
+final generalFavouritesProvider = Provider<List<String>>((ref) {
+  final raw = ref.watch(generalMetaProvider(GeneralMetaKeys.favourites)).value;
+  if (raw == null) return kDefaultFavourites;
+  try {
+    final v = jsonDecode(raw);
+    if (v is List<Object?>) return [for (final e in v) '$e'];
+  } on FormatException {
+    // fall through to the defaults
+  }
+  return kDefaultFavourites;
+});
+
+/// The default model of a new General chat.
+final generalDefaultModelProvider = Provider<String>(
+  (ref) =>
+      ref.watch(generalMetaProvider(GeneralMetaKeys.defaultModel)).value ??
+      kDefaultModel,
+);
+
+/// The key's limits and spend (`GET /key`); null without a key.
+final generalKeyInfoProvider = FutureProvider.autoDispose<KeyInfo?>((
+  ref,
+) async {
+  final client = ref.watch(openRouterClientProvider);
+  if (client == null) return null;
+  return client.keyInfo();
 });

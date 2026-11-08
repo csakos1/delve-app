@@ -95,7 +95,7 @@ class ContextChip extends StatelessWidget {
       lead = CustomPaint(
         key: const Key('contextChip.empty'),
         size: const Size.square(ringSize),
-        painter: _DashedRing(color: cs.outline, stroke: ringStroke),
+        painter: DashedRing(color: cs.outline, stroke: ringStroke),
       );
     } else if (warn) {
       fg = d.warnFg;
@@ -188,9 +188,9 @@ class ContextChip extends StatelessWidget {
   }
 }
 
-/// The empty ring: a dashed outline circle.
-class _DashedRing extends CustomPainter {
-  const _DashedRing({required this.color, required this.stroke});
+/// The empty ring: a dashed outline circle (the context and model chips).
+class DashedRing extends CustomPainter {
+  const DashedRing({required this.color, required this.stroke});
 
   final Color color;
   final double stroke;
@@ -216,7 +216,7 @@ class _DashedRing extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DashedRing old) =>
+  bool shouldRepaint(DashedRing old) =>
       old.color != color || old.stroke != stroke;
 }
 

@@ -3641,4 +3641,431 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get chatsFilterAll => 'All';
+
+  @override
+  String get chatsFilterAgent => 'Agent';
+
+  @override
+  String get chatsFilterGeneral => 'General';
+
+  @override
+  String chatsFilterLabel(String kind) {
+    return 'Show $kind chats';
+  }
+
+  @override
+  String generalMarker(String model) {
+    return 'General · $model';
+  }
+
+  @override
+  String get chatsGeneralEmpty => 'No General chats yet';
+
+  @override
+  String get chatsGeneralWorks => 'General chats work as usual.';
+
+  @override
+  String get newChatAgent => 'Agent';
+
+  @override
+  String get newChatAgentSub =>
+      'Local model on your desktop\nTools, files and memory';
+
+  @override
+  String get newChatGeneral => 'General';
+
+  @override
+  String get newChatGeneralSub =>
+      'Cloud models via OpenRouter\nStraight from this phone';
+
+  @override
+  String get generalIntroVia => 'via OpenRouter · straight from this phone';
+
+  @override
+  String get generalIntroShield =>
+      'Zero data retention · nothing from your desktop';
+
+  @override
+  String get generalNoKeyTitle => 'Chat with cloud models';
+
+  @override
+  String get generalNoKeyBody =>
+      'Add an OpenRouter key to chat with cloud models straight from this phone.\nNothing from your desktop is sent.';
+
+  @override
+  String get generalAddKey => 'Add an OpenRouter key';
+
+  @override
+  String generalComposerHint(String model) {
+    return 'Message $model…';
+  }
+
+  @override
+  String get generalPickModel => 'Pick a model';
+
+  @override
+  String generalModelChipSemantics(String model, int percent) {
+    return 'Model $model, context $percent percent, change model';
+  }
+
+  @override
+  String generalModelChipEmpty(String model) {
+    return 'Model $model, change model';
+  }
+
+  @override
+  String get generalMenu => 'Chat options';
+
+  @override
+  String get generalMenuEffort => 'Thinking effort';
+
+  @override
+  String get generalMenuRename => 'Rename';
+
+  @override
+  String get generalMenuArchive => 'Archive';
+
+  @override
+  String get generalMenuDelete => 'Delete';
+
+  @override
+  String get generalRenameTitle => 'Rename chat';
+
+  @override
+  String get generalRenameSave => 'Save';
+
+  @override
+  String get generalDeleteTitle => 'Delete this chat?';
+
+  @override
+  String get generalDeleteBody =>
+      'Its messages and images are removed from this phone. This can\'t be undone.';
+
+  @override
+  String get generalDeleted => 'Chat deleted';
+
+  @override
+  String generalSwitched(String model, String time) {
+    return 'Switched to $model · $time';
+  }
+
+  @override
+  String get generalWriting => 'writing';
+
+  @override
+  String get generalStopped => 'Stopped';
+
+  @override
+  String get generalFailed => 'Failed';
+
+  @override
+  String generalTokens(String count) {
+    return '$count tok';
+  }
+
+  @override
+  String generalAlwaysThinks(String model) {
+    return '$model always thinks';
+  }
+
+  @override
+  String generalThinkingEffort(String effort) {
+    return 'Thinking · $effort';
+  }
+
+  @override
+  String get generalEffortTitle => 'Thinking effort';
+
+  @override
+  String generalEffortSub(String model) {
+    return 'for $model · applies to your next message';
+  }
+
+  @override
+  String generalEffortDefault(String effort) {
+    return 'Model default ($effort)';
+  }
+
+  @override
+  String get generalEffortDefaultPlain => 'Model default';
+
+  @override
+  String get generalEffortHint => 'Long-press for the effort';
+
+  @override
+  String get effortMinimal => 'Minimal';
+
+  @override
+  String get effortLow => 'Low';
+
+  @override
+  String get effortMedium => 'Medium';
+
+  @override
+  String get effortHigh => 'High';
+
+  @override
+  String get effortXhigh => 'Extra high';
+
+  @override
+  String get effortMax => 'Max';
+
+  @override
+  String get generalErrKey => 'OpenRouter rejected the key';
+
+  @override
+  String get generalErrLimit => 'Key limit reached';
+
+  @override
+  String get generalErrNoProvider =>
+      'No zero-retention provider for this model';
+
+  @override
+  String generalErrRate(int seconds) {
+    return 'Rate limited — try again in $seconds s';
+  }
+
+  @override
+  String get generalErrRateNow => 'Rate limited — try again';
+
+  @override
+  String get generalErrNetwork => 'Couldn’t reach OpenRouter';
+
+  @override
+  String get generalErrBadRequest => 'OpenRouter refused the request';
+
+  @override
+  String get generalErrUpstream => 'The model’s provider failed';
+
+  @override
+  String get generalErrUnknown => 'The answer failed';
+
+  @override
+  String get generalOpenSettings => 'Open settings';
+
+  @override
+  String get generalPickAnother => 'Pick another model';
+
+  @override
+  String generalNoImages(String model, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count earlier images won’t',
+      one: '1 earlier image won’t',
+    );
+    return '$model doesn’t read images — $_temp0 be sent';
+  }
+
+  @override
+  String generalProviderWarning(String provider) {
+    return 'Served by $provider, not on the zero-retention list. Nothing more is sent until you acknowledge it.';
+  }
+
+  @override
+  String get generalAcknowledge => 'OK';
+
+  @override
+  String generalNotSent(String reason) {
+    return 'Not sent: $reason';
+  }
+
+  @override
+  String get generalNoKeyShort => 'No OpenRouter key';
+
+  @override
+  String generalModelsFailed(String reason) {
+    return 'Couldn\'t load the models: $reason';
+  }
+
+  @override
+  String get pickerTitle => 'Model';
+
+  @override
+  String pickerSub(String chat) {
+    return 'for $chat · per 1M tokens in / out';
+  }
+
+  @override
+  String get pickerSubDefault =>
+      'default for new chats · per 1M tokens in / out';
+
+  @override
+  String pickerSearch(int count) {
+    return 'Search $count models';
+  }
+
+  @override
+  String get pickerFavourites => 'Favourites';
+
+  @override
+  String get pickerAll => 'All models · A–Z';
+
+  @override
+  String pickerUpdated(String ago) {
+    return 'Updated $ago ago · pull to refresh';
+  }
+
+  @override
+  String get pickerNever => 'Not loaded yet · pull to refresh';
+
+  @override
+  String get pickerNoZdr => 'No zero-retention provider';
+
+  @override
+  String pickerNoMatch(String query) {
+    return 'No model matches “$query”';
+  }
+
+  @override
+  String get pickerEmpty => 'The model list isn\'t loaded yet.';
+
+  @override
+  String get pickerLoad => 'Load models';
+
+  @override
+  String pickerAddFavourite(String model) {
+    return 'Add $model to favourites';
+  }
+
+  @override
+  String pickerRemoveFavourite(String model) {
+    return 'Remove $model from favourites';
+  }
+
+  @override
+  String get pickerReadsImages => 'Reads images';
+
+  @override
+  String get pickerThinks => 'Can think';
+
+  @override
+  String get pickerAlwaysThinks => 'Always thinks';
+
+  @override
+  String get generalAddTitle => 'Add to message';
+
+  @override
+  String get generalImagesOnly => 'Only images can be added to a General chat';
+
+  @override
+  String generalNoImageInput(String model) {
+    return '$model doesn’t read images';
+  }
+
+  @override
+  String get generalSwitchModel => 'Switch model';
+
+  @override
+  String generalImage(int index) {
+    return 'Image $index';
+  }
+
+  @override
+  String get settingsGeneralSection => 'General chat';
+
+  @override
+  String get settingsGeneral => 'General';
+
+  @override
+  String get settingsGeneralNoKey => 'OpenRouter · no key yet';
+
+  @override
+  String settingsGeneralSub(String model) {
+    return 'OpenRouter · $model';
+  }
+
+  @override
+  String get generalSettingsKey => 'OpenRouter key';
+
+  @override
+  String get generalKeyPaste => 'Paste an OpenRouter key';
+
+  @override
+  String get generalKeyPasteAction => 'Paste';
+
+  @override
+  String get generalKeyHelper =>
+      'Create a separate key for this phone with a monthly limit at openrouter.ai/keys';
+
+  @override
+  String get generalKeySave => 'Save';
+
+  @override
+  String get generalKeyReplace => 'Replace';
+
+  @override
+  String get generalKeyRemove => 'Remove';
+
+  @override
+  String get generalKeyRemoveTitle => 'Remove the key?';
+
+  @override
+  String get generalKeyRemoveBody =>
+      'General chats stay on this phone. Nothing can be sent until you add a key again.';
+
+  @override
+  String get generalKeyRejected => 'OpenRouter rejected this key';
+
+  @override
+  String get generalKeyNotKey => 'This doesn\'t look like an OpenRouter key';
+
+  @override
+  String get generalKeySaved => 'Key saved';
+
+  @override
+  String get generalKeySavedUnchecked =>
+      'Key saved — OpenRouter couldn\'t be reached to check it';
+
+  @override
+  String generalKeySpend(String used, String limit) {
+    return '$used of $limit';
+  }
+
+  @override
+  String generalKeySpendNoLimit(String used) {
+    return '$used spent · no limit';
+  }
+
+  @override
+  String generalKeyResets(String date) {
+    return 'Resets $date';
+  }
+
+  @override
+  String get generalKeyPeriodMonthly => 'this month';
+
+  @override
+  String get generalKeyPeriodWeekly => 'this week';
+
+  @override
+  String get generalKeyPeriodDaily => 'today';
+
+  @override
+  String get generalKeyNoReset =>
+      'This key\'s limit never resets. A monthly limit keeps a leaked key cheap: set one at openrouter.ai/keys.';
+
+  @override
+  String generalKeyInfoFailed(String reason) {
+    return 'Couldn\'t read the key\'s limits: $reason';
+  }
+
+  @override
+  String get generalSettingsModels => 'Models';
+
+  @override
+  String get generalDefaultModel => 'Default model';
+
+  @override
+  String get generalShowTokens => 'Show tokens under answers';
+
+  @override
+  String get generalShowTokensSub => 'Output tokens next to the model and cost';
+
+  @override
+  String get generalPrivacyNote =>
+      'Requests go straight from this phone to OpenRouter. Zero data retention and no training are required on every request. Nothing from your desktop is sent.';
 }

@@ -5673,6 +5673,708 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 item} other{{count} items}}'**
   String filesNoticeItems(int count);
+
+  /// No description provided for @chatsFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get chatsFilterAll;
+
+  /// No description provided for @chatsFilterAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent'**
+  String get chatsFilterAgent;
+
+  /// No description provided for @chatsFilterGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get chatsFilterGeneral;
+
+  /// No description provided for @chatsFilterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {kind} chats'**
+  String chatsFilterLabel(String kind);
+
+  /// No description provided for @generalMarker.
+  ///
+  /// In en, this message translates to:
+  /// **'General · {model}'**
+  String generalMarker(String model);
+
+  /// No description provided for @chatsGeneralEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No General chats yet'**
+  String get chatsGeneralEmpty;
+
+  /// No description provided for @chatsGeneralWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'General chats work as usual.'**
+  String get chatsGeneralWorks;
+
+  /// No description provided for @newChatAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent'**
+  String get newChatAgent;
+
+  /// No description provided for @newChatAgentSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Local model on your desktop\nTools, files and memory'**
+  String get newChatAgentSub;
+
+  /// No description provided for @newChatGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get newChatGeneral;
+
+  /// No description provided for @newChatGeneralSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud models via OpenRouter\nStraight from this phone'**
+  String get newChatGeneralSub;
+
+  /// No description provided for @generalIntroVia.
+  ///
+  /// In en, this message translates to:
+  /// **'via OpenRouter · straight from this phone'**
+  String get generalIntroVia;
+
+  /// No description provided for @generalIntroShield.
+  ///
+  /// In en, this message translates to:
+  /// **'Zero data retention · nothing from your desktop'**
+  String get generalIntroShield;
+
+  /// No description provided for @generalNoKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with cloud models'**
+  String get generalNoKeyTitle;
+
+  /// No description provided for @generalNoKeyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an OpenRouter key to chat with cloud models straight from this phone.\nNothing from your desktop is sent.'**
+  String get generalNoKeyBody;
+
+  /// No description provided for @generalAddKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an OpenRouter key'**
+  String get generalAddKey;
+
+  /// No description provided for @generalComposerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Message {model}…'**
+  String generalComposerHint(String model);
+
+  /// No description provided for @generalPickModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a model'**
+  String get generalPickModel;
+
+  /// No description provided for @generalModelChipSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Model {model}, context {percent} percent, change model'**
+  String generalModelChipSemantics(String model, int percent);
+
+  /// No description provided for @generalModelChipEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Model {model}, change model'**
+  String generalModelChipEmpty(String model);
+
+  /// No description provided for @generalMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat options'**
+  String get generalMenu;
+
+  /// No description provided for @generalMenuEffort.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking effort'**
+  String get generalMenuEffort;
+
+  /// No description provided for @generalMenuRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get generalMenuRename;
+
+  /// No description provided for @generalMenuArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get generalMenuArchive;
+
+  /// No description provided for @generalMenuDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get generalMenuDelete;
+
+  /// No description provided for @generalRenameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename chat'**
+  String get generalRenameTitle;
+
+  /// No description provided for @generalRenameSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get generalRenameSave;
+
+  /// No description provided for @generalDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this chat?'**
+  String get generalDeleteTitle;
+
+  /// No description provided for @generalDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Its messages and images are removed from this phone. This can\'t be undone.'**
+  String get generalDeleteBody;
+
+  /// No description provided for @generalDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat deleted'**
+  String get generalDeleted;
+
+  /// No description provided for @generalSwitched.
+  ///
+  /// In en, this message translates to:
+  /// **'Switched to {model} · {time}'**
+  String generalSwitched(String model, String time);
+
+  /// No description provided for @generalWriting.
+  ///
+  /// In en, this message translates to:
+  /// **'writing'**
+  String get generalWriting;
+
+  /// No description provided for @generalStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get generalStopped;
+
+  /// No description provided for @generalFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get generalFailed;
+
+  /// No description provided for @generalTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tok'**
+  String generalTokens(String count);
+
+  /// No description provided for @generalAlwaysThinks.
+  ///
+  /// In en, this message translates to:
+  /// **'{model} always thinks'**
+  String generalAlwaysThinks(String model);
+
+  /// No description provided for @generalThinkingEffort.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking · {effort}'**
+  String generalThinkingEffort(String effort);
+
+  /// No description provided for @generalEffortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking effort'**
+  String get generalEffortTitle;
+
+  /// No description provided for @generalEffortSub.
+  ///
+  /// In en, this message translates to:
+  /// **'for {model} · applies to your next message'**
+  String generalEffortSub(String model);
+
+  /// No description provided for @generalEffortDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Model default ({effort})'**
+  String generalEffortDefault(String effort);
+
+  /// No description provided for @generalEffortDefaultPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Model default'**
+  String get generalEffortDefaultPlain;
+
+  /// No description provided for @generalEffortHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press for the effort'**
+  String get generalEffortHint;
+
+  /// No description provided for @effortMinimal.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal'**
+  String get effortMinimal;
+
+  /// No description provided for @effortLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get effortLow;
+
+  /// No description provided for @effortMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get effortMedium;
+
+  /// No description provided for @effortHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get effortHigh;
+
+  /// No description provided for @effortXhigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra high'**
+  String get effortXhigh;
+
+  /// No description provided for @effortMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Max'**
+  String get effortMax;
+
+  /// No description provided for @generalErrKey.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenRouter rejected the key'**
+  String get generalErrKey;
+
+  /// No description provided for @generalErrLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Key limit reached'**
+  String get generalErrLimit;
+
+  /// No description provided for @generalErrNoProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'No zero-retention provider for this model'**
+  String get generalErrNoProvider;
+
+  /// No description provided for @generalErrRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limited — try again in {seconds} s'**
+  String generalErrRate(int seconds);
+
+  /// No description provided for @generalErrRateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limited — try again'**
+  String get generalErrRateNow;
+
+  /// No description provided for @generalErrNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t reach OpenRouter'**
+  String get generalErrNetwork;
+
+  /// No description provided for @generalErrBadRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenRouter refused the request'**
+  String get generalErrBadRequest;
+
+  /// No description provided for @generalErrUpstream.
+  ///
+  /// In en, this message translates to:
+  /// **'The model’s provider failed'**
+  String get generalErrUpstream;
+
+  /// No description provided for @generalErrUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'The answer failed'**
+  String get generalErrUnknown;
+
+  /// No description provided for @generalOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get generalOpenSettings;
+
+  /// No description provided for @generalPickAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick another model'**
+  String get generalPickAnother;
+
+  /// No description provided for @generalNoImages.
+  ///
+  /// In en, this message translates to:
+  /// **'{model} doesn’t read images — {count, plural, =1{1 earlier image won’t} other{{count} earlier images won’t}} be sent'**
+  String generalNoImages(String model, int count);
+
+  /// No description provided for @generalProviderWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Served by {provider}, not on the zero-retention list. Nothing more is sent until you acknowledge it.'**
+  String generalProviderWarning(String provider);
+
+  /// No description provided for @generalAcknowledge.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get generalAcknowledge;
+
+  /// No description provided for @generalNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent: {reason}'**
+  String generalNotSent(String reason);
+
+  /// No description provided for @generalNoKeyShort.
+  ///
+  /// In en, this message translates to:
+  /// **'No OpenRouter key'**
+  String get generalNoKeyShort;
+
+  /// No description provided for @generalModelsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the models: {reason}'**
+  String generalModelsFailed(String reason);
+
+  /// No description provided for @pickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get pickerTitle;
+
+  /// No description provided for @pickerSub.
+  ///
+  /// In en, this message translates to:
+  /// **'for {chat} · per 1M tokens in / out'**
+  String pickerSub(String chat);
+
+  /// No description provided for @pickerSubDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'default for new chats · per 1M tokens in / out'**
+  String get pickerSubDefault;
+
+  /// No description provided for @pickerSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search {count} models'**
+  String pickerSearch(int count);
+
+  /// No description provided for @pickerFavourites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favourites'**
+  String get pickerFavourites;
+
+  /// No description provided for @pickerAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All models · A–Z'**
+  String get pickerAll;
+
+  /// No description provided for @pickerUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {ago} ago · pull to refresh'**
+  String pickerUpdated(String ago);
+
+  /// No description provided for @pickerNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Not loaded yet · pull to refresh'**
+  String get pickerNever;
+
+  /// No description provided for @pickerNoZdr.
+  ///
+  /// In en, this message translates to:
+  /// **'No zero-retention provider'**
+  String get pickerNoZdr;
+
+  /// No description provided for @pickerNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No model matches “{query}”'**
+  String pickerNoMatch(String query);
+
+  /// No description provided for @pickerEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The model list isn\'t loaded yet.'**
+  String get pickerEmpty;
+
+  /// No description provided for @pickerLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Load models'**
+  String get pickerLoad;
+
+  /// No description provided for @pickerAddFavourite.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {model} to favourites'**
+  String pickerAddFavourite(String model);
+
+  /// No description provided for @pickerRemoveFavourite.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {model} from favourites'**
+  String pickerRemoveFavourite(String model);
+
+  /// No description provided for @pickerReadsImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Reads images'**
+  String get pickerReadsImages;
+
+  /// No description provided for @pickerThinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Can think'**
+  String get pickerThinks;
+
+  /// No description provided for @pickerAlwaysThinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Always thinks'**
+  String get pickerAlwaysThinks;
+
+  /// No description provided for @generalAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to message'**
+  String get generalAddTitle;
+
+  /// No description provided for @generalImagesOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only images can be added to a General chat'**
+  String get generalImagesOnly;
+
+  /// No description provided for @generalNoImageInput.
+  ///
+  /// In en, this message translates to:
+  /// **'{model} doesn’t read images'**
+  String generalNoImageInput(String model);
+
+  /// No description provided for @generalSwitchModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch model'**
+  String get generalSwitchModel;
+
+  /// No description provided for @generalImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image {index}'**
+  String generalImage(int index);
+
+  /// No description provided for @settingsGeneralSection.
+  ///
+  /// In en, this message translates to:
+  /// **'General chat'**
+  String get settingsGeneralSection;
+
+  /// No description provided for @settingsGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get settingsGeneral;
+
+  /// No description provided for @settingsGeneralNoKey.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenRouter · no key yet'**
+  String get settingsGeneralNoKey;
+
+  /// No description provided for @settingsGeneralSub.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenRouter · {model}'**
+  String settingsGeneralSub(String model);
+
+  /// No description provided for @generalSettingsKey.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenRouter key'**
+  String get generalSettingsKey;
+
+  /// No description provided for @generalKeyPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste an OpenRouter key'**
+  String get generalKeyPaste;
+
+  /// No description provided for @generalKeyPasteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get generalKeyPasteAction;
+
+  /// No description provided for @generalKeyHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a separate key for this phone with a monthly limit at openrouter.ai/keys'**
+  String get generalKeyHelper;
+
+  /// No description provided for @generalKeySave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get generalKeySave;
+
+  /// No description provided for @generalKeyReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get generalKeyReplace;
+
+  /// No description provided for @generalKeyRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get generalKeyRemove;
+
+  /// No description provided for @generalKeyRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the key?'**
+  String get generalKeyRemoveTitle;
+
+  /// No description provided for @generalKeyRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'General chats stay on this phone. Nothing can be sent until you add a key again.'**
+  String get generalKeyRemoveBody;
+
+  /// No description provided for @generalKeyRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenRouter rejected this key'**
+  String get generalKeyRejected;
+
+  /// No description provided for @generalKeyNotKey.
+  ///
+  /// In en, this message translates to:
+  /// **'This doesn\'t look like an OpenRouter key'**
+  String get generalKeyNotKey;
+
+  /// No description provided for @generalKeySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Key saved'**
+  String get generalKeySaved;
+
+  /// No description provided for @generalKeySavedUnchecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Key saved — OpenRouter couldn\'t be reached to check it'**
+  String get generalKeySavedUnchecked;
+
+  /// No description provided for @generalKeySpend.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {limit}'**
+  String generalKeySpend(String used, String limit);
+
+  /// No description provided for @generalKeySpendNoLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} spent · no limit'**
+  String generalKeySpendNoLimit(String used);
+
+  /// No description provided for @generalKeyResets.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets {date}'**
+  String generalKeyResets(String date);
+
+  /// No description provided for @generalKeyPeriodMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'this month'**
+  String get generalKeyPeriodMonthly;
+
+  /// No description provided for @generalKeyPeriodWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'this week'**
+  String get generalKeyPeriodWeekly;
+
+  /// No description provided for @generalKeyPeriodDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get generalKeyPeriodDaily;
+
+  /// No description provided for @generalKeyNoReset.
+  ///
+  /// In en, this message translates to:
+  /// **'This key\'s limit never resets. A monthly limit keeps a leaked key cheap: set one at openrouter.ai/keys.'**
+  String get generalKeyNoReset;
+
+  /// No description provided for @generalKeyInfoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the key\'s limits: {reason}'**
+  String generalKeyInfoFailed(String reason);
+
+  /// No description provided for @generalSettingsModels.
+  ///
+  /// In en, this message translates to:
+  /// **'Models'**
+  String get generalSettingsModels;
+
+  /// No description provided for @generalDefaultModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Default model'**
+  String get generalDefaultModel;
+
+  /// No description provided for @generalShowTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'Show tokens under answers'**
+  String get generalShowTokens;
+
+  /// No description provided for @generalShowTokensSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Output tokens next to the model and cost'**
+  String get generalShowTokensSub;
+
+  /// No description provided for @generalPrivacyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests go straight from this phone to OpenRouter. Zero data retention and no training are required on every request. Nothing from your desktop is sent.'**
+  String get generalPrivacyNote;
 }
 
 class _AppLocalizationsDelegate

@@ -79,6 +79,17 @@ class $GeneralChatsTable extends GeneralChats
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _reasoningEffortMeta = const VerificationMeta(
+    'reasoningEffort',
+  );
+  @override
+  late final GeneratedColumn<String> reasoningEffort = GeneratedColumn<String>(
+    'reasoning_effort',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -182,6 +193,7 @@ class $GeneralChatsTable extends GeneralChats
     preview,
     modelId,
     reasoning,
+    reasoningEffort,
     createdAt,
     updatedAt,
     archived,
@@ -238,6 +250,15 @@ class $GeneralChatsTable extends GeneralChats
       context.handle(
         _reasoningMeta,
         reasoning.isAcceptableOrUnknown(data['reasoning']!, _reasoningMeta),
+      );
+    }
+    if (data.containsKey('reasoning_effort')) {
+      context.handle(
+        _reasoningEffortMeta,
+        reasoningEffort.isAcceptableOrUnknown(
+          data['reasoning_effort']!,
+          _reasoningEffortMeta,
+        ),
       );
     }
     if (data.containsKey('created_at')) {
@@ -331,6 +352,10 @@ class $GeneralChatsTable extends GeneralChats
         DriftSqlType.bool,
         data['${effectivePrefix}reasoning'],
       )!,
+      reasoningEffort: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reasoning_effort'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -388,6 +413,10 @@ class GeneralChatRow extends DataClass implements Insertable<GeneralChatRow> {
   /// Thinking for the next message (ignored where the model always thinks
   /// or cannot think).
   final bool reasoning;
+
+  /// Thinking effort for the next message (one of the model's
+  /// `supported_efforts`, never `none`); null: the model's default. Schema 2.
+  final String? reasoningEffort;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool archived;
@@ -406,6 +435,7 @@ class GeneralChatRow extends DataClass implements Insertable<GeneralChatRow> {
     this.preview,
     required this.modelId,
     required this.reasoning,
+    this.reasoningEffort,
     required this.createdAt,
     required this.updatedAt,
     required this.archived,
@@ -428,6 +458,9 @@ class GeneralChatRow extends DataClass implements Insertable<GeneralChatRow> {
     }
     map['model_id'] = Variable<String>(modelId);
     map['reasoning'] = Variable<bool>(reasoning);
+    if (!nullToAbsent || reasoningEffort != null) {
+      map['reasoning_effort'] = Variable<String>(reasoningEffort);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['archived'] = Variable<bool>(archived);
@@ -455,6 +488,9 @@ class GeneralChatRow extends DataClass implements Insertable<GeneralChatRow> {
           : Value(preview),
       modelId: Value(modelId),
       reasoning: Value(reasoning),
+      reasoningEffort: reasoningEffort == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reasoningEffort),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       archived: Value(archived),
@@ -482,6 +518,7 @@ class GeneralChatRow extends DataClass implements Insertable<GeneralChatRow> {
       preview: serializer.fromJson<String?>(json['preview']),
       modelId: serializer.fromJson<String>(json['modelId']),
       reasoning: serializer.fromJson<bool>(json['reasoning']),
+      reasoningEffort: serializer.fromJson<String?>(json['reasoningEffort']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       archived: serializer.fromJson<bool>(json['archived']),
@@ -502,6 +539,7 @@ class GeneralChatRow extends DataClass implements Insertable<GeneralChatRow> {
       'preview': serializer.toJson<String?>(preview),
       'modelId': serializer.toJson<String>(modelId),
       'reasoning': serializer.toJson<bool>(reasoning),
+      'reasoningEffort': serializer.toJson<String?>(reasoningEffort),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'archived': serializer.toJson<bool>(archived),
@@ -520,6 +558,7 @@ class GeneralChatRow extends DataClass implements Insertable<GeneralChatRow> {
     Value<String?> preview = const Value.absent(),
     String? modelId,
     bool? reasoning,
+    Value<String?> reasoningEffort = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? archived,
@@ -535,6 +574,9 @@ class GeneralChatRow extends DataClass implements Insertable<GeneralChatRow> {
     preview: preview.present ? preview.value : this.preview,
     modelId: modelId ?? this.modelId,
     reasoning: reasoning ?? this.reasoning,
+    reasoningEffort: reasoningEffort.present
+        ? reasoningEffort.value
+        : this.reasoningEffort,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     archived: archived ?? this.archived,
@@ -556,6 +598,9 @@ class GeneralChatRow extends DataClass implements Insertable<GeneralChatRow> {
       preview: data.preview.present ? data.preview.value : this.preview,
       modelId: data.modelId.present ? data.modelId.value : this.modelId,
       reasoning: data.reasoning.present ? data.reasoning.value : this.reasoning,
+      reasoningEffort: data.reasoningEffort.present
+          ? data.reasoningEffort.value
+          : this.reasoningEffort,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       archived: data.archived.present ? data.archived.value : this.archived,
@@ -580,6 +625,7 @@ class GeneralChatRow extends DataClass implements Insertable<GeneralChatRow> {
           ..write('preview: $preview, ')
           ..write('modelId: $modelId, ')
           ..write('reasoning: $reasoning, ')
+          ..write('reasoningEffort: $reasoningEffort, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('archived: $archived, ')
@@ -600,6 +646,7 @@ class GeneralChatRow extends DataClass implements Insertable<GeneralChatRow> {
     preview,
     modelId,
     reasoning,
+    reasoningEffort,
     createdAt,
     updatedAt,
     archived,
@@ -619,6 +666,7 @@ class GeneralChatRow extends DataClass implements Insertable<GeneralChatRow> {
           other.preview == this.preview &&
           other.modelId == this.modelId &&
           other.reasoning == this.reasoning &&
+          other.reasoningEffort == this.reasoningEffort &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.archived == this.archived &&
@@ -636,6 +684,7 @@ class GeneralChatsCompanion extends UpdateCompanion<GeneralChatRow> {
   final Value<String?> preview;
   final Value<String> modelId;
   final Value<bool> reasoning;
+  final Value<String?> reasoningEffort;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<bool> archived;
@@ -652,6 +701,7 @@ class GeneralChatsCompanion extends UpdateCompanion<GeneralChatRow> {
     this.preview = const Value.absent(),
     this.modelId = const Value.absent(),
     this.reasoning = const Value.absent(),
+    this.reasoningEffort = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.archived = const Value.absent(),
@@ -669,6 +719,7 @@ class GeneralChatsCompanion extends UpdateCompanion<GeneralChatRow> {
     this.preview = const Value.absent(),
     required String modelId,
     this.reasoning = const Value.absent(),
+    this.reasoningEffort = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.archived = const Value.absent(),
@@ -689,6 +740,7 @@ class GeneralChatsCompanion extends UpdateCompanion<GeneralChatRow> {
     Expression<String>? preview,
     Expression<String>? modelId,
     Expression<bool>? reasoning,
+    Expression<String>? reasoningEffort,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<bool>? archived,
@@ -706,6 +758,7 @@ class GeneralChatsCompanion extends UpdateCompanion<GeneralChatRow> {
       if (preview != null) 'preview': preview,
       if (modelId != null) 'model_id': modelId,
       if (reasoning != null) 'reasoning': reasoning,
+      if (reasoningEffort != null) 'reasoning_effort': reasoningEffort,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (archived != null) 'archived': archived,
@@ -725,6 +778,7 @@ class GeneralChatsCompanion extends UpdateCompanion<GeneralChatRow> {
     Value<String?>? preview,
     Value<String>? modelId,
     Value<bool>? reasoning,
+    Value<String?>? reasoningEffort,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<bool>? archived,
@@ -742,6 +796,7 @@ class GeneralChatsCompanion extends UpdateCompanion<GeneralChatRow> {
       preview: preview ?? this.preview,
       modelId: modelId ?? this.modelId,
       reasoning: reasoning ?? this.reasoning,
+      reasoningEffort: reasoningEffort ?? this.reasoningEffort,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       archived: archived ?? this.archived,
@@ -774,6 +829,9 @@ class GeneralChatsCompanion extends UpdateCompanion<GeneralChatRow> {
     }
     if (reasoning.present) {
       map['reasoning'] = Variable<bool>(reasoning.value);
+    }
+    if (reasoningEffort.present) {
+      map['reasoning_effort'] = Variable<String>(reasoningEffort.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -814,6 +872,7 @@ class GeneralChatsCompanion extends UpdateCompanion<GeneralChatRow> {
           ..write('preview: $preview, ')
           ..write('modelId: $modelId, ')
           ..write('reasoning: $reasoning, ')
+          ..write('reasoningEffort: $reasoningEffort, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('archived: $archived, ')
@@ -3401,6 +3460,7 @@ typedef $$GeneralChatsTableCreateCompanionBuilder =
       Value<String?> preview,
       required String modelId,
       Value<bool> reasoning,
+      Value<String?> reasoningEffort,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<bool> archived,
@@ -3419,6 +3479,7 @@ typedef $$GeneralChatsTableUpdateCompanionBuilder =
       Value<String?> preview,
       Value<String> modelId,
       Value<bool> reasoning,
+      Value<String?> reasoningEffort,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<bool> archived,
@@ -3466,6 +3527,11 @@ class $$GeneralChatsTableFilterComposer
 
   ColumnFilters<bool> get reasoning => $composableBuilder(
     column: $table.reasoning,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reasoningEffort => $composableBuilder(
+    column: $table.reasoningEffort,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3549,6 +3615,11 @@ class $$GeneralChatsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get reasoningEffort => $composableBuilder(
+    column: $table.reasoningEffort,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3616,6 +3687,11 @@ class $$GeneralChatsTableAnnotationComposer
 
   GeneratedColumn<bool> get reasoning =>
       $composableBuilder(column: $table.reasoning, builder: (column) => column);
+
+  GeneratedColumn<String> get reasoningEffort => $composableBuilder(
+    column: $table.reasoningEffort,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3689,6 +3765,7 @@ class $$GeneralChatsTableTableManager
                 Value<String?> preview = const Value.absent(),
                 Value<String> modelId = const Value.absent(),
                 Value<bool> reasoning = const Value.absent(),
+                Value<String?> reasoningEffort = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
@@ -3705,6 +3782,7 @@ class $$GeneralChatsTableTableManager
                 preview: preview,
                 modelId: modelId,
                 reasoning: reasoning,
+                reasoningEffort: reasoningEffort,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archived: archived,
@@ -3723,6 +3801,7 @@ class $$GeneralChatsTableTableManager
                 Value<String?> preview = const Value.absent(),
                 required String modelId,
                 Value<bool> reasoning = const Value.absent(),
+                Value<String?> reasoningEffort = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<bool> archived = const Value.absent(),
@@ -3739,6 +3818,7 @@ class $$GeneralChatsTableTableManager
                 preview: preview,
                 modelId: modelId,
                 reasoning: reasoning,
+                reasoningEffort: reasoningEffort,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archived: archived,

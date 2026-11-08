@@ -47,12 +47,25 @@ class ReasoningSpec {
   final List<String> efforts;
   final String? defaultEffort;
 
-  /// The `reasoning` request parameter for the pill state [on], or null
+  /// The efforts a user can pick, strongest first as the model lists them
+  /// (`none` is “off”, which the pill does).
+  List<String> get choosableEfforts => [
+    for (final e in efforts)
+      if (e != 'none') e,
+  ];
+
+  /// The `reasoning` request parameter for the pill state [on] and the
+  /// chosen [effort] (null or not offered: the model's default), or null
   /// (leave it out). A model that always thinks never gets an “off”; a model
   /// without thinking gets nothing.
-  Map<String, Object?>? param({required bool on}) {
+  Map<String, Object?>? param({required bool on, String? effort}) {
     if (!supported) return null;
-    if (on || mandatory) return const {'enabled': true};
+    if (on || mandatory) {
+      if (effort != null && choosableEfforts.contains(effort)) {
+        return {'effort': effort};
+      }
+      return const {'enabled': true};
+    }
     if (efforts.contains('none')) return const {'effort': 'none'};
     return const {'enabled': false};
   }
@@ -390,9 +403,17 @@ class OpenRouterClient {
     yield ChatStarted(res.headers.value('x-generation-id'));
     var routed = false;
     var finished = false;
+    var done = false;
     try {
+      // read to the end even after `[DONE]`: leaving the loop early cancels
+      // the response stream, and Dio then keeps its receive-timeout timer
+      // (150 s) running
       await for (final data in sseData(stream)) {
-        if (data == '[DONE]') break;
+        if (done) continue;
+        if (data == '[DONE]') {
+          done = true;
+          continue;
+        }
         final Object? chunk;
         try {
           chunk = jsonDecode(data);

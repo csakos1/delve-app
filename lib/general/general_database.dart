@@ -27,13 +27,19 @@ class GeneralDatabase extends _$GeneralDatabase {
 
   static const fileName = 'delve_general';
 
-  /// 1: G1a.
+  /// 1: G1a. 2: G1b – `general_chats.reasoning_effort`.
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
-  MigrationStrategy get migration =>
-      MigrationStrategy(onCreate: (m) => m.createAll());
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(generalChats, generalChats.reasoningEffort);
+      }
+    },
+  );
 
   // ---- chats
 
@@ -117,6 +123,31 @@ class GeneralDatabase extends _$GeneralDatabase {
             ]))
           .get();
 
+  /// The images of a chat without their bytes (the chat screen loads each
+  /// one when it shows it).
+  Stream<List<GeneralImageRef>> watchImages(String chatId) {
+    final ids = selectOnly(generalMessages)
+      ..addColumns([generalMessages.id])
+      ..where(generalMessages.chatId.equals(chatId));
+    final a = generalAttachments;
+    final q = selectOnly(a)
+      ..addColumns([a.id, a.messageId, a.ord, a.mime, a.size])
+      ..where(a.messageId.isInQuery(ids))
+      ..orderBy([OrderingTerm.asc(a.messageId), OrderingTerm.asc(a.ord)]);
+    return q.watch().map(
+      (rows) => [
+        for (final r in rows)
+          GeneralImageRef(
+            id: r.read(a.id)!,
+            messageId: r.read(a.messageId)!,
+            ord: r.read(a.ord)!,
+            mime: r.read(a.mime)!,
+            size: r.read(a.size)!,
+          ),
+      ],
+    );
+  }
+
   Future<Uint8List?> attachmentBytes(String id) async {
     final row = await (select(
       generalAttachments,
@@ -169,10 +200,36 @@ class GeneralDatabase extends _$GeneralDatabase {
       setMeta(key, jsonEncode(value));
 }
 
+/// An image of a General message, without its bytes.
+class GeneralImageRef {
+  const GeneralImageRef({
+    required this.id,
+    required this.messageId,
+    required this.ord,
+    required this.mime,
+    required this.size,
+  });
+
+  final String id;
+  final String messageId;
+  final int ord;
+  final String mime;
+  final int size;
+}
+
 /// Keys of [GeneralMeta].
 abstract final class GeneralMetaKeys {
   static const favourites = 'favourites';
   static const defaultModel = 'default_model';
   static const systemPrompt = 'system_prompt';
   static const modelsFetchedAt = 'models_fetched_at';
+
+  /// The Chats filter: `all`, `agent` or `general`.
+  static const chatsFilter = 'chats_filter';
+
+  /// The last kind chosen for a new chat: `agent` or `general`.
+  static const newChatKind = 'new_chat_kind';
+
+  /// `1`: answers show their output tokens in the footer (NG13).
+  static const showTokens = 'show_tokens';
 }

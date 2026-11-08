@@ -23,7 +23,17 @@ class Composer extends StatefulWidget {
     this.onAdd,
     this.attachmentsAllowed = true,
     this.controller,
+    this.hintText,
+    this.sendBlocked = false,
   });
+
+  /// The field's placeholder (General: “Message GLM 5.3…”); null: the
+  /// agent's.
+  final String? hintText;
+
+  /// Nothing can be sent now (General: an answer is streaming, or a
+  /// provider warning waits); Stop still shows while [onStop] is set.
+  final bool sendBlocked;
 
   /// Returns once the message is queued; the field clears then (the caller
   /// clears [attachments]).
@@ -133,7 +143,7 @@ class _ComposerState extends State<Composer> {
     final hasContent =
         _controller.text.trim().isNotEmpty ||
         (attachments != null && !attachments.isEmpty);
-    final stop = !hasContent && widget.onStop != null;
+    final stop = (!hasContent || widget.sendBlocked) && widget.onStop != null;
     final blocked =
         attachments != null &&
         !attachments.isEmpty &&
@@ -154,7 +164,7 @@ class _ComposerState extends State<Composer> {
         key: const Key('composer.send'),
         semantics: l.composerSend,
         icon: DelveIcons.send,
-        onPressed: _canSend && !_sending ? _send : null,
+        onPressed: _canSend && !_sending && !widget.sendBlocked ? _send : null,
       );
     }
 
@@ -228,7 +238,7 @@ class _ComposerState extends State<Composer> {
                   textCapitalization: TextCapitalization.sentences,
                   style: context.text.bodyLarge,
                   decoration: InputDecoration(
-                    hintText: l.composerHint,
+                    hintText: widget.hintText ?? l.composerHint,
                     hintStyle: context.text.bodyLarge!.copyWith(
                       color: d.textMuted,
                     ),

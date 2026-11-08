@@ -62,6 +62,12 @@ class GeneralChatService {
   /// Answers a killed app left `streaming` are `stopped`.
   Future<void> settleInterrupted() => db.settleInterrupted();
 
+  Future<void>? _settled;
+
+  /// [settleInterrupted] once per app run, before the first answer of this
+  /// run starts (so it never stops a live one).
+  Future<void> settleOnce() => _settled ??= settleInterrupted();
+
   /// Waits for background work (cost lookups); for tests.
   Future<void> idle() async {
     while (_background.isNotEmpty) {
@@ -79,8 +85,13 @@ class GeneralChatService {
 
   // ---- chats
 
-  /// A new, empty chat with [modelId] or the default model.
-  Future<String> createChat({String? modelId}) async {
+  /// A new, empty chat with [modelId] or the default model, and the
+  /// thinking state chosen before its first message.
+  Future<String> createChat({
+    String? modelId,
+    bool reasoning = true,
+    String? effort,
+  }) async {
     final model = modelId ?? await catalog.defaultModel();
     checkModelId(model);
     final id = _uuid.v4();
@@ -93,6 +104,8 @@ class GeneralChatService {
             modelId: model,
             createdAt: now,
             updatedAt: now,
+            reasoning: Value(reasoning),
+            reasoningEffort: Value(effort),
           ),
         );
     return id;
@@ -119,6 +132,16 @@ class GeneralChatService {
 
   Future<void> setReasoning(String chatId, {required bool on}) =>
       db.updateChat(chatId, GeneralChatsCompanion(reasoning: Value(on)));
+
+  /// The thinking effort for the next message; null: the model's default.
+  /// Choosing an effort turns thinking on.
+  Future<void> setEffort(String chatId, String? effort) => db.updateChat(
+    chatId,
+    GeneralChatsCompanion(
+      reasoningEffort: Value(effort == 'none' ? null : effort),
+      reasoning: effort == null ? const Value.absent() : const Value(true),
+    ),
+  );
 
   /// Switches the chat's model; a chat with messages gets a “Switched to”
   /// marker (one marker, however often the model changes in between).
@@ -195,6 +218,7 @@ class GeneralChatService {
     if (client == null) throw const GeneralNoKey();
     final cancel = _claim(chatId);
     try {
+      await settleOnce();
       await _send(client, chatId, text, images, cancel);
     } finally {
       _release(chatId, cancel);
@@ -274,6 +298,7 @@ class GeneralChatService {
     if (client == null) throw const GeneralNoKey();
     final cancel = _claim(chatId);
     try {
+      await settleOnce();
       await _retry(client, chatId, cancel);
     } finally {
       _release(chatId, cancel);
@@ -374,7 +399,10 @@ class GeneralChatService {
       model: model.id,
       turns: turns,
       systemPrompt: system,
-      reasoning: model.reasoningSpec.param(on: chat.reasoning),
+      reasoning: model.reasoningSpec.param(
+        on: chat.reasoning,
+        effort: chat.reasoningEffort,
+      ),
       sendImages: model.readsImages,
     );
     final id = _uuid.v4();

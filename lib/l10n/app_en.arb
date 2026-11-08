@@ -2825,5 +2825,337 @@
         "type": "int"
       }
     }
-  }
+  },
+  "chatsFilterAll": "All",
+  "chatsFilterAgent": "Agent",
+  "chatsFilterGeneral": "General",
+  "chatsFilterLabel": "Show {kind} chats",
+  "@chatsFilterLabel": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "generalMarker": "General · {model}",
+  "@generalMarker": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsGeneralEmpty": "No General chats yet",
+  "chatsGeneralWorks": "General chats work as usual.",
+  "newChatAgent": "Agent",
+  "newChatAgentSub": "Local model on your desktop\nTools, files and memory",
+  "newChatGeneral": "General",
+  "newChatGeneralSub": "Cloud models via OpenRouter\nStraight from this phone",
+  "generalIntroVia": "via OpenRouter · straight from this phone",
+  "generalIntroShield": "Zero data retention · nothing from your desktop",
+  "generalNoKeyTitle": "Chat with cloud models",
+  "generalNoKeyBody": "Add an OpenRouter key to chat with cloud models straight from this phone.\nNothing from your desktop is sent.",
+  "generalAddKey": "Add an OpenRouter key",
+  "generalComposerHint": "Message {model}…",
+  "@generalComposerHint": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "generalPickModel": "Pick a model",
+  "generalModelChipSemantics": "Model {model}, context {percent} percent, change model",
+  "@generalModelChipSemantics": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "generalModelChipEmpty": "Model {model}, change model",
+  "@generalModelChipEmpty": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "generalMenu": "Chat options",
+  "generalMenuEffort": "Thinking effort",
+  "generalMenuRename": "Rename",
+  "generalMenuArchive": "Archive",
+  "generalMenuDelete": "Delete",
+  "generalRenameTitle": "Rename chat",
+  "generalRenameSave": "Save",
+  "generalDeleteTitle": "Delete this chat?",
+  "generalDeleteBody": "Its messages and images are removed from this phone. This can't be undone.",
+  "generalDeleted": "Chat deleted",
+  "generalSwitched": "Switched to {model} · {time}",
+  "@generalSwitched": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "generalWriting": "writing",
+  "generalStopped": "Stopped",
+  "generalFailed": "Failed",
+  "generalTokens": "{count} tok",
+  "@generalTokens": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "generalAlwaysThinks": "{model} always thinks",
+  "@generalAlwaysThinks": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "generalThinkingEffort": "Thinking · {effort}",
+  "@generalThinkingEffort": {
+    "placeholders": {
+      "effort": {
+        "type": "String"
+      }
+    }
+  },
+  "generalEffortTitle": "Thinking effort",
+  "generalEffortSub": "for {model} · applies to your next message",
+  "@generalEffortSub": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "generalEffortDefault": "Model default ({effort})",
+  "@generalEffortDefault": {
+    "placeholders": {
+      "effort": {
+        "type": "String"
+      }
+    }
+  },
+  "generalEffortDefaultPlain": "Model default",
+  "generalEffortHint": "Long-press for the effort",
+  "effortMinimal": "Minimal",
+  "effortLow": "Low",
+  "effortMedium": "Medium",
+  "effortHigh": "High",
+  "effortXhigh": "Extra high",
+  "effortMax": "Max",
+  "generalErrKey": "OpenRouter rejected the key",
+  "generalErrLimit": "Key limit reached",
+  "generalErrNoProvider": "No zero-retention provider for this model",
+  "generalErrRate": "Rate limited — try again in {seconds} s",
+  "@generalErrRate": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "generalErrRateNow": "Rate limited — try again",
+  "generalErrNetwork": "Couldn’t reach OpenRouter",
+  "generalErrBadRequest": "OpenRouter refused the request",
+  "generalErrUpstream": "The model’s provider failed",
+  "generalErrUnknown": "The answer failed",
+  "generalOpenSettings": "Open settings",
+  "generalPickAnother": "Pick another model",
+  "generalNoImages": "{model} doesn’t read images — {count, plural, =1{1 earlier image won’t} other{{count} earlier images won’t}} be sent",
+  "@generalNoImages": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "generalProviderWarning": "Served by {provider}, not on the zero-retention list. Nothing more is sent until you acknowledge it.",
+  "@generalProviderWarning": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "generalAcknowledge": "OK",
+  "generalNotSent": "Not sent: {reason}",
+  "@generalNotSent": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "generalNoKeyShort": "No OpenRouter key",
+  "generalModelsFailed": "Couldn't load the models: {reason}",
+  "@generalModelsFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerTitle": "Model",
+  "pickerSub": "for {chat} · per 1M tokens in / out",
+  "@pickerSub": {
+    "placeholders": {
+      "chat": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerSubDefault": "default for new chats · per 1M tokens in / out",
+  "pickerSearch": "Search {count} models",
+  "@pickerSearch": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pickerFavourites": "Favourites",
+  "pickerAll": "All models · A–Z",
+  "pickerUpdated": "Updated {ago} ago · pull to refresh",
+  "@pickerUpdated": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerNever": "Not loaded yet · pull to refresh",
+  "pickerNoZdr": "No zero-retention provider",
+  "pickerNoMatch": "No model matches “{query}”",
+  "@pickerNoMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerEmpty": "The model list isn't loaded yet.",
+  "pickerLoad": "Load models",
+  "pickerAddFavourite": "Add {model} to favourites",
+  "@pickerAddFavourite": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerRemoveFavourite": "Remove {model} from favourites",
+  "@pickerRemoveFavourite": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerReadsImages": "Reads images",
+  "pickerThinks": "Can think",
+  "pickerAlwaysThinks": "Always thinks",
+  "generalAddTitle": "Add to message",
+  "generalImagesOnly": "Only images can be added to a General chat",
+  "generalNoImageInput": "{model} doesn’t read images",
+  "@generalNoImageInput": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "generalSwitchModel": "Switch model",
+  "generalImage": "Image {index}",
+  "@generalImage": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsGeneralSection": "General chat",
+  "settingsGeneral": "General",
+  "settingsGeneralNoKey": "OpenRouter · no key yet",
+  "settingsGeneralSub": "OpenRouter · {model}",
+  "@settingsGeneralSub": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "generalSettingsKey": "OpenRouter key",
+  "generalKeyPaste": "Paste an OpenRouter key",
+  "generalKeyPasteAction": "Paste",
+  "generalKeyHelper": "Create a separate key for this phone with a monthly limit at openrouter.ai/keys",
+  "generalKeySave": "Save",
+  "generalKeyReplace": "Replace",
+  "generalKeyRemove": "Remove",
+  "generalKeyRemoveTitle": "Remove the key?",
+  "generalKeyRemoveBody": "General chats stay on this phone. Nothing can be sent until you add a key again.",
+  "generalKeyRejected": "OpenRouter rejected this key",
+  "generalKeyNotKey": "This doesn't look like an OpenRouter key",
+  "generalKeySaved": "Key saved",
+  "generalKeySavedUnchecked": "Key saved — OpenRouter couldn't be reached to check it",
+  "generalKeySpend": "{used} of {limit}",
+  "@generalKeySpend": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "generalKeySpendNoLimit": "{used} spent · no limit",
+  "@generalKeySpendNoLimit": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      }
+    }
+  },
+  "generalKeyResets": "Resets {date}",
+  "@generalKeyResets": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "generalKeyPeriodMonthly": "this month",
+  "generalKeyPeriodWeekly": "this week",
+  "generalKeyPeriodDaily": "today",
+  "generalKeyNoReset": "This key's limit never resets. A monthly limit keeps a leaked key cheap: set one at openrouter.ai/keys.",
+  "generalKeyInfoFailed": "Couldn't read the key's limits: {reason}",
+  "@generalKeyInfoFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "generalSettingsModels": "Models",
+  "generalDefaultModel": "Default model",
+  "generalShowTokens": "Show tokens under answers",
+  "generalShowTokensSub": "Output tokens next to the model and cost",
+  "generalPrivacyNote": "Requests go straight from this phone to OpenRouter. Zero data retention and no training are required on every request. Nothing from your desktop is sent."
 }

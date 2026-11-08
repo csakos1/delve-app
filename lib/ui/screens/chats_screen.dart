@@ -8,11 +8,15 @@ import '../../app/chat_list.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../data/db/database.dart';
+import '../../general/general_database.dart';
+import '../../general/general_providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../sync/connection_status.dart';
 import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
 import '../format.dart';
+import '../general/general_format.dart';
+import '../general/general_widgets.dart';
 import '../widgets/chat_row.dart';
 import '../widgets/connection_ui.dart';
 import '../widgets/page_scaffolds.dart';
@@ -100,6 +104,29 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     return true;
   }
 
+  /// A General chat is archived on this phone: nothing to wait for.
+  Future<bool> _archiveGeneral(String id) async {
+    final l = AppLocalizations.of(context);
+    final service = ref.read(generalChatServiceProvider);
+    await service.archive(id);
+    if (mounted) {
+      _snack(
+        l.chatsArchived,
+        action: SnackBarAction(
+          label: l.chatsUndo,
+          onPressed: () => unawaited(service.archive(id, archived: false)),
+        ),
+      );
+    }
+    return true;
+  }
+
+  void _setFilter(ChatsFilter f) => unawaited(
+    ref
+        .read(generalDatabaseProvider)
+        .setMeta(GeneralMetaKeys.chatsFilter, f.name),
+  );
+
   Future<void> _restore(ChatListPager pager, String id) async {
     final l = AppLocalizations.of(context);
     try {
@@ -120,15 +147,41 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     );
     final paging = ref.watch(chatListPagerProvider(false));
     final pending = ref.watch(answerableApprovalCountProvider).value ?? 0;
+    // General (24): its chats live on this phone; the filter chips show
+    // once a key is saved
+    final hasKey = ref.watch(generalKeyProvider).value != null;
+    final filter = hasKey
+        ? chatsFilterOf(
+            ref.watch(generalMetaProvider(GeneralMetaKeys.chatsFilter)).value,
+          )
+        : ChatsFilter.all;
+    final general =
+        ref.watch(generalChatsProvider(false)).value ??
+        const <GeneralChatRow>[];
+    final models = {
+      for (final m
+          in ref.watch(generalModelsProvider).value ?? const <OrModelRow>[])
+        m.id: m,
+    };
 
     final connecting = switch (status.phase) {
       ConnectionPhase.connecting || ConnectionPhase.awaitingHello => true,
       ConnectionPhase.live => status.resyncing,
       _ => false,
     };
+    final agentItems = filter == ChatsFilter.general
+        ? const <ChatListItem>[]
+        : items ?? const <ChatListItem>[];
+    final generalItems = filter == ChatsFilter.agent
+        ? const <GeneralChatRow>[]
+        : general;
+    final agentMore =
+        !paging.exhausted && agentItems.length >= ChatListPager.pageSize;
     final skeleton =
-        items == null || (items.isEmpty && neverLoaded && connecting);
-    final empty = !skeleton && items.isEmpty;
+        filter != ChatsFilter.general &&
+        generalItems.isEmpty &&
+        (items == null || (items.isEmpty && neverLoaded && connecting));
+    final empty = !skeleton && agentItems.isEmpty && generalItems.isEmpty;
     final retrying =
         status.phase == ConnectionPhase.backoff ||
         ((status.phase == ConnectionPhase.connecting ||
@@ -136,14 +189,35 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
             status.attempt > 0);
 
     final query = _search.text.trim().toLowerCase();
-    final shown = [
-      for (final item in items ?? const <ChatListItem>[])
-        if (query.isEmpty || _matches(item, query)) item,
-    ];
+    // while older agent pages are still to come, General chats older than
+    // the oldest loaded agent chat wait for them (the list stays in order)
+    final floor = agentMore && agentItems.isNotEmpty
+        ? agentItems
+              .map((i) => i.conversation.updatedAt)
+              .reduce((a, b) => a.isBefore(b) ? a : b)
+        : null;
+    final shown = <_Entry>[
+      for (final item in agentItems)
+        if (query.isEmpty || _matches(item, query)) _Entry.agent(item),
+      for (final g in generalItems)
+        if ((floor == null || !g.updatedAt.isBefore(floor)) &&
+            (query.isEmpty || _matchesGeneral(g, query)))
+          _Entry.general(g),
+    ]..sort((a, b) => b.at.compareTo(a.at));
 
     final Widget body;
     if (skeleton) {
       body = const _SkeletonList();
+    } else if (empty && filter == ChatsFilter.general) {
+      body = Center(
+        child: Text(
+          l.chatsGeneralEmpty,
+          key: const Key('chats.generalEmpty'),
+          style: context.text.bodyMedium!.copyWith(
+            color: context.colors.onSurfaceVariant,
+          ),
+        ),
+      );
     } else if (empty) {
       body = _EmptyState(onNewChat: () => context.push(Routes.newChat));
     } else if (shown.isEmpty) {
@@ -160,10 +234,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
         ),
       );
     } else {
-      final more =
-          query.isEmpty &&
-          !paging.exhausted &&
-          shown.length >= ChatListPager.pageSize;
+      final more = query.isEmpty && agentMore;
       body = RefreshIndicator(
         onRefresh: _refresh,
         child: ListView.builder(
@@ -178,7 +249,25 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                 onVisible: _loadMore,
               );
             }
-            final item = shown[i];
+            final entry = shown[i];
+            final g = entry.general;
+            if (g != null) {
+              return Dismissible(
+                key: ValueKey('general.${g.id}'),
+                direction: DismissDirection.endToStart,
+                confirmDismiss: (_) => _archiveGeneral(g.id),
+                background: SwipeBackground(
+                  icon: DelveIcons.archive,
+                  label: l.chatsArchive,
+                ),
+                child: GeneralListRow(
+                  chat: g,
+                  modelName: modelShortName(g.modelId, models[g.modelId]),
+                  onTap: () => context.push(Routes.generalChat(g.id)),
+                ),
+              );
+            }
+            final item = entry.agent!;
             final id = item.conversation.id;
             return Dismissible(
               key: ValueKey('chat.$id'),
@@ -218,7 +307,6 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
               const LinearProgressIndicator(key: Key('chats.progress'))
             else
               const SizedBox(height: 2),
-            if (retrying) _RetryBanner(status: status),
             if (_searching)
               Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -242,6 +330,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                   onChanged: (_) => setState(() {}),
                 ),
               ),
+            if (hasKey) ChatsFilterChips(value: filter, onChanged: _setFilter),
+            if (retrying && filter != ChatsFilter.general)
+              _RetryBanner(status: status, generalWorks: hasKey),
             Expanded(child: body),
           ],
         ),
@@ -256,6 +347,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     );
   }
 
+  static bool _matchesGeneral(GeneralChatRow g, String query) => [
+    g.title,
+    g.preview,
+  ].any((s) => s != null && s.toLowerCase().contains(query));
+
   static bool _matches(ChatListItem item, String query) {
     final c = item.conversation;
     return [
@@ -269,9 +365,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
 
 /// 02d: the socket keeps failing; "Details" opens the connection log.
 class _RetryBanner extends StatelessWidget {
-  const _RetryBanner({required this.status});
+  const _RetryBanner({required this.status, this.generalWorks = false});
 
   final ConnectionStatus status;
+
+  /// General chats do not need the desktop (24a): the banner says so.
+  final bool generalWorks;
 
   @override
   Widget build(BuildContext context) {
@@ -288,7 +387,7 @@ class _RetryBanner extends StatelessWidget {
         key: const Key('chats.banner'),
         kind: StatusKind.warn,
         icon: view.icon,
-        text: view.text,
+        text: generalWorks ? '${view.text} ${l.chatsGeneralWorks}' : view.text,
         actionLabel: l.chatsDetails,
         onAction: () => context.push(Routes.connectionLog),
       ),
@@ -440,4 +539,18 @@ class _ApprovalsButton extends StatelessWidget {
           : icon,
     );
   }
+}
+
+/// One row of the Chats list: an agent conversation or a General chat.
+class _Entry {
+  _Entry.agent(ChatListItem this.agent)
+    : general = null,
+      at = agent.conversation.updatedAt;
+  _Entry.general(GeneralChatRow this.general)
+    : agent = null,
+      at = general.updatedAt;
+
+  final ChatListItem? agent;
+  final GeneralChatRow? general;
+  final DateTime at;
 }

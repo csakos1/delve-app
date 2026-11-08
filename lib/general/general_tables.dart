@@ -23,6 +23,10 @@ class GeneralChats extends Table {
   /// Thinking for the next message (ignored where the model always thinks
   /// or cannot think).
   BoolColumn get reasoning => boolean().withDefault(const Constant(true))();
+
+  /// Thinking effort for the next message (one of the model's
+  /// `supported_efforts`, never `none`); null: the model's default. Schema 2.
+  TextColumn get reasoningEffort => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
