@@ -18,6 +18,7 @@ import '../../theme/delve_theme.dart';
 import '../chat/attachments.dart' show AttachSource;
 import '../chat/composer.dart';
 import '../general/general_format.dart';
+import '../general/general_usage.dart';
 import '../general/general_widgets.dart';
 import '../general/model_picker.dart';
 import '../widgets/page_scaffolds.dart';
@@ -459,6 +460,11 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
             name: chipName,
             pct: chat == null ? null : generalContextPct(chat),
             onTap: () => unawaited(_pickModel(modelId, chat)),
+            onLongPress: chat == null
+                ? null
+                : () => unawaited(
+                    showGeneralUsageSheet(context, chatId: chat.id),
+                  ),
           ),
           if (chat != null)
             PopupMenuButton<String>(
@@ -467,6 +473,8 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
               icon: const SymbolIcon(DelveIcons.moreVert),
               onSelected: (v) {
                 switch (v) {
+                  case 'usage':
+                    unawaited(showGeneralUsageSheet(context, chatId: chat.id));
                   case 'effort':
                     if (model != null) {
                       unawaited(_pickEffort(model, effort));
@@ -480,6 +488,11 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
                 }
               },
               itemBuilder: (_) => [
+                PopupMenuItem(
+                  key: const Key('general.menu.usage'),
+                  value: 'usage',
+                  child: Text(l.generalMenuUsage),
+                ),
                 if (spec != null && spec.choosableEfforts.isNotEmpty)
                   PopupMenuItem(
                     key: const Key('general.menu.effort'),

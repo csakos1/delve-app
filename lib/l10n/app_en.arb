@@ -3157,5 +3157,41 @@
   "generalDefaultModel": "Default model",
   "generalShowTokens": "Show tokens under answers",
   "generalShowTokensSub": "Output tokens next to the model and cost",
-  "generalPrivacyNote": "Requests go straight from this phone to OpenRouter. Zero data retention and no training are required on every request. Nothing from your desktop is sent."
+  "generalPrivacyNote": "Requests go straight from this phone to OpenRouter. Zero data retention and no training are required on every request. Nothing from your desktop is sent.",
+  "generalMenuUsage": "Usage",
+  "generalUsageCost": "Cost",
+  "generalUsageAnswersTile": "Answers",
+  "generalUsageContext": "Context of the last answer",
+  "generalUsageByModel": "By model",
+  "generalUsageNoAnswers": "No answers yet.",
+  "generalUsageAnswers": "{count, plural, =1{1 answer} other{{count} answers}}",
+  "@generalUsageAnswers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "generalUsageResets": "resets {date}",
+  "@generalUsageResets": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "generalFavAdd": "Add",
+  "generalFavEmpty": "No favourites. Add one here or star a model in the picker.",
+  "generalFavRemoved": "{model} removed from favourites",
+  "@generalFavRemoved": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "pickerSubFavourite": "add to favourites · per 1M tokens in / out",
+  "generalSettingsPrompt": "System prompt",
+  "generalPromptHint": "Empty",
+  "generalPromptHelper": "Sent with every General message. Empty by default."
 }

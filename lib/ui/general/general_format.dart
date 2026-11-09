@@ -1,6 +1,8 @@
 import '../../general/general_database.dart';
 import '../../general/model_catalog.dart';
+import '../../general/openrouter_client.dart';
 import '../../l10n/app_localizations.dart';
+import '../format.dart';
 
 /// Costs below this are not shown (a chat's list marker, an answer's footer).
 const double kCostHiddenBelow = 0.0001;
@@ -55,6 +57,51 @@ String effortLabel(AppLocalizations l, String effort) => switch (effort) {
   'max' => l.effortMax,
   _ => effort,
 };
+
+/// What a key spent in its period: the limit minus what remains, else the
+/// monthly usage (Settings → General and the Usage sheet's key card).
+double keySpent(KeyInfo i) {
+  final limit = i.limit;
+  final remaining = i.limitRemaining;
+  return limit != null && remaining != null
+      ? limit - remaining
+      : i.usageMonthly ?? i.usage ?? 0;
+}
+
+/// The key's period as the spend line ends (`this month`); null when the
+/// limit never resets.
+String? keyPeriodText(AppLocalizations l, KeyInfo i) => switch (i.limitReset) {
+  'monthly' => l.generalKeyPeriodMonthly,
+  'weekly' => l.generalKeyPeriodWeekly,
+  'daily' => l.generalKeyPeriodDaily,
+  _ => null,
+};
+
+/// The spend line: `$3.18 of $10.00 this month`, `$3.68 spent · no limit`.
+String keySpendText(AppLocalizations l, KeyInfo i) {
+  final used = keySpent(i);
+  final limit = i.limit;
+  return limit == null
+      ? l.generalKeySpendNoLimit(usdText(used))
+      : [
+          l.generalKeySpend(usdText(used), usdText(limit)),
+          ?keyPeriodText(l, i),
+        ].join(' ');
+}
+
+/// The context of the last answer: `1,180 / 1,048,576 · 0.1%` (one decimal
+/// below 1 %, where a whole percent would read 0).
+String? generalContextText(GeneralChatRow chat) {
+  final used = chat.lastPromptTokens;
+  if (used == null) return null;
+  final max = chat.lastContextLength;
+  final pct = generalContextPct(chat);
+  final of = max == null ? '' : ' / ${tokenCount(max)}';
+  final percent = pct == null
+      ? ''
+      : ' · ${pct < 1 ? pct.toStringAsFixed(1) : pct.round()}%';
+  return '${tokenCount(used)}$of$percent';
+}
 
 /// The context fill of a chat's last answer, in percent (null before it).
 double? generalContextPct(GeneralChatRow chat) {

@@ -106,6 +106,41 @@ class GeneralDatabase extends _$GeneralDatabase {
     return (row.read(max) ?? 0) + 1;
   }
 
+  /// A chat's answers by the model that wrote them (the Usage sheet):
+  /// tokens, cost and how many, the most expensive first. Answers still
+  /// streaming and failed ones are not counted.
+  Stream<List<GeneralModelUsage>> watchUsageByModel(String chatId) {
+    final m = generalMessages;
+    final tokensIn = m.tokensIn.sum();
+    final tokensOut = m.tokensOut.sum();
+    final cost = m.costUsd.sum();
+    final answers = m.id.count();
+    final q = selectOnly(m)
+      ..addColumns([m.modelId, tokensIn, tokensOut, cost, answers])
+      ..where(
+        m.chatId.equals(chatId) &
+            m.role.equals('assistant') &
+            m.status.isIn(const ['final', 'stopped']),
+      )
+      ..groupBy([m.modelId]);
+    return q.watch().map(
+      (rows) =>
+          [
+            for (final r in rows)
+              GeneralModelUsage(
+                modelId: r.read(m.modelId) ?? '',
+                tokensIn: r.read(tokensIn) ?? 0,
+                tokensOut: r.read(tokensOut) ?? 0,
+                costUsd: r.read(cost) ?? 0,
+                answers: r.read(answers) ?? 0,
+              ),
+          ]..sort((a, b) {
+            final byCost = b.costUsd.compareTo(a.costUsd);
+            return byCost != 0 ? byCost : a.modelId.compareTo(b.modelId);
+          }),
+    );
+  }
+
   /// Answers left `streaming` by a killed app: they stopped.
   Future<int> settleInterrupted() =>
       (update(generalMessages)..where((t) => t.status.equals('streaming')))
@@ -215,6 +250,23 @@ class GeneralImageRef {
   final int ord;
   final String mime;
   final int size;
+}
+
+/// One model's share of a chat (the Usage sheet's “By model”).
+class GeneralModelUsage {
+  const GeneralModelUsage({
+    required this.modelId,
+    required this.tokensIn,
+    required this.tokensOut,
+    required this.costUsd,
+    required this.answers,
+  });
+
+  final String modelId;
+  final int tokensIn;
+  final int tokensOut;
+  final double costUsd;
+  final int answers;
 }
 
 /// Keys of [GeneralMeta].

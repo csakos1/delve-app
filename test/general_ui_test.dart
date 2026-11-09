@@ -7,6 +7,8 @@ import 'package:delve/data/db/store.dart';
 import 'package:delve/general/general_database.dart';
 import 'package:delve/general/model_catalog.dart';
 import 'package:delve/general/openrouter_client.dart';
+import 'package:delve/ui/screens/general_settings_screen.dart'
+    show promptSaveDelay;
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -534,5 +536,262 @@ void main() {
     await tester.pumpAndSettle();
     expect(env.generalKeys.key, isNull);
     expect(find.byKey(const Key('generalSettings.field')), findsOneWidget);
+  });
+
+  testWidgets('General: Usage from the menu and the chip; by model; the key', (
+    tester,
+  ) async {
+    final now = DateTime.now().toUtc();
+    final env = await pumpDelve(
+      tester,
+      generalKey: testOpenRouterKey,
+      before: (env) async {
+        await seedModels(env);
+        final db = env.general;
+        await db
+            .into(db.generalChats)
+            .insert(
+              GeneralChatsCompanion.insert(
+                id: 'g_1',
+                modelId: 'moonshotai/kimi-k3.1-pro',
+                createdAt: now,
+                updatedAt: now,
+                title: const Value('Dog names'),
+                tokensIn: const Value(1180),
+                tokensOut: const Value(330),
+                costUsd: const Value(0.0062),
+                lastPromptTokens: const Value(1180),
+                lastContextLength: const Value(1048576),
+              ),
+            );
+        Future<void> message(
+          String id,
+          int seq,
+          String role, {
+          String status = 'final',
+          String? model,
+          int? tokensIn,
+          int? tokensOut,
+          double? cost,
+        }) => db
+            .into(db.generalMessages)
+            .insert(
+              GeneralMessagesCompanion.insert(
+                id: id,
+                chatId: 'g_1',
+                seq: seq,
+                role: role,
+                status: status,
+                content: Value('text $seq'),
+                modelId: Value(model),
+                tokensIn: Value(tokensIn),
+                tokensOut: Value(tokensOut),
+                costUsd: Value(cost),
+                createdAt: now,
+              ),
+            );
+        await message('m_1', 1, 'user');
+        await message(
+          'm_2',
+          2,
+          'assistant',
+          model: 'z-ai/glm-5.3',
+          tokensIn: 500,
+          tokensOut: 30,
+          cost: 0.0002,
+        );
+        await message('m_3', 3, 'switch', model: 'moonshotai/kimi-k3.1-pro');
+        await message('m_4', 4, 'user');
+        await message(
+          'm_5',
+          5,
+          'assistant',
+          model: 'moonshotai/kimi-k3.1-pro',
+          tokensIn: 680,
+          tokensOut: 300,
+          cost: 0.006,
+        );
+        // a failed answer is not counted
+        await message('m_6', 6, 'user');
+        await message(
+          'm_7',
+          7,
+          'assistant',
+          status: 'failed',
+          model: 'moonshotai/kimi-k3.1-pro',
+        );
+      },
+    );
+    await go(tester, Routes.generalChat('g_1'));
+
+    await tester.tap(find.byKey(const Key('general.menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('general.menu.usage')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('generalUsage.sheet')), findsOneWidget);
+
+    Finder tile(String key, String value) => find.descendant(
+      of: find.byKey(Key('generalUsage.$key')),
+      matching: find.text(value),
+    );
+    expect(tile('input', '1,180'), findsOneWidget);
+    expect(tile('output', '330'), findsOneWidget);
+    expect(tile('cost', '\$0.0062'), findsOneWidget);
+    expect(tile('answers', '2'), findsOneWidget);
+    expect(find.text('1,180 / 1,048,576 · 0.1%'), findsOneWidget);
+
+    // by model, the most expensive first
+    final kimi = find.byKey(
+      const ValueKey('generalUsage.model.moonshotai/kimi-k3.1-pro'),
+    );
+    final glm = find.byKey(const ValueKey('generalUsage.model.z-ai/glm-5.3'));
+    expect(kimi, findsOneWidget);
+    expect(glm, findsOneWidget);
+    expect(tester.getTopLeft(kimi).dy, lessThan(tester.getTopLeft(glm).dy));
+    expect(
+      find.descendant(
+        of: kimi,
+        matching: find.text('in 680 · out 300 · 1 answer'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: glm, matching: find.text('\$0.0002')),
+      findsOneWidget,
+    );
+
+    // the key's spend (the G0 key: no reset)
+    await pumpUntil(
+      tester,
+      find.byKey(const Key('generalUsage.key.line')),
+      env: env,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('\$3.68 of \$100.00'), findsOneWidget);
+    expect(find.text('sk-or-v1-…4f2a'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('generalUsage.close')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('generalUsage.sheet')), findsNothing);
+
+    // a long press on the model chip opens it too; a tap is the picker
+    await tester.longPress(find.byKey(const Key('general.modelChip')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('generalUsage.sheet')), findsOneWidget);
+    expect(find.byKey(const Key('picker')), findsNothing);
+    await pumpUntil(tester, find.byKey(const Key('generalUsage.key.line')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('generalUsage.close')));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('Settings → General: favourites and the system prompt', (
+    tester,
+  ) async {
+    final env = await pumpDelve(
+      tester,
+      generalKey: testOpenRouterKey,
+      before: seedModels,
+    );
+    await go(tester, Routes.generalSettings);
+    await pumpUntil(
+      tester,
+      find.byKey(const Key('generalSettings.spend.line')),
+    );
+    await tester.pumpAndSettle();
+
+    Future<List<String>?> stored() => tester.runAsync<List<String>?>(
+      () => env.general.metaList(GeneralMetaKeys.favourites),
+    );
+    Finder fav(String id) => find.byKey(ValueKey('generalSettings.fav.$id'));
+    for (final id in kDefaultFavourites) {
+      expect(fav(id), findsOneWidget);
+    }
+
+    // remove, then Undo
+    await tester.tap(
+      find.byKey(const Key('generalSettings.fav.remove.z-ai/glm-5.3-flash')),
+    );
+    await tester.pumpAndSettle();
+    expect(fav('z-ai/glm-5.3-flash'), findsNothing);
+    expect(await stored(), [
+      'z-ai/glm-5.3',
+      'moonshotai/kimi-k3.1-pro',
+      'anthropic/claude-opus-5.5',
+      'openai/gpt-6-astra',
+    ]);
+    await tester.tap(find.byType(SnackBarAction));
+    await tester.pumpAndSettle();
+    expect(await stored(), kDefaultFavourites);
+    expect(fav('z-ai/glm-5.3-flash'), findsOneWidget);
+
+    // drag the first one below the second
+    final from = tester.getCenter(
+      find.byKey(const Key('generalSettings.fav.drag.z-ai/glm-5.3')),
+    );
+    // held at its centre, moved one row: its far edge is past the second
+    // row's middle (with room for the touch slop), not past the third's
+    final second = tester.getRect(fav('z-ai/glm-5.3-flash'));
+    final to = Offset(from.dx, second.center.dy);
+    final g = await tester.startGesture(from);
+    await tester.pump(const Duration(milliseconds: 100));
+    const steps = 10;
+    for (var i = 0; i < steps; i++) {
+      await g.moveBy(Offset(0, (to.dy - from.dy) / steps));
+      await tester.pump();
+    }
+    await tester.pump(const Duration(milliseconds: 300));
+    await g.up();
+    await tester.pumpAndSettle();
+    expect((await stored())!.take(2), ['z-ai/glm-5.3-flash', 'z-ai/glm-5.3']);
+
+    // remove Astra, then add it back from the picker: it goes last
+    await tester.tap(
+      find.byKey(const Key('generalSettings.fav.remove.openai/gpt-6-astra')),
+    );
+    await tester.pumpAndSettle();
+    expect(fav('openai/gpt-6-astra'), findsNothing);
+    await tester.tap(find.byKey(const Key('generalSettings.fav.add')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('picker')), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('picker.search')), 'astra');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('picker.all.openai/gpt-6-astra')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('picker')), findsNothing);
+    expect((await stored())!.last, 'openai/gpt-6-astra');
+    expect(fav('openai/gpt-6-astra'), findsOneWidget);
+
+    // the system prompt is saved a moment after typing; blank removes it
+    final prompt = find.byKey(const Key('generalSettings.prompt'));
+    await tester.scrollUntilVisible(
+      prompt,
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('generalSettings.list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(prompt, 'Be brief.');
+    await tester.pump(promptSaveDelay + const Duration(milliseconds: 50));
+    await tester.pumpAndSettle();
+    expect(
+      await tester.runAsync(
+        () => env.general.meta(GeneralMetaKeys.systemPrompt),
+      ),
+      'Be brief.',
+    );
+    await tester.enterText(prompt, '  ');
+    await tester.pump(promptSaveDelay + const Duration(milliseconds: 50));
+    await tester.pumpAndSettle();
+    expect(
+      await tester.runAsync(
+        () => env.general.meta(GeneralMetaKeys.systemPrompt),
+      ),
+      isNull,
+    );
   });
 }

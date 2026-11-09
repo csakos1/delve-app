@@ -129,6 +129,13 @@ final generalImageBytesProvider = FutureProvider.autoDispose
       return bytes;
     });
 
+/// A chat's answers by model (the Usage sheet).
+final generalUsageByModelProvider = StreamProvider.autoDispose
+    .family<List<GeneralModelUsage>, String>(
+      (ref, chatId) =>
+          ref.watch(generalDatabaseProvider).watchUsageByModel(chatId),
+    );
+
 /// The cached model list, by name.
 final generalModelsProvider = StreamProvider<List<OrModelRow>>(
   (ref) => ref.watch(generalDatabaseProvider).watchModels(),

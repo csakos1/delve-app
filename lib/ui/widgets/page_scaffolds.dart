@@ -326,4 +326,5 @@ abstract final class DelveIcons {
   static const IconData shield = Symbols.shield_rounded;
   static const IconData image = Symbols.image_rounded;
   static const IconData delete = Symbols.delete_rounded;
+  static const IconData dragIndicator = Symbols.drag_indicator_rounded;
 }

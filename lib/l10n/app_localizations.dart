@@ -6375,6 +6375,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Requests go straight from this phone to OpenRouter. Zero data retention and no training are required on every request. Nothing from your desktop is sent.'**
   String get generalPrivacyNote;
+
+  /// No description provided for @generalMenuUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage'**
+  String get generalMenuUsage;
+
+  /// No description provided for @generalUsageCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get generalUsageCost;
+
+  /// No description provided for @generalUsageAnswersTile.
+  ///
+  /// In en, this message translates to:
+  /// **'Answers'**
+  String get generalUsageAnswersTile;
+
+  /// No description provided for @generalUsageContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Context of the last answer'**
+  String get generalUsageContext;
+
+  /// No description provided for @generalUsageByModel.
+  ///
+  /// In en, this message translates to:
+  /// **'By model'**
+  String get generalUsageByModel;
+
+  /// No description provided for @generalUsageNoAnswers.
+  ///
+  /// In en, this message translates to:
+  /// **'No answers yet.'**
+  String get generalUsageNoAnswers;
+
+  /// No description provided for @generalUsageAnswers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 answer} other{{count} answers}}'**
+  String generalUsageAnswers(int count);
+
+  /// No description provided for @generalUsageResets.
+  ///
+  /// In en, this message translates to:
+  /// **'resets {date}'**
+  String generalUsageResets(String date);
+
+  /// No description provided for @generalFavAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get generalFavAdd;
+
+  /// No description provided for @generalFavEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No favourites. Add one here or star a model in the picker.'**
+  String get generalFavEmpty;
+
+  /// No description provided for @generalFavRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{model} removed from favourites'**
+  String generalFavRemoved(String model);
+
+  /// No description provided for @pickerSubFavourite.
+  ///
+  /// In en, this message translates to:
+  /// **'add to favourites · per 1M tokens in / out'**
+  String get pickerSubFavourite;
+
+  /// No description provided for @generalSettingsPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'System prompt'**
+  String get generalSettingsPrompt;
+
+  /// No description provided for @generalPromptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty'**
+  String get generalPromptHint;
+
+  /// No description provided for @generalPromptHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent with every General message. Empty by default.'**
+  String get generalPromptHelper;
 }
 
 class _AppLocalizationsDelegate

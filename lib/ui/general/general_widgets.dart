@@ -22,13 +22,15 @@ import 'general_format.dart';
 
 /// The model chip in the General chat's top bar: the context ring of the
 /// last answer, the model's short name and ▾; warn colours above 75 %; a
-/// dashed ring and “Pick a model” without a model. Opens the model picker.
+/// dashed ring and “Pick a model” without a model. Opens the model picker;
+/// a long press opens the chat's Usage sheet ([onLongPress]).
 class ModelChip extends StatelessWidget {
   const ModelChip({
     super.key,
     required this.name,
     required this.pct,
     required this.onTap,
+    this.onLongPress,
   });
 
   /// The short name; null: no usable model.
@@ -37,6 +39,7 @@ class ModelChip extends StatelessWidget {
   /// The context fill of the last answer (null before it).
   final double? pct;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   static const int maxChars = 14;
 
@@ -115,6 +118,7 @@ class ModelChip extends StatelessWidget {
             child: InkWell(
               key: const Key('general.modelChip'),
               onTap: onTap,
+              onLongPress: onLongPress,
               child: SizedBox(
                 height: 32,
                 child: Padding(

@@ -19,9 +19,9 @@ import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 
 /// 24g Settings → General: the phone's OpenRouter key (paste, replace,
-/// remove) with this period's spend, the default model, the token footer
-/// and the privacy note. Favourites, the system prompt and export / import
-/// come in G1b-2 / G1c.
+/// remove) with this period's spend, the default model, the favourites
+/// (reorder by drag, remove, add from the picker), the token footer, the
+/// system prompt and the privacy note. Export / import come in G1c.
 class GeneralSettingsScreen extends ConsumerStatefulWidget {
   const GeneralSettingsScreen({super.key});
 
@@ -36,16 +36,108 @@ class _GeneralSettingsScreenState extends ConsumerState<GeneralSettingsScreen> {
   bool _saving = false;
   String? _error;
 
+  late final GeneralDatabase _db;
+  final _prompt = TextEditingController();
+  bool _promptLoaded = false;
+  Timer? _promptSave;
+
+  /// The favourites as just edited, until the database has them (so a drag
+  /// does not jump back for a frame).
+  List<String>? _favs;
+
   @override
   void initState() {
     super.initState();
+    _db = ref.read(generalDatabaseProvider);
     _field.addListener(() => setState(() => _error = null));
+    unawaited(_loadPrompt());
   }
 
   @override
   void dispose() {
+    // a prompt typed just before leaving is still saved
+    if (_promptSave?.isActive ?? false) {
+      _promptSave!.cancel();
+      _savePrompt();
+    }
     _field.dispose();
+    _prompt.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadPrompt() async {
+    final saved = await _db.meta(GeneralMetaKeys.systemPrompt);
+    if (!mounted) return;
+    if (_prompt.text.isEmpty) _prompt.text = saved ?? '';
+    setState(() => _promptLoaded = true);
+  }
+
+  void _onPromptChanged(String _) {
+    _promptSave?.cancel();
+    _promptSave = Timer(promptSaveDelay, _savePrompt);
+  }
+
+  /// Saves the system prompt; a blank one is removed (none is sent).
+  void _savePrompt() {
+    final text = _prompt.text;
+    unawaited(
+      _db.setMeta(
+        GeneralMetaKeys.systemPrompt,
+        text.trim().isEmpty ? null : text,
+      ),
+    );
+  }
+
+  Future<void> _setFavourites(List<String> ids) async {
+    setState(() => _favs = ids);
+    await ref.read(modelCatalogProvider).setFavourites(ids);
+  }
+
+  void _moveFavourite(List<String> favourites, int from, int to) {
+    final ids = [...favourites];
+    final id = ids.removeAt(from);
+    ids.insert(to > from ? to - 1 : to, id);
+    unawaited(_setFavourites(ids));
+  }
+
+  Future<void> _removeFavourite(
+    List<String> favourites,
+    String id,
+    String name,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final catalog = ref.read(modelCatalogProvider);
+    final before = [...favourites];
+    await _setFavourites([...favourites]..remove(id));
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l.generalFavRemoved(name)),
+          persist: false,
+          duration: DelveTokens.undoSnack,
+          action: SnackBarAction(
+            label: l.chatsUndo,
+            onPressed: () => unawaited(catalog.setFavourites(before)),
+          ),
+        ),
+      );
+  }
+
+  Future<void> _addFavourite() async {
+    final l = AppLocalizations.of(context);
+    final picked = await showModelPicker(
+      context,
+      current: null,
+      subtitle: l.pickerSubFavourite,
+    );
+    if (picked == null || !mounted) return;
+    // the picker's stars may have changed the list meanwhile
+    final List<String> stored = ref.read(generalFavouritesProvider);
+    final now = _favs ?? stored;
+    if (now.contains(picked)) return;
+    await _setFavourites([...now, picked]);
   }
 
   void _snack(String text) => ScaffoldMessenger.of(context)
@@ -126,6 +218,15 @@ class _GeneralSettingsScreenState extends ConsumerState<GeneralSettingsScreen> {
     final row = models.where((m) => m.id == defaultModel).firstOrNull;
     final showTokens =
         ref.watch(generalMetaProvider(GeneralMetaKeys.showTokens)).value == '1';
+    ref.listen(generalFavouritesProvider, (_, next) {
+      final pending = _favs;
+      if (pending != null && pending.join('\n') == next.join('\n')) {
+        setState(() => _favs = null);
+      }
+    });
+    final storedFavourites = ref.watch(generalFavouritesProvider);
+    final favourites = _favs ?? storedFavourites;
+    final byId = {for (final m in models) m.id: m};
     final cs = context.colors;
     final muted = context.delve.textMuted;
 
@@ -213,6 +314,72 @@ class _GeneralSettingsScreenState extends ConsumerState<GeneralSettingsScreen> {
                   ? null
                   : () => unawaited(_pickDefault(defaultModel)),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DelveTokens.space4,
+                DelveTokens.space4,
+                DelveTokens.space4,
+                DelveTokens.space1,
+              ),
+              child: Text(
+                l.pickerFavourites.toUpperCase(),
+                style: context.text.labelSmall!.copyWith(color: muted),
+              ),
+            ),
+            if (favourites.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DelveTokens.space4,
+                  vertical: DelveTokens.space2,
+                ),
+                child: Text(
+                  l.generalFavEmpty,
+                  key: const Key('generalSettings.fav.empty'),
+                  style: context.text.bodyMedium!.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              )
+            else
+              ReorderableListView(
+                key: const Key('generalSettings.favs'),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
+                onReorder: (from, to) => _moveFavourite(favourites, from, to),
+                children: [
+                  for (final (i, id) in favourites.indexed)
+                    _FavouriteRow(
+                      key: ValueKey('generalSettings.fav.$id'),
+                      index: i,
+                      id: id,
+                      name: modelShortName(id, byId[id]),
+                      onRemove: () => unawaited(
+                        _removeFavourite(
+                          favourites,
+                          id,
+                          modelShortName(id, byId[id]),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DelveTokens.space2,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  key: const Key('generalSettings.fav.add'),
+                  onPressed: key == null
+                      ? null
+                      : () => unawaited(_addFavourite()),
+                  icon: const SymbolIcon(DelveIcons.add, size: 20),
+                  label: Text(l.generalFavAdd),
+                ),
+              ),
+            ),
             SwitchListTile(
               key: const Key('generalSettings.tokens'),
               title: Text(l.generalShowTokens),
@@ -222,6 +389,30 @@ class _GeneralSettingsScreenState extends ConsumerState<GeneralSettingsScreen> {
                 ref
                     .read(generalDatabaseProvider)
                     .setMeta(GeneralMetaKeys.showTokens, v ? '1' : null),
+              ),
+            ),
+            _Section(l.generalSettingsPrompt),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DelveTokens.space4,
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 112),
+                child: TextField(
+                  key: const Key('generalSettings.prompt'),
+                  controller: _prompt,
+                  enabled: _promptLoaded,
+                  minLines: 4,
+                  maxLines: 12,
+                  keyboardType: TextInputType.multiline,
+                  textCapitalization: TextCapitalization.sentences,
+                  onChanged: _onPromptChanged,
+                  decoration: InputDecoration(
+                    hintText: l.generalPromptHint,
+                    helperText: l.generalPromptHelper,
+                    helperMaxLines: 3,
+                  ),
+                ),
               ),
             ),
             Padding(
@@ -259,6 +450,83 @@ class _GeneralSettingsScreenState extends ConsumerState<GeneralSettingsScreen> {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// How long the system prompt waits after the last keystroke to be saved.
+const Duration promptSaveDelay = Duration(milliseconds: 500);
+
+/// A favourite: drag handle, short name over the id, remove.
+class _FavouriteRow extends StatelessWidget {
+  const _FavouriteRow({
+    super.key,
+    required this.index,
+    required this.id,
+    required this.name,
+    required this.onRemove,
+  });
+
+  final int index;
+  final String id;
+  final String name;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final cs = context.colors;
+    final muted = context.delve.textMuted;
+    return Material(
+      color: Colors.transparent,
+      child: SizedBox(
+        height: 60,
+        child: Row(
+          children: [
+            ReorderableDragStartListener(
+              key: Key('generalSettings.fav.drag.$id'),
+              index: index,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DelveTokens.space4,
+                  vertical: DelveTokens.space3,
+                ),
+                child: SymbolIcon(
+                  DelveIcons.dragIndicator,
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.text.titleSmall,
+                  ),
+                  Text(
+                    id,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: DelveText.monoSmall.copyWith(color: muted),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              key: Key('generalSettings.fav.remove.$id'),
+              tooltip: l.pickerRemoveFavourite(name),
+              onPressed: onRemove,
+              icon: SymbolIcon(DelveIcons.close, color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(width: DelveTokens.space1),
           ],
         ),
       ),
@@ -385,20 +653,9 @@ class _Spend extends ConsumerWidget {
     final cs = context.colors;
     final d = context.delve;
     final limit = i.limit;
-    final remaining = i.limitRemaining;
-    final used = limit != null && remaining != null
-        ? limit - remaining
-        : i.usageMonthly ?? i.usage ?? 0;
-    final period = switch (i.limitReset) {
-      'monthly' => l.generalKeyPeriodMonthly,
-      'weekly' => l.generalKeyPeriodWeekly,
-      'daily' => l.generalKeyPeriodDaily,
-      _ => null,
-    };
+    final used = keySpent(i);
     final resets = i.resetsAt;
-    final line = limit == null
-        ? l.generalKeySpendNoLimit(usdText(used))
-        : [l.generalKeySpend(usdText(used), usdText(limit)), ?period].join(' ');
+    final line = keySpendText(l, i);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

@@ -4068,4 +4068,63 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get generalPrivacyNote =>
       'Requests go straight from this phone to OpenRouter. Zero data retention and no training are required on every request. Nothing from your desktop is sent.';
+
+  @override
+  String get generalMenuUsage => 'Usage';
+
+  @override
+  String get generalUsageCost => 'Cost';
+
+  @override
+  String get generalUsageAnswersTile => 'Answers';
+
+  @override
+  String get generalUsageContext => 'Context of the last answer';
+
+  @override
+  String get generalUsageByModel => 'By model';
+
+  @override
+  String get generalUsageNoAnswers => 'No answers yet.';
+
+  @override
+  String generalUsageAnswers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count answers',
+      one: '1 answer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String generalUsageResets(String date) {
+    return 'resets $date';
+  }
+
+  @override
+  String get generalFavAdd => 'Add';
+
+  @override
+  String get generalFavEmpty =>
+      'No favourites. Add one here or star a model in the picker.';
+
+  @override
+  String generalFavRemoved(String model) {
+    return '$model removed from favourites';
+  }
+
+  @override
+  String get pickerSubFavourite => 'add to favourites · per 1M tokens in / out';
+
+  @override
+  String get generalSettingsPrompt => 'System prompt';
+
+  @override
+  String get generalPromptHint => 'Empty';
+
+  @override
+  String get generalPromptHelper =>
+      'Sent with every General message. Empty by default.';
 }
