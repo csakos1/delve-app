@@ -1,6 +1,8 @@
 package hu.csakos.delve
 
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ComponentName
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -9,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Parcelable
 import android.os.PowerManager
 import android.os.Environment
 import android.provider.MediaStore
@@ -136,6 +139,15 @@ class MainActivity : FlutterFragmentActivity() {
                     "open" -> result.success(
                         openUri(call.argument<String>("uri"), call.argument<String>("mime")),
                     )
+                    "share" -> {
+                        val uri = call.argument<String>("uri")
+                        if (uri == null) {
+                            result.error("args", "uri", null)
+                        } else {
+                            shareUri(uri, call.argument<String>("mime"))
+                            result.success(null)
+                        }
+                    }
                     "pdfOpen" -> {
                         val path = call.argument<String>("path")
                         if (path == null) {
@@ -294,6 +306,26 @@ class MainActivity : FlutterFragmentActivity() {
         } catch (e: ActivityNotFoundException) {
             false
         }
+    }
+
+    /**
+     * The share sheet for one of [publish]'s entries (a General export).
+     * Delve itself is left out: its own "Share to Delve" would take it.
+     */
+    private fun shareUri(uri: String, mime: String?) {
+        val content = Uri.parse(uri)
+        val send = Intent(Intent.ACTION_SEND)
+            .setType(mime ?: "application/octet-stream")
+            .putExtra(Intent.EXTRA_STREAM, content)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        send.clipData = ClipData.newRawUri("", content)
+        val chooser = Intent.createChooser(send, null)
+            .putExtra(
+                Intent.EXTRA_EXCLUDE_COMPONENTS,
+                arrayOf<Parcelable>(ComponentName(this, MainActivity::class.java)),
+            )
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        startActivity(chooser)
     }
 
     /** Starts (or updates the text of) the keep-alive service; false: not allowed now. */

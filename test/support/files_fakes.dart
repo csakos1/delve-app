@@ -535,6 +535,7 @@ class FakeDeviceFiles implements DeviceFiles {
   /// Folders under Downloads/Delve that already hold this app's files.
   final Set<String> takenFolders = {};
   final List<String> openedUris = [];
+  final List<(String, String)> shared = [];
   bool canOpen = true;
 
   @override
@@ -570,6 +571,9 @@ class FakeDeviceFiles implements DeviceFiles {
     openedUris.add(uri);
     return canOpen;
   }
+
+  @override
+  Future<void> share(String uri, String mime) async => shared.add((uri, mime));
 }
 
 /// A white 1 × 1 PNG: what the fake PDF renderer draws.

@@ -4127,4 +4127,94 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get generalPromptHelper =>
       'Sent with every General message. Empty by default.';
+
+  @override
+  String get generalSettingsChats => 'Chats on this phone';
+
+  @override
+  String get generalExport => 'Export chats';
+
+  @override
+  String get generalExportSub =>
+      'One .zip with chats, images and settings · never the key';
+
+  @override
+  String generalExportDone(int count, String folder) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Exported $count chats to $folder',
+      one: 'Exported 1 chat to $folder',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get generalExportShare => 'Share';
+
+  @override
+  String generalExportFailed(String error) {
+    return 'Couldn\'t export: $error';
+  }
+
+  @override
+  String get generalImport => 'Import chats';
+
+  @override
+  String get generalImportSub =>
+      'Adds the chats of a Delve export · the newer version of a chat wins';
+
+  @override
+  String generalImportChats(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Imported $count chats',
+      one: 'Imported 1 chat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String generalImportImages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count images',
+      one: '1 image',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String generalImportResult(
+    String chats,
+    int created,
+    int updated,
+    String images,
+  ) {
+    return '$chats — $created new, $updated updated, $images';
+  }
+
+  @override
+  String get generalImportOk => 'OK';
+
+  @override
+  String get generalImportNotExport => 'This file isn\'t a Delve export';
+
+  @override
+  String get generalImportTooNew =>
+      'This export is from a newer version of Delve. Update the app to import it.';
+
+  @override
+  String get generalImportDamaged =>
+      'This export is damaged — nothing was imported.';
+
+  @override
+  String get generalImportPickAnother => 'Pick another file';
+
+  @override
+  String generalImportFailed(String error) {
+    return 'Couldn\'t import: $error';
+  }
 }

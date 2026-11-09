@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'general_database.dart';
+import 'general_export.dart';
 import 'general_key_store.dart';
 import 'general_service.dart';
 import 'model_catalog.dart';
@@ -18,6 +19,11 @@ final generalDatabaseProvider = Provider<GeneralDatabase>((ref) {
   ref.onDispose(db.close);
   return db;
 });
+
+/// Export / import of the General chats (G1c).
+final generalExporterProvider = Provider<GeneralExporter>(
+  (ref) => GeneralExporter(ref.watch(generalDatabaseProvider)),
+);
 
 final generalKeyStoreProvider = Provider<GeneralKeyStore>(
   (ref) => SecureGeneralKeyStore(),

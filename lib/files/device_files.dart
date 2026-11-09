@@ -24,6 +24,9 @@ abstract interface class DeviceFiles {
 
   /// Opens [uri] in another app; false when none can.
   Future<bool> open(String uri, String mime);
+
+  /// Offers [uri] (one of [publish]'s) to other apps: the share sheet.
+  Future<void> share(String uri, String mime);
 }
 
 /// MainActivity's `hu.csakos.delve/files` channel.
@@ -57,6 +60,10 @@ class ChannelDeviceFiles implements DeviceFiles {
   Future<bool> open(String uri, String mime) async =>
       await _channel.invokeMethod<bool>('open', {'uri': uri, 'mime': mime}) ??
       false;
+
+  @override
+  Future<void> share(String uri, String mime) =>
+      _channel.invokeMethod<void>('share', {'uri': uri, 'mime': mime});
 }
 
 /// Where the downloads land, as the user sees it.

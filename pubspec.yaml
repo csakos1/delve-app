@@ -47,6 +47,9 @@ dependencies:
   pinenacl: ^0.6.0
   local_auth: ^3.0.2
 
+  # General export / import (G1c): one .zip with chats, images, settings
+  archive: ^4.0.7
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

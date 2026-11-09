@@ -3193,5 +3193,76 @@
   "pickerSubFavourite": "add to favourites · per 1M tokens in / out",
   "generalSettingsPrompt": "System prompt",
   "generalPromptHint": "Empty",
-  "generalPromptHelper": "Sent with every General message. Empty by default."
+  "generalPromptHelper": "Sent with every General message. Empty by default.",
+  "generalSettingsChats": "Chats on this phone",
+  "generalExport": "Export chats",
+  "generalExportSub": "One .zip with chats, images and settings · never the key",
+  "generalExportDone": "{count, plural, =1{Exported 1 chat to {folder}} other{Exported {count} chats to {folder}}}",
+  "@generalExportDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "generalExportShare": "Share",
+  "generalExportFailed": "Couldn't export: {error}",
+  "@generalExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "generalImport": "Import chats",
+  "generalImportSub": "Adds the chats of a Delve export · the newer version of a chat wins",
+  "generalImportChats": "{count, plural, =1{Imported 1 chat} other{Imported {count} chats}}",
+  "@generalImportChats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "generalImportImages": "{count, plural, =1{1 image} other{{count} images}}",
+  "@generalImportImages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "generalImportResult": "{chats} — {created} new, {updated} updated, {images}",
+  "@generalImportResult": {
+    "placeholders": {
+      "chats": {
+        "type": "String"
+      },
+      "created": {
+        "type": "int"
+      },
+      "updated": {
+        "type": "int"
+      },
+      "images": {
+        "type": "String"
+      }
+    }
+  },
+  "generalImportOk": "OK",
+  "generalImportNotExport": "This file isn't a Delve export",
+  "generalImportTooNew": "This export is from a newer version of Delve. Update the app to import it.",
+  "generalImportDamaged": "This export is damaged — nothing was imported.",
+  "generalImportPickAnother": "Pick another file",
+  "generalImportFailed": "Couldn't import: {error}",
+  "@generalImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

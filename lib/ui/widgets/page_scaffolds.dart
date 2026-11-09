@@ -327,4 +327,7 @@ abstract final class DelveIcons {
   static const IconData image = Symbols.image_rounded;
   static const IconData delete = Symbols.delete_rounded;
   static const IconData dragIndicator = Symbols.drag_indicator_rounded;
+  static const IconData exportChats = Symbols.download_rounded;
+  static const IconData importChats = Symbols.upload_file_rounded;
+  static const IconData share = Symbols.share_rounded;
 }

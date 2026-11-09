@@ -6465,6 +6465,113 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sent with every General message. Empty by default.'**
   String get generalPromptHelper;
+
+  /// No description provided for @generalSettingsChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats on this phone'**
+  String get generalSettingsChats;
+
+  /// No description provided for @generalExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export chats'**
+  String get generalExport;
+
+  /// No description provided for @generalExportSub.
+  ///
+  /// In en, this message translates to:
+  /// **'One .zip with chats, images and settings · never the key'**
+  String get generalExportSub;
+
+  /// No description provided for @generalExportDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Exported 1 chat to {folder}} other{Exported {count} chats to {folder}}}'**
+  String generalExportDone(int count, String folder);
+
+  /// No description provided for @generalExportShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get generalExportShare;
+
+  /// No description provided for @generalExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t export: {error}'**
+  String generalExportFailed(String error);
+
+  /// No description provided for @generalImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import chats'**
+  String get generalImport;
+
+  /// No description provided for @generalImportSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds the chats of a Delve export · the newer version of a chat wins'**
+  String get generalImportSub;
+
+  /// No description provided for @generalImportChats.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Imported 1 chat} other{Imported {count} chats}}'**
+  String generalImportChats(int count);
+
+  /// No description provided for @generalImportImages.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 image} other{{count} images}}'**
+  String generalImportImages(int count);
+
+  /// No description provided for @generalImportResult.
+  ///
+  /// In en, this message translates to:
+  /// **'{chats} — {created} new, {updated} updated, {images}'**
+  String generalImportResult(
+    String chats,
+    int created,
+    int updated,
+    String images,
+  );
+
+  /// No description provided for @generalImportOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get generalImportOk;
+
+  /// No description provided for @generalImportNotExport.
+  ///
+  /// In en, this message translates to:
+  /// **'This file isn\'t a Delve export'**
+  String get generalImportNotExport;
+
+  /// No description provided for @generalImportTooNew.
+  ///
+  /// In en, this message translates to:
+  /// **'This export is from a newer version of Delve. Update the app to import it.'**
+  String get generalImportTooNew;
+
+  /// No description provided for @generalImportDamaged.
+  ///
+  /// In en, this message translates to:
+  /// **'This export is damaged — nothing was imported.'**
+  String get generalImportDamaged;
+
+  /// No description provided for @generalImportPickAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick another file'**
+  String get generalImportPickAnother;
+
+  /// No description provided for @generalImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t import: {error}'**
+  String generalImportFailed(String error);
 }
 
 class _AppLocalizationsDelegate

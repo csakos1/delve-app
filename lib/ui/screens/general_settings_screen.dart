@@ -1,11 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../attachments/picker.dart';
+import '../../files/device_files.dart';
+import '../../files/files_providers.dart';
 import '../../general/general_database.dart';
+import '../../general/general_export.dart';
 import '../../general/general_key_store.dart';
 import '../../general/general_providers.dart';
 import '../../general/model_catalog.dart';
@@ -21,7 +26,8 @@ import '../widgets/status_ui.dart';
 /// 24g Settings → General: the phone's OpenRouter key (paste, replace,
 /// remove) with this period's spend, the default model, the favourites
 /// (reorder by drag, remove, add from the picker), the token footer, the
-/// system prompt and the privacy note. Export / import come in G1c.
+/// system prompt, export / import of the chats on this phone (24h) and the
+/// privacy note.
 class GeneralSettingsScreen extends ConsumerStatefulWidget {
   const GeneralSettingsScreen({super.key});
 
@@ -45,6 +51,9 @@ class _GeneralSettingsScreenState extends ConsumerState<GeneralSettingsScreen> {
   /// does not jump back for a frame).
   List<String>? _favs;
 
+  /// An export or an import is running (one at a time).
+  _Transfer? _transfer;
+
   @override
   void initState() {
     super.initState();
@@ -56,10 +65,7 @@ class _GeneralSettingsScreenState extends ConsumerState<GeneralSettingsScreen> {
   @override
   void dispose() {
     // a prompt typed just before leaving is still saved
-    if (_promptSave?.isActive ?? false) {
-      _promptSave!.cancel();
-      _savePrompt();
-    }
+    _flushPrompt();
     _field.dispose();
     _prompt.dispose();
     super.dispose();
@@ -139,6 +145,161 @@ class _GeneralSettingsScreenState extends ConsumerState<GeneralSettingsScreen> {
     if (now.contains(picked)) return;
     await _setFavourites([...now, picked]);
   }
+
+  /// 24h: the whole General database into Downloads/Delve, then Share.
+  Future<void> _export() async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final device = ref.read(deviceFilesProvider);
+    _flushPrompt();
+    setState(() => _transfer = _Transfer.exporting);
+    try {
+      final file = await ref.read(generalExporterProvider).export();
+      final path = '${await device.scratchDir()}/${file.name}';
+      await File(path).writeAsBytes(file.bytes, flush: true);
+      final uri = await device.publish(path, file.name, _zipMime);
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            key: const Key('generalSettings.exported'),
+            content: Text(l.generalExportDone(file.chats, kDownloadFolder)),
+            persist: false,
+            duration: const Duration(seconds: 10),
+            action: SnackBarAction(
+              label: l.generalExportShare,
+              onPressed: () => unawaited(device.share(uri, _zipMime)),
+            ),
+          ),
+        );
+    } on Exception catch (e) {
+      if (mounted) _snack(l.generalExportFailed(_why(e)));
+    } finally {
+      if (mounted) setState(() => _transfer = null);
+    }
+  }
+
+  /// 24h: pick a `.zip`, merge it, show what came in; a wrong file offers
+  /// another pick.
+  Future<void> _import() async {
+    final l = AppLocalizations.of(context);
+    final picker = ref.read(attachmentPickerProvider);
+    final exporter = ref.read(generalExporterProvider);
+    _flushPrompt();
+    while (mounted) {
+      final picked = await picker.files(limit: 1);
+      if (picked.isEmpty || !mounted) return;
+      setState(() => _transfer = _Transfer.importing);
+      GeneralImportResult? result;
+      GeneralImportError? problem;
+      try {
+        result = await exporter.import(await picked.first.read());
+      } on GeneralImportError catch (e) {
+        problem = e;
+      } on Exception catch (e) {
+        if (mounted) _snack(l.generalImportFailed(_why(e)));
+        return;
+      } finally {
+        if (mounted) setState(() => _transfer = null);
+      }
+      if (!mounted) return;
+      if (result != null) {
+        await _reloadPrompt();
+        if (mounted) await _showImported(result);
+        return;
+      }
+      if (await _showImportProblem(problem!) != true) return;
+    }
+  }
+
+  Future<void> _showImported(GeneralImportResult r) {
+    final l = AppLocalizations.of(context);
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const Key('generalSettings.imported'),
+        content: Text(
+          l.generalImportResult(
+            l.generalImportChats(r.chats),
+            r.created,
+            r.updated,
+            l.generalImportImages(r.images),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l.generalImportOk),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// True: pick another file.
+  Future<bool?> _showImportProblem(GeneralImportError e) {
+    final l = AppLocalizations.of(context);
+    final detail = e.detail;
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const Key('generalSettings.importProblem'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(switch (e.problem) {
+              GeneralImportProblem.notExport => l.generalImportNotExport,
+              GeneralImportProblem.tooNew => l.generalImportTooNew,
+              GeneralImportProblem.damaged => l.generalImportDamaged,
+            }),
+            if (e.problem == GeneralImportProblem.damaged && detail != null)
+              Padding(
+                padding: const EdgeInsets.only(top: DelveTokens.space2),
+                child: Text(
+                  detail,
+                  style: DelveText.monoSmall.copyWith(
+                    color: context.delve.textMuted,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            key: const Key('generalSettings.importAgain'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l.generalImportPickAnother),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// A prompt typed just before an export or an import is saved first.
+  void _flushPrompt() {
+    if (_promptSave?.isActive ?? false) {
+      _promptSave!.cancel();
+      _savePrompt();
+    }
+  }
+
+  /// An import may have replaced the system prompt.
+  Future<void> _reloadPrompt() async {
+    final saved = await _db.meta(GeneralMetaKeys.systemPrompt);
+    if (mounted) _prompt.text = saved ?? '';
+  }
+
+  static String _why(Exception e) => switch (e) {
+    PlatformException(:final message?) => message,
+    FileSystemException(:final message, :final osError) =>
+      osError == null ? message : '$message (${osError.message})',
+    _ => '$e',
+  };
 
   void _snack(String text) => ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
@@ -415,6 +576,25 @@ class _GeneralSettingsScreenState extends ConsumerState<GeneralSettingsScreen> {
                 ),
               ),
             ),
+            _Section(l.generalSettingsChats),
+            ListTile(
+              key: const Key('generalSettings.export'),
+              leading: const SymbolIcon(DelveIcons.exportChats),
+              title: Text(l.generalExport),
+              subtitle: Text(l.generalExportSub),
+              trailing: _transfer == _Transfer.exporting ? const _Busy() : null,
+              enabled: _transfer == null,
+              onTap: () => unawaited(_export()),
+            ),
+            ListTile(
+              key: const Key('generalSettings.import'),
+              leading: const SymbolIcon(DelveIcons.importChats),
+              title: Text(l.generalImport),
+              subtitle: Text(l.generalImportSub),
+              trailing: _transfer == _Transfer.importing ? const _Busy() : null,
+              enabled: _transfer == null,
+              onTap: () => unawaited(_import()),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 DelveTokens.space4,
@@ -459,6 +639,21 @@ class _GeneralSettingsScreenState extends ConsumerState<GeneralSettingsScreen> {
 
 /// How long the system prompt waits after the last keystroke to be saved.
 const Duration promptSaveDelay = Duration(milliseconds: 500);
+
+const _zipMime = 'application/zip';
+
+enum _Transfer { exporting, importing }
+
+/// The spinner of a running export or import.
+class _Busy extends StatelessWidget {
+  const _Busy();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.square(
+    dimension: 20,
+    child: CircularProgressIndicator(strokeWidth: 2),
+  );
+}
 
 /// A favourite: drag handle, short name over the id, remove.
 class _FavouriteRow extends StatelessWidget {
