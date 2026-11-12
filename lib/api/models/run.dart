@@ -19,6 +19,9 @@ abstract class Run with _$Run {
     Map<String, Object?>? usage,
     Map<String, Object?>? perf,
     String? error,
+
+    /// The local model that ran it ("Qwen3.8-27B · IQ4_XS"); null on old runs.
+    String? model,
   }) = _Run;
 
   factory Run.fromJson(Map<String, Object?> json) => _$RunFromJson(json);
@@ -40,6 +43,7 @@ abstract class OpenRun with _$OpenRun {
     Map<String, Object?>? usage,
     Map<String, Object?>? perf,
     String? error,
+    String? model,
     required int position,
   }) = _OpenRun;
 

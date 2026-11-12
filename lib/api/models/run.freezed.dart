@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Run {
 
- String get runId; String get conversationId; String get status; bool get thinking; String get origin; DateTime get queuedAt; DateTime? get startedAt; DateTime? get endedAt; Map<String, Object?>? get usage; Map<String, Object?>? get perf; String? get error;
+ String get runId; String get conversationId; String get status; bool get thinking; String get origin; DateTime get queuedAt; DateTime? get startedAt; DateTime? get endedAt; Map<String, Object?>? get usage; Map<String, Object?>? get perf; String? get error;/// The local model that ran it ("Qwen3.8-27B · IQ4_XS"); null on old runs.
+ String? get model;
 /// Create a copy of Run
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +29,16 @@ $RunCopyWith<Run> get copyWith => _$RunCopyWithImpl<Run>(this as Run, _$identity
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Run&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.queuedAt, queuedAt) || other.queuedAt == queuedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&const DeepCollectionEquality().equals(other.usage, usage)&&const DeepCollectionEquality().equals(other.perf, perf)&&(identical(other.error, error) || other.error == error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Run&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.queuedAt, queuedAt) || other.queuedAt == queuedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&const DeepCollectionEquality().equals(other.usage, usage)&&const DeepCollectionEquality().equals(other.perf, perf)&&(identical(other.error, error) || other.error == error)&&(identical(other.model, model) || other.model == model));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,runId,conversationId,status,thinking,origin,queuedAt,startedAt,endedAt,const DeepCollectionEquality().hash(usage),const DeepCollectionEquality().hash(perf),error);
+int get hashCode => Object.hash(runtimeType,runId,conversationId,status,thinking,origin,queuedAt,startedAt,endedAt,const DeepCollectionEquality().hash(usage),const DeepCollectionEquality().hash(perf),error,model);
 
 @override
 String toString() {
-  return 'Run(runId: $runId, conversationId: $conversationId, status: $status, thinking: $thinking, origin: $origin, queuedAt: $queuedAt, startedAt: $startedAt, endedAt: $endedAt, usage: $usage, perf: $perf, error: $error)';
+  return 'Run(runId: $runId, conversationId: $conversationId, status: $status, thinking: $thinking, origin: $origin, queuedAt: $queuedAt, startedAt: $startedAt, endedAt: $endedAt, usage: $usage, perf: $perf, error: $error, model: $model)';
 }
 
 
@@ -48,7 +49,7 @@ abstract mixin class $RunCopyWith<$Res>  {
   factory $RunCopyWith(Run value, $Res Function(Run) _then) = _$RunCopyWithImpl;
 @useResult
 $Res call({
- String runId, String conversationId, String status, bool thinking, String origin, DateTime queuedAt, DateTime? startedAt, DateTime? endedAt, Map<String, Object?>? usage, Map<String, Object?>? perf, String? error
+ String runId, String conversationId, String status, bool thinking, String origin, DateTime queuedAt, DateTime? startedAt, DateTime? endedAt, Map<String, Object?>? usage, Map<String, Object?>? perf, String? error, String? model
 });
 
 
@@ -65,7 +66,7 @@ class _$RunCopyWithImpl<$Res>
 
 /// Create a copy of Run
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? runId = null,Object? conversationId = null,Object? status = null,Object? thinking = null,Object? origin = null,Object? queuedAt = null,Object? startedAt = freezed,Object? endedAt = freezed,Object? usage = freezed,Object? perf = freezed,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? runId = null,Object? conversationId = null,Object? status = null,Object? thinking = null,Object? origin = null,Object? queuedAt = null,Object? startedAt = freezed,Object? endedAt = freezed,Object? usage = freezed,Object? perf = freezed,Object? error = freezed,Object? model = freezed,}) {
   return _then(_self.copyWith(
 runId: null == runId ? _self.runId : runId // ignore: cast_nullable_to_non_nullable
 as String,conversationId: null == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
@@ -78,6 +79,7 @@ as DateTime?,endedAt: freezed == endedAt ? _self.endedAt : endedAt // ignore: ca
 as DateTime?,usage: freezed == usage ? _self.usage : usage // ignore: cast_nullable_to_non_nullable
 as Map<String, Object?>?,perf: freezed == perf ? _self.perf : perf // ignore: cast_nullable_to_non_nullable
 as Map<String, Object?>?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,model: freezed == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -163,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error,  String? model)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Run() when $default != null:
-return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error);case _:
+return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error,_that.model);case _:
   return orElse();
 
 }
@@ -184,10 +186,10 @@ return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error,  String? model)  $default,) {final _that = this;
 switch (_that) {
 case _Run():
-return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error);case _:
+return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error,_that.model);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +206,10 @@ return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error,  String? model)?  $default,) {final _that = this;
 switch (_that) {
 case _Run() when $default != null:
-return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error);case _:
+return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error,_that.model);case _:
   return null;
 
 }
@@ -219,7 +221,7 @@ return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_th
 @JsonSerializable()
 
 class _Run implements Run {
-  const _Run({required this.runId, required this.conversationId, required this.status, required this.thinking, required this.origin, required this.queuedAt, this.startedAt, this.endedAt, final  Map<String, Object?>? usage, final  Map<String, Object?>? perf, this.error}): _usage = usage,_perf = perf;
+  const _Run({required this.runId, required this.conversationId, required this.status, required this.thinking, required this.origin, required this.queuedAt, this.startedAt, this.endedAt, final  Map<String, Object?>? usage, final  Map<String, Object?>? perf, this.error, this.model}): _usage = usage,_perf = perf;
   factory _Run.fromJson(Map<String, dynamic> json) => _$RunFromJson(json);
 
 @override final  String runId;
@@ -249,6 +251,8 @@ class _Run implements Run {
 }
 
 @override final  String? error;
+/// The local model that ran it ("Qwen3.8-27B · IQ4_XS"); null on old runs.
+@override final  String? model;
 
 /// Create a copy of Run
 /// with the given fields replaced by the non-null parameter values.
@@ -263,16 +267,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Run&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.queuedAt, queuedAt) || other.queuedAt == queuedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&const DeepCollectionEquality().equals(other._usage, _usage)&&const DeepCollectionEquality().equals(other._perf, _perf)&&(identical(other.error, error) || other.error == error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Run&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.queuedAt, queuedAt) || other.queuedAt == queuedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&const DeepCollectionEquality().equals(other._usage, _usage)&&const DeepCollectionEquality().equals(other._perf, _perf)&&(identical(other.error, error) || other.error == error)&&(identical(other.model, model) || other.model == model));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,runId,conversationId,status,thinking,origin,queuedAt,startedAt,endedAt,const DeepCollectionEquality().hash(_usage),const DeepCollectionEquality().hash(_perf),error);
+int get hashCode => Object.hash(runtimeType,runId,conversationId,status,thinking,origin,queuedAt,startedAt,endedAt,const DeepCollectionEquality().hash(_usage),const DeepCollectionEquality().hash(_perf),error,model);
 
 @override
 String toString() {
-  return 'Run(runId: $runId, conversationId: $conversationId, status: $status, thinking: $thinking, origin: $origin, queuedAt: $queuedAt, startedAt: $startedAt, endedAt: $endedAt, usage: $usage, perf: $perf, error: $error)';
+  return 'Run(runId: $runId, conversationId: $conversationId, status: $status, thinking: $thinking, origin: $origin, queuedAt: $queuedAt, startedAt: $startedAt, endedAt: $endedAt, usage: $usage, perf: $perf, error: $error, model: $model)';
 }
 
 
@@ -283,7 +287,7 @@ abstract mixin class _$RunCopyWith<$Res> implements $RunCopyWith<$Res> {
   factory _$RunCopyWith(_Run value, $Res Function(_Run) _then) = __$RunCopyWithImpl;
 @override @useResult
 $Res call({
- String runId, String conversationId, String status, bool thinking, String origin, DateTime queuedAt, DateTime? startedAt, DateTime? endedAt, Map<String, Object?>? usage, Map<String, Object?>? perf, String? error
+ String runId, String conversationId, String status, bool thinking, String origin, DateTime queuedAt, DateTime? startedAt, DateTime? endedAt, Map<String, Object?>? usage, Map<String, Object?>? perf, String? error, String? model
 });
 
 
@@ -300,7 +304,7 @@ class __$RunCopyWithImpl<$Res>
 
 /// Create a copy of Run
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? runId = null,Object? conversationId = null,Object? status = null,Object? thinking = null,Object? origin = null,Object? queuedAt = null,Object? startedAt = freezed,Object? endedAt = freezed,Object? usage = freezed,Object? perf = freezed,Object? error = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? runId = null,Object? conversationId = null,Object? status = null,Object? thinking = null,Object? origin = null,Object? queuedAt = null,Object? startedAt = freezed,Object? endedAt = freezed,Object? usage = freezed,Object? perf = freezed,Object? error = freezed,Object? model = freezed,}) {
   return _then(_Run(
 runId: null == runId ? _self.runId : runId // ignore: cast_nullable_to_non_nullable
 as String,conversationId: null == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
@@ -313,6 +317,7 @@ as DateTime?,endedAt: freezed == endedAt ? _self.endedAt : endedAt // ignore: ca
 as DateTime?,usage: freezed == usage ? _self._usage : usage // ignore: cast_nullable_to_non_nullable
 as Map<String, Object?>?,perf: freezed == perf ? _self._perf : perf // ignore: cast_nullable_to_non_nullable
 as Map<String, Object?>?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,model: freezed == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -324,7 +329,7 @@ as String?,
 /// @nodoc
 mixin _$OpenRun {
 
- String get runId; String get conversationId; String get status; bool get thinking; String get origin; DateTime get queuedAt; DateTime? get startedAt; DateTime? get endedAt; Map<String, Object?>? get usage; Map<String, Object?>? get perf; String? get error; int get position;
+ String get runId; String get conversationId; String get status; bool get thinking; String get origin; DateTime get queuedAt; DateTime? get startedAt; DateTime? get endedAt; Map<String, Object?>? get usage; Map<String, Object?>? get perf; String? get error; String? get model; int get position;
 /// Create a copy of OpenRun
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -337,16 +342,16 @@ $OpenRunCopyWith<OpenRun> get copyWith => _$OpenRunCopyWithImpl<OpenRun>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OpenRun&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.queuedAt, queuedAt) || other.queuedAt == queuedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&const DeepCollectionEquality().equals(other.usage, usage)&&const DeepCollectionEquality().equals(other.perf, perf)&&(identical(other.error, error) || other.error == error)&&(identical(other.position, position) || other.position == position));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OpenRun&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.queuedAt, queuedAt) || other.queuedAt == queuedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&const DeepCollectionEquality().equals(other.usage, usage)&&const DeepCollectionEquality().equals(other.perf, perf)&&(identical(other.error, error) || other.error == error)&&(identical(other.model, model) || other.model == model)&&(identical(other.position, position) || other.position == position));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,runId,conversationId,status,thinking,origin,queuedAt,startedAt,endedAt,const DeepCollectionEquality().hash(usage),const DeepCollectionEquality().hash(perf),error,position);
+int get hashCode => Object.hash(runtimeType,runId,conversationId,status,thinking,origin,queuedAt,startedAt,endedAt,const DeepCollectionEquality().hash(usage),const DeepCollectionEquality().hash(perf),error,model,position);
 
 @override
 String toString() {
-  return 'OpenRun(runId: $runId, conversationId: $conversationId, status: $status, thinking: $thinking, origin: $origin, queuedAt: $queuedAt, startedAt: $startedAt, endedAt: $endedAt, usage: $usage, perf: $perf, error: $error, position: $position)';
+  return 'OpenRun(runId: $runId, conversationId: $conversationId, status: $status, thinking: $thinking, origin: $origin, queuedAt: $queuedAt, startedAt: $startedAt, endedAt: $endedAt, usage: $usage, perf: $perf, error: $error, model: $model, position: $position)';
 }
 
 
@@ -357,7 +362,7 @@ abstract mixin class $OpenRunCopyWith<$Res>  {
   factory $OpenRunCopyWith(OpenRun value, $Res Function(OpenRun) _then) = _$OpenRunCopyWithImpl;
 @useResult
 $Res call({
- String runId, String conversationId, String status, bool thinking, String origin, DateTime queuedAt, DateTime? startedAt, DateTime? endedAt, Map<String, Object?>? usage, Map<String, Object?>? perf, String? error, int position
+ String runId, String conversationId, String status, bool thinking, String origin, DateTime queuedAt, DateTime? startedAt, DateTime? endedAt, Map<String, Object?>? usage, Map<String, Object?>? perf, String? error, String? model, int position
 });
 
 
@@ -374,7 +379,7 @@ class _$OpenRunCopyWithImpl<$Res>
 
 /// Create a copy of OpenRun
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? runId = null,Object? conversationId = null,Object? status = null,Object? thinking = null,Object? origin = null,Object? queuedAt = null,Object? startedAt = freezed,Object? endedAt = freezed,Object? usage = freezed,Object? perf = freezed,Object? error = freezed,Object? position = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? runId = null,Object? conversationId = null,Object? status = null,Object? thinking = null,Object? origin = null,Object? queuedAt = null,Object? startedAt = freezed,Object? endedAt = freezed,Object? usage = freezed,Object? perf = freezed,Object? error = freezed,Object? model = freezed,Object? position = null,}) {
   return _then(_self.copyWith(
 runId: null == runId ? _self.runId : runId // ignore: cast_nullable_to_non_nullable
 as String,conversationId: null == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
@@ -387,6 +392,7 @@ as DateTime?,endedAt: freezed == endedAt ? _self.endedAt : endedAt // ignore: ca
 as DateTime?,usage: freezed == usage ? _self.usage : usage // ignore: cast_nullable_to_non_nullable
 as Map<String, Object?>?,perf: freezed == perf ? _self.perf : perf // ignore: cast_nullable_to_non_nullable
 as Map<String, Object?>?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,model: freezed == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
 as String?,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
 as int,
   ));
@@ -473,10 +479,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error,  int position)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error,  String? model,  int position)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OpenRun() when $default != null:
-return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error,_that.position);case _:
+return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error,_that.model,_that.position);case _:
   return orElse();
 
 }
@@ -494,10 +500,10 @@ return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error,  int position)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error,  String? model,  int position)  $default,) {final _that = this;
 switch (_that) {
 case _OpenRun():
-return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error,_that.position);case _:
+return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error,_that.model,_that.position);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -514,10 +520,10 @@ return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error,  int position)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error,  String? model,  int position)?  $default,) {final _that = this;
 switch (_that) {
 case _OpenRun() when $default != null:
-return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error,_that.position);case _:
+return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error,_that.model,_that.position);case _:
   return null;
 
 }
@@ -529,7 +535,7 @@ return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_th
 @JsonSerializable()
 
 class _OpenRun implements OpenRun {
-  const _OpenRun({required this.runId, required this.conversationId, required this.status, required this.thinking, required this.origin, required this.queuedAt, this.startedAt, this.endedAt, final  Map<String, Object?>? usage, final  Map<String, Object?>? perf, this.error, required this.position}): _usage = usage,_perf = perf;
+  const _OpenRun({required this.runId, required this.conversationId, required this.status, required this.thinking, required this.origin, required this.queuedAt, this.startedAt, this.endedAt, final  Map<String, Object?>? usage, final  Map<String, Object?>? perf, this.error, this.model, required this.position}): _usage = usage,_perf = perf;
   factory _OpenRun.fromJson(Map<String, dynamic> json) => _$OpenRunFromJson(json);
 
 @override final  String runId;
@@ -559,6 +565,7 @@ class _OpenRun implements OpenRun {
 }
 
 @override final  String? error;
+@override final  String? model;
 @override final  int position;
 
 /// Create a copy of OpenRun
@@ -574,16 +581,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OpenRun&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.queuedAt, queuedAt) || other.queuedAt == queuedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&const DeepCollectionEquality().equals(other._usage, _usage)&&const DeepCollectionEquality().equals(other._perf, _perf)&&(identical(other.error, error) || other.error == error)&&(identical(other.position, position) || other.position == position));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OpenRun&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.queuedAt, queuedAt) || other.queuedAt == queuedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&const DeepCollectionEquality().equals(other._usage, _usage)&&const DeepCollectionEquality().equals(other._perf, _perf)&&(identical(other.error, error) || other.error == error)&&(identical(other.model, model) || other.model == model)&&(identical(other.position, position) || other.position == position));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,runId,conversationId,status,thinking,origin,queuedAt,startedAt,endedAt,const DeepCollectionEquality().hash(_usage),const DeepCollectionEquality().hash(_perf),error,position);
+int get hashCode => Object.hash(runtimeType,runId,conversationId,status,thinking,origin,queuedAt,startedAt,endedAt,const DeepCollectionEquality().hash(_usage),const DeepCollectionEquality().hash(_perf),error,model,position);
 
 @override
 String toString() {
-  return 'OpenRun(runId: $runId, conversationId: $conversationId, status: $status, thinking: $thinking, origin: $origin, queuedAt: $queuedAt, startedAt: $startedAt, endedAt: $endedAt, usage: $usage, perf: $perf, error: $error, position: $position)';
+  return 'OpenRun(runId: $runId, conversationId: $conversationId, status: $status, thinking: $thinking, origin: $origin, queuedAt: $queuedAt, startedAt: $startedAt, endedAt: $endedAt, usage: $usage, perf: $perf, error: $error, model: $model, position: $position)';
 }
 
 
@@ -594,7 +601,7 @@ abstract mixin class _$OpenRunCopyWith<$Res> implements $OpenRunCopyWith<$Res> {
   factory _$OpenRunCopyWith(_OpenRun value, $Res Function(_OpenRun) _then) = __$OpenRunCopyWithImpl;
 @override @useResult
 $Res call({
- String runId, String conversationId, String status, bool thinking, String origin, DateTime queuedAt, DateTime? startedAt, DateTime? endedAt, Map<String, Object?>? usage, Map<String, Object?>? perf, String? error, int position
+ String runId, String conversationId, String status, bool thinking, String origin, DateTime queuedAt, DateTime? startedAt, DateTime? endedAt, Map<String, Object?>? usage, Map<String, Object?>? perf, String? error, String? model, int position
 });
 
 
@@ -611,7 +618,7 @@ class __$OpenRunCopyWithImpl<$Res>
 
 /// Create a copy of OpenRun
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? runId = null,Object? conversationId = null,Object? status = null,Object? thinking = null,Object? origin = null,Object? queuedAt = null,Object? startedAt = freezed,Object? endedAt = freezed,Object? usage = freezed,Object? perf = freezed,Object? error = freezed,Object? position = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? runId = null,Object? conversationId = null,Object? status = null,Object? thinking = null,Object? origin = null,Object? queuedAt = null,Object? startedAt = freezed,Object? endedAt = freezed,Object? usage = freezed,Object? perf = freezed,Object? error = freezed,Object? model = freezed,Object? position = null,}) {
   return _then(_OpenRun(
 runId: null == runId ? _self.runId : runId // ignore: cast_nullable_to_non_nullable
 as String,conversationId: null == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
@@ -624,6 +631,7 @@ as DateTime?,endedAt: freezed == endedAt ? _self.endedAt : endedAt // ignore: ca
 as DateTime?,usage: freezed == usage ? _self._usage : usage // ignore: cast_nullable_to_non_nullable
 as Map<String, Object?>?,perf: freezed == perf ? _self._perf : perf // ignore: cast_nullable_to_non_nullable
 as Map<String, Object?>?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,model: freezed == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
 as String?,position: null == position ? _self.position : position // ignore: cast_nullable_to_non_nullable
 as int,
   ));

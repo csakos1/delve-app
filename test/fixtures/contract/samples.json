@@ -152,7 +152,8 @@
         "prefill_tps": 210.4,
         "gen_tps": 20.6
       },
-      "error": null
+      "error": null,
+      "model": "Qwen3.8-27B · IQ4_XS"
     },
     "open_run": {
       "run_id": "run_8e4b1c2d3a4f5e6b",
@@ -166,6 +167,7 @@
       "usage": null,
       "perf": null,
       "error": null,
+      "model": null,
       "position": 0
     },
     "approval": {
@@ -276,7 +278,91 @@
         "ctx": 65536,
         "slots": 1,
         "slots_busy": 1,
-        "gen_tps": 21.4
+        "gen_tps": 21.4,
+        "preset": "qwen38-27b-iq4xs",
+        "vision": true,
+        "thinking": "toggle",
+        "models": [
+          {
+            "name": "qwen38-27b-iq4xs",
+            "model": "Qwen3.8-27B",
+            "quant": "IQ4_XS",
+            "note": null,
+            "ctx": 65536,
+            "vision": true,
+            "thinking": "toggle",
+            "size_bytes": 14252845984,
+            "usable": true,
+            "reason": null,
+            "active": true
+          },
+          {
+            "name": "qwen38-27b-q6k",
+            "model": "Qwen3.8-27B",
+            "quant": "Q6_K",
+            "note": "Q6 since the RTX 3060",
+            "ctx": 65536,
+            "vision": true,
+            "thinking": "toggle",
+            "size_bytes": 22100000000,
+            "usable": true,
+            "reason": null,
+            "active": false
+          },
+          {
+            "name": "qwen38-27b-abl",
+            "model": "Qwen3.8-27B abliterated",
+            "quant": "Q4_K_M",
+            "note": null,
+            "ctx": 65536,
+            "vision": false,
+            "thinking": "toggle",
+            "size_bytes": 16500000000,
+            "usable": true,
+            "reason": null,
+            "active": false
+          },
+          {
+            "name": "reasoner-32b",
+            "model": "Reasoner-32B",
+            "quant": "Q4_K_M",
+            "note": null,
+            "ctx": 65536,
+            "vision": true,
+            "thinking": "always",
+            "size_bytes": 19800000000,
+            "usable": true,
+            "reason": null,
+            "active": false
+          },
+          {
+            "name": "qwen38-9b",
+            "model": "Qwen3.8-9B",
+            "quant": "Q8_0",
+            "note": null,
+            "ctx": 32768,
+            "vision": true,
+            "thinking": "toggle",
+            "size_bytes": 9700000000,
+            "usable": false,
+            "reason": "context_below_64k",
+            "active": false
+          },
+          {
+            "name": "test-broken",
+            "model": "does-not-exist",
+            "quant": null,
+            "note": null,
+            "ctx": 65536,
+            "vision": false,
+            "thinking": "toggle",
+            "size_bytes": null,
+            "usable": false,
+            "reason": "model_missing",
+            "active": false
+          }
+        ],
+        "switch": null
       },
       "queue": {
         "active": 1,
@@ -319,6 +405,28 @@
       "check": "disk",
       "status": "degraded",
       "detail": "96% used"
+    },
+    "llama_model": {
+      "name": "qwen38-27b-q6k",
+      "model": "Qwen3.8-27B",
+      "quant": "Q6_K",
+      "note": "Q6 since the RTX 3060",
+      "ctx": 65536,
+      "vision": true,
+      "thinking": "toggle",
+      "size_bytes": 22100000000,
+      "usable": true,
+      "reason": null,
+      "active": false
+    },
+    "llama_switch": {
+      "state": "failed",
+      "from": "qwen38-27b-iq4xs",
+      "to": "reasoner-32b",
+      "by": "Pixel 9 Pro XL",
+      "at": "2026-10-19T21:37:00.123456+00:00",
+      "error": "exited",
+      "elapsed_s": 34
     },
     "schedule": {
       "id": "7c1e9d2a-4b3f-4e5a-9c8d-1f2e3a4b5c6d",
@@ -4911,7 +5019,91 @@
         "ctx": null,
         "slots": 1,
         "slots_busy": 0,
-        "gen_tps": null
+        "gen_tps": null,
+        "preset": "qwen38-27b-iq4xs",
+        "vision": true,
+        "thinking": "toggle",
+        "models": [
+          {
+            "name": "qwen38-27b-iq4xs",
+            "model": "Qwen3.8-27B",
+            "quant": "IQ4_XS",
+            "note": null,
+            "ctx": 65536,
+            "vision": true,
+            "thinking": "toggle",
+            "size_bytes": 14252845984,
+            "usable": true,
+            "reason": null,
+            "active": true
+          },
+          {
+            "name": "qwen38-27b-q6k",
+            "model": "Qwen3.8-27B",
+            "quant": "Q6_K",
+            "note": "Q6 since the RTX 3060",
+            "ctx": 65536,
+            "vision": true,
+            "thinking": "toggle",
+            "size_bytes": 22100000000,
+            "usable": true,
+            "reason": null,
+            "active": false
+          },
+          {
+            "name": "qwen38-27b-abl",
+            "model": "Qwen3.8-27B abliterated",
+            "quant": "Q4_K_M",
+            "note": null,
+            "ctx": 65536,
+            "vision": false,
+            "thinking": "toggle",
+            "size_bytes": 16500000000,
+            "usable": true,
+            "reason": null,
+            "active": false
+          },
+          {
+            "name": "reasoner-32b",
+            "model": "Reasoner-32B",
+            "quant": "Q4_K_M",
+            "note": null,
+            "ctx": 65536,
+            "vision": true,
+            "thinking": "always",
+            "size_bytes": 19800000000,
+            "usable": true,
+            "reason": null,
+            "active": false
+          },
+          {
+            "name": "qwen38-9b",
+            "model": "Qwen3.8-9B",
+            "quant": "Q8_0",
+            "note": null,
+            "ctx": 32768,
+            "vision": true,
+            "thinking": "toggle",
+            "size_bytes": 9700000000,
+            "usable": false,
+            "reason": "context_below_64k",
+            "active": false
+          },
+          {
+            "name": "test-broken",
+            "model": "does-not-exist",
+            "quant": null,
+            "note": null,
+            "ctx": 65536,
+            "vision": false,
+            "thinking": "toggle",
+            "size_bytes": null,
+            "usable": false,
+            "reason": "model_missing",
+            "active": false
+          }
+        ],
+        "switch": null
       },
       "queue": {
         "active": 0,
@@ -5028,7 +5220,7 @@
   "connection": {
     "hello.ok": {
       "server_version": "0.1.0",
-      "api_revision": 9,
+      "api_revision": 10,
       "revision": "eb4045ed6a94",
       "hermes": "ok",
       "hermes_version": "0.22.2",
@@ -5043,7 +5235,7 @@
     },
     "meta": {
       "server_version": "0.1.0",
-      "api_revision": 9,
+      "api_revision": 10,
       "revision": "eb4045ed6a94",
       "python": "3.14.8",
       "hermes_expected_version": "0.22.2",
@@ -5051,7 +5243,7 @@
     },
     "status": {
       "server_version": "0.1.0",
-      "api_revision": 9,
+      "api_revision": 10,
       "revision": null,
       "hermes": null,
       "hermes_version": null,

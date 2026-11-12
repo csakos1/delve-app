@@ -4217,4 +4217,167 @@ class AppLocalizationsEn extends AppLocalizations {
   String generalImportFailed(String error) {
     return 'Couldn\'t import: $error';
   }
+
+  @override
+  String get systemStateSwitching => 'switching';
+
+  @override
+  String get modelLoadsOnStart => 'loads on Start';
+
+  @override
+  String get modelPickerTitle => 'Local models';
+
+  @override
+  String get modelPickerSubtitle => 'One model is loaded at a time.';
+
+  @override
+  String get modelPickerStopped =>
+      'llama-server is stopped. Start loads the model you pick.';
+
+  @override
+  String modelPickerFooter(String path) {
+    return 'Presets live on the desktop in $path.';
+  }
+
+  @override
+  String get modelReasonContext => 'Needs 65,536 tok of context for the agent';
+
+  @override
+  String get modelReasonMissing => 'Model file not found';
+
+  @override
+  String get modelReasonProjector => 'Image projector file not found';
+
+  @override
+  String get modelReasonNoModel => 'The preset names no model file';
+
+  @override
+  String get modelReasonOther => 'Can\'t be loaded';
+
+  @override
+  String get modelCapImages => 'Images';
+
+  @override
+  String get modelCapTextOnly => 'Text only';
+
+  @override
+  String get modelCapThinking => 'Thinking';
+
+  @override
+  String get modelCapAlways => 'Always thinks';
+
+  @override
+  String get modelCapNoThinking => 'No thinking';
+
+  @override
+  String modelLoading(String model) {
+    return 'Loading $model…';
+  }
+
+  @override
+  String modelStartedFrom(String device, String time) {
+    return 'Started from $device · $time';
+  }
+
+  @override
+  String modelSwitchTitle(String model) {
+    return 'Switch to $model?';
+  }
+
+  @override
+  String get modelSwitchBody =>
+      'Loading takes about a minute. Messages you send meanwhile wait.';
+
+  @override
+  String modelSwitchRunChat(String chat) {
+    return 'in “$chat”';
+  }
+
+  @override
+  String modelSwitchQueued(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queued messages run on the new model.',
+      one: '1 queued message runs on the new model.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get modelSwitch => 'Switch';
+
+  @override
+  String get modelStopAndSwitch => 'Stop run and switch';
+
+  @override
+  String modelQueueWaits(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages wait for the new model.',
+      one: '1 message waits for the new model.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String modelFailed(String model, String previous) {
+    return 'Couldn\'t load $model. Back on $previous.';
+  }
+
+  @override
+  String modelFailedAlone(String model) {
+    return 'Couldn\'t load $model.';
+  }
+
+  @override
+  String modelFailedDown(String model, String previous) {
+    return 'Couldn\'t load $model and couldn\'t go back to $previous. llama-server is down.';
+  }
+
+  @override
+  String modelFailedDownAlone(String model) {
+    return 'Couldn\'t load $model. llama-server is down.';
+  }
+
+  @override
+  String modelFailedShort(String model, String previous) {
+    return 'Couldn\'t load $model · back on $previous';
+  }
+
+  @override
+  String get modelFailedDownShort => 'Switch failed — llama-server is down';
+
+  @override
+  String modelExitedAfter(String time) {
+    return 'llama-server exited after $time';
+  }
+
+  @override
+  String modelNotReadyAfter(String time) {
+    return 'Not ready after $time';
+  }
+
+  @override
+  String get modelDismiss => 'Dismiss';
+
+  @override
+  String modelDismissFailed(String reason) {
+    return 'Couldn\'t dismiss: $reason';
+  }
+
+  @override
+  String get modelNotUsable => 'That model can\'t be loaded.';
+
+  @override
+  String get modelSwitchInProgress => 'A model switch is already in progress.';
+
+  @override
+  String get modelUnknown => 'That preset is no longer on the desktop.';
+
+  @override
+  String modelSwitchFailed(String reason) {
+    return 'Couldn\'t switch the model: $reason';
+  }
 }

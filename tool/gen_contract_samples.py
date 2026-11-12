@@ -10,7 +10,7 @@ from delve.attachments import attachment_out
 from delve.db.models import Approval, Attachment, Card, Conversation, Message, Run, Schedule, ToolStep, Watch, WatchItem
 from delve.serialize import approval_out, card_out, conversation_out, message_out, run_out, step_out
 from delve.llama import Props
-from delve.system import Parts, system_out
+from delve.system import Parts, switch_out, system_out
 from delve.brief import brief_payload
 from delve.schedules import schedule_out
 from delve.stats import RANGES, GpuBucket, RunRow, bucket_edges, edges_between, stats_out
@@ -36,7 +36,8 @@ run = Run(run_id="run_8e4b1c2d3a4f5e6b", conversation_id=conv.id, status="comple
     origin="app", queued_at=t0, started_at=t0 + timedelta(seconds=1), ended_at=t0 + timedelta(seconds=3),
     usage={"input_tokens": 17315, "output_tokens": 63, "cache_read_tokens": 17152},
     perf={"sse_reconnects": 0, "first_delta_s": 2.96, "context_source": "final_read", "llama_calls_seen": 2,
-          "prompt_tokens": 122, "predicted_tokens": 63, "prefill_tps": 210.4, "gen_tps": 20.6}, error=None)
+          "prompt_tokens": 122, "predicted_tokens": 63, "prefill_tps": 210.4, "gen_tps": 20.6}, error=None,
+    model="Qwen3.8-27B · IQ4_XS")
 appr = Approval(request_id="apr_3c9d1e2f", run_id="run_8e4b1c2d3a4f5e6b", conversation_id=conv.id,
     command="rm -r /tmp/delve-12-4-smoke-dir", description="recursive delete", pattern_keys=["rm -r"],
     action_class="delete_kill", status="pending", choice=None, decided_by=None, created_at=t0,
@@ -62,15 +63,29 @@ gpus = [
 detail = {"status": "degraded", "readiness": {"checks": {
     "disk": {"status": "degraded", "used_percent": 96.4, "free_bytes": 15779127296},
     "gateway": {"status": "ok"}}}}
+# M: the model presets as the helper lists them (`llama.models`)
+GB = 1000 ** 3
+def preset(name, file, ctx=65536, size=None, label=None, note=None, vision=True, thinking="toggle", reason=None):
+    return {"name": name, "file": file, "label": label, "note": note, "ctx": ctx, "vision": vision,
+            "thinking": thinking, "size_bytes": size, "usable": reason is None, "reason": reason}
+presets = {"active": "qwen38-27b-iq4xs", "models": [
+    preset("qwen38-27b-iq4xs", "Qwen3.8-27B-UD-IQ4_XS.gguf", size=14252845984),
+    preset("qwen38-27b-q6k", "Qwen3.8-27B-UD-Q6_K.gguf", size=int(22.1 * GB), note="Q6 since the RTX 3060"),
+    preset("qwen38-27b-abl", "Qwen3.8-27B-abliterated-Q4_K_M.gguf", size=int(16.5 * GB),
+           label="Qwen3.8-27B abliterated", vision=False),
+    preset("reasoner-32b", "Reasoner-32B-Q4_K_M.gguf", size=int(19.8 * GB), thinking="always"),
+    preset("qwen38-9b", "Qwen3.8-9B-Q8_0.gguf", ctx=32768, size=int(9.7 * GB), reason="context_below_64k"),
+    preset("test-broken", "does-not-exist.gguf", vision=False, reason="model_missing"),
+]}
 system_running = system_out(Parts(checked_at=t0, hermes_ok=True, hermes_version="0.22.2",
     hermes_detail=detail, hermes_unit={"active_state": "active", "active_since": 1792535518},
     llama_unit={"active_state": "active", "active_since": 1792537434, "inactive_since": 1792535668},
-    llama_healthy=True, props=Props("Qwen3.8-27B", "IQ4_XS", 65536, 1), slot_busy=True,
-    gen_tps=21.4, active_runs=1, queued_runs=1, gpus=gpus))
+    llama_healthy=True, props=Props("Qwen3.8-27B", "IQ4_XS", 65536, 1, file="Qwen3.8-27B-UD-IQ4_XS.gguf", vision=True),
+    slot_busy=True, gen_tps=21.4, active_runs=1, queued_runs=1, gpus=gpus, presets=presets))
 system_stopped = system_out(Parts(checked_at=t0, hermes_ok=True, hermes_version="0.22.2",
     hermes_detail=detail, hermes_unit={"active_state": "active", "active_since": 1792535518},
     llama_unit={"active_state": "inactive", "active_since": 1792535325, "inactive_since": 1792535668},
-    known_slots=1, intent="stopped", queued_runs=2,
+    known_slots=1, intent="stopped", queued_runs=2, presets=presets,
     gpus=[{**gpus[0], "mem_used_mib": 1266}, {**gpus[1], "mem_used_mib": 15}]))
 
 # B4: schedules and the morning brief
@@ -165,6 +180,9 @@ shapes = {
     "system": system_running,
     "gpu": system_running["gpus"][0],
     "hermes_issue": system_running["hermes"]["issues"][0],
+    "llama_model": system_running["llama"]["models"][1],
+    "llama_switch": switch_out("failed", src="qwen38-27b-iq4xs", to="reasoner-32b", by="Pixel 9 Pro XL",
+        at=(t0 - timedelta(minutes=2)).isoformat(), error="exited", elapsed_s=34),
     "schedule": schedule_out(brief_sched),
     "schedule_prompt": schedule_out(prompt_sched),
     "brief_payload": brief,

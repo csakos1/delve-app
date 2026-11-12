@@ -3,7 +3,7 @@
 /// Oldest backend contract this build works with (`/meta` `api_revision`).
 /// Raise it together with the models when the app starts relying on a newer
 /// contract; a smaller server revision shows the "server too old" screen.
-const int kMinApiRevision = 9; // 9: watches
+const int kMinApiRevision = 10; // 10: model presets
 
 /// REST routes the app calls (method + path template); checked against the
 /// backend contract in `test/contract_test.dart`.
@@ -205,7 +205,7 @@ abstract final class WsClose {
 }
 
 /// `POST /system/llama` actions.
-enum LlamaAction { start, stop }
+enum LlamaAction { start, stop, switchModel, dismiss }
 
 /// `POST /watches/{slug}/{verb}`: through the desktop's cron (W2).
 enum WatchAction { pause, resume, run }

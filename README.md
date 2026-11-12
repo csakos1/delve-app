@@ -59,6 +59,16 @@ reached over Tailscale only.
   asks again every 10 s while open; `system.updated` arrives over the socket. Without the
   server's privileged helper the view says so and offers no stop/start.
 
+- M3a: the local model (design 25) — the desktop runs one model at a time; the Model row
+  on both System cards opens "Local models", the presets the desktop lists (name and
+  quantization, context, size, image input, thinking; what cannot be loaded says why).
+  A pick asks first (and says when a run is stopped or messages wait), then the card
+  shows "switching" with the time since the desktop started. While llama-server is
+  stopped a pick only changes what Start loads. A switch that failed stays as a banner
+  with the reason and a command to copy until it is dismissed; when going back failed
+  too, there is no Dismiss and Start is on the card. Presets are files on the desktop;
+  the app never edits them.
+
 - B4: Schedules (More → Schedules) — the morning brief and the prompt schedules, each with
   its timing in words, next and last run, an on/off switch and Run now. The editor sets
   the timing as daily times, weekdays at a time, or plain cron (Budapest time; several
@@ -193,8 +203,8 @@ reached over Tailscale only.
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share
 target, W3 the watches, T2a–T3 the terminal. (A home-screen widget was planned and dropped.)
-Requires a server with API revision 9 or newer (`/api/v1/watches`); the terminal needs
-sshd on 2222 (delve-infra, installation step 19).
+Requires a server with API revision 10 or newer (model presets in `/api/v1/system`); the
+terminal needs sshd on 2222 (delve-infra, installation step 19).
 
 ## Stack
 

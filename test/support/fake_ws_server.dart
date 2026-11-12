@@ -77,7 +77,7 @@ class FakeWsServer {
     'type': 'hello.ok',
     'data': {
       'server_version': '0.1.0',
-      'api_revision': 9,
+      'api_revision': 10,
       'revision': null,
       'hermes': 'ok',
       'hermes_version': '0.22.2',

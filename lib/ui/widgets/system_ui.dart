@@ -234,7 +234,8 @@ class GpuRow extends StatelessWidget {
 }
 
 /// Stop (outlined, alert) or Start (filled, accent) llama-server; disabled
-/// while one is on its way or without the helper.
+/// while one is on its way or without the helper. During a model switch it
+/// stays a disabled Stop, whatever the unit does in between.
 class LlamaButton extends ConsumerWidget {
   const LlamaButton({super.key, required this.info});
   final SystemInfo info;
@@ -245,8 +246,10 @@ class LlamaButton extends ConsumerWidget {
     final busy = ref.watch(systemProvider.select((v) => v.busy));
     final transitioning =
         info.llama.status == 'starting' || info.llama.status == 'stopping';
-    final enabled = busy == null && info.helper.ok && !transitioning;
-    if (info.canStart) {
+    final switching = info.llama.switching;
+    final enabled =
+        busy == null && info.helper.ok && !transitioning && !switching;
+    if (info.canStart && !switching) {
       return SizedBox(
         height: DelveTokens.button,
         child: FilledButton.icon(

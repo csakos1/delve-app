@@ -6572,6 +6572,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t import: {error}'**
   String generalImportFailed(String error);
+
+  /// No description provided for @systemStateSwitching.
+  ///
+  /// In en, this message translates to:
+  /// **'switching'**
+  String get systemStateSwitching;
+
+  /// No description provided for @modelLoadsOnStart.
+  ///
+  /// In en, this message translates to:
+  /// **'loads on Start'**
+  String get modelLoadsOnStart;
+
+  /// No description provided for @modelPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local models'**
+  String get modelPickerTitle;
+
+  /// No description provided for @modelPickerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One model is loaded at a time.'**
+  String get modelPickerSubtitle;
+
+  /// No description provided for @modelPickerStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'llama-server is stopped. Start loads the model you pick.'**
+  String get modelPickerStopped;
+
+  /// No description provided for @modelPickerFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Presets live on the desktop in {path}.'**
+  String modelPickerFooter(String path);
+
+  /// No description provided for @modelReasonContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs 65,536 tok of context for the agent'**
+  String get modelReasonContext;
+
+  /// No description provided for @modelReasonMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Model file not found'**
+  String get modelReasonMissing;
+
+  /// No description provided for @modelReasonProjector.
+  ///
+  /// In en, this message translates to:
+  /// **'Image projector file not found'**
+  String get modelReasonProjector;
+
+  /// No description provided for @modelReasonNoModel.
+  ///
+  /// In en, this message translates to:
+  /// **'The preset names no model file'**
+  String get modelReasonNoModel;
+
+  /// No description provided for @modelReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t be loaded'**
+  String get modelReasonOther;
+
+  /// No description provided for @modelCapImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get modelCapImages;
+
+  /// No description provided for @modelCapTextOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Text only'**
+  String get modelCapTextOnly;
+
+  /// No description provided for @modelCapThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking'**
+  String get modelCapThinking;
+
+  /// No description provided for @modelCapAlways.
+  ///
+  /// In en, this message translates to:
+  /// **'Always thinks'**
+  String get modelCapAlways;
+
+  /// No description provided for @modelCapNoThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'No thinking'**
+  String get modelCapNoThinking;
+
+  /// No description provided for @modelLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading {model}…'**
+  String modelLoading(String model);
+
+  /// No description provided for @modelStartedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Started from {device} · {time}'**
+  String modelStartedFrom(String device, String time);
+
+  /// No description provided for @modelSwitchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to {model}?'**
+  String modelSwitchTitle(String model);
+
+  /// No description provided for @modelSwitchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading takes about a minute. Messages you send meanwhile wait.'**
+  String get modelSwitchBody;
+
+  /// No description provided for @modelSwitchRunChat.
+  ///
+  /// In en, this message translates to:
+  /// **'in “{chat}”'**
+  String modelSwitchRunChat(String chat);
+
+  /// No description provided for @modelSwitchQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 queued message runs on the new model.} other{{count} queued messages run on the new model.}}'**
+  String modelSwitchQueued(int count);
+
+  /// No description provided for @modelSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get modelSwitch;
+
+  /// No description provided for @modelStopAndSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop run and switch'**
+  String get modelStopAndSwitch;
+
+  /// No description provided for @modelQueueWaits.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 message waits for the new model.} other{{count} messages wait for the new model.}}'**
+  String modelQueueWaits(int count);
+
+  /// No description provided for @modelFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load {model}. Back on {previous}.'**
+  String modelFailed(String model, String previous);
+
+  /// No description provided for @modelFailedAlone.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load {model}.'**
+  String modelFailedAlone(String model);
+
+  /// No description provided for @modelFailedDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load {model} and couldn\'t go back to {previous}. llama-server is down.'**
+  String modelFailedDown(String model, String previous);
+
+  /// No description provided for @modelFailedDownAlone.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load {model}. llama-server is down.'**
+  String modelFailedDownAlone(String model);
+
+  /// No description provided for @modelFailedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load {model} · back on {previous}'**
+  String modelFailedShort(String model, String previous);
+
+  /// No description provided for @modelFailedDownShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch failed — llama-server is down'**
+  String get modelFailedDownShort;
+
+  /// No description provided for @modelExitedAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'llama-server exited after {time}'**
+  String modelExitedAfter(String time);
+
+  /// No description provided for @modelNotReadyAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Not ready after {time}'**
+  String modelNotReadyAfter(String time);
+
+  /// No description provided for @modelDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get modelDismiss;
+
+  /// No description provided for @modelDismissFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t dismiss: {reason}'**
+  String modelDismissFailed(String reason);
+
+  /// No description provided for @modelNotUsable.
+  ///
+  /// In en, this message translates to:
+  /// **'That model can\'t be loaded.'**
+  String get modelNotUsable;
+
+  /// No description provided for @modelSwitchInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'A model switch is already in progress.'**
+  String get modelSwitchInProgress;
+
+  /// No description provided for @modelUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'That preset is no longer on the desktop.'**
+  String get modelUnknown;
+
+  /// No description provided for @modelSwitchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t switch the model: {reason}'**
+  String modelSwitchFailed(String reason);
 }
 
 class _AppLocalizationsDelegate

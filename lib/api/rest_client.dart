@@ -207,6 +207,7 @@ class DelveApi {
         totals: TokenTotals.fromJson(j['totals']! as Map<String, Object?>),
         context: ContextFill.fromJson(j['context']! as Map<String, Object?>),
         runs: [for (final r in _list(j, 'runs')) Run.fromJson(r)],
+        lastModel: j['last_model'] as String?,
       ),
     );
   }
@@ -292,11 +293,35 @@ class DelveApi {
       _parse(
         await _json(
           ApiRoutes.llama,
-          body: {'action': action.name, if (force) 'force': true},
+          body: {
+            'action': action == LlamaAction.stop ? 'stop' : 'start',
+            if (force) 'force': true,
+          },
           receiveTimeout: const Duration(seconds: 60),
         ),
         SystemInfo.fromJson,
       );
+
+  /// Loads the model preset [name] (M); answers with the new system view.
+  /// While llama-server runs this starts the switch (the view says
+  /// `switching`); while it is stopped only the selection changes. 409:
+  /// `run_active` (needs [force]), `already_active`, `model_not_usable`,
+  /// `switch_in_progress`; 404 `unknown_model`.
+  Future<SystemInfo> switchModel(String name, {bool force = false}) async =>
+      _parse(
+        await _json(
+          ApiRoutes.llama,
+          body: {'action': 'switch', 'model': name, if (force) 'force': true},
+          receiveTimeout: const Duration(seconds: 60),
+        ),
+        SystemInfo.fromJson,
+      );
+
+  /// Forgets a failed switch (the previous model is back).
+  Future<SystemInfo> dismissSwitch() async => _parse(
+    await _json(ApiRoutes.llama, body: {'action': 'dismiss'}),
+    SystemInfo.fromJson,
+  );
 
   /// The Observability view for [range] (`24h`, `7d`, `30d`; B5).
   Future<Stats> stats(String range) async => _parse(
@@ -485,11 +510,15 @@ class ConversationUsage {
     required this.totals,
     required this.context,
     required this.runs,
+    this.lastModel,
   });
   final String conversationId;
   final TokenTotals totals;
   final ContextFill context;
   final List<Run> runs;
+
+  /// The model that wrote the newest answer (null before the first one).
+  final String? lastModel;
 }
 
 /// What `POST /schedules` takes.

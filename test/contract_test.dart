@@ -67,6 +67,8 @@ void main() {
           'system': (j) => SystemInfo.fromJson(j).toJson(),
           'gpu': (j) => GpuInfo.fromJson(j).toJson(),
           'hermes_issue': (j) => HermesIssue.fromJson(j).toJson(),
+          'llama_model': (j) => LlamaModel.fromJson(j).toJson(),
+          'llama_switch': (j) => LlamaSwitch.fromJson(j).toJson(),
           'schedule': (j) => Schedule.fromJson(j).toJson(),
           'brief_payload': (j) => Brief.fromJson(j).toJson(),
           'brief_incident': (j) => BriefIncident.fromJson(j).toJson(),
@@ -152,6 +154,38 @@ void main() {
         ('Qwen3.8-27B', 'IQ4_XS', 65536, 1),
       );
       expect(s.llama.genTps, 21.4);
+      // M: the presets, what the loaded one can do, no switch
+      expect(
+        (s.llama.preset, s.llama.vision, s.llama.thinking),
+        ('qwen38-27b-iq4xs', true, 'toggle'),
+      );
+      expect(s.llama.switchState, isNull);
+      final models = s.llama.models!;
+      expect(models.map((m) => m.name), [
+        'qwen38-27b-iq4xs',
+        'qwen38-27b-q6k',
+        'qwen38-27b-abl',
+        'reasoner-32b',
+        'qwen38-9b',
+        'test-broken',
+      ]);
+      expect(models.where((m) => m.active).single.name, 'qwen38-27b-iq4xs');
+      expect(
+        (models[1].model, models[1].quant, models[1].ctx, models[1].sizeBytes),
+        ('Qwen3.8-27B', 'Q6_K', 65536, 22100000000),
+      );
+      expect((models[2].vision, models[3].thinking), (false, 'always'));
+      expect(
+        (models[4].usable, models[4].reason),
+        (false, 'context_below_64k'),
+      );
+      final sw = LlamaSwitch.fromJson(obj(sampleShapes['llama_switch']));
+      expect(
+        (sw.state, sw.from, sw.to, sw.error, sw.elapsedS),
+        ('failed', 'qwen38-27b-iq4xs', 'reasoner-32b', 'exited', 34),
+      );
+      expect(sw.at!.isUtc, isTrue);
+      expect(Run.fromJson(obj(sampleShapes['run'])).model, isNotNull);
       expect((s.queue.active, s.queue.queued), (1, 1));
       final g = s.gpus!.first;
       expect((g.memUsedMib, g.memTotalMib, g.powerW), (11381, 12282, 40.39));

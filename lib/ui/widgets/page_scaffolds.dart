@@ -330,4 +330,5 @@ abstract final class DelveIcons {
   static const IconData exportChats = Symbols.download_rounded;
   static const IconData importChats = Symbols.upload_file_rounded;
   static const IconData share = Symbols.share_rounded;
+  static const IconData unfoldMore = Symbols.unfold_more_rounded;
 }

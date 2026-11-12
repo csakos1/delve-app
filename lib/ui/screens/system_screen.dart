@@ -8,6 +8,7 @@ import '../../app/system.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../format.dart';
+import '../widgets/model_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import '../widgets/system_ui.dart';
@@ -114,6 +115,14 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                 ),
                 const SizedBox(height: DelveTokens.space3),
               ],
+              if (data.llama.switchState case final sw?) ...[
+                if (sw.state != 'switching')
+                  SwitchFailedBanner(info: data)
+                else if (data.queue.queued > 0)
+                  SwitchQueueBanner(info: data),
+                if (sw.state != 'switching' || data.queue.queued > 0)
+                  const SizedBox(height: DelveTokens.space3),
+              ],
               HermesCard(info: data, now: DateTime.now()),
               const SizedBox(height: DelveTokens.space3),
               LlamaCard(info: data),
@@ -181,8 +190,10 @@ class HermesCard extends StatelessWidget {
   }
 }
 
-/// llama-server: state since when, model, context, slots, speed; why queued
-/// messages wait; the stop/start button.
+/// llama-server: state since when, model (the row that changes it, 25b),
+/// context, slots, speed; why queued messages wait; the stop/start button.
+/// During a model switch (25e): "switching", what loads and for how long,
+/// and dashes for what is not known until it is up.
 class LlamaCard extends StatelessWidget {
   const LlamaCard({super.key, required this.info});
   final SystemInfo info;
@@ -193,13 +204,15 @@ class LlamaCard extends StatelessWidget {
     final ll = info.llama;
     final none = l.settingsUnknown;
     final running = ll.status == 'running';
-    final model = ll.model == null ? none : [ll.model!, ?ll.quant].join(' · ');
-    final slots = ll.slots;
+    final switching = ll.switching;
+    final slots = switching ? null : ll.slots;
     final busy = ll.slotsBusy ?? 0;
     final waiting = ll.intent == 'stopped';
+    // during a switch the banner above the cards says who waits
     final loading =
-        ll.intent == 'starting' ||
-        (ll.status == 'loading' && info.queue.queued > 0);
+        !switching &&
+        (ll.intent == 'starting' ||
+            (ll.status == 'loading' && info.queue.queued > 0));
     return SurfaceCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -212,8 +225,11 @@ class LlamaCard extends StatelessWidget {
               crossAxisAlignment: WrapCrossAlignment.center,
               spacing: DelveTokens.space3,
               children: [
-                llamaStatus(l, ll.status),
-                if (ll.since case final since?)
+                if (switching)
+                  const SwitchingWord()
+                else
+                  llamaStatus(l, ll.status),
+                if (ll.since case final since? when !switching)
                   Text(
                     l.systemSince(clockTime(since, DateTime.now())),
                     style: DelveText.mono.copyWith(
@@ -223,10 +239,20 @@ class LlamaCard extends StatelessWidget {
               ],
             ),
           ),
-          InfoRow(label: l.systemModel, value: model),
+          if (switching) SwitchingBlock(info: info, showStarter: true),
+          if (ll.models == null)
+            // an older helper on the desktop: nothing to choose from
+            InfoRow(
+              label: l.systemModel,
+              value: ll.model == null ? none : modelText(ll.model!, ll.quant),
+            )
+          else
+            ModelRow(info: info),
           InfoRow(
             label: l.systemContext,
-            value: ll.ctx == null ? none : l.systemTokens(tokenCount(ll.ctx!)),
+            value: ll.ctx == null || switching
+                ? none
+                : l.systemTokens(tokenCount(ll.ctx!)),
           ),
           InfoRow(
             label: l.systemSlots,
@@ -236,7 +262,9 @@ class LlamaCard extends StatelessWidget {
                 ? l.systemSlotsBusy(busy, slots)
                 : l.systemSlotsIdle(busy, slots),
           ),
-          if (running && ll.genTps != null)
+          if (switching)
+            InfoRow(label: l.systemGeneration, value: none)
+          else if (running && ll.genTps != null)
             InfoRow(
               label: l.systemGeneration,
               value: l.systemTps(ll.genTps!.toStringAsFixed(1)),

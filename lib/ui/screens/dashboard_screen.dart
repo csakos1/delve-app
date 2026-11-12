@@ -19,6 +19,7 @@ import '../links.dart';
 import '../schedule_text.dart';
 import '../widgets/chart_paint.dart';
 import '../widgets/connection_ui.dart';
+import '../widgets/model_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import '../widgets/system_ui.dart';
@@ -370,8 +371,11 @@ class _WaterEmpty extends StatelessWidget {
   }
 }
 
-/// System (design 12): Hermes and llama-server with their state, the GPUs
-/// (without power), and the stop/start button with the same dialog as 13b.
+/// System (design 12, 25a): Hermes and llama-server with their state, the
+/// Model row that changes the loaded model, the GPUs (without power), and
+/// the stop/start button with the same dialog as 13b. A model switch shows
+/// here as on the System screen, in short (25e2); a failed one as one line
+/// that leads there.
 class SystemCard extends ConsumerWidget {
   const SystemCard({super.key});
 
@@ -398,6 +402,7 @@ class SystemCard extends ConsumerWidget {
       );
     }
     final gpus = info.gpus;
+    final ll = info.llama;
     final muted = DelveText.mono.copyWith(color: context.delve.textMuted);
     // the version or model, then the state last in the row
     Widget pair(String? text, Widget status) => Wrap(
@@ -425,12 +430,42 @@ class SystemCard extends ConsumerWidget {
               hermesStatus(l, info.hermes.status),
             ),
           ),
-          InfoRow(
-            label: l.systemLlama,
-            trailing: pair(info.llama.model, llamaStatus(l, info.llama.status)),
-          ),
+          if (ll.models == null)
+            // an older helper on the desktop: the model beside the state
+            InfoRow(
+              label: l.systemLlama,
+              trailing: pair(ll.model, llamaStatus(l, ll.status)),
+            )
+          else ...[
+            InfoRow(
+              label: l.systemLlama,
+              trailing: ll.switching
+                  ? const SwitchingWord()
+                  : pair(
+                      ll.since == null
+                          ? null
+                          : l.systemSince(clockTime(ll.since!, DateTime.now())),
+                      llamaStatus(l, ll.status),
+                    ),
+            ),
+            if (ll.switching) SwitchingBlock(info: info),
+            ModelRow(info: info),
+          ],
           for (final g in gpus ?? const <GpuInfo>[])
             GpuRow(gpu: g, showPower: false),
+          if (ll.switchState case final sw?)
+            if (sw.state != 'switching')
+              SwitchFailedLine(
+                info: info,
+                onTap: () => context.push(Routes.system),
+              )
+            else if (info.queue.queued > 0)
+              SwitchLine(
+                key: const Key('dashboard.switch.queue'),
+                icon: DelveIcons.scheduleSend,
+                color: context.colors.onSurfaceVariant,
+                text: l.modelQueueWaits(info.queue.queued),
+              ),
           if (info.llama.intent == 'stopped') ...[
             const SizedBox(height: DelveTokens.space2),
             StatusBanner(

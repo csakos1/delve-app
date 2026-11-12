@@ -75,6 +75,15 @@ _LlamaInfo _$LlamaInfoFromJson(Map<String, dynamic> json) => _LlamaInfo(
   slots: (json['slots'] as num?)?.toInt(),
   slotsBusy: (json['slots_busy'] as num?)?.toInt(),
   genTps: (json['gen_tps'] as num?)?.toDouble(),
+  preset: json['preset'] as String?,
+  vision: json['vision'] as bool?,
+  thinking: json['thinking'] as String?,
+  models: (json['models'] as List<dynamic>?)
+      ?.map((e) => LlamaModel.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  switchState: json['switch'] == null
+      ? null
+      : LlamaSwitch.fromJson(json['switch'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$LlamaInfoToJson(_LlamaInfo instance) =>
@@ -88,6 +97,61 @@ Map<String, dynamic> _$LlamaInfoToJson(_LlamaInfo instance) =>
       'slots': instance.slots,
       'slots_busy': instance.slotsBusy,
       'gen_tps': instance.genTps,
+      'preset': instance.preset,
+      'vision': instance.vision,
+      'thinking': instance.thinking,
+      'models': instance.models?.map((e) => e.toJson()).toList(),
+      'switch': instance.switchState?.toJson(),
+    };
+
+_LlamaModel _$LlamaModelFromJson(Map<String, dynamic> json) => _LlamaModel(
+  name: json['name'] as String,
+  model: json['model'] as String,
+  quant: json['quant'] as String?,
+  note: json['note'] as String?,
+  ctx: (json['ctx'] as num?)?.toInt(),
+  vision: json['vision'] as bool? ?? false,
+  thinking: json['thinking'] as String? ?? 'toggle',
+  sizeBytes: (json['size_bytes'] as num?)?.toInt(),
+  usable: json['usable'] as bool? ?? false,
+  reason: json['reason'] as String?,
+  active: json['active'] as bool? ?? false,
+);
+
+Map<String, dynamic> _$LlamaModelToJson(_LlamaModel instance) =>
+    <String, dynamic>{
+      'name': instance.name,
+      'model': instance.model,
+      'quant': instance.quant,
+      'note': instance.note,
+      'ctx': instance.ctx,
+      'vision': instance.vision,
+      'thinking': instance.thinking,
+      'size_bytes': instance.sizeBytes,
+      'usable': instance.usable,
+      'reason': instance.reason,
+      'active': instance.active,
+    };
+
+_LlamaSwitch _$LlamaSwitchFromJson(Map<String, dynamic> json) => _LlamaSwitch(
+  state: json['state'] as String,
+  from: json['from'] as String?,
+  to: json['to'] as String,
+  by: json['by'] as String?,
+  at: json['at'] == null ? null : DateTime.parse(json['at'] as String),
+  error: json['error'] as String?,
+  elapsedS: (json['elapsed_s'] as num?)?.toInt(),
+);
+
+Map<String, dynamic> _$LlamaSwitchToJson(_LlamaSwitch instance) =>
+    <String, dynamic>{
+      'state': instance.state,
+      'from': instance.from,
+      'to': instance.to,
+      'by': instance.by,
+      'at': instance.at?.toIso8601String(),
+      'error': instance.error,
+      'elapsed_s': instance.elapsedS,
     };
 
 _QueueInfo _$QueueInfoFromJson(Map<String, dynamic> json) => _QueueInfo(

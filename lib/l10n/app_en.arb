@@ -3264,5 +3264,168 @@
         "type": "String"
       }
     }
+  },
+  "systemStateSwitching": "switching",
+  "modelLoadsOnStart": "loads on Start",
+  "modelPickerTitle": "Local models",
+  "modelPickerSubtitle": "One model is loaded at a time.",
+  "modelPickerStopped": "llama-server is stopped. Start loads the model you pick.",
+  "modelPickerFooter": "Presets live on the desktop in {path}.",
+  "@modelPickerFooter": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "modelReasonContext": "Needs 65,536 tok of context for the agent",
+  "modelReasonMissing": "Model file not found",
+  "modelReasonProjector": "Image projector file not found",
+  "modelReasonNoModel": "The preset names no model file",
+  "modelReasonOther": "Can't be loaded",
+  "modelCapImages": "Images",
+  "modelCapTextOnly": "Text only",
+  "modelCapThinking": "Thinking",
+  "modelCapAlways": "Always thinks",
+  "modelCapNoThinking": "No thinking",
+  "modelLoading": "Loading {model}…",
+  "@modelLoading": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "modelStartedFrom": "Started from {device} · {time}",
+  "@modelStartedFrom": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "modelSwitchTitle": "Switch to {model}?",
+  "@modelSwitchTitle": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "modelSwitchBody": "Loading takes about a minute. Messages you send meanwhile wait.",
+  "modelSwitchRunChat": "in “{chat}”",
+  "@modelSwitchRunChat": {
+    "placeholders": {
+      "chat": {
+        "type": "String"
+      }
+    }
+  },
+  "modelSwitchQueued": "{count, plural, =1{1 queued message runs on the new model.} other{{count} queued messages run on the new model.}}",
+  "@modelSwitchQueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "modelSwitch": "Switch",
+  "modelStopAndSwitch": "Stop run and switch",
+  "modelQueueWaits": "{count, plural, =1{1 message waits for the new model.} other{{count} messages wait for the new model.}}",
+  "@modelQueueWaits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "modelFailed": "Couldn't load {model}. Back on {previous}.",
+  "@modelFailed": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      },
+      "previous": {
+        "type": "String"
+      }
+    }
+  },
+  "modelFailedAlone": "Couldn't load {model}.",
+  "@modelFailedAlone": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "modelFailedDown": "Couldn't load {model} and couldn't go back to {previous}. llama-server is down.",
+  "@modelFailedDown": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      },
+      "previous": {
+        "type": "String"
+      }
+    }
+  },
+  "modelFailedDownAlone": "Couldn't load {model}. llama-server is down.",
+  "@modelFailedDownAlone": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "modelFailedShort": "Couldn't load {model} · back on {previous}",
+  "@modelFailedShort": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      },
+      "previous": {
+        "type": "String"
+      }
+    }
+  },
+  "modelFailedDownShort": "Switch failed — llama-server is down",
+  "modelExitedAfter": "llama-server exited after {time}",
+  "@modelExitedAfter": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "modelNotReadyAfter": "Not ready after {time}",
+  "@modelNotReadyAfter": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "modelDismiss": "Dismiss",
+  "modelDismissFailed": "Couldn't dismiss: {reason}",
+  "@modelDismissFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "modelNotUsable": "That model can't be loaded.",
+  "modelSwitchInProgress": "A model switch is already in progress.",
+  "modelUnknown": "That preset is no longer on the desktop.",
+  "modelSwitchFailed": "Couldn't switch the model: {reason}",
+  "@modelSwitchFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
   }
 }

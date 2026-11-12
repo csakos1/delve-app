@@ -3,6 +3,7 @@ import 'package:delve/ui/format.dart';
 import 'package:delve/ui/widgets/status_ui.dart';
 import 'package:delve/ui/widgets/system_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fake_server.dart';
@@ -33,6 +34,88 @@ Map<String, Object?> withoutHelper() => {
   'helper': {'ok': false, 'error': 'helper_unavailable'},
   'gpus': null,
 };
+
+/// The system view with its llama part changed ([queue]: the run queue).
+Map<String, Object?> withLlama(
+  Map<String, Object?> llama, {
+  Map<String, Object?>? base,
+  Map<String, int>? queue,
+}) {
+  final s = base ?? FakeServer.sample('system');
+  return {
+    ...s,
+    'llama': {...s['llama']! as Map<String, Object?>, ...llama},
+    'queue': ?queue,
+  };
+}
+
+/// Nothing runs and nothing waits.
+Map<String, Object?> idle() =>
+    withLlama(const {}, queue: const {'active': 0, 'queued': 0});
+
+/// The sample's presets with [name] as the one the desktop points to.
+List<Object?> presetsWith(String name) {
+  final llama = FakeServer.sample('system')['llama']! as Map<String, Object?>;
+  return [
+    for (final m
+        in (llama['models']! as List<Object?>).cast<Map<String, Object?>>())
+      {...m, 'active': m['name'] == name},
+  ];
+}
+
+const q6k = 'qwen38-27b-q6k';
+
+/// A switch to the Q6 preset that the desktop started 14 s ago.
+Map<String, Object?> switching({int queued = 0}) => withLlama(
+  {
+    'status': 'loading',
+    'intent': 'starting',
+    'model': null,
+    'quant': null,
+    'ctx': null,
+    'slots_busy': null,
+    'preset': q6k,
+    'models': presetsWith(q6k),
+    'switch': {
+      'state': 'switching',
+      'from': 'qwen38-27b-iq4xs',
+      'to': q6k,
+      'by': 'Pixel 9 Pro XL',
+      'at': DateTime.now()
+          .toUtc()
+          .subtract(const Duration(seconds: 14))
+          .toIso8601String(),
+      'error': null,
+      'elapsed_s': null,
+    },
+  },
+  queue: {'active': 0, 'queued': queued},
+);
+
+/// A switch to the Reasoner preset that failed ([state]: failed | down).
+Map<String, Object?> failedSwitch({
+  String state = 'failed',
+  String error = 'exited',
+  int elapsed = 34,
+}) => withLlama({
+  'switch': {
+    'state': state,
+    'from': 'qwen38-27b-iq4xs',
+    'to': 'reasoner-32b',
+    'by': 'Pixel 9 Pro XL',
+    'at': '2026-10-19T21:37:00+00:00',
+    'error': error,
+    'elapsed_s': elapsed,
+  },
+}, base: state == 'down' ? stopped(queued: 0) : idle());
+
+/// A few short frames: for views that never settle (the switching state
+/// turns its icon and runs its bar).
+Future<void> frames(WidgetTester t) async {
+  for (var i = 0; i < 12; i++) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+}
 
 void main() {
   group('formatting', () {
@@ -137,7 +220,6 @@ void main() {
         find.text('v0.22.2'),
         find.text('1 run active · 1 queued'),
         find.textContaining('since '),
-        find.text('Qwen3.8-27B · IQ4_XS'),
         find.text('1 / 1 busy'),
         find.text('21.4 tok/s'),
       ]) {
@@ -198,7 +280,9 @@ void main() {
         find.text('2 messages wait until llama-server is back.'),
         findsOneWidget,
       );
-      expect(find.text('Qwen3.8-27B · IQ4_XS'), findsNothing);
+      // the Model row now names the preset that Start loads
+      expect(find.text('Qwen3.8-27B · IQ4_XS'), findsOneWidget);
+      expect(find.text('loads on Start'), findsOneWidget);
       expect(find.text('0 / 1'), findsOneWidget);
       expect(find.text('21.4 tok/s'), findsNothing);
     });
@@ -338,6 +422,358 @@ void main() {
       await t.scrollUntilVisible(find.text('RTX 3050'), 200);
       expect(t.takeException(), isNull);
     });
+    Map<String, Object?> lastPost(TestEnv env) =>
+        env.server.requests
+                .lastWhere((r) => r.uri.path == '/api/v1/system/llama')
+                .data
+            as Map<String, Object?>;
+
+    Future<void> openPicker(WidgetTester t) async {
+      await t.tap(find.byKey(const Key('system.model')));
+      await t.pumpAndSettle();
+    }
+
+    testWidgets('25c: the Model row opens the presets', (t) async {
+      final env = await openSystem(t, system: idle());
+      expect(text(t, const Key('system.model.value')), 'Qwen3.8-27B · IQ4_XS');
+      expect(find.byKey(const Key('system.model.onStart')), findsNothing);
+
+      await openPicker(t);
+      expect(find.text('Local models'), findsOneWidget);
+      expect(
+        text(t, const Key('model.picker.subtitle')),
+        'One model is loaded at a time.',
+      );
+      // the loaded one is checked; name and quantization stay together
+      expect(
+        find.byKey(const Key('model.row.qwen38-27b-iq4xs.check')),
+        findsOneWidget,
+      );
+      expect(find.text('Qwen3.8-27B · Q6_K'), findsOneWidget);
+      expect(find.text('65,536 tok · 22.1 GB'), findsOneWidget);
+      expect(find.text('Q6 since the RTX 3060'), findsOneWidget);
+      // two markers per row: image input, thinking
+      expect(find.text('Images'), findsNWidgets(4));
+      expect(find.text('Text only'), findsNWidgets(2));
+      expect(find.text('Thinking'), findsNWidgets(5));
+      expect(find.text('Always thinks'), findsOneWidget);
+      // what cannot be loaded says why, and comes last
+      expect(find.text('32,768 tok · 9.7 GB'), findsOneWidget);
+      expect(
+        find.text('Needs 65,536 tok of context for the agent'),
+        findsOneWidget,
+      );
+      expect(find.text('Model file not found'), findsOneWidget);
+      double top(String name) =>
+          t.getTopLeft(find.byKey(Key('model.row.$name'))).dy;
+      expect(top('qwen38-9b'), greaterThan(top('reasoner-32b')));
+      expect(top('test-broken'), greaterThan(top('qwen38-9b')));
+      expect(t.takeException(), isNull);
+
+      await t.tap(find.byKey(const Key('model.row.qwen38-9b')));
+      await t.pumpAndSettle();
+      expect(find.text('Local models'), findsOneWidget);
+
+      // the loaded one only closes the sheet
+      await t.tap(find.byKey(const Key('model.row.qwen38-27b-iq4xs')));
+      await t.pumpAndSettle();
+      expect(find.text('Local models'), findsNothing);
+      expect(find.textContaining('Switch to'), findsNothing);
+      expect(env.server.calls, isNot(contains('POST /api/v1/system/llama')));
+    });
+
+    testWidgets('25d1, 25e1: confirm, then the new model loads', (t) async {
+      final env = await openSystem(t, system: idle());
+      env.server.on(
+        'POST',
+        '/api/v1/system/llama',
+        (_) => FakeReply(200, switching()),
+      );
+      await openPicker(t);
+      await t.tap(find.byKey(const Key('model.row.$q6k')));
+      await t.pumpAndSettle();
+      expect(find.text('Local models'), findsNothing);
+      expect(find.text('Switch to Qwen3.8-27B · Q6_K?'), findsOneWidget);
+      expect(
+        text(t, const Key('model.confirm.facts')),
+        'qwen38-27b-q6k · 65,536 tok · 22.1 GB',
+      );
+      expect(find.byKey(const Key('model.confirm.run')), findsNothing);
+      expect(find.byKey(const Key('model.confirm.queued')), findsNothing);
+      expect(find.text('Stop run and switch'), findsNothing);
+
+      await t.tap(find.text('Cancel'));
+      await t.pumpAndSettle();
+      expect(env.server.calls, isNot(contains('POST /api/v1/system/llama')));
+
+      await openPicker(t);
+      await t.tap(find.byKey(const Key('model.row.$q6k')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('model.confirm.ok')));
+      await frames(t);
+      expect(lastPost(env), {'action': 'switch', 'model': q6k});
+
+      expect(find.text('switching'), findsOneWidget);
+      expect(
+        text(t, const Key('system.switch.line')),
+        'Loading Qwen3.8-27B · Q6_K…',
+      );
+      expect(
+        text(t, const Key('system.switch.elapsed')),
+        anyOf('0:14', '0:15', '0:16'),
+      );
+      expect(
+        text(t, const Key('system.switch.starter')),
+        startsWith('Started from Pixel 9 Pro XL · '),
+      );
+      // the row names what loads and cannot be opened; no stop meanwhile
+      expect(text(t, const Key('system.model.value')), 'Qwen3.8-27B · Q6_K');
+      expect(
+        t
+            .widget<InkWell>(
+              find.descendant(
+                of: find.byKey(const Key('system.model')),
+                matching: find.byType(InkWell),
+              ),
+            )
+            .onTap,
+        isNull,
+      );
+      expect(
+        t
+            .widget<OutlinedButton>(find.byKey(const Key('system.llama.stop')))
+            .onPressed,
+        isNull,
+      );
+      expect(find.byKey(const Key('system.llama.start')), findsNothing);
+      expect(find.text('65,536 tok'), findsNothing);
+      expect(find.byKey(const Key('system.waiting')), findsNothing);
+      expect(find.byKey(const Key('system.switch.queue')), findsNothing);
+      expect(t.takeException(), isNull);
+    });
+
+    testWidgets('25d2: an active run is stopped, queued messages wait', (
+      t,
+    ) async {
+      final env = await openSystem(t);
+      env.server.on(
+        'POST',
+        '/api/v1/system/llama',
+        (_) => FakeReply(200, switching(queued: 1)),
+      );
+      await openPicker(t);
+      await t.tap(find.byKey(const Key('model.row.$q6k')));
+      await t.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('model.confirm.run')),
+          matching: find.text('The active run will be stopped.'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text('1 queued message runs on the new model.'),
+        findsOneWidget,
+      );
+      expect(find.text('Stop run and switch'), findsOneWidget);
+      await t.tap(find.byKey(const Key('model.confirm.ok')));
+      await frames(t);
+      expect(lastPost(env), {'action': 'switch', 'model': q6k, 'force': true});
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('system.switch.queue')),
+          matching: find.text('1 message waits for the new model.'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a run that started meanwhile: ask again, then force', (
+      t,
+    ) async {
+      final env = await openSystem(t, system: idle());
+      env.server.on(
+        'POST',
+        '/api/v1/system/llama',
+        (r) => (r.data as Map<String, Object?>)['force'] == true
+            ? FakeReply(200, switching())
+            : FakeReply(
+                409,
+                FakeServer.detail('run_active', 'a run is active'),
+              ),
+      );
+      await openPicker(t);
+      await t.tap(find.byKey(const Key('model.row.$q6k')));
+      await t.pumpAndSettle();
+      expect(find.text('Stop run and switch'), findsNothing);
+      await t.tap(find.byKey(const Key('model.confirm.ok')));
+      await t.pumpAndSettle();
+      expect(lastPost(env), {'action': 'switch', 'model': q6k});
+      // the second dialog says what the first could not know
+      expect(find.byKey(const Key('model.confirm.run')), findsOneWidget);
+      expect(find.text('Stop run and switch'), findsOneWidget);
+      await t.tap(find.byKey(const Key('model.confirm.ok')));
+      await frames(t);
+      expect(lastPost(env), {'action': 'switch', 'model': q6k, 'force': true});
+      expect(find.text('switching'), findsOneWidget);
+    });
+
+    testWidgets('a preset that is gone: say so and reload', (t) async {
+      final env = await openSystem(t, system: idle());
+      env.server.json(
+        'POST',
+        '/api/v1/system/llama',
+        FakeServer.detail('unknown_model', 'no model preset named x'),
+        status: 404,
+      );
+      final loads = env.server.calls
+          .where((c) => c == 'GET /api/v1/system')
+          .length;
+      await openPicker(t);
+      await t.tap(find.byKey(const Key('model.row.$q6k')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('model.confirm.ok')));
+      await t.pumpAndSettle();
+      expect(
+        find.text('That preset is no longer on the desktop.'),
+        findsOneWidget,
+      );
+      expect(
+        env.server.calls.where((c) => c == 'GET /api/v1/system').length,
+        loads + 1,
+      );
+    });
+
+    testWidgets('stopped: a pick only changes what Start loads', (t) async {
+      final env = await openSystem(t, system: stopped(queued: 0));
+      expect(find.byKey(const Key('system.model.onStart')), findsOneWidget);
+      expect(text(t, const Key('system.model.value')), 'Qwen3.8-27B · IQ4_XS');
+      env.server.on(
+        'POST',
+        '/api/v1/system/llama',
+        (_) => FakeReply(
+          200,
+          withLlama({
+            'preset': q6k,
+            'models': presetsWith(q6k),
+          }, base: stopped(queued: 0)),
+        ),
+      );
+      await openPicker(t);
+      expect(
+        text(t, const Key('model.picker.subtitle')),
+        'llama-server is stopped. Start loads the model you pick.',
+      );
+      await t.tap(find.byKey(const Key('model.row.$q6k')));
+      await t.pumpAndSettle();
+      expect(find.textContaining('Switch to'), findsNothing); // no dialog
+      expect(lastPost(env), {'action': 'switch', 'model': q6k});
+      expect(text(t, const Key('system.model.value')), 'Qwen3.8-27B · Q6_K');
+      expect(find.text('loads on Start'), findsOneWidget);
+      expect(find.byKey(const Key('system.llama.start')), findsOneWidget);
+    });
+
+    testWidgets('25f1: a failed switch says why until it is dismissed', (
+      t,
+    ) async {
+      final env = await openSystem(t, system: failedSwitch());
+      expect(
+        text(t, const Key('system.switch.failed')),
+        "Couldn't load Reasoner-32B · Q4_K_M. "
+        'Back on Qwen3.8-27B · IQ4_XS.',
+      );
+      expect(
+        text(t, const Key('system.switch.why')),
+        'llama-server exited after 0:34',
+      );
+      expect(
+        find.text('journalctl --user -u llama-server -n 50'),
+        findsOneWidget,
+      );
+      expect(find.text('running'), findsOneWidget);
+
+      String? copied;
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied = (call.arguments as Map)['text'] as String?;
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await t.tap(find.byKey(const Key('system.switch.copy')));
+      await t.pumpAndSettle();
+      expect(copied, 'journalctl --user -u llama-server -n 50');
+      expect(find.text('Copied'), findsOneWidget);
+
+      env.server.on(
+        'POST',
+        '/api/v1/system/llama',
+        (_) => FakeReply(200, idle()),
+      );
+      await t.tap(find.byKey(const Key('system.switch.dismiss')));
+      await t.pumpAndSettle();
+      expect(lastPost(env), {'action': 'dismiss'});
+      expect(find.byKey(const Key('system.switch.failed')), findsNothing);
+    });
+
+    testWidgets('25f2: going back failed too - no dismiss, Start below', (
+      t,
+    ) async {
+      await openSystem(
+        t,
+        system: failedSwitch(state: 'down', error: 'timeout', elapsed: 180),
+      );
+      expect(
+        text(t, const Key('system.switch.failed')),
+        "Couldn't load Reasoner-32B · Q4_K_M and couldn't go back to "
+        'Qwen3.8-27B · IQ4_XS. llama-server is down.',
+      );
+      expect(text(t, const Key('system.switch.why')), 'Not ready after 3:00');
+      expect(find.byKey(const Key('system.switch.dismiss')), findsNothing);
+      expect(find.byKey(const Key('system.llama.start')), findsOneWidget);
+      expect(find.text('loads on Start'), findsOneWidget);
+    });
+
+    testWidgets('an older helper lists no presets: a plain Model row', (
+      t,
+    ) async {
+      await openSystem(
+        t,
+        system: withLlama(const {
+          'preset': null,
+          'vision': null,
+          'thinking': null,
+          'models': null,
+        }),
+      );
+      expect(find.byKey(const Key('system.model')), findsNothing);
+      final model = find.text('Qwen3.8-27B · IQ4_XS');
+      expectOnRightEdge(
+        t,
+        model,
+        find.ancestor(of: model, matching: find.byType(SurfaceCard)).first,
+      );
+    });
+
+    testWidgets('the picker and the dialog at a big text size', (t) async {
+      t.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+      await openSystem(t);
+      await openPicker(t);
+      expect(t.takeException(), isNull);
+      await t.tap(find.byKey(const Key('model.row.$q6k')));
+      await t.pumpAndSettle();
+      expect(find.text('Stop run and switch'), findsOneWidget);
+      expect(t.takeException(), isNull);
+    });
   });
 
   group('Dashboard System card (12)', () {
@@ -366,7 +802,9 @@ void main() {
       expect(inCard(find.text('degraded')), findsOneWidget);
       expect(inCard(find.text('v0.22.2')), findsOneWidget);
       expect(inCard(find.text('running')), findsOneWidget);
-      expect(inCard(find.text('Qwen3.8-27B')), findsOneWidget);
+      expect(inCard(find.text('Qwen3.8-27B · IQ4_XS')), findsOneWidget);
+      expect(inCard(find.byKey(const Key('system.model'))), findsOneWidget);
+      expect(inCard(find.textContaining('since ')), findsOneWidget);
       expect(inCard(find.text('51 °C · 11.1 / 12 GB')), findsOneWidget);
       // the state is the last thing in its row, after the version or model
       for (final f in [
@@ -378,11 +816,11 @@ void main() {
         expectOnRightEdge(t, inCard(f), card);
       }
       for (final (before, state) in [
-        ('v0.22.2', 'degraded'),
-        ('Qwen3.8-27B', 'running'),
+        (find.text('v0.22.2'), 'degraded'),
+        (find.textContaining('since '), 'running'),
       ]) {
         // right of it on the same line, or on a line below when the row wraps
-        final b = t.getRect(inCard(find.text(before)));
+        final b = t.getRect(inCard(before));
         final st = t.getRect(inCard(find.text(state)));
         expect(
           st.left >= b.right || st.top >= b.bottom,
@@ -419,6 +857,57 @@ void main() {
         inCard(find.text('2 messages wait until llama-server is back.')),
         findsOneWidget,
       );
+    });
+
+    testWidgets('25e2: a switch in short, with who waits', (t) async {
+      await pumpDelve(
+        t,
+        before: (env) async =>
+            env.server.json('GET', '/api/v1/system', switching(queued: 2)),
+      );
+      await t.tap(find.text('Dashboard').last);
+      await frames(t);
+      final card = find.byKey(const Key('dashboard.system'));
+      await t.scrollUntilVisible(
+        find.byKey(const Key('dashboard.switch.queue')),
+        200,
+      );
+      Finder inCard(Finder f) => find.descendant(of: card, matching: f);
+      expect(inCard(find.text('switching')), findsOneWidget);
+      expect(inCard(find.text('Loading Qwen3.8-27B · Q6_K…')), findsOneWidget);
+      expect(find.byKey(const Key('system.switch.starter')), findsNothing);
+      expect(
+        inCard(find.text('2 messages wait for the new model.')),
+        findsOneWidget,
+      );
+      expect(
+        t
+            .widget<OutlinedButton>(
+              inCard(find.byKey(const Key('system.llama.stop'))),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(t.takeException(), isNull);
+    });
+
+    testWidgets('a failed switch is one line that leads to System', (t) async {
+      await openDashboard(t, system: failedSwitch());
+      final line = find.byKey(const Key('dashboard.switch.failed'));
+      await t.scrollUntilVisible(line, 200);
+      expect(
+        find.descendant(
+          of: line,
+          matching: find.text(
+            "Couldn't load Reasoner-32B · Q4_K_M · back on IQ4_XS",
+          ),
+        ),
+        findsOneWidget,
+      );
+      await t.tap(line);
+      await t.pumpAndSettle();
+      expect(find.text('Hermes Agent'), findsOneWidget);
+      expect(find.byKey(const Key('system.switch.failed')), findsOneWidget);
     });
 
     testWidgets('no system view yet: no card, the rest still loads', (t) async {

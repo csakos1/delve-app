@@ -22,6 +22,7 @@ _Run _$RunFromJson(Map<String, dynamic> json) => _Run(
   usage: json['usage'] as Map<String, dynamic>?,
   perf: json['perf'] as Map<String, dynamic>?,
   error: json['error'] as String?,
+  model: json['model'] as String?,
 );
 
 Map<String, dynamic> _$RunToJson(_Run instance) => <String, dynamic>{
@@ -36,6 +37,7 @@ Map<String, dynamic> _$RunToJson(_Run instance) => <String, dynamic>{
   'usage': instance.usage,
   'perf': instance.perf,
   'error': instance.error,
+  'model': instance.model,
 };
 
 _OpenRun _$OpenRunFromJson(Map<String, dynamic> json) => _OpenRun(
@@ -54,6 +56,7 @@ _OpenRun _$OpenRunFromJson(Map<String, dynamic> json) => _OpenRun(
   usage: json['usage'] as Map<String, dynamic>?,
   perf: json['perf'] as Map<String, dynamic>?,
   error: json['error'] as String?,
+  model: json['model'] as String?,
   position: (json['position'] as num).toInt(),
 );
 
@@ -69,5 +72,6 @@ Map<String, dynamic> _$OpenRunToJson(_OpenRun instance) => <String, dynamic>{
   'usage': instance.usage,
   'perf': instance.perf,
   'error': instance.error,
+  'model': instance.model,
   'position': instance.position,
 };

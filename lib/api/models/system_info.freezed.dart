@@ -1190,7 +1190,7 @@ as String?,
 mixin _$LlamaInfo {
 
  String get status; String? get intent; DateTime? get since; String? get model; String? get quant; int? get ctx; int? get slots; int? get slotsBusy;/// The last completed run's generation speed, tok/s.
- double? get genTps;
+ double? get genTps; String? get preset; bool? get vision; String? get thinking; List<LlamaModel>? get models;@JsonKey(name: 'switch') LlamaSwitch? get switchState;
 /// Create a copy of LlamaInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1203,16 +1203,16 @@ $LlamaInfoCopyWith<LlamaInfo> get copyWith => _$LlamaInfoCopyWithImpl<LlamaInfo>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlamaInfo&&(identical(other.status, status) || other.status == status)&&(identical(other.intent, intent) || other.intent == intent)&&(identical(other.since, since) || other.since == since)&&(identical(other.model, model) || other.model == model)&&(identical(other.quant, quant) || other.quant == quant)&&(identical(other.ctx, ctx) || other.ctx == ctx)&&(identical(other.slots, slots) || other.slots == slots)&&(identical(other.slotsBusy, slotsBusy) || other.slotsBusy == slotsBusy)&&(identical(other.genTps, genTps) || other.genTps == genTps));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlamaInfo&&(identical(other.status, status) || other.status == status)&&(identical(other.intent, intent) || other.intent == intent)&&(identical(other.since, since) || other.since == since)&&(identical(other.model, model) || other.model == model)&&(identical(other.quant, quant) || other.quant == quant)&&(identical(other.ctx, ctx) || other.ctx == ctx)&&(identical(other.slots, slots) || other.slots == slots)&&(identical(other.slotsBusy, slotsBusy) || other.slotsBusy == slotsBusy)&&(identical(other.genTps, genTps) || other.genTps == genTps)&&(identical(other.preset, preset) || other.preset == preset)&&(identical(other.vision, vision) || other.vision == vision)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&const DeepCollectionEquality().equals(other.models, models)&&(identical(other.switchState, switchState) || other.switchState == switchState));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,status,intent,since,model,quant,ctx,slots,slotsBusy,genTps);
+int get hashCode => Object.hash(runtimeType,status,intent,since,model,quant,ctx,slots,slotsBusy,genTps,preset,vision,thinking,const DeepCollectionEquality().hash(models),switchState);
 
 @override
 String toString() {
-  return 'LlamaInfo(status: $status, intent: $intent, since: $since, model: $model, quant: $quant, ctx: $ctx, slots: $slots, slotsBusy: $slotsBusy, genTps: $genTps)';
+  return 'LlamaInfo(status: $status, intent: $intent, since: $since, model: $model, quant: $quant, ctx: $ctx, slots: $slots, slotsBusy: $slotsBusy, genTps: $genTps, preset: $preset, vision: $vision, thinking: $thinking, models: $models, switchState: $switchState)';
 }
 
 
@@ -1223,11 +1223,11 @@ abstract mixin class $LlamaInfoCopyWith<$Res>  {
   factory $LlamaInfoCopyWith(LlamaInfo value, $Res Function(LlamaInfo) _then) = _$LlamaInfoCopyWithImpl;
 @useResult
 $Res call({
- String status, String? intent, DateTime? since, String? model, String? quant, int? ctx, int? slots, int? slotsBusy, double? genTps
+ String status, String? intent, DateTime? since, String? model, String? quant, int? ctx, int? slots, int? slotsBusy, double? genTps, String? preset, bool? vision, String? thinking, List<LlamaModel>? models,@JsonKey(name: 'switch') LlamaSwitch? switchState
 });
 
 
-
+$LlamaSwitchCopyWith<$Res>? get switchState;
 
 }
 /// @nodoc
@@ -1240,7 +1240,7 @@ class _$LlamaInfoCopyWithImpl<$Res>
 
 /// Create a copy of LlamaInfo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? intent = freezed,Object? since = freezed,Object? model = freezed,Object? quant = freezed,Object? ctx = freezed,Object? slots = freezed,Object? slotsBusy = freezed,Object? genTps = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? intent = freezed,Object? since = freezed,Object? model = freezed,Object? quant = freezed,Object? ctx = freezed,Object? slots = freezed,Object? slotsBusy = freezed,Object? genTps = freezed,Object? preset = freezed,Object? vision = freezed,Object? thinking = freezed,Object? models = freezed,Object? switchState = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,intent: freezed == intent ? _self.intent : intent // ignore: cast_nullable_to_non_nullable
@@ -1251,10 +1251,27 @@ as String?,ctx: freezed == ctx ? _self.ctx : ctx // ignore: cast_nullable_to_non
 as int?,slots: freezed == slots ? _self.slots : slots // ignore: cast_nullable_to_non_nullable
 as int?,slotsBusy: freezed == slotsBusy ? _self.slotsBusy : slotsBusy // ignore: cast_nullable_to_non_nullable
 as int?,genTps: freezed == genTps ? _self.genTps : genTps // ignore: cast_nullable_to_non_nullable
-as double?,
+as double?,preset: freezed == preset ? _self.preset : preset // ignore: cast_nullable_to_non_nullable
+as String?,vision: freezed == vision ? _self.vision : vision // ignore: cast_nullable_to_non_nullable
+as bool?,thinking: freezed == thinking ? _self.thinking : thinking // ignore: cast_nullable_to_non_nullable
+as String?,models: freezed == models ? _self.models : models // ignore: cast_nullable_to_non_nullable
+as List<LlamaModel>?,switchState: freezed == switchState ? _self.switchState : switchState // ignore: cast_nullable_to_non_nullable
+as LlamaSwitch?,
   ));
 }
+/// Create a copy of LlamaInfo
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LlamaSwitchCopyWith<$Res>? get switchState {
+    if (_self.switchState == null) {
+    return null;
+  }
 
+  return $LlamaSwitchCopyWith<$Res>(_self.switchState!, (value) {
+    return _then(_self.copyWith(switchState: value));
+  });
+}
 }
 
 
@@ -1336,10 +1353,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String status,  String? intent,  DateTime? since,  String? model,  String? quant,  int? ctx,  int? slots,  int? slotsBusy,  double? genTps)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String status,  String? intent,  DateTime? since,  String? model,  String? quant,  int? ctx,  int? slots,  int? slotsBusy,  double? genTps,  String? preset,  bool? vision,  String? thinking,  List<LlamaModel>? models, @JsonKey(name: 'switch')  LlamaSwitch? switchState)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LlamaInfo() when $default != null:
-return $default(_that.status,_that.intent,_that.since,_that.model,_that.quant,_that.ctx,_that.slots,_that.slotsBusy,_that.genTps);case _:
+return $default(_that.status,_that.intent,_that.since,_that.model,_that.quant,_that.ctx,_that.slots,_that.slotsBusy,_that.genTps,_that.preset,_that.vision,_that.thinking,_that.models,_that.switchState);case _:
   return orElse();
 
 }
@@ -1357,10 +1374,10 @@ return $default(_that.status,_that.intent,_that.since,_that.model,_that.quant,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String status,  String? intent,  DateTime? since,  String? model,  String? quant,  int? ctx,  int? slots,  int? slotsBusy,  double? genTps)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String status,  String? intent,  DateTime? since,  String? model,  String? quant,  int? ctx,  int? slots,  int? slotsBusy,  double? genTps,  String? preset,  bool? vision,  String? thinking,  List<LlamaModel>? models, @JsonKey(name: 'switch')  LlamaSwitch? switchState)  $default,) {final _that = this;
 switch (_that) {
 case _LlamaInfo():
-return $default(_that.status,_that.intent,_that.since,_that.model,_that.quant,_that.ctx,_that.slots,_that.slotsBusy,_that.genTps);case _:
+return $default(_that.status,_that.intent,_that.since,_that.model,_that.quant,_that.ctx,_that.slots,_that.slotsBusy,_that.genTps,_that.preset,_that.vision,_that.thinking,_that.models,_that.switchState);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1377,10 +1394,10 @@ return $default(_that.status,_that.intent,_that.since,_that.model,_that.quant,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String status,  String? intent,  DateTime? since,  String? model,  String? quant,  int? ctx,  int? slots,  int? slotsBusy,  double? genTps)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String status,  String? intent,  DateTime? since,  String? model,  String? quant,  int? ctx,  int? slots,  int? slotsBusy,  double? genTps,  String? preset,  bool? vision,  String? thinking,  List<LlamaModel>? models, @JsonKey(name: 'switch')  LlamaSwitch? switchState)?  $default,) {final _that = this;
 switch (_that) {
 case _LlamaInfo() when $default != null:
-return $default(_that.status,_that.intent,_that.since,_that.model,_that.quant,_that.ctx,_that.slots,_that.slotsBusy,_that.genTps);case _:
+return $default(_that.status,_that.intent,_that.since,_that.model,_that.quant,_that.ctx,_that.slots,_that.slotsBusy,_that.genTps,_that.preset,_that.vision,_that.thinking,_that.models,_that.switchState);case _:
   return null;
 
 }
@@ -1392,7 +1409,7 @@ return $default(_that.status,_that.intent,_that.since,_that.model,_that.quant,_t
 @JsonSerializable()
 
 class _LlamaInfo implements LlamaInfo {
-  const _LlamaInfo({required this.status, this.intent, this.since, this.model, this.quant, this.ctx, this.slots, this.slotsBusy, this.genTps});
+  const _LlamaInfo({required this.status, this.intent, this.since, this.model, this.quant, this.ctx, this.slots, this.slotsBusy, this.genTps, this.preset, this.vision, this.thinking, final  List<LlamaModel>? models, @JsonKey(name: 'switch') this.switchState}): _models = models;
   factory _LlamaInfo.fromJson(Map<String, dynamic> json) => _$LlamaInfoFromJson(json);
 
 @override final  String status;
@@ -1405,6 +1422,19 @@ class _LlamaInfo implements LlamaInfo {
 @override final  int? slotsBusy;
 /// The last completed run's generation speed, tok/s.
 @override final  double? genTps;
+@override final  String? preset;
+@override final  bool? vision;
+@override final  String? thinking;
+ final  List<LlamaModel>? _models;
+@override List<LlamaModel>? get models {
+  final value = _models;
+  if (value == null) return null;
+  if (_models is EqualUnmodifiableListView) return _models;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
+@override@JsonKey(name: 'switch') final  LlamaSwitch? switchState;
 
 /// Create a copy of LlamaInfo
 /// with the given fields replaced by the non-null parameter values.
@@ -1419,16 +1449,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlamaInfo&&(identical(other.status, status) || other.status == status)&&(identical(other.intent, intent) || other.intent == intent)&&(identical(other.since, since) || other.since == since)&&(identical(other.model, model) || other.model == model)&&(identical(other.quant, quant) || other.quant == quant)&&(identical(other.ctx, ctx) || other.ctx == ctx)&&(identical(other.slots, slots) || other.slots == slots)&&(identical(other.slotsBusy, slotsBusy) || other.slotsBusy == slotsBusy)&&(identical(other.genTps, genTps) || other.genTps == genTps));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlamaInfo&&(identical(other.status, status) || other.status == status)&&(identical(other.intent, intent) || other.intent == intent)&&(identical(other.since, since) || other.since == since)&&(identical(other.model, model) || other.model == model)&&(identical(other.quant, quant) || other.quant == quant)&&(identical(other.ctx, ctx) || other.ctx == ctx)&&(identical(other.slots, slots) || other.slots == slots)&&(identical(other.slotsBusy, slotsBusy) || other.slotsBusy == slotsBusy)&&(identical(other.genTps, genTps) || other.genTps == genTps)&&(identical(other.preset, preset) || other.preset == preset)&&(identical(other.vision, vision) || other.vision == vision)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&const DeepCollectionEquality().equals(other._models, _models)&&(identical(other.switchState, switchState) || other.switchState == switchState));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,status,intent,since,model,quant,ctx,slots,slotsBusy,genTps);
+int get hashCode => Object.hash(runtimeType,status,intent,since,model,quant,ctx,slots,slotsBusy,genTps,preset,vision,thinking,const DeepCollectionEquality().hash(_models),switchState);
 
 @override
 String toString() {
-  return 'LlamaInfo(status: $status, intent: $intent, since: $since, model: $model, quant: $quant, ctx: $ctx, slots: $slots, slotsBusy: $slotsBusy, genTps: $genTps)';
+  return 'LlamaInfo(status: $status, intent: $intent, since: $since, model: $model, quant: $quant, ctx: $ctx, slots: $slots, slotsBusy: $slotsBusy, genTps: $genTps, preset: $preset, vision: $vision, thinking: $thinking, models: $models, switchState: $switchState)';
 }
 
 
@@ -1439,11 +1469,11 @@ abstract mixin class _$LlamaInfoCopyWith<$Res> implements $LlamaInfoCopyWith<$Re
   factory _$LlamaInfoCopyWith(_LlamaInfo value, $Res Function(_LlamaInfo) _then) = __$LlamaInfoCopyWithImpl;
 @override @useResult
 $Res call({
- String status, String? intent, DateTime? since, String? model, String? quant, int? ctx, int? slots, int? slotsBusy, double? genTps
+ String status, String? intent, DateTime? since, String? model, String? quant, int? ctx, int? slots, int? slotsBusy, double? genTps, String? preset, bool? vision, String? thinking, List<LlamaModel>? models,@JsonKey(name: 'switch') LlamaSwitch? switchState
 });
 
 
-
+@override $LlamaSwitchCopyWith<$Res>? get switchState;
 
 }
 /// @nodoc
@@ -1456,7 +1486,7 @@ class __$LlamaInfoCopyWithImpl<$Res>
 
 /// Create a copy of LlamaInfo
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? intent = freezed,Object? since = freezed,Object? model = freezed,Object? quant = freezed,Object? ctx = freezed,Object? slots = freezed,Object? slotsBusy = freezed,Object? genTps = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? intent = freezed,Object? since = freezed,Object? model = freezed,Object? quant = freezed,Object? ctx = freezed,Object? slots = freezed,Object? slotsBusy = freezed,Object? genTps = freezed,Object? preset = freezed,Object? vision = freezed,Object? thinking = freezed,Object? models = freezed,Object? switchState = freezed,}) {
   return _then(_LlamaInfo(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,intent: freezed == intent ? _self.intent : intent // ignore: cast_nullable_to_non_nullable
@@ -1467,7 +1497,598 @@ as String?,ctx: freezed == ctx ? _self.ctx : ctx // ignore: cast_nullable_to_non
 as int?,slots: freezed == slots ? _self.slots : slots // ignore: cast_nullable_to_non_nullable
 as int?,slotsBusy: freezed == slotsBusy ? _self.slotsBusy : slotsBusy // ignore: cast_nullable_to_non_nullable
 as int?,genTps: freezed == genTps ? _self.genTps : genTps // ignore: cast_nullable_to_non_nullable
-as double?,
+as double?,preset: freezed == preset ? _self.preset : preset // ignore: cast_nullable_to_non_nullable
+as String?,vision: freezed == vision ? _self.vision : vision // ignore: cast_nullable_to_non_nullable
+as bool?,thinking: freezed == thinking ? _self.thinking : thinking // ignore: cast_nullable_to_non_nullable
+as String?,models: freezed == models ? _self._models : models // ignore: cast_nullable_to_non_nullable
+as List<LlamaModel>?,switchState: freezed == switchState ? _self.switchState : switchState // ignore: cast_nullable_to_non_nullable
+as LlamaSwitch?,
+  ));
+}
+
+/// Create a copy of LlamaInfo
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LlamaSwitchCopyWith<$Res>? get switchState {
+    if (_self.switchState == null) {
+    return null;
+  }
+
+  return $LlamaSwitchCopyWith<$Res>(_self.switchState!, (value) {
+    return _then(_self.copyWith(switchState: value));
+  });
+}
+}
+
+
+/// @nodoc
+mixin _$LlamaModel {
+
+ String get name; String get model; String? get quant; String? get note; int? get ctx; bool get vision; String get thinking; int? get sizeBytes; bool get usable; String? get reason; bool get active;
+/// Create a copy of LlamaModel
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LlamaModelCopyWith<LlamaModel> get copyWith => _$LlamaModelCopyWithImpl<LlamaModel>(this as LlamaModel, _$identity);
+
+  /// Serializes this LlamaModel to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlamaModel&&(identical(other.name, name) || other.name == name)&&(identical(other.model, model) || other.model == model)&&(identical(other.quant, quant) || other.quant == quant)&&(identical(other.note, note) || other.note == note)&&(identical(other.ctx, ctx) || other.ctx == ctx)&&(identical(other.vision, vision) || other.vision == vision)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.sizeBytes, sizeBytes) || other.sizeBytes == sizeBytes)&&(identical(other.usable, usable) || other.usable == usable)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.active, active) || other.active == active));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,name,model,quant,note,ctx,vision,thinking,sizeBytes,usable,reason,active);
+
+@override
+String toString() {
+  return 'LlamaModel(name: $name, model: $model, quant: $quant, note: $note, ctx: $ctx, vision: $vision, thinking: $thinking, sizeBytes: $sizeBytes, usable: $usable, reason: $reason, active: $active)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LlamaModelCopyWith<$Res>  {
+  factory $LlamaModelCopyWith(LlamaModel value, $Res Function(LlamaModel) _then) = _$LlamaModelCopyWithImpl;
+@useResult
+$Res call({
+ String name, String model, String? quant, String? note, int? ctx, bool vision, String thinking, int? sizeBytes, bool usable, String? reason, bool active
+});
+
+
+
+
+}
+/// @nodoc
+class _$LlamaModelCopyWithImpl<$Res>
+    implements $LlamaModelCopyWith<$Res> {
+  _$LlamaModelCopyWithImpl(this._self, this._then);
+
+  final LlamaModel _self;
+  final $Res Function(LlamaModel) _then;
+
+/// Create a copy of LlamaModel
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? model = null,Object? quant = freezed,Object? note = freezed,Object? ctx = freezed,Object? vision = null,Object? thinking = null,Object? sizeBytes = freezed,Object? usable = null,Object? reason = freezed,Object? active = null,}) {
+  return _then(_self.copyWith(
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,model: null == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
+as String,quant: freezed == quant ? _self.quant : quant // ignore: cast_nullable_to_non_nullable
+as String?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as String?,ctx: freezed == ctx ? _self.ctx : ctx // ignore: cast_nullable_to_non_nullable
+as int?,vision: null == vision ? _self.vision : vision // ignore: cast_nullable_to_non_nullable
+as bool,thinking: null == thinking ? _self.thinking : thinking // ignore: cast_nullable_to_non_nullable
+as String,sizeBytes: freezed == sizeBytes ? _self.sizeBytes : sizeBytes // ignore: cast_nullable_to_non_nullable
+as int?,usable: null == usable ? _self.usable : usable // ignore: cast_nullable_to_non_nullable
+as bool,reason: freezed == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
+as String?,active: null == active ? _self.active : active // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [LlamaModel].
+extension LlamaModelPatterns on LlamaModel {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _LlamaModel value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _LlamaModel() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _LlamaModel value)  $default,){
+final _that = this;
+switch (_that) {
+case _LlamaModel():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _LlamaModel value)?  $default,){
+final _that = this;
+switch (_that) {
+case _LlamaModel() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String model,  String? quant,  String? note,  int? ctx,  bool vision,  String thinking,  int? sizeBytes,  bool usable,  String? reason,  bool active)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _LlamaModel() when $default != null:
+return $default(_that.name,_that.model,_that.quant,_that.note,_that.ctx,_that.vision,_that.thinking,_that.sizeBytes,_that.usable,_that.reason,_that.active);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String model,  String? quant,  String? note,  int? ctx,  bool vision,  String thinking,  int? sizeBytes,  bool usable,  String? reason,  bool active)  $default,) {final _that = this;
+switch (_that) {
+case _LlamaModel():
+return $default(_that.name,_that.model,_that.quant,_that.note,_that.ctx,_that.vision,_that.thinking,_that.sizeBytes,_that.usable,_that.reason,_that.active);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String model,  String? quant,  String? note,  int? ctx,  bool vision,  String thinking,  int? sizeBytes,  bool usable,  String? reason,  bool active)?  $default,) {final _that = this;
+switch (_that) {
+case _LlamaModel() when $default != null:
+return $default(_that.name,_that.model,_that.quant,_that.note,_that.ctx,_that.vision,_that.thinking,_that.sizeBytes,_that.usable,_that.reason,_that.active);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _LlamaModel implements LlamaModel {
+  const _LlamaModel({required this.name, required this.model, this.quant, this.note, this.ctx, this.vision = false, this.thinking = 'toggle', this.sizeBytes, this.usable = false, this.reason, this.active = false});
+  factory _LlamaModel.fromJson(Map<String, dynamic> json) => _$LlamaModelFromJson(json);
+
+@override final  String name;
+@override final  String model;
+@override final  String? quant;
+@override final  String? note;
+@override final  int? ctx;
+@override@JsonKey() final  bool vision;
+@override@JsonKey() final  String thinking;
+@override final  int? sizeBytes;
+@override@JsonKey() final  bool usable;
+@override final  String? reason;
+@override@JsonKey() final  bool active;
+
+/// Create a copy of LlamaModel
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$LlamaModelCopyWith<_LlamaModel> get copyWith => __$LlamaModelCopyWithImpl<_LlamaModel>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$LlamaModelToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlamaModel&&(identical(other.name, name) || other.name == name)&&(identical(other.model, model) || other.model == model)&&(identical(other.quant, quant) || other.quant == quant)&&(identical(other.note, note) || other.note == note)&&(identical(other.ctx, ctx) || other.ctx == ctx)&&(identical(other.vision, vision) || other.vision == vision)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.sizeBytes, sizeBytes) || other.sizeBytes == sizeBytes)&&(identical(other.usable, usable) || other.usable == usable)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.active, active) || other.active == active));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,name,model,quant,note,ctx,vision,thinking,sizeBytes,usable,reason,active);
+
+@override
+String toString() {
+  return 'LlamaModel(name: $name, model: $model, quant: $quant, note: $note, ctx: $ctx, vision: $vision, thinking: $thinking, sizeBytes: $sizeBytes, usable: $usable, reason: $reason, active: $active)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$LlamaModelCopyWith<$Res> implements $LlamaModelCopyWith<$Res> {
+  factory _$LlamaModelCopyWith(_LlamaModel value, $Res Function(_LlamaModel) _then) = __$LlamaModelCopyWithImpl;
+@override @useResult
+$Res call({
+ String name, String model, String? quant, String? note, int? ctx, bool vision, String thinking, int? sizeBytes, bool usable, String? reason, bool active
+});
+
+
+
+
+}
+/// @nodoc
+class __$LlamaModelCopyWithImpl<$Res>
+    implements _$LlamaModelCopyWith<$Res> {
+  __$LlamaModelCopyWithImpl(this._self, this._then);
+
+  final _LlamaModel _self;
+  final $Res Function(_LlamaModel) _then;
+
+/// Create a copy of LlamaModel
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? model = null,Object? quant = freezed,Object? note = freezed,Object? ctx = freezed,Object? vision = null,Object? thinking = null,Object? sizeBytes = freezed,Object? usable = null,Object? reason = freezed,Object? active = null,}) {
+  return _then(_LlamaModel(
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,model: null == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
+as String,quant: freezed == quant ? _self.quant : quant // ignore: cast_nullable_to_non_nullable
+as String?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as String?,ctx: freezed == ctx ? _self.ctx : ctx // ignore: cast_nullable_to_non_nullable
+as int?,vision: null == vision ? _self.vision : vision // ignore: cast_nullable_to_non_nullable
+as bool,thinking: null == thinking ? _self.thinking : thinking // ignore: cast_nullable_to_non_nullable
+as String,sizeBytes: freezed == sizeBytes ? _self.sizeBytes : sizeBytes // ignore: cast_nullable_to_non_nullable
+as int?,usable: null == usable ? _self.usable : usable // ignore: cast_nullable_to_non_nullable
+as bool,reason: freezed == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
+as String?,active: null == active ? _self.active : active // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$LlamaSwitch {
+
+ String get state; String? get from; String get to; String? get by; DateTime? get at; String? get error; int? get elapsedS;
+/// Create a copy of LlamaSwitch
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LlamaSwitchCopyWith<LlamaSwitch> get copyWith => _$LlamaSwitchCopyWithImpl<LlamaSwitch>(this as LlamaSwitch, _$identity);
+
+  /// Serializes this LlamaSwitch to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlamaSwitch&&(identical(other.state, state) || other.state == state)&&(identical(other.from, from) || other.from == from)&&(identical(other.to, to) || other.to == to)&&(identical(other.by, by) || other.by == by)&&(identical(other.at, at) || other.at == at)&&(identical(other.error, error) || other.error == error)&&(identical(other.elapsedS, elapsedS) || other.elapsedS == elapsedS));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,state,from,to,by,at,error,elapsedS);
+
+@override
+String toString() {
+  return 'LlamaSwitch(state: $state, from: $from, to: $to, by: $by, at: $at, error: $error, elapsedS: $elapsedS)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LlamaSwitchCopyWith<$Res>  {
+  factory $LlamaSwitchCopyWith(LlamaSwitch value, $Res Function(LlamaSwitch) _then) = _$LlamaSwitchCopyWithImpl;
+@useResult
+$Res call({
+ String state, String? from, String to, String? by, DateTime? at, String? error, int? elapsedS
+});
+
+
+
+
+}
+/// @nodoc
+class _$LlamaSwitchCopyWithImpl<$Res>
+    implements $LlamaSwitchCopyWith<$Res> {
+  _$LlamaSwitchCopyWithImpl(this._self, this._then);
+
+  final LlamaSwitch _self;
+  final $Res Function(LlamaSwitch) _then;
+
+/// Create a copy of LlamaSwitch
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? state = null,Object? from = freezed,Object? to = null,Object? by = freezed,Object? at = freezed,Object? error = freezed,Object? elapsedS = freezed,}) {
+  return _then(_self.copyWith(
+state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
+as String,from: freezed == from ? _self.from : from // ignore: cast_nullable_to_non_nullable
+as String?,to: null == to ? _self.to : to // ignore: cast_nullable_to_non_nullable
+as String,by: freezed == by ? _self.by : by // ignore: cast_nullable_to_non_nullable
+as String?,at: freezed == at ? _self.at : at // ignore: cast_nullable_to_non_nullable
+as DateTime?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,elapsedS: freezed == elapsedS ? _self.elapsedS : elapsedS // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [LlamaSwitch].
+extension LlamaSwitchPatterns on LlamaSwitch {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _LlamaSwitch value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _LlamaSwitch() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _LlamaSwitch value)  $default,){
+final _that = this;
+switch (_that) {
+case _LlamaSwitch():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _LlamaSwitch value)?  $default,){
+final _that = this;
+switch (_that) {
+case _LlamaSwitch() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String state,  String? from,  String to,  String? by,  DateTime? at,  String? error,  int? elapsedS)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _LlamaSwitch() when $default != null:
+return $default(_that.state,_that.from,_that.to,_that.by,_that.at,_that.error,_that.elapsedS);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String state,  String? from,  String to,  String? by,  DateTime? at,  String? error,  int? elapsedS)  $default,) {final _that = this;
+switch (_that) {
+case _LlamaSwitch():
+return $default(_that.state,_that.from,_that.to,_that.by,_that.at,_that.error,_that.elapsedS);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String state,  String? from,  String to,  String? by,  DateTime? at,  String? error,  int? elapsedS)?  $default,) {final _that = this;
+switch (_that) {
+case _LlamaSwitch() when $default != null:
+return $default(_that.state,_that.from,_that.to,_that.by,_that.at,_that.error,_that.elapsedS);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _LlamaSwitch implements LlamaSwitch {
+  const _LlamaSwitch({required this.state, this.from, required this.to, this.by, this.at, this.error, this.elapsedS});
+  factory _LlamaSwitch.fromJson(Map<String, dynamic> json) => _$LlamaSwitchFromJson(json);
+
+@override final  String state;
+@override final  String? from;
+@override final  String to;
+@override final  String? by;
+@override final  DateTime? at;
+@override final  String? error;
+@override final  int? elapsedS;
+
+/// Create a copy of LlamaSwitch
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$LlamaSwitchCopyWith<_LlamaSwitch> get copyWith => __$LlamaSwitchCopyWithImpl<_LlamaSwitch>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$LlamaSwitchToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlamaSwitch&&(identical(other.state, state) || other.state == state)&&(identical(other.from, from) || other.from == from)&&(identical(other.to, to) || other.to == to)&&(identical(other.by, by) || other.by == by)&&(identical(other.at, at) || other.at == at)&&(identical(other.error, error) || other.error == error)&&(identical(other.elapsedS, elapsedS) || other.elapsedS == elapsedS));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,state,from,to,by,at,error,elapsedS);
+
+@override
+String toString() {
+  return 'LlamaSwitch(state: $state, from: $from, to: $to, by: $by, at: $at, error: $error, elapsedS: $elapsedS)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$LlamaSwitchCopyWith<$Res> implements $LlamaSwitchCopyWith<$Res> {
+  factory _$LlamaSwitchCopyWith(_LlamaSwitch value, $Res Function(_LlamaSwitch) _then) = __$LlamaSwitchCopyWithImpl;
+@override @useResult
+$Res call({
+ String state, String? from, String to, String? by, DateTime? at, String? error, int? elapsedS
+});
+
+
+
+
+}
+/// @nodoc
+class __$LlamaSwitchCopyWithImpl<$Res>
+    implements _$LlamaSwitchCopyWith<$Res> {
+  __$LlamaSwitchCopyWithImpl(this._self, this._then);
+
+  final _LlamaSwitch _self;
+  final $Res Function(_LlamaSwitch) _then;
+
+/// Create a copy of LlamaSwitch
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? state = null,Object? from = freezed,Object? to = null,Object? by = freezed,Object? at = freezed,Object? error = freezed,Object? elapsedS = freezed,}) {
+  return _then(_LlamaSwitch(
+state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
+as String,from: freezed == from ? _self.from : from // ignore: cast_nullable_to_non_nullable
+as String?,to: null == to ? _self.to : to // ignore: cast_nullable_to_non_nullable
+as String,by: freezed == by ? _self.by : by // ignore: cast_nullable_to_non_nullable
+as String?,at: freezed == at ? _self.at : at // ignore: cast_nullable_to_non_nullable
+as DateTime?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,elapsedS: freezed == elapsedS ? _self.elapsedS : elapsedS // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

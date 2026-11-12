@@ -63,6 +63,12 @@ abstract class HermesIssue with _$HermesIssue {
 /// `status`: running | loading | starting | stopping | stopped | failed |
 /// down | unknown. `intent`: stopped (stopped from Delve; queued runs wait) |
 /// starting (started, the model loads) | null.
+///
+/// The model presets (M): [preset] is the one the desktop points to (what
+/// Start loads while stopped), [vision] and [thinking] (toggle | always |
+/// none) say what the loaded or selected model can do, [models] lists every
+/// preset (null: the desktop's helper cannot list them) and [switchState] is
+/// the switch in progress or the one that failed.
 @freezed
 abstract class LlamaInfo with _$LlamaInfo {
   const factory LlamaInfo({
@@ -77,10 +83,61 @@ abstract class LlamaInfo with _$LlamaInfo {
 
     /// The last completed run's generation speed, tok/s.
     double? genTps,
+    String? preset,
+    bool? vision,
+    String? thinking,
+    List<LlamaModel>? models,
+    @JsonKey(name: 'switch') LlamaSwitch? switchState,
   }) = _LlamaInfo;
 
   factory LlamaInfo.fromJson(Map<String, Object?> json) =>
       _$LlamaInfoFromJson(json);
+}
+
+/// `llama_model` shape: one preset on the desktop. [name] is the preset's
+/// id (what a switch takes), [model] and [quant] what to show. `thinking`:
+/// toggle | always | none. A preset that is not [usable] says why in
+/// [reason]: no_model | model_missing | mmproj_missing | no_context |
+/// context_below_64k. [active]: the desktop points to it.
+@freezed
+abstract class LlamaModel with _$LlamaModel {
+  const factory LlamaModel({
+    required String name,
+    required String model,
+    String? quant,
+    String? note,
+    int? ctx,
+    @Default(false) bool vision,
+    @Default('toggle') String thinking,
+    int? sizeBytes,
+    @Default(false) bool usable,
+    String? reason,
+    @Default(false) bool active,
+  }) = _LlamaModel;
+
+  factory LlamaModel.fromJson(Map<String, Object?> json) =>
+      _$LlamaModelFromJson(json);
+}
+
+/// `llama_switch` shape. `state`: switching | failed (the previous model is
+/// back) | down (llama-server is not running). [from] and [to] are preset
+/// ids, [by] the device that asked, [at] when the desktop started; a failed
+/// one says why (`error`: exited | timeout) and how long the new model was
+/// given ([elapsedS]).
+@freezed
+abstract class LlamaSwitch with _$LlamaSwitch {
+  const factory LlamaSwitch({
+    required String state,
+    String? from,
+    required String to,
+    String? by,
+    DateTime? at,
+    String? error,
+    int? elapsedS,
+  }) = _LlamaSwitch;
+
+  factory LlamaSwitch.fromJson(Map<String, Object?> json) =>
+      _$LlamaSwitchFromJson(json);
 }
 
 @freezed

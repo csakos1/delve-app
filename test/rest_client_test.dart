@@ -20,7 +20,7 @@ void main() {
 
   test('meta needs no token and parses', () async {
     final meta = await api().meta();
-    expect((meta.apiRevision, meta.serverVersion), (9, '0.1.0'));
+    expect((meta.apiRevision, meta.serverVersion), (10, '0.1.0'));
     expect(server.requests.single.headers['Authorization'], isNull);
     expect(server.requests.single.uri.toString(), '$testServer/api/v1/meta');
   });
@@ -180,6 +180,7 @@ void main() {
         'totals': sample('conversation')['totals'],
         'context': sample('conversation')['context'],
         'runs': [sample('run')],
+        'last_model': 'Qwen3.8-27B · IQ4_XS',
       });
       server.json('GET', '/api/v1/approvals', {
         'data': [sample('approval')],
@@ -189,7 +190,29 @@ void main() {
         (await a.openRuns()).single.position,
         sample('open_run')['position'],
       );
-      expect((await a.usage('c_1')).runs, hasLength(1));
+      final usage = await a.usage('c_1');
+      expect(usage.runs, hasLength(1));
+      expect(
+        (usage.lastModel, usage.runs.single.model),
+        ('Qwen3.8-27B · IQ4_XS', 'Qwen3.8-27B · IQ4_XS'),
+      );
+
+      // M: a switch names the preset, forces only when asked; a dismiss
+      server.json('POST', '/api/v1/system/llama', sample('system'));
+      await a.switchModel('qwen38-27b-q6k');
+      expect(server.requests.last.data, {
+        'action': 'switch',
+        'model': 'qwen38-27b-q6k',
+      });
+      await a.switchModel('qwen38-27b-q6k', force: true);
+      expect(server.requests.last.data, {
+        'action': 'switch',
+        'model': 'qwen38-27b-q6k',
+        'force': true,
+      });
+      final view = await a.dismissSwitch();
+      expect(server.requests.last.data, {'action': 'dismiss'});
+      expect(view.llama.models, hasLength(6));
       expect(
         (await a.approvals()).single.requestId,
         sample('approval')['request_id'],
