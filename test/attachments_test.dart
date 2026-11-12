@@ -387,6 +387,68 @@ void main() {
       expect(find.byKey(const Key('composer.attachments')), findsNothing);
     });
 
+    /// The system view with a loaded model that can do less.
+    Map<String, Object?> systemWith(Map<String, Object?> llama) {
+      final s = FakeServer.sample('system');
+      return {
+        ...s,
+        'llama': {...s['llama']! as Map<String, Object?>, ...llama},
+      };
+    }
+
+    testWidgets('25h: a model without image input takes no photo', (t) async {
+      final env = await start(t);
+      env.server.json(
+        'GET',
+        '/api/v1/system',
+        systemWith(const {
+          'model': 'Qwen3.8-27B abliterated',
+          'vision': false,
+          'thinking': 'none',
+        }),
+      );
+      await open(t);
+      // it cannot think either: no pill
+      expect(find.byKey(const Key('composer.thinking')), findsNothing);
+      picker.next = [photo(), file('notes.txt')];
+      await t.tap(find.byKey(const Key('composer.add')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('attach.noImages')), findsOneWidget);
+      expect(
+        find.text("Qwen3.8-27B abliterated can't read images"),
+        findsOneWidget,
+      );
+      expect(
+        find.text('The local model is changed in More → System.'),
+        findsOneWidget,
+      );
+      await t.tap(find.byKey(const Key('attach.photos')), warnIfMissed: false);
+      await t.pumpAndSettle();
+      expect(picker.asked, isEmpty);
+      expect(find.byKey(const Key('attach.noImages')), findsOneWidget);
+      // File stays; an image picked there is left out
+      await t.tap(find.byKey(const Key('attach.file')));
+      await t.pumpAndSettle();
+      expect(picker.asked, ['files 4']);
+      expect(find.text('notes.txt'), findsOneWidget);
+      expect(find.text('IMG_1.jpg'), findsNothing);
+    });
+
+    testWidgets('25h: a model that always thinks locks the pill', (t) async {
+      final env = await start(t);
+      env.server.json(
+        'GET',
+        '/api/v1/system',
+        systemWith(const {'model': 'Reasoner-32B', 'thinking': 'always'}),
+      );
+      await open(t);
+      expect(find.byKey(const Key('composer.thinking')), findsNothing);
+      expect(find.byKey(const Key('general.thinking.lock')), findsOneWidget);
+      await t.tap(find.byKey(const Key('composer.add')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('attach.noImages')), findsNothing);
+    });
+
     testWidgets('a failed upload blocks Send; retried, it can go alone', (
       t,
     ) async {

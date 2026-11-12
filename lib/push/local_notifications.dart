@@ -120,6 +120,10 @@ class LocalNotifications implements PhoneNotifications {
         l.notifyChannelWatches,
         l.notifyChannelWatchesDesc,
       ),
+      NotifyChannel.system => (
+        l.notifyChannelSystem,
+        l.notifyChannelSystemDesc,
+      ),
     };
     final android = AndroidNotificationDetails(
       spec.channel.name,

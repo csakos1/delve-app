@@ -976,13 +976,17 @@ void main() {
             'gen_tps': 20.6,
             'first_delta_s': 2.96,
           }),
-          runJson('run_b', 'running', {
-            'prompt_tokens': 900,
-            'prefill_tps': 642.3,
-            'gen_tps': 21.4,
-            'first_delta_s': 6.8,
-          }),
+          {
+            ...runJson('run_b', 'running', {
+              'prompt_tokens': 900,
+              'prefill_tps': 642.3,
+              'gen_tps': 21.4,
+              'first_delta_s': 6.8,
+            }),
+            'model': 'Qwen3.8-27B · Q6_K',
+          },
         ],
+        'last_model': 'Qwen3.8-27B · Q6_K',
       });
       await openChat(t);
       expect(
@@ -998,6 +1002,21 @@ void main() {
       expect(find.text('25,954'), findsOneWidget);
       expect(find.text('Run 1'), findsOneWidget);
       expect(find.text('Run 2 · running'), findsOneWidget);
+      // 25g: who wrote the newest answer; two models, so each run names its
+      expect(
+        t.widget<Text>(find.byKey(const Key('usage.lastModel'))).data,
+        'Qwen3.8-27B · Q6_K',
+      );
+      expect(
+        t
+            .widget<Text>(find.byKey(const ValueKey('usage.run.run_a.model')))
+            .data,
+        'Qwen3.8-27B · IQ4_XS',
+      );
+      expect(
+        find.byKey(const ValueKey('usage.run.run_b.model')),
+        findsOneWidget,
+      );
       expect(find.text('642 tok/s'), findsOneWidget);
       expect(find.text('21.4 tok/s'), findsOneWidget);
       // run 1 prefilled only 122 tokens: no prefill speed

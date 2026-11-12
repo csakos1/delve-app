@@ -241,7 +241,7 @@ connection = {
     # GET/PATCH /api/v1/devices/me (api/devices.py _device_out; no shared serializer)
     "device_me": {"id": "4f1c2b3a-9d8e-4f7a-8b6c-5d4e3f2a1b0c", "name": "pixel", "created_at": t0.isoformat(),
                   "last_seen_at": (t0 + timedelta(minutes=1)).isoformat(), "fcm": True, "push": True,
-                  "notify": {"approvals": True, "run_done": False, "water": False, "brief": False, "watches": True}},
+                  "notify": {"approvals": True, "run_done": False, "water": False, "brief": False, "watches": True, "system": True}},
 }
 out = {"_note": "Generated from delve-backend serializers (decision 176); keys must equal contract.json.",
        "shapes": shapes, "events": events, "connection": connection}

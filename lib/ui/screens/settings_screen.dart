@@ -315,6 +315,7 @@ class _NotificationsState extends ConsumerState<_Notifications> {
         water: key == 'water' ? value : null,
         brief: key == 'brief' ? value : null,
         watches: key == 'watches' ? value : null,
+        system: key == 'system' ? value : null,
       );
       ref.invalidate(deviceInfoProvider);
       await ref.read(deviceInfoProvider.future);
@@ -433,6 +434,13 @@ class _NotificationsState extends ConsumerState<_Notifications> {
           l.settingsNotifyWatches,
           l.settingsNotifyWatchesSub,
           notify?.watches,
+        ),
+        row(
+          'system',
+          DelveIcons.modelSwitch,
+          l.settingsNotifySystem,
+          l.settingsNotifySystemSub,
+          notify?.system,
         ),
       ],
     );

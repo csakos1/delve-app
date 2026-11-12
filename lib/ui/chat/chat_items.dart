@@ -134,12 +134,12 @@ class OutboxBubble extends StatelessWidget {
             filled: true,
             color: d.alertFg,
           ),
-          Text(
-            row.lastError == null
-                ? l.outboxFailed
-                : l.outboxFailedWhy(row.lastError!),
-            style: context.text.labelSmall!.copyWith(color: d.alertFg),
-          ),
+          Text(switch (row.lastError) {
+            null => l.outboxFailed,
+            // the loaded local model has no image input (M)
+            'model_no_vision' => l.outboxFailedWhy(l.outboxNoVision),
+            final String why => l.outboxFailedWhy(why),
+          }, style: context.text.labelSmall!.copyWith(color: d.alertFg)),
           TextButton(onPressed: onRetry, child: Text(l.outboxRetry)),
           TextButton(onPressed: onDiscard, child: Text(l.outboxDiscard)),
         ],

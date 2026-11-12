@@ -10,6 +10,7 @@ import '../../app/chat.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../app/session.dart';
+import '../../app/system.dart';
 import '../../attachments/attachment_store.dart';
 import '../../attachments/composer_attachments.dart';
 import '../../attachments/image_prep.dart';
@@ -29,7 +30,7 @@ import '../chat/composer.dart';
 import '../chat/usage.dart';
 import '../format.dart';
 import '../general/general_widgets.dart'
-    show ChatKind, ChatKindSwitch, chatKindOf;
+    show ChatKind, ChatKindSwitch, GeneralThinkingPill, chatKindOf;
 import '../widgets/chat_row.dart';
 import '../widgets/delve_mark.dart';
 import '../widgets/page_scaffolds.dart';
@@ -129,6 +130,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _firstClientMsgId = widget.firstClientMsgId;
     final id = widget.conversationId;
     if (id != null) _openAfterFrame(id);
+    // what the loaded model can do (images, thinking) shapes the composer;
+    // the view is only kept fresh while the dashboard or System is open
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || ref.read(systemProvider).info != null) return;
+      unawaited(
+        ref.read(systemProvider.notifier).refresh().catchError((Object _) {}),
+      );
+    });
   }
 
   /// A new chat moves to its conversation with `replace`, which keeps this
@@ -267,11 +276,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   // --- attachments --------------------------------------------------------------
 
   /// "+": Photos, Camera or File; what is picked starts uploading at once.
-  Future<void> _addAttachments() => pickAttachmentsInto(
-    context,
-    ref.read(attachmentPickerProvider),
-    _attachments,
-  );
+  Future<void> _addAttachments() {
+    final llama = ref.read(systemProvider).info?.llama;
+    return pickAttachmentsInto(
+      context,
+      ref.read(attachmentPickerProvider),
+      _attachments,
+      noImagesModel: llama?.vision == false ? _modelName(llama!) : null,
+    );
+  }
+
+  /// The loaded (stopped: the selected) model's name without its
+  /// quantization, for a sentence.
+  String _modelName(LlamaInfo llama) =>
+      llama.model ??
+      llama.presetNamed(llama.preset)?.model ??
+      AppLocalizations.of(context).modelThisModel;
 
   /// A photo full screen, a file's details; both offer "Send again".
   void _openAttachment(Attachment a) {
@@ -308,11 +328,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }) {
     final l = AppLocalizations.of(context);
     final canAttach = connected && ref.watch(attachmentApiProvider) != null;
+    // 25h: the pill follows what the loaded model can do - a switch, locked
+    // on (it always thinks) or gone (it cannot); the chat's choice is kept
+    final llama = ref.watch(systemProvider.select((v) => v.info?.llama));
     return Composer(
       onSend: _sendComposer,
       onStop: onStop,
       queued: queued,
-      leading: [_pill(on: thinking)],
+      leading: [
+        if (llama?.thinking == 'always')
+          GeneralThinkingPill(
+            on: true,
+            locked: true,
+            label: l.composerThinking,
+            lockedTip: l.modelAlwaysThinks(_modelName(llama!)),
+          )
+        else if (llama?.thinking != 'none')
+          _pill(on: thinking),
+      ],
       caption: _caption ? l.composerThinkingCaption : null,
       attachments: _attachments,
       onAdd: canAttach ? () => unawaited(_addAttachments()) : null,

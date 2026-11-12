@@ -551,40 +551,121 @@ Future<void> showFileSheet(
 /// Where a new attachment comes from (the composer's "+").
 enum AttachSource { photos, camera, file }
 
-/// The "+" menu: Photos, Camera, File.
-Future<AttachSource?> showAttachSourceSheet(BuildContext context) =>
-    showModalBottomSheet<AttachSource>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        final l = AppLocalizations.of(context);
-        Widget tile(AttachSource s, IconData icon, String label) => ListTile(
-          key: Key('attach.${s.name}'),
-          leading: SymbolIcon(icon),
-          title: Text(label),
-          onTap: () => Navigator.of(context).pop(s),
-        );
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              tile(AttachSource.photos, DelveIcons.photos, l.attachPhotos),
-              tile(AttachSource.camera, DelveIcons.camera, l.attachCamera),
-              tile(AttachSource.file, DelveIcons.attachFile, l.attachFile),
-              const SizedBox(height: DelveTokens.space2),
-            ],
-          ),
-        );
-      },
+/// The "+" menu: Photos, Camera, File. [noImagesModel]: the loaded local
+/// model has no image input (25h) - a note names it, Photos and Camera are
+/// off; File stays.
+Future<AttachSource?> showAttachSourceSheet(
+  BuildContext context, {
+  String? noImagesModel,
+}) => showModalBottomSheet<AttachSource>(
+  context: context,
+  showDragHandle: true,
+  builder: (context) {
+    final l = AppLocalizations.of(context);
+    final d = context.delve;
+    Widget tile(
+      AttachSource s,
+      IconData icon,
+      String label, {
+      bool enabled = true,
+    }) => ListTile(
+      key: Key('attach.${s.name}'),
+      enabled: enabled,
+      leading: SymbolIcon(icon, color: enabled ? null : d.textDisabled),
+      title: Text(label),
+      onTap: enabled ? () => Navigator.of(context).pop(s) : null,
     );
+    final images = noImagesModel == null;
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (noImagesModel != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DelveTokens.space4,
+                0,
+                DelveTokens.space4,
+                DelveTokens.space2,
+              ),
+              child: DecoratedBox(
+                key: const Key('attach.noImages'),
+                decoration: BoxDecoration(
+                  color: d.infoBg,
+                  border: Border.all(
+                    color: d.infoBorder,
+                    width: DelveTokens.hairline,
+                  ),
+                  borderRadius: BorderRadius.circular(DelveTokens.rmd),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DelveTokens.space4,
+                    vertical: DelveTokens.space3,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SymbolIcon(
+                        DelveIcons.imageGone,
+                        size: DelveTokens.iconMd,
+                        color: d.infoFg,
+                      ),
+                      const SizedBox(width: DelveTokens.space3),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l.modelCantReadImages(noImagesModel),
+                              style: context.text.bodyMedium!.copyWith(
+                                color: context.colors.onSurface,
+                              ),
+                            ),
+                            Text(
+                              l.modelChangedIn,
+                              style: context.text.bodySmall!.copyWith(
+                                color: d.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          tile(
+            AttachSource.photos,
+            DelveIcons.photos,
+            l.attachPhotos,
+            enabled: images,
+          ),
+          tile(
+            AttachSource.camera,
+            DelveIcons.camera,
+            l.attachCamera,
+            enabled: images,
+          ),
+          tile(AttachSource.file, DelveIcons.attachFile, l.attachFile),
+          const SizedBox(height: DelveTokens.space2),
+        ],
+      ),
+    );
+  },
+);
 
 /// The composer's "+": asks for Photos, Camera or File and adds what is
 /// picked (it starts uploading at once); a snackbar says what did not fit.
+/// With [noImagesModel] (the loaded model has no image input) no image is
+/// taken, not even through File.
 Future<void> pickAttachmentsInto(
   BuildContext context,
   AttachmentPicker picker,
-  ComposerAttachments attachments,
-) async {
+  ComposerAttachments attachments, {
+  String? noImagesModel,
+}) async {
   final l = AppLocalizations.of(context);
   final messenger = ScaffoldMessenger.of(context);
   void snack(String text) {
@@ -598,9 +679,12 @@ Future<void> pickAttachmentsInto(
     snack(l.attachLimit(kMaxAttachments));
     return;
   }
-  final source = await showAttachSourceSheet(context);
+  final source = await showAttachSourceSheet(
+    context,
+    noImagesModel: noImagesModel,
+  );
   if (source == null || !context.mounted) return;
-  final List<PickedAttachment> picked;
+  List<PickedAttachment> picked;
   try {
     picked = switch (source) {
       AttachSource.photos => await picker.photos(limit: room),
@@ -610,6 +694,13 @@ Future<void> pickAttachmentsInto(
   } on Exception catch (e) {
     if (context.mounted) snack(l.attachPickFailed('$e'));
     return;
+  }
+  if (noImagesModel != null && picked.any((p) => p.kind == 'image')) {
+    picked = [
+      for (final p in picked)
+        if (p.kind != 'image') p,
+    ];
+    snack(l.modelCantReadImages(noImagesModel));
   }
   if (!context.mounted || picked.isEmpty) return;
   final left = attachments.addAll(picked);

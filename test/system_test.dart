@@ -1,11 +1,17 @@
+import 'package:delve/l10n/app_localizations.dart';
+import 'package:delve/push/background.dart';
+import 'package:delve/push/notification_spec.dart';
+import 'package:delve/push/push_message.dart';
 import 'package:delve/theme/delve_colors.dart';
 import 'package:delve/ui/format.dart';
+import 'package:delve/ui/screens/settings_screen.dart';
 import 'package:delve/ui/widgets/status_ui.dart';
 import 'package:delve/ui/widgets/system_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'push_test.dart' show FakeNotifications;
 import 'support/fake_server.dart';
 import 'support/harness.dart';
 import 'support/layout.dart';
@@ -931,6 +937,92 @@ void main() {
         findsNothing,
       ); // no snackbar
       expect(env.server.calls, contains('GET /api/v1/cards'));
+    });
+  });
+
+  group('a failed switch is pushed', () {
+    final l = lookupAppLocalizations(const Locale('en'));
+    Map<String, Object?> data({
+      String event = 'switch_failed',
+      String back = 'Qwen3.8-27B · IQ4_XS',
+    }) => {
+      'kind': 'system',
+      'event': event,
+      'to': 'Reasoner-32B · Q4_K_M',
+      'back': back,
+      'at': '2026-11-12T21:02:00+00:00',
+    };
+
+    test('on the System channel; Open leads to System', () {
+      final p = PushMessage.parse(data())! as ModelSwitchPush;
+      expect((p.down, p.back), (false, 'Qwen3.8-27B · IQ4_XS'));
+      final n = modelSwitchNotification(l, p);
+      expect(n.channel, NotifyChannel.system);
+      expect(
+        (n.title, n.body),
+        ("Couldn't load Reasoner-32B · Q4_K_M", 'Back on Qwen3.8-27B · IQ4_XS'),
+      );
+      expect([for (final a in n.actions) a.id], [NotifyActions.open]);
+      final target = PushTarget.decode(n.payload)!;
+      expect((target.kind, target.conversationId), ('system', null));
+
+      // llama-server is down: the same notification, saying so
+      final down = modelSwitchNotification(
+        l,
+        PushMessage.parse(data(event: 'switch_down', back: ''))!
+            as ModelSwitchPush,
+      );
+      expect(down.body, 'llama-server is stopped');
+      expect(down.id, n.id);
+
+      expect(PushMessage.parse({...data(), 'event': 'switched'}), isNull);
+      expect(PushMessage.parse({...data()}..remove('to')), isNull);
+    });
+
+    test('shown in the foreground too', () async {
+      final n = FakeNotifications();
+      await handlePush(data(), n, now: DateTime.now(), foreground: true);
+      expect(n.shown, hasLength(1));
+    });
+  });
+
+  testWidgets('Settings → Model switch failed saves on the server', (t) async {
+    final env = await pumpDelve(t);
+    env.server.on(
+      'PATCH',
+      '/api/v1/devices/me',
+      (_) => FakeReply(200, {
+        ...FakeServer.device,
+        'notify': {
+          ...(FakeServer.device['notify']! as Map<String, Object?>),
+          'system': false,
+        },
+      }),
+    );
+    await t.tap(find.text('More'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Settings'));
+    await t.pumpAndSettle();
+    final key = find.byKey(const Key('settings.notify.system'));
+    await t.scrollUntilVisible(
+      key,
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(SettingsScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(t.widget<Switch>(key).value, isTrue);
+    expect(find.text('Model switch failed'), findsOneWidget);
+    await t.ensureVisible(key);
+    await t.pumpAndSettle();
+    await t.tap(key);
+    await t.pumpAndSettle();
+    final patch = env.server.requests.lastWhere((r) => r.method == 'PATCH');
+    expect(patch.data, {
+      'notify': {'system': false},
     });
   });
 }

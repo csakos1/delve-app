@@ -4380,4 +4380,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String modelSwitchFailed(String reason) {
     return 'Couldn\'t switch the model: $reason';
   }
+
+  @override
+  String get usageLastAnswer => 'Last answer';
+
+  @override
+  String modelCantReadImages(String model) {
+    return '$model can\'t read images';
+  }
+
+  @override
+  String get modelChangedIn => 'The local model is changed in More → System.';
+
+  @override
+  String modelAlwaysThinks(String model) {
+    return '$model always thinks';
+  }
+
+  @override
+  String get modelThisModel => 'The loaded model';
+
+  @override
+  String get outboxNoVision => 'the loaded model can\'t read images';
+
+  @override
+  String get notifyChannelSystem => 'System';
+
+  @override
+  String get notifyChannelSystemDesc => 'When a model switch fails';
+
+  @override
+  String notifySwitchTitle(String model) {
+    return 'Couldn\'t load $model';
+  }
+
+  @override
+  String notifySwitchBack(String model) {
+    return 'Back on $model';
+  }
+
+  @override
+  String get notifySwitchBackPlain => 'The previous model is loaded again';
+
+  @override
+  String get notifySwitchDown => 'llama-server is stopped';
+
+  @override
+  String get settingsNotifySystem => 'Model switch failed';
+
+  @override
+  String get settingsNotifySystemSub =>
+      'When the desktop could not load the model you picked';
 }

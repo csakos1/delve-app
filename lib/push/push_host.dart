@@ -49,8 +49,9 @@ class _PushHostState extends ConsumerState<PushHost> {
     final router = ref.read(routerProvider);
     final messenger = ScaffoldMessenger.maybeOf(context);
     // a watch's notification opens the watch, a chat's the chat, a card's
-    // the dashboard
+    // the dashboard, a failed model switch System
     String place(PushTarget t) => switch ((t.slug, t.conversationId)) {
+      _ when t.kind == 'system' => Routes.system,
       (final slug?, _) when t.kind == 'watch' => Routes.watch(slug),
       (_, final id?) => Routes.chat(id),
       _ => Routes.dashboard,

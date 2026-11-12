@@ -4,7 +4,7 @@ import '../ui/format.dart';
 import 'push_message.dart';
 
 /// The Android notification channels (design 18, 21e).
-enum NotifyChannel { approvals, runs, cards, watches }
+enum NotifyChannel { approvals, runs, cards, watches, system }
 
 /// Action ids on a notification.
 abstract final class NotifyActions {
@@ -178,6 +178,24 @@ NotificationSpec watchNotification(AppLocalizations l, WatchPush p) {
     ],
   );
 }
+
+/// "Couldn't load ‹new›" with what runs now: the previous model, or nothing
+/// (llama-server is stopped). One per switch; Open leads to System.
+NotificationSpec modelSwitchNotification(
+  AppLocalizations l,
+  ModelSwitchPush p,
+) => NotificationSpec(
+  id: notificationId('system:switch'),
+  channel: NotifyChannel.system,
+  title: l.notifySwitchTitle(p.to),
+  body: p.down
+      ? l.notifySwitchDown
+      : p.back == null
+      ? l.notifySwitchBackPlain
+      : l.notifySwitchBack(p.back!),
+  payload: const PushTarget(kind: 'system').encode(),
+  actions: [NotifyAction(NotifyActions.open, l.notifyOpen, opensApp: true)],
+);
 
 NotificationSpec waterNotification(AppLocalizations l, WaterPush p) {
   final parts = [

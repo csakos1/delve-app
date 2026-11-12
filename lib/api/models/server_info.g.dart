@@ -133,6 +133,7 @@ _NotifySettings _$NotifySettingsFromJson(Map<String, dynamic> json) =>
       water: json['water'] as bool? ?? false,
       brief: json['brief'] as bool? ?? false,
       watches: json['watches'] as bool? ?? true,
+      system: json['system'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$NotifySettingsToJson(_NotifySettings instance) =>
@@ -142,4 +143,5 @@ Map<String, dynamic> _$NotifySettingsToJson(_NotifySettings instance) =>
       'water': instance.water,
       'brief': instance.brief,
       'watches': instance.watches,
+      'system': instance.system,
     };

@@ -104,6 +104,23 @@ sealed class PushMessage {
           },
           reserved: s('reserved') == 'true',
         );
+      case 'system':
+        final to = s('to');
+        final down = switch (s('event')) {
+          'switch_failed' => false,
+          'switch_down' => true,
+          _ => null,
+        };
+        if (down == null || to == null || to.isEmpty) return null;
+        return ModelSwitchPush(
+          to: to,
+          back: switch (s('back')) {
+            null || '' => null,
+            final v => v,
+          },
+          down: down,
+          at: s('at') ?? '',
+        );
       case 'run_done':
         final conversationId = s('conversation_id');
         final runId = s('run_id');
@@ -250,6 +267,27 @@ final class WatchPush extends PushMessage {
   final bool reserved;
 }
 
+/// A model switch that did not work (M): the previous model is back, or -
+/// [down] - llama-server is not running. Only failures are pushed.
+final class ModelSwitchPush extends PushMessage {
+  const ModelSwitchPush({
+    required this.to,
+    required this.down,
+    required this.at,
+    this.back,
+  });
+
+  /// The model that did not load, as shown ("Qwen3.8-27B · Q6_K").
+  final String to;
+
+  /// The model that is loaded again; null: there was none to go back to.
+  final String? back;
+  final bool down;
+
+  /// When the desktop started the switch (ISO; one notification per switch).
+  final String at;
+}
+
 /// Notification id for a key (request id, run id): FNV-1a, positive 31 bit.
 /// Stable across isolates and app starts, so the background handler can
 /// replace or remove what another isolate showed.
@@ -284,10 +322,10 @@ class PushTarget {
       final url = j['url'];
       if (kind is! String) return null;
       // a watch's notification needs its watch; a chat's its chat; a card's
-      // opens the dashboard
+      // opens the dashboard, a system one the System screen
       if (kind == 'watch'
           ? slug is! String
-          : kind != 'card' && conv is! String) {
+          : kind != 'card' && kind != 'system' && conv is! String) {
         return null;
       }
       return PushTarget(
@@ -302,10 +340,10 @@ class PushTarget {
     }
   }
 
-  /// `approval`, `run_done`, `card` or `watch`.
+  /// `approval`, `run_done`, `card`, `watch` or `system`.
   final String kind;
 
-  /// null for a card and a watch.
+  /// null for a card, a watch and a system notification.
   final String? conversationId;
   final String? requestId;
 

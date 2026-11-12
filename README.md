@@ -68,6 +68,11 @@ reached over Tailscale only.
   with the reason and a command to copy until it is dismissed; when going back failed
   too, there is no Dismiss and Start is on the card. Presets are files on the desktop;
   the app never edits them.
+  M3b: the chat follows the loaded model - the Usage sheet names the model of the last
+  answer (and of each run when there were several), the "+" sheet offers no photo to a
+  model without image input, the Thinking pill is locked on or gone when the model
+  always or never thinks; a failed switch is also a notification (its own "System"
+  channel, a switch in Settings → Notifications).
 
 - B4: Schedules (More → Schedules) — the morning brief and the prompt schedules, each with
   its timing in words, next and last run, an on/off switch and Run now. The editor sets

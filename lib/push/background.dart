@@ -76,6 +76,9 @@ Future<void> handlePush(
     case final WatchPush p:
       // also in the foreground: a hit matters wherever the app is
       await notifications.show(watchNotification(l, p));
+    case final ModelSwitchPush p:
+      // also in the foreground: the banner is on another screen
+      await notifications.show(modelSwitchNotification(l, p));
     case null:
       break;
   }

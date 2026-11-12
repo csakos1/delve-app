@@ -6806,6 +6806,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t switch the model: {reason}'**
   String modelSwitchFailed(String reason);
+
+  /// No description provided for @usageLastAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Last answer'**
+  String get usageLastAnswer;
+
+  /// No description provided for @modelCantReadImages.
+  ///
+  /// In en, this message translates to:
+  /// **'{model} can\'t read images'**
+  String modelCantReadImages(String model);
+
+  /// No description provided for @modelChangedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'The local model is changed in More → System.'**
+  String get modelChangedIn;
+
+  /// No description provided for @modelAlwaysThinks.
+  ///
+  /// In en, this message translates to:
+  /// **'{model} always thinks'**
+  String modelAlwaysThinks(String model);
+
+  /// No description provided for @modelThisModel.
+  ///
+  /// In en, this message translates to:
+  /// **'The loaded model'**
+  String get modelThisModel;
+
+  /// No description provided for @outboxNoVision.
+  ///
+  /// In en, this message translates to:
+  /// **'the loaded model can\'t read images'**
+  String get outboxNoVision;
+
+  /// No description provided for @notifyChannelSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get notifyChannelSystem;
+
+  /// No description provided for @notifyChannelSystemDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'When a model switch fails'**
+  String get notifyChannelSystemDesc;
+
+  /// No description provided for @notifySwitchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load {model}'**
+  String notifySwitchTitle(String model);
+
+  /// No description provided for @notifySwitchBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back on {model}'**
+  String notifySwitchBack(String model);
+
+  /// No description provided for @notifySwitchBackPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'The previous model is loaded again'**
+  String get notifySwitchBackPlain;
+
+  /// No description provided for @notifySwitchDown.
+  ///
+  /// In en, this message translates to:
+  /// **'llama-server is stopped'**
+  String get notifySwitchDown;
+
+  /// No description provided for @settingsNotifySystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Model switch failed'**
+  String get settingsNotifySystem;
+
+  /// No description provided for @settingsNotifySystemSub.
+  ///
+  /// In en, this message translates to:
+  /// **'When the desktop could not load the model you picked'**
+  String get settingsNotifySystemSub;
 }
 
 class _AppLocalizationsDelegate

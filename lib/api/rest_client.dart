@@ -119,6 +119,7 @@ class DelveApi {
     bool? water,
     bool? brief,
     bool? watches,
+    bool? system,
   }) async => _parse(
     await _json(
       ApiRoutes.patchDevice,
@@ -129,6 +130,7 @@ class DelveApi {
           'water': ?water,
           'brief': ?brief,
           'watches': ?watches,
+          'system': ?system,
         },
       },
     ),

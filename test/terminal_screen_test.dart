@@ -712,6 +712,7 @@ void main() {
         findsOneWidget,
       );
       await t.ensureVisible(row);
+      await frames(t);
       await t.tap(row);
       await frames(t);
       expect(find.byKey(const Key('terminalSettings.list')), findsOneWidget);

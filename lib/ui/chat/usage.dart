@@ -384,6 +384,13 @@ class UsageSheet extends ConsumerWidget {
     final runs = [
       for (final (i, r) in data.runs.indexed) (n: i + 1, run: r),
     ].reversed.toList();
+    // the rows name their model only when the chat was answered by several
+    final severalModels =
+        {
+          for (final r in data.runs)
+            if (r.model != null) r.model,
+        }.length >
+        1;
     return [
       Row(
         children: [
@@ -439,6 +446,23 @@ class UsageSheet extends ConsumerWidget {
           ),
         ],
       ),
+      // 25g: which local model wrote the newest answer (not the loaded one)
+      const SizedBox(height: 14),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.usageLastAnswer, style: context.text.titleSmall),
+          const SizedBox(width: DelveTokens.space3),
+          Expanded(
+            child: Text(
+              data.lastModel ?? l.settingsUnknown,
+              key: const Key('usage.lastModel'),
+              textAlign: TextAlign.end,
+              style: DelveText.monoSmall.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+        ],
+      ),
       const SizedBox(height: DelveTokens.space6),
       Row(
         children: [
@@ -462,7 +486,7 @@ class UsageSheet extends ConsumerWidget {
           ),
         ),
       for (final r in runs) ...[
-        RunUsageRow(number: r.n, run: r.run),
+        RunUsageRow(number: r.n, run: r.run, showModel: severalModels),
         const Divider(height: 1),
       ],
       const SizedBox(height: DelveTokens.space4),
@@ -537,10 +561,18 @@ class _Tile extends StatelessWidget {
 /// One run in the sheet: time, "Run N" (with its state when not completed),
 /// input and output tokens; then prefill, generation and first token.
 class RunUsageRow extends StatelessWidget {
-  const RunUsageRow({super.key, required this.number, required this.run});
+  const RunUsageRow({
+    super.key,
+    required this.number,
+    required this.run,
+    this.showModel = false,
+  });
 
   final int number;
   final Run run;
+
+  /// Name the run's model under its title (the chat used more than one).
+  final bool showModel;
 
   @override
   Widget build(BuildContext context) {
@@ -628,6 +660,15 @@ class RunUsageRow extends StatelessWidget {
                       ),
                   ],
                 ),
+                if (run.model case final model? when showModel)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      model,
+                      key: ValueKey('usage.run.${run.runId}.model'),
+                      style: DelveText.monoSmall.copyWith(color: d.textMuted),
+                    ),
+                  ),
                 const SizedBox(height: DelveTokens.space1),
                 Row(
                   children: [

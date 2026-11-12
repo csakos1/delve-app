@@ -3427,5 +3427,47 @@
         "type": "String"
       }
     }
-  }
+  },
+  "usageLastAnswer": "Last answer",
+  "modelCantReadImages": "{model} can't read images",
+  "@modelCantReadImages": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "modelChangedIn": "The local model is changed in More → System.",
+  "modelAlwaysThinks": "{model} always thinks",
+  "@modelAlwaysThinks": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "modelThisModel": "The loaded model",
+  "outboxNoVision": "the loaded model can't read images",
+  "notifyChannelSystem": "System",
+  "notifyChannelSystemDesc": "When a model switch fails",
+  "notifySwitchTitle": "Couldn't load {model}",
+  "@notifySwitchTitle": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "notifySwitchBack": "Back on {model}",
+  "@notifySwitchBack": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "notifySwitchBackPlain": "The previous model is loaded again",
+  "notifySwitchDown": "llama-server is stopped",
+  "settingsNotifySystem": "Model switch failed",
+  "settingsNotifySystemSub": "When the desktop could not load the model you picked"
 }

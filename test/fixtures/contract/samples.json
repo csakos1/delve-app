@@ -5316,7 +5316,8 @@
         "run_done": false,
         "water": false,
         "brief": false,
-        "watches": true
+        "watches": true,
+        "system": true
       }
     }
   }
