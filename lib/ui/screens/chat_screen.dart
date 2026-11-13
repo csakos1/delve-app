@@ -278,6 +278,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   /// "+": Photos, Camera or File; what is picked starts uploading at once.
   Future<void> _addAttachments() {
     final llama = ref.read(systemProvider).info?.llama;
+    _dropIdleFocus();
     return pickAttachmentsInto(
       context,
       ref.read(attachmentPickerProvider),
@@ -302,6 +303,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         AttachmentViewer.open(context, a, onSendAgain: canAgain ? again : null),
       );
     } else {
+      _dropIdleFocus();
       unawaited(
         showFileSheet(context, a, onSendAgain: canAgain ? again : null),
       );
@@ -377,13 +379,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  /// Usage sheet. Closing it gives the focus back to the composer, which
-  /// would open the keyboard: when the keyboard was closed before (the field
-  /// may still hold the focus after Back hid it), the focus goes first.
-  Future<void> _openUsage(String id, String title) async {
+  /// Before a sheet opens. Closing it gives the focus back to the composer,
+  /// which would open the keyboard: when the keyboard was closed before (the
+  /// field may still hold the focus after Back hid it), the focus goes first.
+  void _dropIdleFocus() {
     if (MediaQuery.viewInsetsOf(context).bottom == 0) {
       FocusManager.instance.primaryFocus?.unfocus();
     }
+  }
+
+  /// Usage sheet.
+  Future<void> _openUsage(String id, String title) async {
+    _dropIdleFocus();
     await showUsageSheet(context, conversationId: id, title: title);
   }
 
