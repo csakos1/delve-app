@@ -126,6 +126,17 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
       case AppLifecycleState.hidden || AppLifecycleState.paused:
         _freeze();
         _service.setForeground(foreground: false);
+        final copied = _copied;
+        _copied = null;
+        if (copied != null &&
+            DateTime.now().difference(_copiedAt) < _copiedFor) {
+          unawaited(
+            Future<void>.delayed(
+              _inputCloses,
+              () => Clipboard.setData(ClipboardData(text: copied)),
+            ),
+          );
+        }
       case AppLifecycleState.detached:
         break;
     }
@@ -259,7 +270,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
     c.clearSelection();
     if (text == null) return;
     final l = AppLocalizations.of(context);
-    await Clipboard.setData(ClipboardData(text: text));
+    await _copyForKeyboard(text);
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -268,6 +279,49 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
           content: Text(l.termSelCopied('\n'.allMatches(text).length + 1)),
         ),
       );
+  }
+
+  /// The copy the terminal made while the keyboard was up: made once more
+  /// when the app leaves the screen ([_copyForKeyboard]).
+  String? _copied;
+  DateTime _copiedAt = DateTime(0);
+
+  /// Left later than this, the clipboard may hold something newer.
+  static const _copiedFor = Duration(minutes: 1);
+
+  /// To the clipboard so that the keyboard offers it in the next app too.
+  ///
+  /// The terminal's text input asks the keyboard not to learn from it (a
+  /// password typed at sudo), and Gboard keeps what is copied meanwhile out
+  /// of its clipboard strip: text copied here was not offered above the keys
+  /// in another app (phone, 2026-11). With the keyboard down the input is
+  /// closed first (the next tap opens it again); with the keyboard up it
+  /// stays, and the copy is made once more when the app is left.
+  Future<void> _copyForKeyboard(String text) async {
+    final view = _front?.viewKey.currentState;
+    if (_imeUp) {
+      _copied = text;
+      _copiedAt = DateTime.now();
+    } else if (view != null && view.hasInputConnection) {
+      view.closeKeyboard();
+      await Future<void>.delayed(_inputCloses);
+    }
+    await Clipboard.setData(ClipboardData(text: text));
+  }
+
+  /// The keyboard learns that the input is closed before the copy is made.
+  static const _inputCloses = Duration(milliseconds: 120);
+
+  /// The clipboard's text to the shell, as a paste (bracketed when the
+  /// program asked for it); ends the selection.
+  Future<void> _pasteClipboard() async {
+    final c = _conn;
+    if (c == null) return;
+    c.clearSelection();
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = data?.text;
+    if (!mounted || text == null || text.isEmpty) return;
+    c.terminal.paste(text);
   }
 
   /// To the Share to Delve screen's chat picker (17): the selection as a
@@ -568,6 +622,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
                 scrollController: v.scroll,
                 onCopy: () => unawaited(_copySelection()),
                 onSendToChat: _sendSelection,
+                onPaste: () => unawaited(_pasteClipboard()),
                 textStyle: delveTerminalStyle(service.fontSize),
                 focusNode: _focus,
               ),

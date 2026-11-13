@@ -44,6 +44,13 @@ import 'package:xterm/xterm.dart';
 /// is kept without it (T3 phone test: closing the keyboard brought back a
 /// column of old indicators for a round trip).
 ///
+/// tmux does not always scroll copy mode with scroll sequences: a client it
+/// has fallen behind, or a pane that is not as wide as the client, gets the
+/// rows drawn again in place, and only the indicator tells how far the text
+/// moved. While [followRedraws] is set, such a redraw moves the lines the
+/// way the scroll would have ([_followRedraw]), so a selection stays on its
+/// text (phone, 2026-11: it stayed on the screen rows instead, now and then).
+///
 /// tmux's status line, when it has one, is the last row ([statusRows]: 1,
 /// tmux's default); the app's sessions have none (0).
 class TmuxTerminal extends Terminal {
@@ -81,6 +88,28 @@ class TmuxTerminal extends Terminal {
   /// Lines that left the bottom of the pane.
   @visibleForTesting
   int get belowLength => _below.length;
+
+  /// Copy mode's redraws in place are followed (see the class doc). Set by
+  /// the connection while something is selected: each write then copies the
+  /// pane's rows first.
+  bool followRedraws = false;
+
+  /// How many redraws in place were followed.
+  int get redrawsFollowed => _redraws;
+  int _redraws = 0;
+
+  /// The pane's rows before the write going on (null: not followed).
+  List<BufferLine>? _before;
+
+  /// Rows the pane's lines moved by scroll sequences in the write going on:
+  /// down (older lines in at the top) positive.
+  int _moved = 0;
+
+  /// The write before this one ended without the indicator, and without a
+  /// `q`: tmux's update cut in two (the scroll in one write, the first row
+  /// in the next), not copy mode beginning.
+  bool _cut = false;
+  bool _afterCut = false;
 
   /// tmux's copy mode is on the pane (its position indicator shows).
   bool get inCopyMode => _copyMode;
@@ -239,7 +268,7 @@ class TmuxTerminal extends Terminal {
       _entry++;
       final ask = onCopyMode;
       _promptAsked = ask != null;
-      _enteredCopyMode();
+      if (!_followEntry()) _enteredCopyMode();
       ask?.call(_entry);
     }
     // out of copy mode the pane is live: nothing is below it
@@ -265,6 +294,70 @@ class TmuxTerminal extends Terminal {
     for (var i = 0; i < k; i++) {
       _below.add(BufferLine(viewWidth));
     }
+  }
+
+  /// Copy mode began with the pane drawn again in place, scrolled up by
+  /// [_copyUp]: the lines move as that scroll would have moved them (true),
+  /// so what is selected on the live pane stays on its text.
+  bool _followEntry() {
+    if (_before == null || _moved != 0 || _afterCut) return false;
+    if (_copyUp <= 0 || _copyUp >= paneRows) return false;
+    return _followRedraw(_copyUp);
+  }
+
+  /// tmux drew the pane again in place, its text [r] rows further down (up
+  /// when negative) than in [_before]: the lines move with their text, as a
+  /// scroll would have moved them. Those that leave the pane are kept with
+  /// the text they had, those that come back get what tmux drew.
+  bool _followRedraw(int r) {
+    final before = _before;
+    final rows = paneRows;
+    if (before == null || r == 0 || before.length != rows) return false;
+    final b = buffer;
+    final base = b.scrollBack;
+    final n = math.min(r.abs(), rows);
+    final lines = [for (var i = 0; i < rows; i++) b.lines[base + i]];
+    final drawn = [for (final line in lines) _copyOf(line)];
+    for (var i = 0; i < rows; i++) {
+      lines[i].copyFrom(before[i], 0, 0, before[i].length);
+    }
+    final List<BufferLine> placed;
+    if (r > 0) {
+      // older lines came in at the top: the last n rows left at the bottom
+      for (var i = 0; i < n; i++) {
+        _below.add(lines[rows - 1 - i]);
+      }
+      final over = _below.length - historyMax;
+      if (over > 0) _below.removeRange(0, over);
+      final m = math.min(n, _history.length);
+      final back = _history.sublist(_history.length - m);
+      _history.removeRange(_history.length - m, _history.length);
+      placed = [
+        for (var i = 0; i < n - m; i++) BufferLine(viewWidth),
+        ...back,
+        ...lines.take(rows - n),
+      ];
+    } else {
+      // newer lines came in at the bottom: the first n rows left at the top
+      _keepWithoutIndicator(lines[0]);
+      _history.addAll(lines.take(n));
+      final over = _history.length - historyMax;
+      if (over > 0) _history.removeRange(0, over);
+      final m = math.min(n, _below.length);
+      final back = [for (var i = 0; i < m; i++) _below.removeLast()];
+      placed = [
+        ...lines.skip(n),
+        ...back,
+        for (var i = 0; i < n - m; i++) BufferLine(viewWidth),
+      ];
+    }
+    for (var i = 0; i < rows; i++) {
+      placed[i].copyFrom(drawn[i], 0, 0, drawn[i].length);
+      b.lines[base + i] = placed[i];
+    }
+    _reattach();
+    _redraws++;
+    return true;
   }
 
   bool _found() {
@@ -433,9 +526,35 @@ class TmuxTerminal extends Terminal {
 
   @override
   void write(String data) {
+    final follow = followRedraws && isUsingAltBuffer && viewHeight >= 3;
+    final wasCopy = _copyMode;
+    final wasStale = _promptStale;
+    final up = _copyUp;
+    final history = _copyHistory;
+    final b = buffer;
+    _before = follow
+        ? [
+            for (var i = 0; i < paneRows; i++)
+              _copyOf(b.lines[b.scrollBack + i]),
+          ]
+        : null;
+    _moved = 0;
+    _afterCut = _cut;
+    final leaving = _leaving;
     super.write(data);
     _reattach();
     _seeCopyMode();
+    _cut = wasCopy && !_copyMode && !leaving;
+    // the indicator moved further than the scroll sequences moved the lines
+    // (a resize changes the numbers by itself: not then)
+    if (follow &&
+        wasCopy &&
+        _copyMode &&
+        !wasStale &&
+        _copyHistory == history) {
+      _followRedraw(_copyUp - up - _moved);
+    }
+    _before = null;
     // tmux's redraw after a resize draws the indicator with the new numbers
     if (_promptStale && _drawsIndicator.hasMatch(data)) _promptStale = false;
     // the shell's cursor: where tmux leaves it outside copy mode (not
@@ -451,6 +570,7 @@ class TmuxTerminal extends Terminal {
     if (up) _scrolledOut(1);
     super.lineFeed();
     if (up) _restoreBottom(1);
+    if (up) _moved--;
   }
 
   @override
@@ -459,6 +579,7 @@ class TmuxTerminal extends Terminal {
     if (up) _scrolledOut(1);
     super.index();
     if (up) _restoreBottom(1);
+    if (up) _moved--;
   }
 
   @override
@@ -467,6 +588,7 @@ class TmuxTerminal extends Terminal {
     if (up) _scrolledOut(1);
     super.nextLine();
     if (up) _restoreBottom(1);
+    if (up) _moved--;
   }
 
   @override
@@ -475,6 +597,7 @@ class TmuxTerminal extends Terminal {
     if (up) _scrolledOut(math.min(amount, buffer.marginBottom + 1));
     super.scrollUp(amount);
     if (up) _restoreBottom(amount);
+    if (up) _moved -= math.min(amount, buffer.marginBottom + 1);
   }
 
   @override
@@ -483,6 +606,7 @@ class TmuxTerminal extends Terminal {
     if (up) _keepTop(math.min(amount, buffer.marginBottom + 1));
     super.deleteLines(amount);
     if (up) _restoreBottom(amount);
+    if (up) _moved -= math.min(amount, buffer.marginBottom + 1);
   }
 
   @override
@@ -491,6 +615,7 @@ class TmuxTerminal extends Terminal {
     if (back) _keepBottom(math.min(amount, buffer.marginBottom + 1));
     super.scrollDown(amount);
     if (back) _restoreTop(amount);
+    if (back) _moved += math.min(amount, buffer.marginBottom + 1);
   }
 
   @override
@@ -499,6 +624,7 @@ class TmuxTerminal extends Terminal {
     if (back) _keepBottom(1);
     super.reverseIndex();
     if (back) _restoreTop(1);
+    if (back) _moved++;
   }
 
   @override
@@ -507,6 +633,7 @@ class TmuxTerminal extends Terminal {
     if (back) _keepBottom(math.min(amount, buffer.marginBottom + 1));
     super.insertLines(amount);
     if (back) _restoreTop(amount);
+    if (back) _moved += math.min(amount, buffer.marginBottom + 1);
   }
 
   @override

@@ -3985,8 +3985,14 @@ abstract class AppLocalizations {
   /// No description provided for @termSelSendToChat.
   ///
   /// In en, this message translates to:
-  /// **'Send to chat'**
+  /// **'Chat'**
   String get termSelSendToChat;
+
+  /// No description provided for @termSelPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get termSelPaste;
 
   /// No description provided for @termSelCopied.
   ///

@@ -163,8 +163,20 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
 
   // --- model, thinking ---------------------------------------------------------
 
+  /// Before a sheet opens. Closing it gives the focus back to the composer,
+  /// which would open the keyboard: when the keyboard is closed (the field
+  /// may still hold the focus after Back hid it), the focus goes first, so
+  /// the keyboard stays the way it was (phone, 2026-11: the model picker
+  /// brought it up after the keyboard had been used once).
+  void _dropIdleFocus() {
+    if (MediaQuery.viewInsetsOf(context).bottom == 0) {
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+  }
+
   Future<void> _pickModel(String current, GeneralChatRow? chat) async {
     final l = AppLocalizations.of(context);
+    _dropIdleFocus();
     final title = chat?.title?.trim();
     final picked = await showModelPicker(
       context,
@@ -191,8 +203,14 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
     await ref.read(generalChatServiceProvider).setReasoning(id, on: on);
   }
 
+  void _openUsage(String chatId) {
+    _dropIdleFocus();
+    unawaited(showGeneralUsageSheet(context, chatId: chatId));
+  }
+
   Future<void> _pickEffort(OrModelRow model, String? current) async {
     final spec = model.reasoningSpec;
+    _dropIdleFocus();
     final choice = await showEffortSheet(
       context,
       model: model.shortName,
@@ -222,6 +240,7 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
       return;
     }
     final readsImages = model?.readsImages ?? false;
+    _dropIdleFocus();
     final choice = await _showAddSheet(
       context,
       model: modelShortName(modelId, model),
@@ -460,11 +479,7 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
             name: chipName,
             pct: chat == null ? null : generalContextPct(chat),
             onTap: () => unawaited(_pickModel(modelId, chat)),
-            onLongPress: chat == null
-                ? null
-                : () => unawaited(
-                    showGeneralUsageSheet(context, chatId: chat.id),
-                  ),
+            onLongPress: chat == null ? null : () => _openUsage(chat.id),
           ),
           if (chat != null)
             PopupMenuButton<String>(
@@ -474,7 +489,7 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
               onSelected: (v) {
                 switch (v) {
                   case 'usage':
-                    unawaited(showGeneralUsageSheet(context, chatId: chat.id));
+                    _openUsage(chat.id);
                   case 'effort':
                     if (model != null) {
                       unawaited(_pickEffort(model, effort));

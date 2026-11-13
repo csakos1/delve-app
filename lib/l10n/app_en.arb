@@ -1786,7 +1786,8 @@
     }
   },
   "termSelCopy": "Copy",
-  "termSelSendToChat": "Send to chat",
+  "termSelSendToChat": "Chat",
+  "termSelPaste": "Paste",
   "termSelCopied": "{count, plural, =1{Copied 1 line} other{Copied {count} lines}}",
   "@termSelCopied": {
     "placeholders": {

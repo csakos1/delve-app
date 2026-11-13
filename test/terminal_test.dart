@@ -908,6 +908,67 @@ void main() {
       expect(identical(doc[1], t.buffer.lines[0]), isFalse, reason: 'a copy');
     });
 
+    test('copy mode drawn again in place, with no scroll sequence: the '
+        'lines follow the indicator, and come back with their text (phone, '
+        '2026-11: a selection stayed on the screen rows)', () {
+      final t = screen()..followRedraws = true;
+      String mark(int up) => '\x1b[1;15H\x1b[30;43m[$up/50]\x1b[0m';
+      String redraw(List<String> rows, int up) {
+        final buf = StringBuffer();
+        for (var i = 0; i < rows.length; i++) {
+          buf.write('\x1b[${i + 1};1H\x1b[2K${rows[i]}');
+        }
+        buf.write(mark(up));
+        return buf.toString();
+      }
+
+      t.write(mark(0));
+      expect(t.inCopyMode, isTrue);
+      final line5 = t.buffer.lines[5];
+      // two lines up, every row drawn again where it is
+      t.write(
+        redraw(['old0', 'old1', for (var i = 0; i < 7; i++) 'line$i'], 2),
+      );
+      expect(t.redrawsFollowed, 1);
+      expect(identical(t.buffer.lines[7], line5), isTrue);
+      expect(row(t, 7), 'line5');
+      expect(row(t, 1), 'old1');
+      expect(t.belowLength, 2, reason: 'line7 and line8 went below');
+      expectAttached(t);
+      // and back down, drawn in place again
+      t.write(redraw([for (var i = 0; i < 9; i++) 'line$i'], 0));
+      expect(t.redrawsFollowed, 2);
+      expect(identical(t.buffer.lines[5], line5), isTrue);
+      expect(row(t, 5), 'line5');
+      expect(row(t, 8), 'line8');
+      expect(t.belowLength, 0);
+      expectAttached(t);
+      // a step tmux scrolls with a sequence is not followed twice
+      t.write(
+        '\x1b[1;9r\x1b[1;1H\x1b[1L\x1b[1;1Hold1${mark(1)}'
+        '\x1b[2;1H\x1b[2Kline0\x1b[r',
+      );
+      expect(t.redrawsFollowed, 2);
+      expect(identical(t.buffer.lines[6], line5), isTrue);
+    });
+
+    test('copy mode beginning with the pane drawn scrolled up moves the '
+        "live pane's lines with their text", () {
+      final t = screen()..followRedraws = true;
+      final line5 = t.buffer.lines[5];
+      final buf = StringBuffer();
+      for (var i = 0; i < 9; i++) {
+        final text = i == 0 ? 'old' : 'line${i - 1}';
+        buf.write('\x1b[${i + 1};1H\x1b[2K$text');
+      }
+      buf.write('\x1b[1;15H\x1b[30;43m[1/50]\x1b[0m');
+      t.write(buf.toString());
+      expect(t.inCopyMode, isTrue);
+      expect(identical(t.buffer.lines[6], line5), isTrue);
+      expect(row(t, 6), 'line5');
+      expect(t.belowLength, 1);
+    });
+
     test('out of copy mode nothing is kept below the pane', () {
       final t = screen()..write('\x1b[1;15H\x1b[30;43m[2/50]\x1b[0m');
       expect(t.inCopyMode, isTrue);
@@ -1151,6 +1212,35 @@ void main() {
       c.terminal.textInput('x');
       expect(c.hasSelection, isFalse);
       expect(c.selection.selection, isNull);
+    });
+
+    test('a dragged handle: the other end stays on its line while the pane '
+        'scrolls under the drag, scrolled out too', () async {
+      final (rig, link) = await tmux();
+      final c = rig.connection;
+      final buffer = c.terminal.buffer;
+      c.selection.setSelection(
+        buffer.createAnchorFromOffset(const CellOffset(0, 2)),
+        buffer.createAnchorFromOffset(const CellOffset(5, 2)),
+      );
+      expect(c.selectedText(), 'line2');
+      c.beginSelectionDrag(start: false);
+      // the pane scrolls up two lines: line2 is on the first row
+      link.send('\x1b[2S\x1b[22;1Hline23\x1b[23;1Hline24');
+      await until(() => buffer.lines[22].getText() == 'line24');
+      c.dragSelectionTo(const CellOffset(4, 4));
+      expect(c.selectedText(), 'line2\nline3\nline4\nline5\nline6');
+      // three more: line2 is out at the top, the selection still begins there
+      link.send('\x1b[3S\x1b[21;1Hline25\x1b[22;1Hline26\x1b[23;1Hline27');
+      await until(() => buffer.lines[22].getText() == 'line27');
+      c.dragSelectionTo(const CellOffset(4, 4));
+      expect(c.selectionStartHidden, isTrue);
+      expect(
+        c.selectedText(),
+        [for (var i = 2; i <= 9; i++) 'line$i'].join('\n'),
+      );
+      c.endSelectionDrag();
+      expect(c.hasSelection, isTrue);
     });
   });
 

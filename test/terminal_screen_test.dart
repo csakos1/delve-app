@@ -594,7 +594,8 @@ void main() {
         ),
       );
       await t.tap(find.byKey(const Key('terminal.select.copy')));
-      await frames(t, 2);
+      // the text input is closed first, so the keyboard offers the copy
+      await frames(t, 4);
       expect(copied, 'hello');
       expect(find.text('Copied 1 line'), findsOneWidget);
       expect(toolbar, findsNothing);
@@ -660,6 +661,32 @@ void main() {
       // attached)
       await longPress(t, const CellOffset(8, 2));
       expect(selected(t), 'world');
+    });
+
+    testWidgets('the toolbar: Copy, Chat and Paste; Paste sends the '
+        'clipboard to the shell and ends the selection', (t) async {
+      final link = await tmux(t, 'hello world');
+      await longPress(t, const CellOffset(1, 0));
+      expect(find.text('Copy'), findsOneWidget);
+      expect(find.text('Chat'), findsOneWidget);
+      expect(find.text('Paste'), findsOneWidget);
+      t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async => call.method == 'Clipboard.getData'
+            ? <String, dynamic>{'text': 'ls -la'}
+            : null,
+      );
+      addTearDown(
+        () => t.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await t.tap(find.byKey(const Key('terminal.select.paste')));
+      await frames(t, 2);
+      expect(link.written, contains('ls -la'));
+      expect(toolbar, findsNothing);
+      expect(selected(t), isNull);
     });
 
     testWidgets('Send to chat: the chat picker, the selection as a code '

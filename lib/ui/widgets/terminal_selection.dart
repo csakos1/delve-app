@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -42,6 +43,11 @@ CellOffset _lastCell(BufferRange range, int width) {
 /// there is no room). Lies over the terminal view, in the same box; draws
 /// nothing (and takes no touch) while nothing is selected.
 ///
+/// A handle dragged up onto the pane's first row, or down onto its last,
+/// scrolls the pane that way (as a finger would, a step at a time), so text
+/// that is not on the screen can be taken in; the other end stays on its
+/// line, scrolled out.
+///
 /// It also draws the cursor (xterm's is transparent: [delveTerminalViewTheme]),
 /// as high as [terminalCursorHeight]; while tmux's copy mode is on, the
 /// shell's cursor ([TmuxTerminal.promptCursor]) instead of tmux's own.
@@ -53,6 +59,7 @@ class TerminalSelectionLayer extends StatefulWidget {
     required this.scrollController,
     required this.onCopy,
     required this.onSendToChat,
+    required this.onPaste,
     required this.textStyle,
     this.focusNode,
   });
@@ -62,6 +69,7 @@ class TerminalSelectionLayer extends StatefulWidget {
   final ScrollController scrollController;
   final VoidCallback onCopy;
   final VoidCallback onSendToChat;
+  final VoidCallback onPaste;
 
   /// The view's text style: the reversed cells are drawn with it.
   final TerminalStyle textStyle;
@@ -77,10 +85,21 @@ class _TerminalSelectionLayerState extends State<TerminalSelectionLayer> {
   late Listenable _changes;
   late Terminal _terminal;
 
-  /// While a handle is dragged: the cell that stays, and how far the
-  /// finger is from the middle of the cell the handle stands for.
-  CellOffset? _fixed;
+  /// While a handle is dragged: how far the finger is from the middle of
+  /// the cell the handle stands for, and where the finger is.
+  bool _dragging = false;
   Offset _grab = Offset.zero;
+  Offset _finger = Offset.zero;
+
+  /// Where the finger was when the drag began.
+  Offset _from = Offset.zero;
+
+  /// Scrolls the pane while the dragged handle is at its edge.
+  Timer? _auto;
+  bool _autoUp = false;
+
+  /// One step of the scroll a handle at the edge keeps up.
+  static const _autoEvery = Duration(milliseconds: 60);
 
   /// A build found no layout to measure and asked for one more frame.
   bool _waiting = false;
@@ -126,6 +145,7 @@ class _TerminalSelectionLayerState extends State<TerminalSelectionLayer> {
 
   @override
   void dispose() {
+    _auto?.cancel();
     _unlisten();
     _painted.dispose();
     super.dispose();
@@ -146,6 +166,9 @@ class _TerminalSelectionLayerState extends State<TerminalSelectionLayer> {
     _outputPending = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _outputPending = false;
+      // the pane scrolled under a handle held at its edge: the handle's
+      // end is the cell under the finger now
+      if (mounted && _dragging && _auto != null) _dragTo();
       _changed();
     });
   }
@@ -168,11 +191,9 @@ class _TerminalSelectionLayerState extends State<TerminalSelectionLayer> {
     required bool start,
     required Offset tip,
   }) {
-    final range = widget.connection.selection.selection?.normalized;
     final view = widget.viewKey.currentState;
-    if (range == null || view == null) return;
-    final width = widget.connection.terminal.viewWidth;
-    _fixed = start ? _lastCell(range, width) : range.begin;
+    if (widget.connection.selection.selection == null || view == null) return;
+    widget.connection.beginSelectionDrag(start: start);
     final box = context.findRenderObject()! as RenderBox;
     // the tip is the cell's bottom corner (left for the start, right for
     // the end): aim at the middle of that cell, not at its neighbour
@@ -181,26 +202,87 @@ class _TerminalSelectionLayerState extends State<TerminalSelectionLayer> {
         tip +
         Offset(start ? cell.width / 2 : -cell.width / 2, -cell.height / 2);
     _grab = middle - box.globalToLocal(d.globalPosition);
+    _finger = d.globalPosition;
+    _from = d.globalPosition;
+    _dragging = true;
   }
 
   void _dragUpdate(DragUpdateDetails d) {
-    final fixed = _fixed;
-    final view = widget.viewKey.currentState;
-    if (fixed == null || view == null) return;
-    final render = view.renderTerminal;
-    final aim = render.globalToLocal(d.globalPosition + _grab);
-    final moving = render.getCellOffset(aim);
-    final first = moving.isBefore(fixed) ? moving : fixed;
-    final last = moving.isBefore(fixed) ? fixed : moving;
-    final buffer = widget.connection.terminal.buffer;
-    widget.connection.selection.setSelection(
-      buffer.createAnchorFromOffset(first),
-      buffer.createAnchorFromOffset(CellOffset(last.x + 1, last.y)),
-      mode: SelectionMode.line,
-    );
+    if (!_dragging) return;
+    _finger = d.globalPosition;
+    _dragTo();
+    _edge();
   }
 
-  void _dragEnd() => _fixed = null;
+  /// The dragged end goes to the cell the finger aims at (kept on the pane).
+  void _dragTo() {
+    final view = widget.viewKey.currentState;
+    if (!_dragging || view == null) return;
+    final render = view.renderTerminal;
+    if (!render.attached) return;
+    final aim = render.globalToLocal(_finger + _grab);
+    final height = render.size.height;
+    final cell = render.getCellOffset(
+      Offset(aim.dx, aim.dy.clamp(0.0, math.max(0.0, height - 1))),
+    );
+    widget.connection.dragSelectionTo(cell);
+  }
+
+  /// The handle dragged onto the pane's first or last row, towards that
+  /// edge (at least half a row from where the drag began – a handle that
+  /// only moves along the first row scrolls nothing): the pane scrolls that
+  /// way until the handle leaves the row.
+  void _edge() {
+    final box = context.findRenderObject();
+    final view = widget.viewKey.currentState;
+    if (box is! RenderBox || !box.hasSize || view == null) return;
+    final y = box.globalToLocal(_finger + _grab).dy;
+    final row = view.renderTerminal.cellSize.height;
+    final moved = _finger.dy - _from.dy;
+    final up = y < row && moved < -row / 2;
+    final down = y > box.size.height - row && moved > row / 2;
+    if (!up && !down) {
+      _auto?.cancel();
+      _auto = null;
+      return;
+    }
+    _autoUp = up;
+    _auto ??= Timer.periodic(_autoEvery, (_) => _autoStep());
+  }
+
+  void _autoStep() {
+    if (!mounted || !_dragging) return;
+    final c = widget.connection;
+    final t = c.terminal;
+    final view = widget.viewKey.currentState;
+    if (view == null) return;
+    if (t.mouseMode.reportScroll) {
+      // tmux: nothing older than the top of its history, nothing newer
+      // than the live pane
+      if (_autoUp ? t.copyAtTop : !t.inCopyMode) return;
+      c.wheel(up: _autoUp, column: 0, row: 0);
+      return;
+    }
+    final sc = widget.scrollController;
+    if (!sc.hasClients) return;
+    final p = sc.position;
+    final line = view.renderTerminal.lineHeight;
+    final to = (p.pixels + (_autoUp ? -line : line)).clamp(
+      p.minScrollExtent,
+      p.maxScrollExtent,
+    );
+    if (to == p.pixels) return;
+    sc.jumpTo(to);
+    _dragTo();
+  }
+
+  void _dragEnd() {
+    _auto?.cancel();
+    _auto = null;
+    if (!_dragging) return;
+    _dragging = false;
+    widget.connection.endSelectionDrag();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -311,6 +393,7 @@ class _TerminalSelectionLayerState extends State<TerminalSelectionLayer> {
             child: _Toolbar(
               onCopy: widget.onCopy,
               onSendToChat: widget.onSendToChat,
+              onPaste: widget.onPaste,
             ),
           ),
         ),
@@ -380,12 +463,22 @@ class _ToolbarPlace extends SingleChildLayoutDelegate {
       old.above != above || old.below != below || old.centre != centre;
 }
 
-/// h 48 · surface-4 · radius 12 · elevation-2 · labelLarge + icon 18.
+/// h 40 · surface-4 · radius 12 · elevation-2 · labelMedium + icon 16:
+/// Copy, Chat (the selection to a chat) and Paste (the clipboard to the
+/// shell). Smaller than the design's 48 dp bar (22-0), which hid too much
+/// of a small screen with three buttons on it.
 class _Toolbar extends StatelessWidget {
-  const _Toolbar({required this.onCopy, required this.onSendToChat});
+  const _Toolbar({
+    required this.onCopy,
+    required this.onSendToChat,
+    required this.onPaste,
+  });
 
   final VoidCallback onCopy;
   final VoidCallback onSendToChat;
+  final VoidCallback onPaste;
+
+  static const double _height = 40;
 
   @override
   Widget build(BuildContext context) {
@@ -393,14 +486,23 @@ class _Toolbar extends StatelessWidget {
     final cs = context.colors;
     final style = TextButton.styleFrom(
       foregroundColor: cs.onSurface,
-      textStyle: context.text.labelLarge,
-      minimumSize: const Size(0, DelveTokens.terminalToolbar),
-      padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space4),
+      textStyle: context.text.labelMedium,
+      minimumSize: const Size(0, _height),
+      padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space3),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       shape: const RoundedRectangleBorder(),
     );
+    Widget button(String key, IconData icon, String label, VoidCallback on) =>
+        TextButton.icon(
+          key: Key(key),
+          style: style,
+          onPressed: on,
+          icon: SymbolIcon(icon, size: 16),
+          label: Text(label),
+        );
     return Container(
       key: const Key('terminal.select.toolbar'),
-      height: DelveTokens.terminalToolbar,
+      height: _height,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: cs.surfaceContainerHighest,
@@ -410,19 +512,23 @@ class _Toolbar extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextButton.icon(
-            key: const Key('terminal.select.copy'),
-            style: style,
-            onPressed: onCopy,
-            icon: const SymbolIcon(DelveIcons.copy, size: 18),
-            label: Text(l.termSelCopy),
+          button(
+            'terminal.select.copy',
+            DelveIcons.copy,
+            l.termSelCopy,
+            onCopy,
           ),
-          TextButton.icon(
-            key: const Key('terminal.select.send'),
-            style: style,
-            onPressed: onSendToChat,
-            icon: const SymbolIcon(DelveIcons.forum, size: 18),
-            label: Text(l.termSelSendToChat),
+          button(
+            'terminal.select.send',
+            DelveIcons.forum,
+            l.termSelSendToChat,
+            onSendToChat,
+          ),
+          button(
+            'terminal.select.paste',
+            DelveIcons.paste,
+            l.termSelPaste,
+            onPaste,
           ),
         ],
       ),

@@ -272,6 +272,9 @@ class _GeneralThinkingPillState extends State<GeneralThinkingPill> {
               ? Tooltip(
                   key: _tip,
                   message: widget.lockedTip,
+                  // above the pill: below it is the keyboard, which hid
+                  // the text (phone, 2026-11)
+                  preferBelow: false,
                   triggerMode: TooltipTriggerMode.manual,
                   child: pill,
                 )
@@ -1328,31 +1331,35 @@ class ChatKindSwitch extends StatelessWidget {
         DelveTokens.space4,
         0,
       ),
+      // the outline is drawn over the segments: under them, the selected
+      // one's fill covered it in the corners (phone, 2026-11)
       child: Container(
         key: const Key('newChat.kind'),
-        decoration: BoxDecoration(
+        foregroundDecoration: BoxDecoration(
           border: Border.all(color: cs.outline, width: DelveTokens.hairline),
           borderRadius: BorderRadius.circular(DelveTokens.rlg),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              segment(
-                ChatKind.agent,
-                DelveIcons.computer,
-                l.newChatAgent,
-                l.newChatAgentSub,
-              ),
-              Container(width: DelveTokens.hairline, color: cs.outline),
-              segment(
-                ChatKind.general,
-                DelveIcons.cloud,
-                l.newChatGeneral,
-                l.newChatGeneralSub,
-              ),
-            ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(DelveTokens.rlg),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                segment(
+                  ChatKind.agent,
+                  DelveIcons.computer,
+                  l.newChatAgent,
+                  l.newChatAgentSub,
+                ),
+                Container(width: DelveTokens.hairline, color: cs.outline),
+                segment(
+                  ChatKind.general,
+                  DelveIcons.cloud,
+                  l.newChatGeneral,
+                  l.newChatGeneralSub,
+                ),
+              ],
+            ),
           ),
         ),
       ),

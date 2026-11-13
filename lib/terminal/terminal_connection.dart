@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:xterm/xterm.dart';
@@ -203,6 +204,8 @@ class TerminalConnection extends ChangeNotifier {
     _selLast = null;
     _startHidden = false;
     _endHidden = false;
+    _dragLine = null;
+    terminal.followRedraws = false;
   }
 
   /// The gestures set (or cleared) the selection on screen: kept by lines.
@@ -220,7 +223,67 @@ class TerminalConnection extends ChangeNotifier {
     _selEndX = range.end.x;
     _startHidden = false;
     _endHidden = false;
+    // tmux may draw a scroll in place: the lines follow it from now on
+    terminal.followRedraws = true;
   }
+
+  /// The end that stays while a handle is dragged: its line and its cell.
+  BufferLine? _dragLine;
+  int _dragX = 0;
+
+  /// A handle is being dragged ([start]: the one at the selection's start):
+  /// the other end stays on its line, on screen or scrolled out – the drag
+  /// may scroll the pane to reach text that is not on the screen.
+  void beginSelectionDrag({required bool start}) {
+    final first = _selFirst;
+    final last = _selLast;
+    if (first == null || last == null) return;
+    _dragLine = start ? last : first;
+    _dragX = start ? math.max(0, _selEndX - 1) : _selFirstX;
+  }
+
+  /// The dragged handle is on [cell] (the buffer's coordinates) now.
+  void dragSelectionTo(CellOffset cell) {
+    final fixed = _dragLine;
+    final t = terminal;
+    final lines = t.buffer.lines;
+    if (fixed == null || cell.y < 0 || cell.y >= lines.length) return;
+    final moving = lines[cell.y];
+    final bool movingFirst;
+    if (t.isUsingAltBuffer) {
+      final doc = t.documentLines();
+      final a = doc.indexWhere((l) => identical(l, fixed));
+      final m = doc.indexWhere((l) => identical(l, moving));
+      if (a < 0 || m < 0) return;
+      movingFirst = m < a || (m == a && cell.x < _dragX);
+    } else {
+      if (!fixed.attached) return;
+      movingFirst =
+          cell.y < fixed.index || (cell.y == fixed.index && cell.x < _dragX);
+    }
+    _selFirst = movingFirst ? moving : fixed;
+    _selFirstX = movingFirst ? cell.x : _dragX;
+    _selLast = movingFirst ? fixed : moving;
+    _selEndX = (movingFirst ? _dragX : cell.x) + 1;
+    if (t.isUsingAltBuffer) {
+      _syncSelection();
+      return;
+    }
+    _syncing = true;
+    try {
+      selection.setSelection(
+        t.buffer.createAnchorFromOffset(
+          CellOffset(_selFirstX, _selFirst!.index),
+        ),
+        t.buffer.createAnchorFromOffset(CellOffset(_selEndX, _selLast!.index)),
+        mode: SelectionMode.line,
+      );
+    } finally {
+      _syncing = false;
+    }
+  }
+
+  void endSelectionDrag() => _dragLine = null;
 
   /// After tmux moved the lines: the selection on screen follows its lines,
   /// cut at the pane's edges.
@@ -603,8 +666,15 @@ class TerminalConnection extends ChangeNotifier {
     _echo?.cancel();
     _echo = null;
     terminal.write(data);
+    final followed = terminal.redrawsFollowed;
+    if (followed != _followed) {
+      _followed = followed;
+      terminalTrace.add(_tag, 'copy mode drawn in place: the lines followed');
+    }
     _syncSelection();
   }
+
+  int _followed = 0;
 
   void _tick() {
     if (!_awake || _phase != TermPhase.live) return;

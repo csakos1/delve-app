@@ -2431,7 +2431,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get termSelCopy => 'Copy';
 
   @override
-  String get termSelSendToChat => 'Send to chat';
+  String get termSelSendToChat => 'Chat';
+
+  @override
+  String get termSelPaste => 'Paste';
 
   @override
   String termSelCopied(int count) {
