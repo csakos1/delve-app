@@ -3,7 +3,7 @@
 /// Oldest backend contract this build works with (`/meta` `api_revision`).
 /// Raise it together with the models when the app starts relying on a newer
 /// contract; a smaller server revision shows the "server too old" screen.
-const int kMinApiRevision = 10; // 10: model presets
+const int kMinApiRevision = 11; // 11: notification mirroring
 
 /// REST routes the app calls (method + path template); checked against the
 /// backend contract in `test/contract_test.dart`.
@@ -54,6 +54,15 @@ abstract final class ApiRoutes {
   static const watch = ('GET', '/api/v1/watches/{slug}');
   static const watchItems = ('GET', '/api/v1/watches/{slug}/items');
   static const watchAction = ('POST', '/api/v1/watches/{slug}/{verb}');
+
+  /// Notification mirroring (DA2). [mirrorPhone] is sent by the Android side
+  /// (MirrorWire.kt), not from Dart: the listener runs without the engine.
+  static const mirror = ('GET', '/api/v1/mirror');
+  static const mirrorPhone = ('POST', '/api/v1/mirror/phone');
+
+  /// The desktop agent's long poll; the app's token does not open it. Listed
+  /// because the contract lists it.
+  static const deskNext = ('GET', '/api/v1/desk/next');
   static const ws = ('WS', '/api/v1/ws');
 
   static const List<(String, String)> all = <(String, String)>[
@@ -89,6 +98,9 @@ abstract final class ApiRoutes {
     watch,
     watchItems,
     watchAction,
+    mirror,
+    mirrorPhone,
+    deskNext,
     ws,
   ];
 

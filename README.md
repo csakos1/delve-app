@@ -215,11 +215,30 @@ reached over Tailscale only.
   text travels to the desktop inside the command (base64), hence at most 64 KB; 256 KB
   the other way. Not behind the terminal's fingerprint lock. More → Clipboard shows the
   text that went last (kept in memory only).
+- DA2b: notification mirroring, phone to desktop — More → Mirroring. A notification
+  listener on the Android side (`NotificationMirrorService`) sends the notifications of
+  the apps chosen on that page to the backend (`POST /api/v1/mirror/phone`, API 11), which
+  hands them to the desktop agent (delve-infra `bin/delve-desk`); the desktop shows them,
+  replaces one when its key posts again and closes it when it leaves the phone's shade.
+  Nothing is chosen at first: the list is built from the apps that have posted since the
+  access was given. Never sent: ongoing notifications (players, "running in the
+  background"), group summaries, Delve's own, and what Android hides from listeners
+  (one-time codes arrive as "hidden content"). The listener works without the Flutter
+  engine, so the filter, the settings and the request are Kotlin (`MirrorWire.kt`,
+  `MirrorStore.kt`, `MirrorSender.kt`): events wait in memory only, a failed request is
+  retried for a minute, then dropped. While mirroring is on the Android side keeps a copy
+  of the server's address and the device token, sealed with an Android Keystore key;
+  turning it off removes the copy, unpairing wipes everything there. The page shows the
+  access, the listener, the desktop agent (`GET /api/v1/mirror`) and the last request.
+  Installing: Play Protect blocks an APK from a file once it declares a notification
+  listener — turn its scanning off for the install (Play Store → Play Protect → settings)
+  and on again, or use `adb install`; the access switch of a sideloaded app is a
+  "restricted setting" first (the page says how to allow it).
 
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share
 target, W3 the watches, T2a–T3 the terminal. (A home-screen widget was planned and dropped.)
-Requires a server with API revision 10 or newer (model presets in `/api/v1/system`); the
+Requires a server with API revision 11 or newer (notification mirroring); the
 terminal needs sshd on 2222 (delve-infra, installation step 19).
 
 ## Stack
@@ -270,6 +289,9 @@ lib/
                              the connection trace (terminal_trace.dart)
   terminal/desktop_clipboard.dart  the desktop's clipboard over that connection: the two
                              commands, their failures, the two transfers (ClipboardSync)
+  mirror/                    notification mirroring seen from Dart: the method channel to
+                             the Android side (mirror_platform.dart), the controller that
+                             hands the token over and wipes on unpair
   attachments/               pickers, photo resizing, uploads (ComposerAttachments),
                              the image cache
   share/                     Share to Delve: the method channel (share_channel.dart), the
@@ -310,6 +332,8 @@ test/
                              moved, renamed, killed
   terminal_tabs_screen_test.dart  the tab bar, +, the sessions sheet, the tab menu,
                              rename, kill, the empty state, dragging a tab
+  mirror_test.dart           the Android side's report, the method channel, the token's
+                             hand-over and the wipe, More → Mirroring
   push_test.dart             pushes → notifications, Deny in the background, the
                              controller with fakes, Settings → Notifications
   support/                   fake REST server (a dio adapter), fake WebSocket server,

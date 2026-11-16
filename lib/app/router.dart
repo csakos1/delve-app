@@ -15,6 +15,7 @@ import '../ui/screens/files_screen.dart';
 import '../ui/screens/folder_picker_screen.dart';
 import '../ui/screens/general_chat_screen.dart';
 import '../ui/screens/general_settings_screen.dart';
+import '../ui/screens/mirror_screen.dart';
 import '../ui/screens/more_screen.dart';
 import '../ui/screens/observability_screen.dart';
 import '../ui/screens/pairing_screen.dart';
@@ -81,6 +82,9 @@ abstract final class Routes {
 
   /// The desktop's clipboard (DA1): from More.
   static const clipboard = '/more/clipboard';
+
+  /// This phone's notifications on the desktop (DA2b): from More.
+  static const mirroring = '/more/mirroring';
 
   /// Share to Delve (design 17), on the root navigator.
   static const share = '/share';
@@ -241,6 +245,7 @@ GoRouter buildRouter({
                         MorePage.observability => const ObservabilityScreen(),
                         MorePage.watches => const WatchesScreen(),
                         MorePage.clipboard => const ClipboardScreen(),
+                        MorePage.mirroring => const MirrorScreen(),
                       },
                       routes: [
                         if (page == MorePage.settings) ...[

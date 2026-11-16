@@ -3541,5 +3541,54 @@
         "type": "String"
       }
     }
-  }
+  },
+  "moreMirroring": "Mirroring",
+  "moreMirroringSub": "This phone's notifications on the desktop",
+  "mirrorTitle": "Notification mirroring",
+  "mirrorHint": "Shows the notifications of the apps you choose on the desktop, and takes them away there when they leave this phone. Nothing is stored on the way.",
+  "mirrorUnavailable": "Notification mirroring is not available on this device",
+  "mirrorNoAccess": "Delve is not allowed to read notifications",
+  "mirrorOpenSettings": "Settings",
+  "mirrorRestrictedHelp": "If the switch there is greyed out: tap it once and confirm the note, then open the system's Settings → Apps → Delve yourself, ⋮ → Allow restricted settings, and come back to the switch.",
+  "mirrorSettingsFailed": "Couldn't open the system settings",
+  "mirrorEnabled": "Mirror to the desktop",
+  "mirrorEnabledSub": "Sends the chosen apps' notifications while this is on",
+  "mirrorEnableFailed": "Couldn't change mirroring",
+  "mirrorBattery": "Allow Delve to run without battery limits, or Android may hold notifications back while the phone sleeps",
+  "mirrorStatusTitle": "Status",
+  "mirrorAccess": "Notification access",
+  "mirrorAllowed": "allowed",
+  "mirrorNotAllowed": "not allowed",
+  "mirrorListener": "Listener",
+  "mirrorListenerOn": "running",
+  "mirrorListenerOff": "not running",
+  "mirrorDesk": "Desktop agent",
+  "mirrorDeskConnected": "connected",
+  "mirrorDeskAway": "not connected",
+  "mirrorDeskUnknown": "unknown",
+  "mirrorLastSent": "Last sent",
+  "mirrorNothingYet": "nothing yet",
+  "mirrorLastFailed": "{reason} · {time}",
+  "@mirrorLastFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mirrorApps": "Apps",
+  "mirrorNoApps": "No app has posted a notification since Delve was allowed to read them. An app shows up here after its first one.",
+  "mirrorAppLast": "last notification {time}",
+  "@mirrorAppLast": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mirrorCodesNote": "One-time codes stay hidden: Android does not show their content to Delve, so the desktop only says that one arrived.",
+  "mirrorRefresh": "Refresh"
 }

@@ -1,5 +1,6 @@
 package hu.csakos.delve
 
+import android.app.NotificationManager
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ComponentName
@@ -17,6 +18,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
+import android.service.notification.NotificationListenerService
 import android.webkit.MimeTypeMap
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -51,12 +53,18 @@ import java.util.concurrent.Executors
  * updates and stops its notification and posts the "finished" one; the
  * notification's Cancel all comes back as "cancelAll", its Open (and a tap)
  * as "open" – or, when the app was not running, waits for "takeOpen".
+ *
+ * A fifth one (MIRROR_CHANNEL) is the page of notification mirroring (DA2b):
+ * what NotificationMirrorService is allowed and doing, its switch and chosen
+ * apps (MirrorStore), and the server's address and token for it – the
+ * service itself runs without this activity.
  */
 class MainActivity : FlutterFragmentActivity() {
     private var channel: MethodChannel? = null
     private var terminal: MethodChannel? = null
     private var files: MethodChannel? = null
     private var transfers: MethodChannel? = null
+    private var mirror: MethodChannel? = null
 
     /** The app was opened from a transfers notification (until Dart asks). */
     private var openTransfers = false
@@ -213,6 +221,157 @@ class MainActivity : FlutterFragmentActivity() {
                 }
             }
             TransfersService.listener = { event -> ch.invokeMethod(event, null) }
+        }
+        mirror = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            MIRROR_CHANNEL,
+        ).also {
+            it.setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "state" -> mirrorCall(result) { mirrorState() }
+                    "setEnabled" -> {
+                        val on = call.argument<Boolean>("on") ?: false
+                        mirrorCall(result) {
+                            MirrorStore.setEnabled(this, on)
+                            if (on) {
+                                rebindMirror()
+                            } else {
+                                // the server's address and token stay here only while it is on
+                                MirrorStore.clearCredentials(this)
+                                mirrorStopped()
+                            }
+                            mirrorState()
+                        }
+                    }
+                    "setSelected" -> {
+                        val pkg = call.argument<String>("package")
+                        val on = call.argument<Boolean>("on") ?: false
+                        if (pkg.isNullOrEmpty()) {
+                            result.error("args", "package", null)
+                        } else {
+                            mirrorCall(result) {
+                                MirrorStore.setSelected(this, pkg, on)
+                                mirrorState()
+                            }
+                        }
+                    }
+                    "setCredentials" -> {
+                        val server = call.argument<String>("server")
+                        val token = call.argument<String>("token")
+                        if (server == null || token == null) {
+                            result.error("args", "server and token", null)
+                        } else {
+                            mirrorCall(result) { MirrorStore.setCredentials(this, server, token) }
+                        }
+                    }
+                    "clearCredentials" -> mirrorCall(result) {
+                        MirrorStore.clearCredentials(this)
+                        mirrorStopped()
+                        null
+                    }
+                    "wipe" -> mirrorCall(result) {
+                        MirrorStore.wipe(this)
+                        mirrorStopped()
+                        null
+                    }
+                    "openAccess" -> result.success(openMirrorAccess())
+                    "requestBatteryExempt" -> result.success(requestBatteryExempt())
+                    else -> result.notImplemented()
+                }
+            }
+        }
+    }
+
+    /** Runs a mirror call off the main thread (preferences, the Keystore), answers on it. */
+    private fun mirrorCall(result: MethodChannel.Result, block: () -> Any?) {
+        try {
+            io.execute {
+                try {
+                    val value = block()
+                    main.post { result.success(value) }
+                } catch (e: Exception) {
+                    main.post { result.error("mirror", e.javaClass.simpleName, null) }
+                }
+            }
+        } catch (e: Exception) {
+            // the activity is going away
+            result.error("mirror", e.javaClass.simpleName, null)
+        }
+    }
+
+    /** What the Mirroring page shows; no notification content in it. */
+    private fun mirrorState(): Map<String, Any?> {
+        val status = MirrorSender.status
+        return mapOf(
+            "granted" to mirrorGranted(),
+            "connected" to NotificationMirrorService.connected,
+            "enabled" to MirrorStore.enabled(this),
+            "credentials" to MirrorStore.hasCredentials(this),
+            "batteryExempt" to batteryExempt(),
+            "okAt" to status.okAt,
+            "failAt" to status.failAt,
+            "failure" to status.failure,
+            "desk" to status.desk,
+            "apps" to MirrorStore.apps(this).map {
+                mapOf(
+                    "package" to it.pkg,
+                    "label" to it.label,
+                    "last" to it.last,
+                    "selected" to it.selected,
+                )
+            },
+        )
+    }
+
+    /** The user allowed NotificationMirrorService to read notifications. */
+    private fun mirrorGranted(): Boolean {
+        val component = NotificationMirrorService.component(this)
+        if (Build.VERSION.SDK_INT >= 27) {
+            return getSystemService(NotificationManager::class.java)
+                .isNotificationListenerAccessGranted(component)
+        }
+        val listed = Settings.Secure.getString(contentResolver, "enabled_notification_listeners") ?: ""
+        return listed.split(":").contains(component.flattenToString())
+    }
+
+    /** Allowed but not bound (after an update, a crash): asks the system to bind it again. */
+    private fun rebindMirror() {
+        if (NotificationMirrorService.connected || !mirrorGranted()) return
+        try {
+            NotificationListenerService.requestRebind(NotificationMirrorService.component(this))
+        } catch (e: Exception) {
+            // the system binds it on its own time
+        }
+    }
+
+    private fun mirrorStopped() {
+        MirrorSender.clear()
+        NotificationMirrorService.forgetSent()
+    }
+
+    /**
+     * The listener's own page in the system settings, else the list of
+     * listeners; false: neither could be shown.
+     */
+    private fun openMirrorAccess(): Boolean {
+        if (Build.VERSION.SDK_INT >= 30) {
+            try {
+                startActivity(
+                    Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS).putExtra(
+                        Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME,
+                        NotificationMirrorService.component(this).flattenToString(),
+                    ),
+                )
+                return true
+            } catch (e: Exception) {
+                // fall through to the list
+            }
+        }
+        return try {
+            startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -393,6 +552,7 @@ class MainActivity : FlutterFragmentActivity() {
         terminal?.setMethodCallHandler(null)
         files?.setMethodCallHandler(null)
         transfers?.setMethodCallHandler(null)
+        mirror?.setMethodCallHandler(null)
         // the transfers run in this activity's Flutter engine, which goes too
         TransfersService.listener = null
         TransfersService.stop(this)
@@ -558,6 +718,7 @@ class MainActivity : FlutterFragmentActivity() {
         private const val TERMINAL_CHANNEL = "hu.csakos.delve/terminal"
         private const val FILES_CHANNEL = "hu.csakos.delve/files"
         private const val TRANSFERS_CHANNEL = "hu.csakos.delve/transfers"
+        private const val MIRROR_CHANNEL = "hu.csakos.delve/mirror"
         private const val FILES_DIR = "files"
         private const val SHARED_DIR = "shared"
 

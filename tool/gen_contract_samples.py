@@ -14,6 +14,7 @@ from delve.system import Parts, switch_out, system_out
 from delve.brief import brief_payload
 from delve.schedules import schedule_out
 from delve.stats import RANGES, GpuBucket, RunRow, bucket_edges, edges_between, stats_out
+from delve.mirror import mirror_out
 from delve.watches import item_out, watch_out
 import math
 
@@ -196,6 +197,8 @@ shapes = {
     "tool_step_plain": step_out(ToolStep(id=98, run_id=run.run_id, tool="terminal", status="running",
         preview_start="nproc", result=None, result_raw=None, user_summary=None, duration_s=None,
         seq_started=9, seq_completed=None, approval_request_id=None)),
+    # DA2: GET /api/v1/mirror (the desktop agent asked three seconds ago)
+    "mirror": mirror_out(connected=True, seen_s=3.2),
 }
 c, m, a = shapes["conversation"], shapes["message"], shapes["approval"]
 base = {"conversation_id": conv.id, "run_id": run.run_id}

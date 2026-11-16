@@ -137,6 +137,10 @@ class DelveApi {
     DeviceInfo.fromJson,
   );
 
+  /// Whether the desktop agent is there for mirrored notifications.
+  Future<MirrorStatus> mirror() async =>
+      _parse(await _json(ApiRoutes.mirror), MirrorStatus.fromJson);
+
   /// Stores this phone's FCM token on the server (`null` clears it).
   Future<void> putFcmToken(String? fcmToken) async {
     await _json(ApiRoutes.deviceFcm, body: {'token': fcmToken});

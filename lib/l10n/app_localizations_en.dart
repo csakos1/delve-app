@@ -4528,4 +4528,111 @@ class AppLocalizationsEn extends AppLocalizations {
   String clipLastGot(String time) {
     return 'from desktop · $time';
   }
+
+  @override
+  String get moreMirroring => 'Mirroring';
+
+  @override
+  String get moreMirroringSub => 'This phone\'s notifications on the desktop';
+
+  @override
+  String get mirrorTitle => 'Notification mirroring';
+
+  @override
+  String get mirrorHint =>
+      'Shows the notifications of the apps you choose on the desktop, and takes them away there when they leave this phone. Nothing is stored on the way.';
+
+  @override
+  String get mirrorUnavailable =>
+      'Notification mirroring is not available on this device';
+
+  @override
+  String get mirrorNoAccess => 'Delve is not allowed to read notifications';
+
+  @override
+  String get mirrorOpenSettings => 'Settings';
+
+  @override
+  String get mirrorRestrictedHelp =>
+      'If the switch there is greyed out: tap it once and confirm the note, then open the system\'s Settings → Apps → Delve yourself, ⋮ → Allow restricted settings, and come back to the switch.';
+
+  @override
+  String get mirrorSettingsFailed => 'Couldn\'t open the system settings';
+
+  @override
+  String get mirrorEnabled => 'Mirror to the desktop';
+
+  @override
+  String get mirrorEnabledSub =>
+      'Sends the chosen apps\' notifications while this is on';
+
+  @override
+  String get mirrorEnableFailed => 'Couldn\'t change mirroring';
+
+  @override
+  String get mirrorBattery =>
+      'Allow Delve to run without battery limits, or Android may hold notifications back while the phone sleeps';
+
+  @override
+  String get mirrorStatusTitle => 'Status';
+
+  @override
+  String get mirrorAccess => 'Notification access';
+
+  @override
+  String get mirrorAllowed => 'allowed';
+
+  @override
+  String get mirrorNotAllowed => 'not allowed';
+
+  @override
+  String get mirrorListener => 'Listener';
+
+  @override
+  String get mirrorListenerOn => 'running';
+
+  @override
+  String get mirrorListenerOff => 'not running';
+
+  @override
+  String get mirrorDesk => 'Desktop agent';
+
+  @override
+  String get mirrorDeskConnected => 'connected';
+
+  @override
+  String get mirrorDeskAway => 'not connected';
+
+  @override
+  String get mirrorDeskUnknown => 'unknown';
+
+  @override
+  String get mirrorLastSent => 'Last sent';
+
+  @override
+  String get mirrorNothingYet => 'nothing yet';
+
+  @override
+  String mirrorLastFailed(String reason, String time) {
+    return '$reason · $time';
+  }
+
+  @override
+  String get mirrorApps => 'Apps';
+
+  @override
+  String get mirrorNoApps =>
+      'No app has posted a notification since Delve was allowed to read them. An app shows up here after its first one.';
+
+  @override
+  String mirrorAppLast(String time) {
+    return 'last notification $time';
+  }
+
+  @override
+  String get mirrorCodesNote =>
+      'One-time codes stay hidden: Android does not show their content to Delve, so the desktop only says that one arrived.';
+
+  @override
+  String get mirrorRefresh => 'Refresh';
 }

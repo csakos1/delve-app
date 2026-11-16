@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../files/transfers_host.dart';
 import '../l10n/app_localizations.dart';
+import '../mirror/mirror_controller.dart';
 import '../push/push_host.dart';
 import '../share/share_host.dart';
 import '../sync/sync_lifecycle.dart';
@@ -19,6 +20,9 @@ class DelveApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = buildDelveTheme();
+    // notification mirroring follows the session (an unpair wipes the Android
+    // side's copy of the token) whether or not its page is ever opened
+    ref.listen(mirrorProvider, (_, _) {});
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,

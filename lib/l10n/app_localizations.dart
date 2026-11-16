@@ -7028,6 +7028,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'from desktop · {time}'**
   String clipLastGot(String time);
+
+  /// No description provided for @moreMirroring.
+  ///
+  /// In en, this message translates to:
+  /// **'Mirroring'**
+  String get moreMirroring;
+
+  /// No description provided for @moreMirroringSub.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone\'s notifications on the desktop'**
+  String get moreMirroringSub;
+
+  /// No description provided for @mirrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification mirroring'**
+  String get mirrorTitle;
+
+  /// No description provided for @mirrorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the notifications of the apps you choose on the desktop, and takes them away there when they leave this phone. Nothing is stored on the way.'**
+  String get mirrorHint;
+
+  /// No description provided for @mirrorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification mirroring is not available on this device'**
+  String get mirrorUnavailable;
+
+  /// No description provided for @mirrorNoAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Delve is not allowed to read notifications'**
+  String get mirrorNoAccess;
+
+  /// No description provided for @mirrorOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get mirrorOpenSettings;
+
+  /// No description provided for @mirrorRestrictedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'If the switch there is greyed out: tap it once and confirm the note, then open the system\'s Settings → Apps → Delve yourself, ⋮ → Allow restricted settings, and come back to the switch.'**
+  String get mirrorRestrictedHelp;
+
+  /// No description provided for @mirrorSettingsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the system settings'**
+  String get mirrorSettingsFailed;
+
+  /// No description provided for @mirrorEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Mirror to the desktop'**
+  String get mirrorEnabled;
+
+  /// No description provided for @mirrorEnabledSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends the chosen apps\' notifications while this is on'**
+  String get mirrorEnabledSub;
+
+  /// No description provided for @mirrorEnableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change mirroring'**
+  String get mirrorEnableFailed;
+
+  /// No description provided for @mirrorBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Delve to run without battery limits, or Android may hold notifications back while the phone sleeps'**
+  String get mirrorBattery;
+
+  /// No description provided for @mirrorStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get mirrorStatusTitle;
+
+  /// No description provided for @mirrorAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification access'**
+  String get mirrorAccess;
+
+  /// No description provided for @mirrorAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'allowed'**
+  String get mirrorAllowed;
+
+  /// No description provided for @mirrorNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'not allowed'**
+  String get mirrorNotAllowed;
+
+  /// No description provided for @mirrorListener.
+  ///
+  /// In en, this message translates to:
+  /// **'Listener'**
+  String get mirrorListener;
+
+  /// No description provided for @mirrorListenerOn.
+  ///
+  /// In en, this message translates to:
+  /// **'running'**
+  String get mirrorListenerOn;
+
+  /// No description provided for @mirrorListenerOff.
+  ///
+  /// In en, this message translates to:
+  /// **'not running'**
+  String get mirrorListenerOff;
+
+  /// No description provided for @mirrorDesk.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop agent'**
+  String get mirrorDesk;
+
+  /// No description provided for @mirrorDeskConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'connected'**
+  String get mirrorDeskConnected;
+
+  /// No description provided for @mirrorDeskAway.
+  ///
+  /// In en, this message translates to:
+  /// **'not connected'**
+  String get mirrorDeskAway;
+
+  /// No description provided for @mirrorDeskUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'unknown'**
+  String get mirrorDeskUnknown;
+
+  /// No description provided for @mirrorLastSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sent'**
+  String get mirrorLastSent;
+
+  /// No description provided for @mirrorNothingYet.
+  ///
+  /// In en, this message translates to:
+  /// **'nothing yet'**
+  String get mirrorNothingYet;
+
+  /// No description provided for @mirrorLastFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{reason} · {time}'**
+  String mirrorLastFailed(String reason, String time);
+
+  /// No description provided for @mirrorApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps'**
+  String get mirrorApps;
+
+  /// No description provided for @mirrorNoApps.
+  ///
+  /// In en, this message translates to:
+  /// **'No app has posted a notification since Delve was allowed to read them. An app shows up here after its first one.'**
+  String get mirrorNoApps;
+
+  /// No description provided for @mirrorAppLast.
+  ///
+  /// In en, this message translates to:
+  /// **'last notification {time}'**
+  String mirrorAppLast(String time);
+
+  /// No description provided for @mirrorCodesNote.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time codes stay hidden: Android does not show their content to Delve, so the desktop only says that one arrived.'**
+  String get mirrorCodesNote;
+
+  /// No description provided for @mirrorRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get mirrorRefresh;
 }
 
 class _AppLocalizationsDelegate

@@ -10,6 +10,7 @@ import 'package:delve/data/db/database.dart';
 import 'package:delve/files/files_providers.dart';
 import 'package:delve/general/general_database.dart';
 import 'package:delve/general/general_providers.dart';
+import 'package:delve/mirror/mirror_controller.dart';
 import 'package:delve/push/push_controller.dart';
 import 'package:delve/push/push_providers.dart';
 import 'package:delve/share/share_channel.dart';
@@ -26,6 +27,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'fake_openrouter.dart';
 import 'fake_server.dart';
 import 'files_fakes.dart';
+import 'mirror_fakes.dart';
 import 'terminal_fakes.dart';
 
 AppDatabase memoryDb() => AppDatabase(
@@ -55,7 +57,9 @@ class TestEnv {
     this.share,
     TerminalFakes? terminal,
     String? generalKey,
+    FakeMirror? mirror,
   }) : terminal = terminal ?? TerminalFakes(),
+       mirror = mirror ?? FakeMirror(),
        db = memoryDb(),
        store = MemoryCredentialStore(credentials),
        server = FakeServer(),
@@ -95,6 +99,9 @@ class TestEnv {
   /// The terminal's storage, SSH and biometrics (no plugins in tests).
   final TerminalFakes terminal;
 
+  /// The Android side of notification mirroring (no platform channel).
+  final FakeMirror mirror;
+
   // (The override list is written out twice: its element type lives in a
   // different library across Riverpod versions.)
   ProviderScope app(Widget child) => ProviderScope(
@@ -121,6 +128,7 @@ class TestEnv {
       generalDatabaseProvider.overrideWithValue(general),
       generalKeyStoreProvider.overrideWithValue(generalKeys),
       openRouterAdapterProvider.overrideWithValue(openRouter),
+      mirrorPlatformProvider.overrideWithValue(mirror),
       if (push case final p?)
         pushStateProvider.overrideWith((ref) => Stream.value(p)),
       if (status case final s?)
@@ -160,6 +168,7 @@ class TestEnv {
         generalDatabaseProvider.overrideWithValue(general),
         generalKeyStoreProvider.overrideWithValue(generalKeys),
         openRouterAdapterProvider.overrideWithValue(openRouter),
+        mirrorPlatformProvider.overrideWithValue(mirror),
         if (push case final p?)
           pushStateProvider.overrideWith((ref) => Stream.value(p)),
         if (status case final s?)
@@ -201,6 +210,7 @@ Future<TestEnv> pumpDelve(
   ShareSource? share,
   TerminalFakes? terminal,
   String? generalKey,
+  FakeMirror? mirror,
   Future<void> Function(TestEnv env)? before,
   bool settle = true,
 }) async {
@@ -213,6 +223,7 @@ Future<TestEnv> pumpDelve(
     share: share,
     terminal: terminal,
     generalKey: generalKey,
+    mirror: mirror,
   );
   addTearDown(env.dispose);
   setDesignSize(tester);

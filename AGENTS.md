@@ -71,3 +71,12 @@ in the path); xterm 4.0.0 draws the view. Known quirk: xterm detaches lines when
 region moves, so the tmux view re-adopts the on-screen lines after every write and resize
 (README, T2b) — preserve that behavior when touching terminal drawing code. The Android
 side is a small method channel in `MainActivity.kt`, no plugin.
+
+## Notification mirroring (lib/mirror/, android Mirror*.kt, NotificationMirrorService.kt)
+
+The listener runs without the Flutter engine, so the filter, the settings, the copy of the
+device token (sealed with an Android Keystore key, kept only while mirroring is on) and the
+request to the backend are Kotlin; Dart has the page, hands the token over and wipes the
+Android side on unpair (`MirrorController`). `MirrorWire.kt` has no Android import on
+purpose (it can be compiled and run on a plain JVM). Never write notification content to
+disk or to the log on either side.

@@ -4,6 +4,7 @@ export 'attachment.dart';
 export 'brief.dart';
 export 'conversation.dart';
 export 'message.dart';
+export 'mirror.dart';
 export 'run.dart';
 export 'schedule.dart';
 export 'server_info.dart';

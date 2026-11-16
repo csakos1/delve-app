@@ -79,6 +79,7 @@ void main() {
           'stats_gpu': (j) => StatsGpu.fromJson(j).toJson(),
           'watch': (j) => Watch.fromJson(j).toJson(),
           'watch_item': (j) => WatchItem.fromJson(j).toJson(),
+          'mirror': (j) => MirrorStatus.fromJson(j).toJson(),
         };
 
     test('every contract shape has a model', () {

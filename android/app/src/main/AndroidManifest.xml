@@ -67,6 +67,18 @@
             android:name=".TransfersService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+        <!-- DA2b: the chosen apps' notifications go to the desktop (More →
+             Mirroring); bound by the system once the user allows notification
+             access, off until then -->
+        <service
+            android:name=".NotificationMirrorService"
+            android:label="Delve mirroring"
+            android:exported="true"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
         <!-- FCM registration through register()/onRegistered (firebase_messaging 17) -->
         <meta-data
             android:name="firebase_messaging_installation_id_enabled"
