@@ -18,6 +18,7 @@ import '../format.dart';
 import '../links.dart';
 import '../schedule_text.dart';
 import '../widgets/chart_paint.dart';
+import '../widgets/clipboard_ui.dart';
 import '../widgets/connection_ui.dart';
 import '../widgets/model_ui.dart';
 import '../widgets/page_scaffolds.dart';
@@ -25,7 +26,8 @@ import '../widgets/status_ui.dart';
 import '../widgets/system_ui.dart';
 import '../widgets/water_chart.dart';
 
-/// 12 Dashboard: connection, the Lake Balaton water level with its week (B2),
+/// 12 Dashboard: connection, the clipboard's two buttons (DA1), the Lake
+/// Balaton water level with its week (B2),
 /// the morning brief (B4), the watches' newest hits (W3) and the System card
 /// (B3).
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -115,6 +117,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: _ConnectionPill(),
             ),
             const SizedBox(height: DelveTokens.space4),
+            const ClipboardQuickRow(),
             switch (readings) {
               AsyncData(:final value) when value.isNotEmpty => WaterCard(
                 readings: value,

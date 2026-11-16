@@ -118,6 +118,10 @@ class FakeTmux {
   /// The next commands fail with this stderr (exit 1).
   final List<String> failures = [];
 
+  /// Answers what tmux does not know (the desktop's clipboard, DA1); null:
+  /// not its command either.
+  SshRunResult? Function(String command)? other;
+
   FakeSession? byName(String name) {
     for (final s in sessions) {
       if (s.name == name) return s;
@@ -168,6 +172,7 @@ class FakeTmux {
       sessions.remove(s);
       return const SshRunResult('', 0);
     }
+    if (other?.call(command) case final r?) return r;
     return const SshRunResult('', 127, error: 'unknown command');
   }
 }

@@ -590,6 +590,11 @@ class TerminalService extends ChangeNotifier {
   /// A command without a pty: over the tab in front when it is connected,
   /// else any connected tab, else a connection of its own (which only
   /// trusts the pinned host key: no question to ask in a sheet).
+  /// Runs [command] on the desktop without a pty, over a connected tab or
+  /// a connection of its own that only trusts the pinned host key (the
+  /// desktop's clipboard, DA1). Not behind the lock: the caller decides.
+  Future<SshRunResult> runOnDesktop(String command) => _run(command);
+
   Future<SshRunResult> _run(String command) async {
     await load();
     final front = current;

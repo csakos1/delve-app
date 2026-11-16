@@ -4434,4 +4434,98 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsNotifySystemSub =>
       'When the desktop could not load the model you picked';
+
+  @override
+  String get moreClipboard => 'Clipboard';
+
+  @override
+  String get moreClipboardSub => 'Text between this phone and the desktop';
+
+  @override
+  String get clipToDesktop => 'To desktop';
+
+  @override
+  String get clipFromDesktop => 'From desktop';
+
+  @override
+  String get clipSending => 'Sending…';
+
+  @override
+  String get clipGetting => 'Getting…';
+
+  @override
+  String clipSent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count characters sent to the desktop',
+      one: '1 character sent to the desktop',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String clipGot(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count characters copied from the desktop',
+      one: '1 character copied from the desktop',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get clipPhoneEmpty => 'This phone\'s clipboard has no text';
+
+  @override
+  String get clipDesktopEmpty => 'The desktop\'s clipboard is empty';
+
+  @override
+  String get clipNotText => 'The desktop\'s clipboard holds no text';
+
+  @override
+  String clipTooLarge(String kb) {
+    return 'Too long for the clipboard ($kb KB at most)';
+  }
+
+  @override
+  String get clipNoSession => 'Nobody is logged in on the desktop\'s screen';
+
+  @override
+  String get clipNoTool => 'wl-clipboard is missing on the desktop';
+
+  @override
+  String get clipNoSetup =>
+      'Set up the Terminal first: the clipboard uses its connection';
+
+  @override
+  String clipUnreachable(String detail) {
+    return 'Couldn\'t reach the desktop: $detail';
+  }
+
+  @override
+  String clipFailed(String detail) {
+    return 'The desktop\'s clipboard failed: $detail';
+  }
+
+  @override
+  String get clipHint =>
+      'Sends this phone\'s clipboard to the desktop, or brings the desktop\'s here. Text only, and only when you tap.';
+
+  @override
+  String get clipLastTitle => 'Last transfer';
+
+  @override
+  String get clipNothingYet => 'Nothing yet';
+
+  @override
+  String clipLastSent(String time) {
+    return 'to desktop · $time';
+  }
+
+  @override
+  String clipLastGot(String time) {
+    return 'from desktop · $time';
+  }
 }

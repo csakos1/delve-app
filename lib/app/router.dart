@@ -7,6 +7,7 @@ import '../ui/screens/approvals_screen.dart';
 import '../ui/screens/archived_chats_screen.dart';
 import '../ui/screens/chat_screen.dart';
 import '../ui/screens/chats_screen.dart';
+import '../ui/screens/clipboard_screen.dart';
 import '../ui/screens/connection_log_screen.dart';
 import '../ui/screens/dashboard_screen.dart';
 import '../ui/screens/file_preview_screen.dart';
@@ -77,6 +78,9 @@ abstract final class Routes {
   /// 24g Settings → General (the OpenRouter key).
   static const generalSettings = '/more/settings/general';
   static const archived = '/more/archived';
+
+  /// The desktop's clipboard (DA1): from More.
+  static const clipboard = '/more/clipboard';
 
   /// Share to Delve (design 17), on the root navigator.
   static const share = '/share';
@@ -236,6 +240,7 @@ GoRouter buildRouter({
                         MorePage.schedules => const SchedulesScreen(),
                         MorePage.observability => const ObservabilityScreen(),
                         MorePage.watches => const WatchesScreen(),
+                        MorePage.clipboard => const ClipboardScreen(),
                       },
                       routes: [
                         if (page == MorePage.settings) ...[

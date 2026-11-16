@@ -204,6 +204,17 @@ reached over Tailscale only.
   Copy connection trace puts them on the clipboard, and each also goes to the log
   (`adb logcat -s flutter`). The dialer now looks the name up on its own (IPv4 first),
   then connects to the address.
+- DA1: the desktop's clipboard — two buttons on the Dashboard (under the connection pill,
+  once the terminal is set up) and More → Clipboard: "To desktop" puts this phone's
+  clipboard text on the desktop's, "From desktop" brings the desktop's here. Text only, and
+  only on a tap in either direction (the desktop's clipboard may hold a password). It runs
+  `wl-copy` / `wl-paste` over the terminal's SSH connection — a connected tab, or a
+  connection of its own that trusts only the pinned host key — so the backend is not in the
+  path and nothing is installed on the desktop beyond `wl-clipboard`. An SSH command gets
+  no `WAYLAND_DISPLAY`: the command finds the session's socket in `XDG_RUNTIME_DIR`. The
+  text travels to the desktop inside the command (base64), hence at most 64 KB; 256 KB
+  the other way. Not behind the terminal's fingerprint lock. More → Clipboard shows the
+  text that went last (kept in memory only).
 
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share
@@ -257,6 +268,8 @@ lib/
                              tabs (terminal_tabs.dart: saved tabs, the tmux session list
                              and commands), the service (one per app) and its providers,
                              the connection trace (terminal_trace.dart)
+  terminal/desktop_clipboard.dart  the desktop's clipboard over that connection: the two
+                             commands, their failures, the two transfers (ClipboardSync)
   attachments/               pickers, photo resizing, uploads (ComposerAttachments),
                              the image cache
   share/                     Share to Delve: the method channel (share_channel.dart), the

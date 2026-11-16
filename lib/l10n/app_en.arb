@@ -3470,5 +3470,76 @@
   "notifySwitchBackPlain": "The previous model is loaded again",
   "notifySwitchDown": "llama-server is stopped",
   "settingsNotifySystem": "Model switch failed",
-  "settingsNotifySystemSub": "When the desktop could not load the model you picked"
+  "settingsNotifySystemSub": "When the desktop could not load the model you picked",
+  "moreClipboard": "Clipboard",
+  "moreClipboardSub": "Text between this phone and the desktop",
+  "clipToDesktop": "To desktop",
+  "clipFromDesktop": "From desktop",
+  "clipSending": "Sending…",
+  "clipGetting": "Getting…",
+  "clipSent": "{count, plural, =1{1 character sent to the desktop} other{{count} characters sent to the desktop}}",
+  "@clipSent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clipGot": "{count, plural, =1{1 character copied from the desktop} other{{count} characters copied from the desktop}}",
+  "@clipGot": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clipPhoneEmpty": "This phone's clipboard has no text",
+  "clipDesktopEmpty": "The desktop's clipboard is empty",
+  "clipNotText": "The desktop's clipboard holds no text",
+  "clipTooLarge": "Too long for the clipboard ({kb} KB at most)",
+  "@clipTooLarge": {
+    "placeholders": {
+      "kb": {
+        "type": "String"
+      }
+    }
+  },
+  "clipNoSession": "Nobody is logged in on the desktop's screen",
+  "clipNoTool": "wl-clipboard is missing on the desktop",
+  "clipNoSetup": "Set up the Terminal first: the clipboard uses its connection",
+  "clipUnreachable": "Couldn't reach the desktop: {detail}",
+  "@clipUnreachable": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "clipFailed": "The desktop's clipboard failed: {detail}",
+  "@clipFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "clipHint": "Sends this phone's clipboard to the desktop, or brings the desktop's here. Text only, and only when you tap.",
+  "clipLastTitle": "Last transfer",
+  "clipNothingYet": "Nothing yet",
+  "clipLastSent": "to desktop · {time}",
+  "@clipLastSent": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "clipLastGot": "from desktop · {time}",
+  "@clipLastGot": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -6896,6 +6896,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'When the desktop could not load the model you picked'**
   String get settingsNotifySystemSub;
+
+  /// No description provided for @moreClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard'**
+  String get moreClipboard;
+
+  /// No description provided for @moreClipboardSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Text between this phone and the desktop'**
+  String get moreClipboardSub;
+
+  /// No description provided for @clipToDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'To desktop'**
+  String get clipToDesktop;
+
+  /// No description provided for @clipFromDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'From desktop'**
+  String get clipFromDesktop;
+
+  /// No description provided for @clipSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get clipSending;
+
+  /// No description provided for @clipGetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting…'**
+  String get clipGetting;
+
+  /// No description provided for @clipSent.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 character sent to the desktop} other{{count} characters sent to the desktop}}'**
+  String clipSent(int count);
+
+  /// No description provided for @clipGot.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 character copied from the desktop} other{{count} characters copied from the desktop}}'**
+  String clipGot(int count);
+
+  /// No description provided for @clipPhoneEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone\'s clipboard has no text'**
+  String get clipPhoneEmpty;
+
+  /// No description provided for @clipDesktopEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop\'s clipboard is empty'**
+  String get clipDesktopEmpty;
+
+  /// No description provided for @clipNotText.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop\'s clipboard holds no text'**
+  String get clipNotText;
+
+  /// No description provided for @clipTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Too long for the clipboard ({kb} KB at most)'**
+  String clipTooLarge(String kb);
+
+  /// No description provided for @clipNoSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody is logged in on the desktop\'s screen'**
+  String get clipNoSession;
+
+  /// No description provided for @clipNoTool.
+  ///
+  /// In en, this message translates to:
+  /// **'wl-clipboard is missing on the desktop'**
+  String get clipNoTool;
+
+  /// No description provided for @clipNoSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up the Terminal first: the clipboard uses its connection'**
+  String get clipNoSetup;
+
+  /// No description provided for @clipUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach the desktop: {detail}'**
+  String clipUnreachable(String detail);
+
+  /// No description provided for @clipFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop\'s clipboard failed: {detail}'**
+  String clipFailed(String detail);
+
+  /// No description provided for @clipHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends this phone\'s clipboard to the desktop, or brings the desktop\'s here. Text only, and only when you tap.'**
+  String get clipHint;
+
+  /// No description provided for @clipLastTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Last transfer'**
+  String get clipLastTitle;
+
+  /// No description provided for @clipNothingYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing yet'**
+  String get clipNothingYet;
+
+  /// No description provided for @clipLastSent.
+  ///
+  /// In en, this message translates to:
+  /// **'to desktop · {time}'**
+  String clipLastSent(String time);
+
+  /// No description provided for @clipLastGot.
+  ///
+  /// In en, this message translates to:
+  /// **'from desktop · {time}'**
+  String clipLastGot(String time);
 }
 
 class _AppLocalizationsDelegate
