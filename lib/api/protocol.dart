@@ -3,7 +3,7 @@
 /// Oldest backend contract this build works with (`/meta` `api_revision`).
 /// Raise it together with the models when the app starts relying on a newer
 /// contract; a smaller server revision shows the "server too old" screen.
-const int kMinApiRevision = 11; // 11: notification mirroring
+const int kMinApiRevision = 12; // 12: the mirrored app's icon
 
 /// REST routes the app calls (method + path template); checked against the
 /// backend contract in `test/contract_test.dart`.
@@ -60,9 +60,10 @@ abstract final class ApiRoutes {
   static const mirror = ('GET', '/api/v1/mirror');
   static const mirrorPhone = ('POST', '/api/v1/mirror/phone');
 
-  /// The desktop agent's long poll; the app's token does not open it. Listed
-  /// because the contract lists it.
+  /// The desktop agent's two routes; the app's token does not open them.
+  /// Listed because the contract lists them.
   static const deskNext = ('GET', '/api/v1/desk/next');
+  static const deskIcon = ('GET', '/api/v1/desk/icon/{icon}');
   static const ws = ('WS', '/api/v1/ws');
 
   static const List<(String, String)> all = <(String, String)>[
@@ -101,6 +102,7 @@ abstract final class ApiRoutes {
     mirror,
     mirrorPhone,
     deskNext,
+    deskIcon,
     ws,
   ];
 

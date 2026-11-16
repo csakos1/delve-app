@@ -19,7 +19,7 @@ import android.service.notification.StatusBarNotification
  * (MirrorStore) and the sending (MirrorSender) are all on this side.
  *
  * What goes out: a post per notification key (the same key again replaces it
- * on the desktop) with the app's name, the title, the text and the category;
+ * on the desktop) with the app's name and icon, the title, the text and the category;
  * a remove when it leaves the phone's shade, whatever the reason. What never
  * goes out: an app that is not chosen, Delve's own notifications, ongoing
  * ones (players, "running in the background"), group summaries, and the
@@ -83,6 +83,7 @@ class NotificationMirrorService : NotificationListenerService() {
             category = MirrorWire.category(n.category),
             hidden = hidden,
             at = SystemClock.elapsedRealtime(),
+            icon = MirrorIcons.of(this, pkg),
         )
         // The same notification posted again as it was (same content, same time, no new
         // message in it) is nothing new for the desktop. "ok" twice in a chat is: the

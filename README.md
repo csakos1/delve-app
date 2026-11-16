@@ -220,6 +220,8 @@ reached over Tailscale only.
   the apps chosen on that page to the backend (`POST /api/v1/mirror/phone`, API 11), which
   hands them to the desktop agent (delve-infra `bin/delve-desk`); the desktop shows them,
   replaces one when its key posts again and closes it when it leaves the phone's shade.
+  Each post carries the app's launcher icon as a small PNG (`MirrorIcons.kt`, API 12),
+  which the desktop shows beside the notification.
   Nothing is chosen at first: the list is built from the apps that have posted since the
   access was given. Never sent: ongoing notifications (players, "running in the
   background"), group summaries, Delve's own, and what Android hides from listeners
@@ -238,7 +240,7 @@ reached over Tailscale only.
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share
 target, W3 the watches, T2a–T3 the terminal. (A home-screen widget was planned and dropped.)
-Requires a server with API revision 11 or newer (notification mirroring); the
+Requires a server with API revision 12 or newer (the mirrored app's icon); the
 terminal needs sshd on 2222 (delve-infra, installation step 19).
 
 ## Stack

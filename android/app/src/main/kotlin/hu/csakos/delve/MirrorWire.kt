@@ -23,6 +23,8 @@ internal data class MirrorEvent(
     val hidden: Boolean = false,
     /** SystemClock.elapsedRealtime() when it was seen. */
     val at: Long = 0,
+    /** The posting app's icon: a small PNG as base64 (MirrorIcons). */
+    val icon: String? = null,
 )
 
 internal object MirrorRules {
@@ -167,6 +169,7 @@ internal object MirrorWire {
                     if (!e.text.isNullOrEmpty()) append(",\"text\":").append(quote(e.text))
                 }
                 if (e.category != null) append(",\"category\":").append(quote(e.category))
+                if (!e.icon.isNullOrEmpty()) append(",\"icon\":").append(quote(e.icon))
             }
             append('}')
         }
