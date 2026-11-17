@@ -164,6 +164,27 @@ void main() {
     expect((await db.chat(id))!.costUsd, closeTo(0.0004, 1e-12));
   });
 
+  test('the part of the profile marked for General goes before the system '
+      'prompt', () async {
+    final id = await service.createChat();
+    const about = '## About the user\n- Answer in Hungarian.';
+    await db.setMeta(GeneralMetaKeys.personaGeneral, about);
+    fake.chatReplies
+      ..add(glmAnswer())
+      ..add(glmAnswer());
+    await service.send(id, 'Szia');
+    expect((fake.chatBodies.last['messages']! as List<Object?>).first, {
+      'role': 'system',
+      'content': about,
+    });
+    await db.setMeta(GeneralMetaKeys.systemPrompt, 'Answer briefly.');
+    await service.send(id, 'Megint');
+    expect((fake.chatBodies.last['messages']! as List<Object?>).first, {
+      'role': 'system',
+      'content': '$about\n\nAnswer briefly.',
+    });
+  });
+
   test('thinking off: a model that always thinks still gets enabled', () async {
     final id = await service.createChat();
     await service.setReasoning(id, on: false);

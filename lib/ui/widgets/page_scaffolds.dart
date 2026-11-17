@@ -283,6 +283,7 @@ abstract final class DelveIcons {
   static const IconData brief = Symbols.wb_twilight_rounded;
   static const IconData notificationsOff = Symbols.notifications_off_rounded;
   static const IconData notifications = Symbols.notifications_rounded;
+  static const IconData person = Symbols.person_rounded;
   static const IconData power = Symbols.power_settings_new_rounded;
   static const IconData play = Symbols.play_arrow_rounded;
   static const IconData photos = Symbols.photo_library_rounded;

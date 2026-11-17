@@ -141,6 +141,47 @@ class DelveApi {
   Future<MirrorStatus> mirror() async =>
       _parse(await _json(ApiRoutes.mirror), MirrorStatus.fromJson);
 
+  // --- the personal profile (P1) -------------------------------------------
+
+  /// What the agent knows about its user, as it is on the desktop now.
+  Future<Persona> persona() async =>
+      _parse(await _json(ApiRoutes.persona), Persona.fromJson);
+
+  /// Replaces the core with [sections], in this order (a section without a
+  /// text is dropped). 503 `persona_no_store` / `persona_not_writable`.
+  Future<Persona> putPersonaProfile(List<PersonaSection> sections) async =>
+      _parse(
+        await _json(
+          ApiRoutes.putPersonaProfile,
+          body: {
+            'sections': [for (final s in sections) s.toJson()],
+          },
+        ),
+        Persona.fromJson,
+      );
+
+  /// Creates or replaces the topic file [topic] (by its name). 409
+  /// `too_many_topics`, 422 for a name the server does not take.
+  Future<Persona> putPersonaTopic(PersonaTopic topic) async => _parse(
+    await _json(
+      ApiRoutes.putPersonaTopic,
+      params: {'name': topic.name},
+      body: {
+        'title': topic.title,
+        'summary': topic.summary,
+        'text': topic.text,
+        'general': topic.general,
+      },
+    ),
+    Persona.fromJson,
+  );
+
+  /// Removes a topic file; 404 `topic_not_found`.
+  Future<Persona> deletePersonaTopic(String name) async => _parse(
+    await _json(ApiRoutes.deletePersonaTopic, params: {'name': name}),
+    Persona.fromJson,
+  );
+
   /// Stores this phone's FCM token on the server (`null` clears it).
   Future<void> putFcmToken(String? fcmToken) async {
     await _json(ApiRoutes.deviceFcm, body: {'token': fcmToken});

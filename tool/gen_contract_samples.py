@@ -15,6 +15,8 @@ from delve.brief import brief_payload
 from delve.schedules import schedule_out
 from delve.stats import RANGES, GpuBucket, RunRow, bucket_edges, edges_between, stats_out
 from delve.mirror import mirror_out
+from delve.persona import Persona, Section, Topic, persona_out, section_out, topic_out
+from pathlib import Path
 from delve.watches import item_out, watch_out
 import math
 
@@ -164,6 +166,18 @@ hit = WatchItem(id=17, slug=watch.slug, item_id="ha:8231467", card_id="a" * 32,
     attempts=1, seen_at=t0 - timedelta(minutes=20), judged_at=t0 - timedelta(minutes=19),
     notified_at=t0 - timedelta(minutes=19), available_at=None)
 
+persona = Persona(
+    sections=(
+        Section("Basics", "- Name: Minta Bence. Lives in Győr.\n- Dog: Zsömle, a vizsla."),
+        Section("Answering", "- Writes Hungarian, often without accents. Answer briefly.", True),
+        Section("His own words", '- "a torony" = the desktop; "a kicsi" = the laptop.'),
+    ),
+    topics=(
+        Topic("books", "Books", "what he reads", "- Scandinavian crime.", True),
+        Topic("gepek", "Machines", "parts, disks and the home network", "- The desktop: 48 GB RAM."),
+    ),
+    available=True,
+)
 shapes = {
     "watch": watch_out(watch, watch_counts),
     "watch_item": item_out(hit),
@@ -199,6 +213,10 @@ shapes = {
         seq_started=9, seq_completed=None, approval_request_id=None)),
     # DA2: GET /api/v1/mirror (the desktop agent asked three seconds ago)
     "mirror": mirror_out(connected=True, seen_s=3.2),
+    # P1: GET /api/v1/persona (an invented person; one section and one topic for General)
+    "persona": persona_out(persona, Path("/var/lib/delve-persona")),
+    "persona_section": section_out(persona.sections[1]),
+    "persona_topic": topic_out(persona.topics[1]),
 }
 c, m, a = shapes["conversation"], shapes["message"], shapes["approval"]
 base = {"conversation_id": conv.id, "run_id": run.run_id}

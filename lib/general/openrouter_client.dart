@@ -71,6 +71,16 @@ class ReasoningSpec {
   }
 }
 
+/// The system message of a General chat: the part of the personal profile
+/// marked for these chats ([persona], P1), then the user's own system prompt.
+/// null when there is neither.
+String? composeSystemPrompt({String? persona, String? prompt}) {
+  final about = persona?.trim() ?? '';
+  if (about.isEmpty) return prompt;
+  if (prompt == null || prompt.trim().isEmpty) return about;
+  return '$about\n\n$prompt';
+}
+
 /// The request body for `POST /chat/completions` (streamed). Pure, so the
 /// privacy rules are tested on every branch: the [kPrivacyProvider] block is
 /// always there, nothing identifies the app or the user, and no plugin, web

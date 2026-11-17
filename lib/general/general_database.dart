@@ -284,4 +284,9 @@ abstract final class GeneralMetaKeys {
 
   /// `1`: answers show their output tokens in the footer (NG13).
   static const showTokens = 'show_tokens';
+
+  /// The part of the personal profile marked for the General chats (P1), as
+  /// the desktop last gave it. Sent before the system prompt; not a setting,
+  /// so it is not part of an export.
+  static const personaGeneral = 'persona_general';
 }

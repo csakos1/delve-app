@@ -80,3 +80,14 @@ request to the backend are Kotlin; Dart has the page, hands the token over and w
 Android side on unpair (`MirrorController`). `MirrorWire.kt` has no Android import on
 purpose (it can be compiled and run on a plain JVM). Never write notification content to
 disk or to the log on either side.
+
+## Personal profile (lib/persona/, More → About me)
+
+The profile lives on the desktop (delve-backend `/api/v1/persona`); the app shows and edits
+it and stores nothing of it, with one exception: `Persona.generalText` - the part the user
+marked for the General chats - is copied into the General database
+(`GeneralMetaKeys.personaGeneral`) whenever the server answers, and
+`composeSystemPrompt` puts it before the system prompt of a General request. That copy is
+the only part of the profile that may reach a cloud model; keep it out of exports and
+never send `Persona.block` or an unmarked section anywhere but the backend. Test data is
+an invented person (`samples.json`), never a real one.

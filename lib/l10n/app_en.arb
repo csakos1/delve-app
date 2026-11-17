@@ -3590,5 +3590,86 @@
     }
   },
   "mirrorCodesNote": "One-time codes stay hidden: Android does not show their content to Delve, so the desktop only says that one arrived.",
-  "mirrorRefresh": "Refresh"
+  "mirrorRefresh": "Refresh",
+  "moreAbout": "About me",
+  "moreAboutSub": "What the agent knows about you",
+  "personaTitle": "About me",
+  "personaHint": "What the agent on your desktop knows about you. It always gets everything here: the core with every chat, a topic file when a question needs it.",
+  "personaNoStore": "The desktop has no profile directory yet (delve-infra, the personal profile step)",
+  "personaLoadFailed": "Couldn't load the profile: {reason}",
+  "@personaLoadFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "personaSaveFailed": "Couldn't save: {reason}",
+  "@personaSaveFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "personaRefresh": "Refresh",
+  "personaCloud": "Cloud",
+  "personaCloudRule": "Nothing here goes to a cloud model unless its Cloud switch is on. The switch is only about General chats; the agent gets every item either way.",
+  "personaCore": "Core",
+  "personaCoreNote": "Part of every agent chat.",
+  "personaNoSections": "No section yet",
+  "personaAddSection": "Add a section",
+  "personaTopics": "Topic files",
+  "personaTopicsNote": "More detail the agent opens on its own. The line under a title is what it sees in its list of files.",
+  "personaNoTopics": "No topic file yet",
+  "personaAddTopic": "Add a topic file",
+  "personaSent": "What is sent",
+  "personaToAgent": "Agent chats",
+  "personaToGeneral": "General chats",
+  "personaChars": "{count, plural, =1{1 character} other{{count} characters}}",
+  "@personaChars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "personaNothing": "nothing",
+  "personaPreviewAgent": "A new agent chat starts with this",
+  "personaPreviewGeneral": "Sent with every General message",
+  "personaPreviewEmpty": "Nothing is sent.",
+  "personaNewChats": "A change applies to the chats you start after it. A running chat keeps the profile it started with.",
+  "personaSectionNew": "New section",
+  "personaSectionEdit": "Section",
+  "personaTopicNew": "New topic file",
+  "personaTopicEdit": "Topic file",
+  "personaFieldTitle": "Title",
+  "personaFieldText": "Text",
+  "personaFieldSummary": "Summary",
+  "personaFieldSummaryHelper": "One line: what is in the file",
+  "personaGeneralSwitch": "Also send to the cloud",
+  "personaGeneralSwitchSub": "On: General chats send it to their cloud model. Off: only the agent on your desktop gets it.",
+  "personaSave": "Save",
+  "personaDelete": "Delete",
+  "personaDeleteTitle": "Delete \"{name}\"?",
+  "@personaDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "personaDeleteBody": "This cannot be undone.",
+  "personaFile": "File: {name}.md",
+  "@personaFile": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "personaNameTaken": "A topic file with this name exists already",
+  "personaNameEmpty": "The title needs a letter or a digit",
+  "personaTitleEmpty": "Give it a title",
+  "personaTextEmpty": "Write something first"
 }

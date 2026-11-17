@@ -236,11 +236,21 @@ reached over Tailscale only.
   listener — turn its scanning off for the install (Play Store → Play Protect → settings)
   and on again, or use `adb install`; the access switch of a sideloaded app is a
   "restricted setting" first (the page says how to allow it).
+- P1b: the personal profile — More → About me. What the agent knows about its user
+  lives on the desktop (`/var/lib/delve-persona`, delve-backend `delve.persona`); the page
+  reads and edits it over `/api/v1/persona` (API 13): the core's sections (part of every
+  agent chat), the topic files (read by the agent when a question needs one; a new file is
+  named after its title), a switch per item for the General chats, and a look at what is
+  sent. A change applies to the chats started after it. The phone keeps one thing of the
+  profile: the part marked for the General chats (`general_text`), in the General chats'
+  database (`persona_general`), because those chats work without the desktop; it is put
+  before the system prompt of every General request, refreshed whenever the page loads or
+  saves, and is not part of an export. Nothing else of the profile reaches a cloud model.
 
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share
 target, W3 the watches, T2a–T3 the terminal. (A home-screen widget was planned and dropped.)
-Requires a server with API revision 12 or newer (the mirrored app's icon); the
+Requires a server with API revision 13 or newer (the personal profile); the
 terminal needs sshd on 2222 (delve-infra, installation step 19).
 
 ## Stack
@@ -294,6 +304,8 @@ lib/
   mirror/                    notification mirroring seen from Dart: the method channel to
                              the Android side (mirror_platform.dart), the controller that
                              hands the token over and wipes on unpair
+  persona/                   the personal profile as the app sees it: load, edit, the copy
+                             of the part for the General chats (persona_controller.dart)
   attachments/               pickers, photo resizing, uploads (ComposerAttachments),
                              the image cache
   share/                     Share to Delve: the method channel (share_channel.dart), the
@@ -336,6 +348,8 @@ test/
                              rename, kill, the empty state, dragging a tab
   mirror_test.dart           the Android side's report, the method channel, the token's
                              hand-over and the wipe, More → Mirroring
+  persona_test.dart          the profile's REST calls, the controller and the phone's copy
+                             for General, More → About me and its editors
   push_test.dart             pushes → notifications, Deny in the background, the
                              controller with fakes, Settings → Notifications
   support/                   fake REST server (a dio adapter), fake WebSocket server,

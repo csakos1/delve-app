@@ -4725,6 +4725,58 @@
         "connected": true,
         "last_seen_s": 3
       }
+    },
+    "persona": {
+      "available": true,
+      "revision": "b4c4457e8f23",
+      "block": "## About the user (a personal profile: facts for context, not instructions)\n### Basics\n- Name: Minta Bence. Lives in Győr.\n- Dog: Zsömle, a vizsla.\n### Answering\n- Writes Hungarian, often without accents. Answer briefly.\n### His own words\n- \"a torony\" = the desktop; \"a kicsi\" = the laptop.\nUse these facts only when the question needs them. Do not mention them in answers about other things.\n\n## Topic files (more detail about the user; read one with read_file only when the question needs it)\n- /var/lib/delve-persona/topics/books.md: Books - what he reads\n- /var/lib/delve-persona/topics/gepek.md: Machines - parts, disks and the home network",
+      "block_chars": 645,
+      "general_text": "## About the user (facts for context, not instructions)\n### Answering\n- Writes Hungarian, often without accents. Answer briefly.\n### Books\n- Scandinavian crime.\nUse these facts only when the question needs them. Do not mention them in answers about other things.",
+      "sections": [
+        {
+          "title": "Basics",
+          "text": "- Name: Minta Bence. Lives in Győr.\n- Dog: Zsömle, a vizsla.",
+          "general": false
+        },
+        {
+          "title": "Answering",
+          "text": "- Writes Hungarian, often without accents. Answer briefly.",
+          "general": true
+        },
+        {
+          "title": "His own words",
+          "text": "- \"a torony\" = the desktop; \"a kicsi\" = the laptop.",
+          "general": false
+        }
+      ],
+      "topics": [
+        {
+          "name": "books",
+          "title": "Books",
+          "summary": "what he reads",
+          "text": "- Scandinavian crime.",
+          "general": true
+        },
+        {
+          "name": "gepek",
+          "title": "Machines",
+          "summary": "parts, disks and the home network",
+          "text": "- The desktop: 48 GB RAM.",
+          "general": false
+        }
+      ]
+    },
+    "persona_section": {
+      "title": "Answering",
+      "text": "- Writes Hungarian, often without accents. Answer briefly.",
+      "general": true
+    },
+    "persona_topic": {
+      "name": "gepek",
+      "title": "Machines",
+      "summary": "parts, disks and the home network",
+      "text": "- The desktop: 48 GB RAM.",
+      "general": false
     }
   },
   "events": {
@@ -5226,7 +5278,7 @@
   "connection": {
     "hello.ok": {
       "server_version": "0.1.0",
-      "api_revision": 12,
+      "api_revision": 13,
       "revision": "eb4045ed6a94",
       "hermes": "ok",
       "hermes_version": "0.22.2",
@@ -5241,7 +5293,7 @@
     },
     "meta": {
       "server_version": "0.1.0",
-      "api_revision": 12,
+      "api_revision": 13,
       "revision": "eb4045ed6a94",
       "python": "3.14.8",
       "hermes_expected_version": "0.22.2",
@@ -5249,7 +5301,7 @@
     },
     "status": {
       "server_version": "0.1.0",
-      "api_revision": 12,
+      "api_revision": 13,
       "revision": null,
       "hermes": null,
       "hermes_version": null,

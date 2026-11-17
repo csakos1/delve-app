@@ -4635,4 +4635,164 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mirrorRefresh => 'Refresh';
+
+  @override
+  String get moreAbout => 'About me';
+
+  @override
+  String get moreAboutSub => 'What the agent knows about you';
+
+  @override
+  String get personaTitle => 'About me';
+
+  @override
+  String get personaHint =>
+      'What the agent on your desktop knows about you. It always gets everything here: the core with every chat, a topic file when a question needs it.';
+
+  @override
+  String get personaNoStore =>
+      'The desktop has no profile directory yet (delve-infra, the personal profile step)';
+
+  @override
+  String personaLoadFailed(String reason) {
+    return 'Couldn\'t load the profile: $reason';
+  }
+
+  @override
+  String personaSaveFailed(String reason) {
+    return 'Couldn\'t save: $reason';
+  }
+
+  @override
+  String get personaRefresh => 'Refresh';
+
+  @override
+  String get personaCloud => 'Cloud';
+
+  @override
+  String get personaCloudRule =>
+      'Nothing here goes to a cloud model unless its Cloud switch is on. The switch is only about General chats; the agent gets every item either way.';
+
+  @override
+  String get personaCore => 'Core';
+
+  @override
+  String get personaCoreNote => 'Part of every agent chat.';
+
+  @override
+  String get personaNoSections => 'No section yet';
+
+  @override
+  String get personaAddSection => 'Add a section';
+
+  @override
+  String get personaTopics => 'Topic files';
+
+  @override
+  String get personaTopicsNote =>
+      'More detail the agent opens on its own. The line under a title is what it sees in its list of files.';
+
+  @override
+  String get personaNoTopics => 'No topic file yet';
+
+  @override
+  String get personaAddTopic => 'Add a topic file';
+
+  @override
+  String get personaSent => 'What is sent';
+
+  @override
+  String get personaToAgent => 'Agent chats';
+
+  @override
+  String get personaToGeneral => 'General chats';
+
+  @override
+  String personaChars(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count characters',
+      one: '1 character',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get personaNothing => 'nothing';
+
+  @override
+  String get personaPreviewAgent => 'A new agent chat starts with this';
+
+  @override
+  String get personaPreviewGeneral => 'Sent with every General message';
+
+  @override
+  String get personaPreviewEmpty => 'Nothing is sent.';
+
+  @override
+  String get personaNewChats =>
+      'A change applies to the chats you start after it. A running chat keeps the profile it started with.';
+
+  @override
+  String get personaSectionNew => 'New section';
+
+  @override
+  String get personaSectionEdit => 'Section';
+
+  @override
+  String get personaTopicNew => 'New topic file';
+
+  @override
+  String get personaTopicEdit => 'Topic file';
+
+  @override
+  String get personaFieldTitle => 'Title';
+
+  @override
+  String get personaFieldText => 'Text';
+
+  @override
+  String get personaFieldSummary => 'Summary';
+
+  @override
+  String get personaFieldSummaryHelper => 'One line: what is in the file';
+
+  @override
+  String get personaGeneralSwitch => 'Also send to the cloud';
+
+  @override
+  String get personaGeneralSwitchSub =>
+      'On: General chats send it to their cloud model. Off: only the agent on your desktop gets it.';
+
+  @override
+  String get personaSave => 'Save';
+
+  @override
+  String get personaDelete => 'Delete';
+
+  @override
+  String personaDeleteTitle(String name) {
+    return 'Delete \"$name\"?';
+  }
+
+  @override
+  String get personaDeleteBody => 'This cannot be undone.';
+
+  @override
+  String personaFile(String name) {
+    return 'File: $name.md';
+  }
+
+  @override
+  String get personaNameTaken => 'A topic file with this name exists already';
+
+  @override
+  String get personaNameEmpty => 'The title needs a letter or a digit';
+
+  @override
+  String get personaTitleEmpty => 'Give it a title';
+
+  @override
+  String get personaTextEmpty => 'Write something first';
 }

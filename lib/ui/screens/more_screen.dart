@@ -13,6 +13,7 @@ enum MorePage {
   watches('watches', DelveIcons.watches, Routes.watches),
   clipboard('clipboard', DelveIcons.paste, Routes.clipboard),
   mirroring('mirroring', DelveIcons.notifications, Routes.mirroring),
+  about('about', DelveIcons.person, Routes.about),
   observability(
     'observability',
     DelveIcons.observability,
@@ -33,6 +34,7 @@ enum MorePage {
     MorePage.watches => l.moreWatches,
     MorePage.clipboard => l.moreClipboard,
     MorePage.mirroring => l.moreMirroring,
+    MorePage.about => l.moreAbout,
     MorePage.observability => l.moreObservability,
     MorePage.settings => l.moreSettings,
     MorePage.archived => l.moreArchived,
@@ -44,14 +46,15 @@ enum MorePage {
     MorePage.watches => l.moreWatchesSub,
     MorePage.clipboard => l.moreClipboardSub,
     MorePage.mirroring => l.moreMirroringSub,
+    MorePage.about => l.moreAboutSub,
     MorePage.observability => l.moreObservabilitySub,
     MorePage.settings => l.moreSettingsSub,
     MorePage.archived => l.moreArchivedSub,
   };
 }
 
-/// 13-0 More — System, Schedules, Watches, Clipboard, Mirroring, Observability,
-/// Settings, Archived chats.
+/// 13-0 More — System, Schedules, Watches, Clipboard, Mirroring, About me,
+/// Observability, Settings, Archived chats.
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
 

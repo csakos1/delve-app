@@ -7220,6 +7220,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refresh'**
   String get mirrorRefresh;
+
+  /// No description provided for @moreAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About me'**
+  String get moreAbout;
+
+  /// No description provided for @moreAboutSub.
+  ///
+  /// In en, this message translates to:
+  /// **'What the agent knows about you'**
+  String get moreAboutSub;
+
+  /// No description provided for @personaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About me'**
+  String get personaTitle;
+
+  /// No description provided for @personaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What the agent on your desktop knows about you. It always gets everything here: the core with every chat, a topic file when a question needs it.'**
+  String get personaHint;
+
+  /// No description provided for @personaNoStore.
+  ///
+  /// In en, this message translates to:
+  /// **'The desktop has no profile directory yet (delve-infra, the personal profile step)'**
+  String get personaNoStore;
+
+  /// No description provided for @personaLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the profile: {reason}'**
+  String personaLoadFailed(String reason);
+
+  /// No description provided for @personaSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save: {reason}'**
+  String personaSaveFailed(String reason);
+
+  /// No description provided for @personaRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get personaRefresh;
+
+  /// No description provided for @personaCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud'**
+  String get personaCloud;
+
+  /// No description provided for @personaCloudRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here goes to a cloud model unless its Cloud switch is on. The switch is only about General chats; the agent gets every item either way.'**
+  String get personaCloudRule;
+
+  /// No description provided for @personaCore.
+  ///
+  /// In en, this message translates to:
+  /// **'Core'**
+  String get personaCore;
+
+  /// No description provided for @personaCoreNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Part of every agent chat.'**
+  String get personaCoreNote;
+
+  /// No description provided for @personaNoSections.
+  ///
+  /// In en, this message translates to:
+  /// **'No section yet'**
+  String get personaNoSections;
+
+  /// No description provided for @personaAddSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a section'**
+  String get personaAddSection;
+
+  /// No description provided for @personaTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic files'**
+  String get personaTopics;
+
+  /// No description provided for @personaTopicsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'More detail the agent opens on its own. The line under a title is what it sees in its list of files.'**
+  String get personaTopicsNote;
+
+  /// No description provided for @personaNoTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'No topic file yet'**
+  String get personaNoTopics;
+
+  /// No description provided for @personaAddTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a topic file'**
+  String get personaAddTopic;
+
+  /// No description provided for @personaSent.
+  ///
+  /// In en, this message translates to:
+  /// **'What is sent'**
+  String get personaSent;
+
+  /// No description provided for @personaToAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent chats'**
+  String get personaToAgent;
+
+  /// No description provided for @personaToGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General chats'**
+  String get personaToGeneral;
+
+  /// No description provided for @personaChars.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 character} other{{count} characters}}'**
+  String personaChars(int count);
+
+  /// No description provided for @personaNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'nothing'**
+  String get personaNothing;
+
+  /// No description provided for @personaPreviewAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'A new agent chat starts with this'**
+  String get personaPreviewAgent;
+
+  /// No description provided for @personaPreviewGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent with every General message'**
+  String get personaPreviewGeneral;
+
+  /// No description provided for @personaPreviewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is sent.'**
+  String get personaPreviewEmpty;
+
+  /// No description provided for @personaNewChats.
+  ///
+  /// In en, this message translates to:
+  /// **'A change applies to the chats you start after it. A running chat keeps the profile it started with.'**
+  String get personaNewChats;
+
+  /// No description provided for @personaSectionNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New section'**
+  String get personaSectionNew;
+
+  /// No description provided for @personaSectionEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Section'**
+  String get personaSectionEdit;
+
+  /// No description provided for @personaTopicNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New topic file'**
+  String get personaTopicNew;
+
+  /// No description provided for @personaTopicEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic file'**
+  String get personaTopicEdit;
+
+  /// No description provided for @personaFieldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get personaFieldTitle;
+
+  /// No description provided for @personaFieldText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get personaFieldText;
+
+  /// No description provided for @personaFieldSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get personaFieldSummary;
+
+  /// No description provided for @personaFieldSummaryHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'One line: what is in the file'**
+  String get personaFieldSummaryHelper;
+
+  /// No description provided for @personaGeneralSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Also send to the cloud'**
+  String get personaGeneralSwitch;
+
+  /// No description provided for @personaGeneralSwitchSub.
+  ///
+  /// In en, this message translates to:
+  /// **'On: General chats send it to their cloud model. Off: only the agent on your desktop gets it.'**
+  String get personaGeneralSwitchSub;
+
+  /// No description provided for @personaSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get personaSave;
+
+  /// No description provided for @personaDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get personaDelete;
+
+  /// No description provided for @personaDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"?'**
+  String personaDeleteTitle(String name);
+
+  /// No description provided for @personaDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone.'**
+  String get personaDeleteBody;
+
+  /// No description provided for @personaFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File: {name}.md'**
+  String personaFile(String name);
+
+  /// No description provided for @personaNameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'A topic file with this name exists already'**
+  String get personaNameTaken;
+
+  /// No description provided for @personaNameEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The title needs a letter or a digit'**
+  String get personaNameEmpty;
+
+  /// No description provided for @personaTitleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Give it a title'**
+  String get personaTitleEmpty;
+
+  /// No description provided for @personaTextEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Write something first'**
+  String get personaTextEmpty;
 }
 
 class _AppLocalizationsDelegate

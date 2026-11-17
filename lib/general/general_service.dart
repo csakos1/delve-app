@@ -394,7 +394,10 @@ class GeneralChatService {
   ) async {
     final chatId = chat.id;
     final turns = await history(chatId, images: model.readsImages);
-    final system = await db.meta(GeneralMetaKeys.systemPrompt);
+    final system = composeSystemPrompt(
+      persona: await db.meta(GeneralMetaKeys.personaGeneral),
+      prompt: await db.meta(GeneralMetaKeys.systemPrompt),
+    );
     final body = buildChatBody(
       model: model.id,
       turns: turns,

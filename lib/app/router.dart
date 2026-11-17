@@ -19,6 +19,7 @@ import '../ui/screens/mirror_screen.dart';
 import '../ui/screens/more_screen.dart';
 import '../ui/screens/observability_screen.dart';
 import '../ui/screens/pairing_screen.dart';
+import '../ui/screens/persona_screen.dart';
 import '../ui/screens/schedule_editor_screen.dart';
 import '../ui/screens/schedules_screen.dart';
 import '../ui/screens/server_too_old_screen.dart';
@@ -85,6 +86,9 @@ abstract final class Routes {
 
   /// This phone's notifications on the desktop (DA2b): from More.
   static const mirroring = '/more/mirroring';
+
+  /// What the agent knows about its user (P1): from More.
+  static const about = '/more/about';
 
   /// Share to Delve (design 17), on the root navigator.
   static const share = '/share';
@@ -246,6 +250,7 @@ GoRouter buildRouter({
                         MorePage.watches => const WatchesScreen(),
                         MorePage.clipboard => const ClipboardScreen(),
                         MorePage.mirroring => const MirrorScreen(),
+                        MorePage.about => const PersonaScreen(),
                       },
                       routes: [
                         if (page == MorePage.settings) ...[

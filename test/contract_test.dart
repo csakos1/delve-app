@@ -80,6 +80,9 @@ void main() {
           'watch': (j) => Watch.fromJson(j).toJson(),
           'watch_item': (j) => WatchItem.fromJson(j).toJson(),
           'mirror': (j) => MirrorStatus.fromJson(j).toJson(),
+          'persona': (j) => Persona.fromJson(j).toJson(),
+          'persona_section': (j) => PersonaSection.fromJson(j).toJson(),
+          'persona_topic': (j) => PersonaTopic.fromJson(j).toJson(),
         };
 
     test('every contract shape has a model', () {
