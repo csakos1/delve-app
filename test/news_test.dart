@@ -94,19 +94,19 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(
-        inCard(find.textContaining('Must read', findRichText: true)),
-        findsOneWidget,
-      );
+      expect(inCard(find.text('Must read')), findsOneWidget);
       // the release row touches the reader's setup
+      expect(inCard(find.text('Your setup')), findsOneWidget);
+      // D3: the topic label in its colour, “publisher · age” on the right,
+      // the why under the first row only
+      expect(inCard(find.text('SAILING')), findsOneWidget);
       expect(
-        inCard(find.textContaining('Your setup', findRichText: true)),
-        findsOneWidget,
+        t.widget<Text>(inCard(find.text('SAILING'))).style!.color,
+        const Color(0xFF8FB4E8),
       );
-      expect(
-        inCard(find.textContaining('Sailing · Sail-World', findRichText: true)),
-        findsOneWidget,
-      );
+      expect(inCard(find.text('Sail-World · ')), findsOneWidget);
+      expect(inCard(find.byKey(const Key('news.why.8121'))), findsOneWidget);
+      expect(inCard(find.byKey(const Key('news.why.8140'))), findsNothing);
       expect(
         inCard(find.byKey(const Key('dashboard.news.weekly'))),
         findsOneWidget,
@@ -164,7 +164,13 @@ void main() {
       final env = await openNews(t);
       expect(env.server.calls, contains('GET /api/v1/news/sections'));
       expect(find.byKey(const Key('news.section.sailing')), findsOneWidget);
-      expect(find.text('14 stories · 2 new'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('news.section.sailing')),
+          matching: find.text('4 today'),
+        ),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('news.section.local_ai')), findsOneWidget);
       // All · Saved · the topics
       final all = t.getTopLeft(find.byKey(const Key('news.chip.all'))).dx;
@@ -188,7 +194,7 @@ void main() {
           .queryParameters;
       expect((q['topic'], q['min_score']), ('sailing', '5'));
       expect(find.text('An older sailing story'), findsOneWidget);
-      expect(find.text('14 stories in 7 days · 2 new'), findsOneWidget);
+      expect(find.text('4 today · 14 this week'), findsOneWidget);
       expect(find.text('TODAY'), findsOneWidget);
       expect(find.byKey(const Key('news.loadOlder')), findsOneWidget);
     });
@@ -240,7 +246,8 @@ void main() {
       final env = await openStory(t);
       expect(find.text('AI summary'), findsOneWidget);
       expect(find.textContaining('A Team USA vízre tette'), findsOneWidget);
-      expect(find.text('Why'), findsOneWidget);
+      expect(find.text('WHY'), findsOneWidget);
+      expect(find.byKey(const Key('news.story.why')), findsOneWidget);
       expect(find.byKey(const Key('news.story.sources')), findsOneWidget);
       expect(
         find.textContaining('text from here', findRichText: true),
@@ -285,7 +292,9 @@ void main() {
         'summary_hu': null,
       });
       final env = await openStory(t, story: failed);
-      expect(find.text('AI note'), findsOneWidget);
+      // no summary and no text: no AI block, the why stays as a quote
+      expect(find.byKey(const Key('news.story.ai')), findsNothing);
+      expect(find.byKey(const Key('news.story.why')), findsOneWidget);
       expect(find.text('No article text'), findsOneWidget);
       expect(
         find.text("The site doesn't allow automatic reading (robots.txt)."),

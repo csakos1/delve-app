@@ -4865,22 +4865,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String newsLastRound(String time, int n) {
-    return 'Last round $time · $n stories in 24 h';
+    return 'Last round $time · $n stories today';
   }
 
   @override
   String newsStoriesToday(int n) {
-    return '$n stories in 24 h';
+    return '$n stories today';
   }
 
   @override
-  String newsSectionCounts(int week, int fresh) {
-    return '$week stories · $fresh new';
-  }
-
-  @override
-  String newsTopicStatus(int week, int fresh) {
-    return '$week stories in 7 days · $fresh new';
+  String newsTopicStatus(int count, int week) {
+    return '$count today · $week this week';
   }
 
   @override
@@ -4895,7 +4890,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get newsLastWeekStatus => 'Last week\'s best that you did not open';
+  String newsLastWeekStatus(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n stories you did not open, best first',
+      one: '1 story you did not open, best first',
+    );
+    return '$_temp0';
+  }
 
   @override
   String newsShowAll(int n) {
@@ -4909,7 +4912,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newsLoadOlder => 'Load older';
 
   @override
-  String get newsToday => 'Today';
+  String newsToday(int n) {
+    return '$n today';
+  }
 
   @override
   String get newsYesterday => 'Yesterday';
@@ -4988,14 +4993,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newsAiSummary => 'AI summary';
 
   @override
-  String get newsAiNote => 'AI note';
-
-  @override
   String get newsWhy => 'Why';
 
   @override
   String get newsAiDisclaimer =>
-      'Written by the local model from the text below. It can contain errors.';
+      'Written by the local model. It can contain errors.';
 
   @override
   String get newsSummaryPending =>
@@ -5009,7 +5011,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newsTeaserOnlySub =>
-      'The agent fetches the article with its next hourly round and writes a summary after it.';
+      'The agent fetches the article within the hour and writes a summary after it.';
 
   @override
   String get newsFetchText => 'Fetch text';
@@ -5021,8 +5023,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newsQueued => 'Fetching text · within the hour';
 
   @override
-  String get newsQueuedSub =>
-      'You get the text here; nothing to wait for on this screen.';
+  String get newsQueuedSub => 'It appears here when it is ready.';
 
   @override
   String get newsNoText => 'No article text';
@@ -5102,4 +5103,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newsLessCaption => 'Less like this · counts from the next round';
+
+  @override
+  String get newsDayToday => 'Today';
+
+  @override
+  String get newsRoundsHourly => 'Rounds run every hour';
 }

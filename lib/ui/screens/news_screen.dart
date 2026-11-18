@@ -37,10 +37,15 @@ final class NewsFilterTopic extends NewsFilter {
   final String topic;
 }
 
-/// 26b News page: filter chips (All · Saved · the topics), All as one
-/// section per topic (its best 3 of the day, Show all N), one topic newest
-/// first with day headers, Saved. A row opens the reading view; long press
-/// the menu.
+/// Where a section's edge and its rows' text start (design 26 D3: the edge
+/// at x = 31-34, centred under the 32 dp tile; the text at x = 48).
+const double _edgeX = 31;
+const double _textX = 48;
+
+/// D3-b News page: chips (All · Saved · the topics, each with its colour
+/// dot), All as one section per topic (tile, coloured name, its best 3 of
+/// the day on one edge, Show all N), one topic with an edge per day,
+/// Saved with an edge per row. “Last week” is the same page without chips.
 class NewsScreen extends ConsumerStatefulWidget {
   const NewsScreen({super.key, this.weekly = false});
 
@@ -105,7 +110,9 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
     final view = ref.watch(newsProvider);
     final sections = view.sections;
     return Scaffold(
-      appBar: PageColourBar(title: l.newsTitle),
+      appBar: PageColourBar(
+        title: widget.weekly ? l.newsLastWeek : l.newsTitle,
+      ),
       body: UnderBarFade(
         child: RefreshIndicator(
           onRefresh: _refresh,
@@ -115,13 +122,14 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
               const SliverToBoxAdapter(
                 child: SizedBox(height: UnderBarFade.height),
               ),
-              SliverToBoxAdapter(
-                child: _Chips(
-                  filter: _filter,
-                  sections: sections ?? const [],
-                  onSelect: _select,
+              if (!widget.weekly)
+                SliverToBoxAdapter(
+                  child: _Chips(
+                    filter: _filter,
+                    sections: sections ?? const [],
+                    onSelect: _select,
+                  ),
                 ),
-              ),
               ..._body(context, l, view),
               const SliverToBoxAdapter(
                 child: SizedBox(height: DelveTokens.space6),
@@ -153,20 +161,20 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
     ),
   );
 
+  Widget _loading(Object? error) => error != null
+      ? _ErrorBanner(error: error, onRetry: _refresh)
+      : const Padding(
+          padding: EdgeInsets.all(DelveTokens.space8),
+          child: Center(child: CircularProgressIndicator()),
+        );
+
+  void _menu(BuildContext ctx, NewsItem i) =>
+      unawaited(showNewsMenu(ctx, ref, i));
+
   List<Widget> _all(BuildContext context, AppLocalizations l, NewsView view) {
     final sections = view.sections;
-    final error = view.error;
     if (sections == null) {
-      return [
-        SliverToBoxAdapter(
-          child: error != null
-              ? _ErrorBanner(error: error, onRetry: _refresh)
-              : const Padding(
-                  padding: EdgeInsets.all(DelveTokens.space8),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-        ),
-      ];
+      return [SliverToBoxAdapter(child: _loading(view.error))];
     }
     if (sections.isEmpty) {
       return [
@@ -198,43 +206,54 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
         SliverToBoxAdapter(
           child: _Empty(title: l.newsEmptyTitle, body: l.newsEmptyBody),
         ),
-      for (final s in shown) ...[
-        SliverToBoxAdapter(child: _SectionHeader(section: s)),
-        SliverList.list(
-          children: [
-            for (final (n, item) in s.top.indexed)
-              NewsStoryRow(
-                item: item,
-                now: now,
-                showTopic: false,
-                divider: n < s.top.length - 1,
-                onLongPress: (ctx, i) => showNewsMenu(ctx, ref, i),
-              ),
-            if (s.top.isEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DelveTokens.space4,
-                  0,
-                  DelveTokens.space4,
-                  DelveTokens.space2,
-                ),
-                child: Text(
-                  l.newsNothingToday,
-                  style: context.text.bodyMedium!.copyWith(
-                    color: context.colors.onSurfaceVariant,
-                  ),
-                ),
-              ),
-          ],
-        ),
+      for (final s in shown)
         SliverToBoxAdapter(
-          child: _ShowAll(
-            key: Key('news.showAll.${s.topic}'),
-            count: s.week,
-            onTap: () => _select(NewsFilterTopic(s.topic)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _SectionHeader(
+                topic: s.topic,
+                name: s.name,
+                trailing: l.newsToday(s.count),
+                onTap: () => _select(NewsFilterTopic(s.topic)),
+              ),
+              if (s.top.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    _textX,
+                    0,
+                    DelveTokens.space4,
+                    DelveTokens.space2,
+                  ),
+                  child: Text(
+                    l.newsNothingToday,
+                    style: context.text.bodyMedium!.copyWith(
+                      color: context.colors.onSurfaceVariant,
+                    ),
+                  ),
+                )
+              else
+                _OnEdge(
+                  topic: s.topic,
+                  children: [
+                    for (final item in s.top)
+                      NewsStoryRow(
+                        item: item,
+                        now: now,
+                        layout: NewsRowLayout.onSection,
+                        gap: 16,
+                        onLongPress: _menu,
+                      ),
+                  ],
+                ),
+              _ShowAll(
+                key: Key('news.showAll.${s.topic}'),
+                count: s.count > 0 ? s.count : s.week,
+                onTap: () => _select(NewsFilterTopic(s.topic)),
+              ),
+            ],
           ),
         ),
-      ],
     ];
   }
 
@@ -247,34 +266,36 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
     final items = list.items;
     final now = DateTime.now();
     final sections = ref.watch(newsProvider.select((v) => v.sections));
-    final section = key.topic == null
+    final topic = key.topic;
+    final section = topic == null
         ? null
-        : sections?.where((s) => s.topic == key.topic).firstOrNull;
-    final status = switch (_filter) {
-      NewsFilterSaved() =>
-        items == null ? null : l.newsSavedCount(items.length),
-      NewsFilterWeekly() => l.newsLastWeekStatus,
-      NewsFilterTopic() when section != null => l.newsTopicStatus(
-        section.week,
-        section.fresh,
-      ),
-      _ => null,
-    };
-    if (items == null) {
-      final error = list.error;
-      return [
+        : sections?.where((s) => s.topic == topic).firstOrNull;
+    final head = <Widget>[
+      if (topic != null)
         SliverToBoxAdapter(
-          child: error != null
-              ? _ErrorBanner(error: error, onRetry: _refresh)
-              : const Padding(
-                  padding: EdgeInsets.all(DelveTokens.space8),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
+          child: _SectionHeader(
+            topic: topic,
+            name: section?.name ?? ref.read(newsProvider).topicName(topic),
+            trailing: section == null
+                ? null
+                : l.newsTopicStatus(section.count, section.week),
+          ),
+        )
+      else if (_filter is NewsFilterSaved && items != null)
+        SliverToBoxAdapter(
+          child: _status(context, l.newsSavedCount(items.length)),
+        )
+      else if (_filter is NewsFilterWeekly && items != null)
+        SliverToBoxAdapter(
+          child: _status(context, l.newsLastWeekStatus(items.length)),
         ),
-      ];
+    ];
+    if (items == null) {
+      return [...head, SliverToBoxAdapter(child: _loading(list.error))];
     }
     if (items.isEmpty) {
       return [
+        ...head,
         SliverToBoxAdapter(
           child: switch (_filter) {
             NewsFilterSaved() => _Empty(
@@ -286,34 +307,60 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
         ),
       ];
     }
-    final rows = <Widget>[];
-    String? day;
-    for (final (n, item) in items.indexed) {
-      if (key.topic != null) {
-        final d = _dayLabel(l, item.at, now);
-        if (d != day) {
-          day = d;
-          rows.add(_DayHeader(label: d));
-        }
+    final List<Widget> body;
+    if (topic != null) {
+      // one edge per day, the day's header at the text column
+      final days = <String, List<NewsItem>>{};
+      for (final item in items) {
+        days.putIfAbsent(_dayLabel(l, item.at, now), () => []).add(item);
       }
-      rows.add(
-        NewsStoryRow(
-          item: item,
-          now: now,
-          showTopic: key.topic == null,
-          divider: n < items.length - 1,
-          onLongPress: (ctx, i) => showNewsMenu(ctx, ref, i),
+      body = [
+        for (final MapEntry(key: day, value: rows) in days.entries) ...[
+          SliverToBoxAdapter(child: _DayHeader(label: day)),
+          SliverToBoxAdapter(
+            child: _OnEdge(
+              topic: topic,
+              children: [
+                for (final item in rows)
+                  NewsStoryRow(
+                    item: item,
+                    now: now,
+                    layout: NewsRowLayout.onSection,
+                    gap: 16,
+                    onLongPress: _menu,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ];
+    } else {
+      body = [
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space4),
+          sliver: SliverList.list(
+            children: [
+              for (final item in items)
+                NewsStoryRow(item: item, now: now, onLongPress: _menu),
+            ],
+          ),
         ),
-      );
+      ];
     }
     return [
-      if (status != null) SliverToBoxAdapter(child: _status(context, status)),
-      SliverList.list(children: rows),
+      ...head,
+      ...body,
       if (list.next != null)
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(DelveTokens.space2),
-            child: Center(
+            padding: EdgeInsets.fromLTRB(
+              topic != null ? _textX - DelveTokens.space3 : DelveTokens.space2,
+              DelveTokens.space2,
+              DelveTokens.space4,
+              0,
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
               child: TextButton(
                 key: const Key('news.loadOlder'),
                 onPressed: () => unawaited(
@@ -338,13 +385,14 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
       n.month,
       n.day,
     ).difference(DateTime.utc(a.year, a.month, a.day)).inDays;
-    if (days <= 0) return l.newsToday;
+    if (days <= 0) return l.newsDayToday;
     if (days == 1) return l.newsYesterday;
     return DateFormat('EEE d MMM').format(a);
   }
 }
 
-/// All · Saved · the topics (Saved second, so it is never off-screen).
+/// All · Saved · the topics (Saved second, so it is never off-screen);
+/// a topic chip has its colour dot while off.
 class _Chips extends StatelessWidget {
   const _Chips({
     required this.filter,
@@ -359,23 +407,21 @@ class _Chips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final chips = <(NewsFilter, String, IconData?, String)>[
-      if (filter is NewsFilterWeekly)
-        (
-          const NewsFilterWeekly(),
-          l.newsLastWeek,
-          NewsIcons.lastWeek,
-          'weekly',
-        ),
-      (const NewsFilterAll(), l.newsAll, null, 'all'),
-      (const NewsFilterSaved(), l.newsSaved, NewsIcons.saved, 'saved'),
+    final chips = <(NewsFilter, String, IconData?, Color?, String)>[
+      (const NewsFilterAll(), l.newsAll, null, null, 'all'),
+      (const NewsFilterSaved(), l.newsSaved, NewsIcons.saved, null, 'saved'),
       for (final s in sections)
-        (NewsFilterTopic(s.topic), s.name, null, s.topic),
+        (
+          NewsFilterTopic(s.topic),
+          s.name,
+          null,
+          TopicStyle.of(s.topic).color,
+          s.topic,
+        ),
     ];
     bool on(NewsFilter f) => switch ((f, filter)) {
       (NewsFilterAll(), NewsFilterAll()) => true,
       (NewsFilterSaved(), NewsFilterSaved()) => true,
-      (NewsFilterWeekly(), NewsFilterWeekly()) => true,
       (NewsFilterTopic(:final topic), NewsFilterTopic(topic: final t)) =>
         topic == t,
       _ => false,
@@ -387,13 +433,14 @@ class _Chips extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space4),
         children: [
-          for (final (n, (f, label, icon, id)) in chips.indexed) ...[
+          for (final (n, (f, label, icon, dot, id)) in chips.indexed) ...[
             if (n > 0) const SizedBox(width: DelveTokens.space2),
             Center(
               child: DelveFilterChip(
                 key: Key('news.chip.$id'),
                 selected: on(f),
                 icon: icon,
+                dot: dot,
                 label: label,
                 semantics: label,
                 onTap: () => onSelect(f),
@@ -406,42 +453,102 @@ class _Chips extends StatelessWidget {
   }
 }
 
-/// A topic's header in All: name, “14 stories · 5 new” (7 days · unread
-/// today).
+/// A topic's header: the 32 dp tile with the glyph, the name in the topic
+/// colour, a count on the right. Tapping opens the topic.
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.section});
-  final NewsSection section;
+  const _SectionHeader({
+    required this.topic,
+    required this.name,
+    this.trailing,
+    this.onTap,
+  });
+
+  final String topic;
+  final String name;
+  final String? trailing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return Container(
-      key: Key('news.section.${section.topic}'),
-      constraints: const BoxConstraints(minHeight: 48),
-      padding: const EdgeInsets.fromLTRB(
-        DelveTokens.space4,
-        DelveTokens.space3,
-        DelveTokens.space4,
-        0,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        children: [
-          Expanded(child: Text(section.name, style: context.text.titleMedium)),
-          Text(
-            l.newsSectionCounts(section.week, section.fresh),
-            style: context.text.labelMedium!.copyWith(
-              color: context.delve.textMuted,
-            ),
+    final s = TopicStyle.of(topic);
+    final t = trailing;
+    return Padding(
+      padding: const EdgeInsets.only(top: DelveTokens.space1),
+      child: InkWell(
+        key: Key('news.section.$topic'),
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 52),
+          padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space4),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: s.tile,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: SymbolIcon(s.glyph, size: 20, color: s.color),
+                ),
+              ),
+              const SizedBox(width: DelveTokens.space3),
+              Expanded(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.titleMedium!.copyWith(color: s.color),
+                ),
+              ),
+              if (t != null) ...[
+                const SizedBox(width: DelveTokens.space2),
+                Text(
+                  t,
+                  style: context.text.labelMedium!.copyWith(
+                    color: context.delve.textMuted,
+                  ),
+                ),
+              ],
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-/// “Show all N”: neutral row (design 26-0), opens the topic.
+/// Rows on one continuous edge in the topic colour (x = 31-34), the text
+/// at x = 48.
+class _OnEdge extends StatelessWidget {
+  const _OnEdge({required this.topic, required this.children});
+
+  final String topic;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(_edgeX, 2, DelveTokens.space4, 2),
+    child: IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TopicEdge(color: TopicStyle.of(topic).color),
+          const SizedBox(width: _textX - _edgeX - 3),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: children,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// “Show all N”: neutral, at the text column, no rule (design 26 D3).
 class _ShowAll extends StatelessWidget {
   const _ShowAll({super.key, required this.count, required this.onTap});
   final int count;
@@ -454,27 +561,16 @@ class _ShowAll extends StatelessWidget {
       onTap: onTap,
       child: Container(
         constraints: const BoxConstraints(minHeight: 48),
-        padding: const EdgeInsets.fromLTRB(
-          DelveTokens.space4,
-          0,
-          DelveTokens.space2,
-          0,
-        ),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: context.colors.outlineVariant),
-          ),
-        ),
+        padding: const EdgeInsets.fromLTRB(_textX, 0, DelveTokens.space4, 0),
         child: Row(
           children: [
-            Expanded(
-              child: Text(
-                l.newsShowAll(count),
-                style: context.text.labelLarge!.copyWith(
-                  color: context.colors.onSurfaceVariant,
-                ),
+            Text(
+              l.newsShowAll(count),
+              style: context.text.labelLarge!.copyWith(
+                color: context.colors.onSurfaceVariant,
               ),
             ),
+            const SizedBox(width: DelveTokens.space1),
             SymbolIcon(
               DelveIcons.chevronRight,
               size: DelveTokens.iconMd,
@@ -493,12 +589,7 @@ class _DayHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(
-      DelveTokens.space4,
-      14,
-      DelveTokens.space4,
-      2,
-    ),
+    padding: const EdgeInsets.fromLTRB(_textX, 16, DelveTokens.space4, 8),
     child: Text(
       label.toUpperCase(),
       style: context.text.labelSmall!.copyWith(color: context.delve.textMuted),

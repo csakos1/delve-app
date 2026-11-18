@@ -1184,6 +1184,7 @@ class DelveFilterChip extends StatelessWidget {
     required this.label,
     required this.semantics,
     required this.onTap,
+    this.dot,
   });
 
   final bool selected;
@@ -1192,11 +1193,16 @@ class DelveFilterChip extends StatelessWidget {
   final String semantics;
   final VoidCallback onTap;
 
+  /// An 8 dp dot before the label while off (a News topic's colour, 26 D3);
+  /// the check replaces it when on.
+  final Color? dot;
+
   @override
   Widget build(BuildContext context) {
     final cs = context.colors;
     final fg = selected ? cs.onPrimaryContainer : cs.onSurfaceVariant;
     final lead = selected ? DelveIcons.check : icon;
+    final dotColor = selected ? null : dot;
     return Semantics(
       selected: selected,
       button: true,
@@ -1217,7 +1223,9 @@ class DelveFilterChip extends StatelessWidget {
             height: 32,
             child: Padding(
               padding: EdgeInsets.fromLTRB(
-                lead == null ? DelveTokens.space4 : DelveTokens.space2,
+                lead == null && dotColor == null
+                    ? DelveTokens.space4
+                    : DelveTokens.space2 + (dotColor != null ? 4 : 0),
                 0,
                 DelveTokens.space4,
                 0,
@@ -1228,6 +1236,16 @@ class DelveFilterChip extends StatelessWidget {
                   if (lead != null) ...[
                     SymbolIcon(lead, size: 18, color: fg),
                     const SizedBox(width: DelveTokens.space2),
+                  ] else if (dotColor != null) ...[
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: dotColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
                   ],
                   Text(
                     label,

@@ -170,9 +170,13 @@ class _Story extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final i = story.item;
     final now = DateTime.now();
     final text = story.text;
+    final tags = newsTags(context, i, topic: false);
+    final why = i.why;
+    final summaryBlock = !i.isRelease && (i.summaryHu != null || text != null);
     return ListView(
       key: const Key('news.story'),
       padding: const EdgeInsets.fromLTRB(
@@ -182,17 +186,43 @@ class _Story extends StatelessWidget {
         28,
       ),
       children: [
-        _Eyebrow(item: i),
-        const SizedBox(height: 6),
+        Wrap(
+          spacing: DelveTokens.space2,
+          runSpacing: DelveTokens.space1,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            _TopicPill(topic: i.topic),
+            ...tags,
+          ],
+        ),
+        const SizedBox(height: DelveTokens.space3),
         SelectableText(
           i.title,
           key: const Key('news.story.title'),
           style: context.text.headlineSmall,
         ),
-        _Sources(story: story, now: now),
-        if (i.why != null || i.summaryHu != null) ...[
+        const SizedBox(height: DelveTokens.space3),
+        Text(
+          key: const Key('news.story.byline'),
+          [
+            ?i.publisher,
+            newsAge(i.at, now),
+            if (i.sources > 1)
+              l.newsSources(i.sources)
+            else
+              newsHost(i.originalUrl),
+          ].join(' · '),
+          style: context.text.labelMedium!.copyWith(
+            color: context.colors.onSurfaceVariant,
+          ),
+        ),
+        if (why != null && why.trim().isNotEmpty) ...[
           const SizedBox(height: DelveTokens.space4),
-          _AiWell(item: i, hasText: text != null),
+          _WhyQuote(topic: i.topic, why: why),
+        ],
+        if (summaryBlock) ...[
+          const SizedBox(height: 18),
+          _AiSummary(summary: i.summaryHu),
         ],
         if (i.isRelease)
           _Releases(item: i, now: now)
@@ -204,6 +234,7 @@ class _Story extends StatelessWidget {
             _Excerpt(text: e),
           _TextState(story: story, fetching: fetching, onFetch: onFetch),
         ],
+        if (story.others.isNotEmpty) _Sources(story: story, now: now),
         const SizedBox(height: DelveTokens.space5),
         _OpenOriginal(item: i),
         const SizedBox(height: DelveTokens.space5),
@@ -213,33 +244,149 @@ class _Story extends StatelessWidget {
   }
 }
 
-class _Eyebrow extends ConsumerWidget {
-  const _Eyebrow({required this.item});
-  final NewsItem item;
+/// The topic pill: glyph + small caps in the topic colour on its tile tint.
+class _TopicPill extends ConsumerWidget {
+  const _TopicPill({required this.topic});
+  final String? topic;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context);
-    final topic = ref.watch(
-      newsProvider.select((v) => v.topicName(item.topic)),
-    );
-    final parts = [
-      if (topic.isNotEmpty) topic,
-      if (item.mustRead) l.newsMustRead,
-      if (item.touchesSetup) l.newsYourSetup,
-      if (item.isRelease) l.newsReleases,
-    ];
-    return Text(
-      parts.join(' · '),
-      style: context.text.labelMedium!.copyWith(
-        color: context.colors.onSurfaceVariant,
+    final s = TopicStyle.of(topic);
+    final name = ref.watch(newsProvider.select((v) => v.topicName(topic)));
+    return Container(
+      key: const Key('news.story.topic'),
+      height: 24,
+      padding: const EdgeInsets.fromLTRB(7, 0, 9, 0),
+      decoration: BoxDecoration(
+        color: s.tile,
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SymbolIcon(s.glyph, size: 14, color: s.color),
+          const SizedBox(width: 5),
+          Text(
+            name.toUpperCase(),
+            style: context.text.labelSmall!.copyWith(
+              color: s.color,
+              letterSpacing: 0.9,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// One source: a line under the title; a merged story: an outlined group,
-/// the lead (whose text this is) first, at most 5 rows before “Show all N”.
+/// The why as a quote on the topic's edge.
+class _WhyQuote extends StatelessWidget {
+  const _WhyQuote({required this.topic, required this.why});
+  final String? topic;
+  final String why;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return IntrinsicHeight(
+      key: const Key('news.story.why'),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TopicEdge(color: TopicStyle.of(topic).color),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 1, bottom: 2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.newsWhy.toUpperCase(),
+                    style: context.text.labelSmall!.copyWith(
+                      color: context.delve.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  SelectableText(
+                    why,
+                    style: context.text.bodyLarge!.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// “AI summary” between two hairlines; with the text there but no summary
+/// yet, the pending line.
+class _AiSummary extends StatelessWidget {
+  const _AiSummary({required this.summary});
+  final String? summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final muted = context.delve.textMuted;
+    final rule = BorderSide(color: context.colors.outlineVariant);
+    final s = summary;
+    return Container(
+      key: const Key('news.story.ai'),
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        border: Border(top: rule, bottom: rule),
+      ),
+      child: s == null
+          ? Row(
+              children: [
+                SymbolIcon(NewsIcons.summaryPending, size: 14, color: muted),
+                const SizedBox(width: DelveTokens.space1),
+                Expanded(
+                  child: Text(
+                    l.newsSummaryPending,
+                    style: context.text.bodySmall!.copyWith(color: muted),
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    SymbolIcon(
+                      NewsIcons.ai,
+                      size: DelveTokens.iconSm,
+                      color: muted,
+                    ),
+                    const SizedBox(width: DelveTokens.space1),
+                    Text(
+                      l.newsAiSummary,
+                      style: DelveText.monoSmall.copyWith(color: muted),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: DelveTokens.space2),
+                SelectableText(s, style: _reading(context)),
+                const SizedBox(height: DelveTokens.space2),
+                Text(
+                  l.newsAiDisclaimer,
+                  style: context.text.bodySmall!.copyWith(color: muted),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+/// The sources of a merged story, after the text: the lead (whose text
+/// this is) first, at most 5 rows before “Show all N”.
 class _Sources extends ConsumerStatefulWidget {
   const _Sources({required this.story, required this.now});
   final NewsStory story;
@@ -261,29 +408,6 @@ class _SourcesState extends ConsumerState<_Sources> {
     String stamp(DateTime? at) => at == null
         ? ''
         : '${newsAge(at, widget.now)} · ${DateFormat('HH:mm').format(at.toLocal())}';
-    if (s.others.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.only(top: DelveTokens.space3),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              [
-                ?i.publisher,
-                stamp(i.at),
-              ].where((p) => p.isNotEmpty).join(' · '),
-              style: context.text.labelMedium!.copyWith(
-                color: context.colors.onSurfaceVariant,
-              ),
-            ),
-            Text(
-              newsHost(i.originalUrl),
-              style: DelveText.monoSmall.copyWith(color: muted),
-            ),
-          ],
-        ),
-      );
-    }
     final rows = <(String, DateTime?, String, bool)>[
       (
         i.publisher ?? newsHost(i.originalUrl),
@@ -298,183 +422,104 @@ class _SourcesState extends ConsumerState<_Sources> {
     final shown = cut ? rows.take(4).toList() : rows;
     final rule = BorderSide(color: context.colors.outlineVariant);
     return Padding(
-      padding: const EdgeInsets.only(top: 14),
-      child: DecoratedBox(
-        key: const Key('news.story.sources'),
-        decoration: BoxDecoration(
-          border: Border.all(color: context.colors.outlineVariant),
-          borderRadius: BorderRadius.circular(DelveTokens.rmd),
-        ),
-        child: Column(
-          children: [
-            for (final (n, (name, at, url, lead)) in shown.indexed)
-              InkWell(
-                onTap: () => openLink(context, ref, url),
-                onLongPress: () => copyLink(context, url),
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 48),
-                  padding: const EdgeInsets.fromLTRB(14, 0, 4, 0),
-                  decoration: BoxDecoration(
-                    border: n == 0 ? null : Border(top: rule),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: name,
-                                style: context.text.bodyMedium,
-                              ),
-                              if (lead)
-                                TextSpan(
-                                  text: '  ${l.newsTextFromHere}',
-                                  style: context.text.labelSmall!.copyWith(
-                                    color: muted,
-                                  ),
-                                ),
-                            ],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Text(
-                        stamp(at),
-                        style: context.text.labelMedium!.copyWith(color: muted),
-                      ),
-                      SizedBox(
-                        width: 40,
-                        child: SymbolIcon(
-                          NewsIcons.openOriginal,
-                          size: 18,
-                          color: context.colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            if (cut)
-              InkWell(
-                key: const Key('news.story.sourcesAll'),
-                onTap: () => setState(() => _all = true),
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 48),
-                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
-                  decoration: BoxDecoration(border: Border(top: rule)),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          l.newsShowAll(rows.length),
-                          style: context.text.labelLarge!.copyWith(
-                            color: context.colors.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                      SymbolIcon(
-                        NewsIcons.expand,
-                        size: DelveTokens.iconMd,
-                        color: context.colors.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// The “AI summary” well: summary, Why, the disclaimer; “AI note” with the
-/// why alone while there is no summary.
-class _AiWell extends StatelessWidget {
-  const _AiWell({required this.item, required this.hasText});
-  final NewsItem item;
-  final bool hasText;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final muted = context.delve.textMuted;
-    final summary = item.summaryHu;
-    final why = item.why;
-    return Container(
-      key: const Key('news.story.ai'),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-      decoration: BoxDecoration(
-        color: context.colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(DelveTokens.rlg),
-      ),
+      padding: const EdgeInsets.only(top: 22),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              SymbolIcon(NewsIcons.ai, size: DelveTokens.iconSm, color: muted),
-              const SizedBox(width: DelveTokens.space1),
-              Text(
-                summary != null ? l.newsAiSummary : l.newsAiNote,
-                style: DelveText.monoSmall.copyWith(color: muted),
-              ),
-            ],
+          Text(
+            l.newsSources(rows.length).toUpperCase(),
+            style: context.text.labelSmall!.copyWith(color: muted),
           ),
-          if (summary != null) ...[
-            const SizedBox(height: DelveTokens.space2),
-            SelectableText(summary, style: _reading(context)),
-          ],
-          if (why != null) ...[
-            if (summary != null) ...[
-              const SizedBox(height: DelveTokens.space3),
-              Divider(height: 1, color: context.colors.outlineVariant),
-              const SizedBox(height: 10),
-            ] else
-              const SizedBox(height: DelveTokens.space2),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
+          const SizedBox(height: DelveTokens.space2),
+          DecoratedBox(
+            key: const Key('news.story.sources'),
+            decoration: BoxDecoration(
+              border: Border.all(color: context.colors.outlineVariant),
+              borderRadius: BorderRadius.circular(DelveTokens.rmd),
+            ),
+            child: Column(
               children: [
-                Text(
-                  l.newsWhy,
-                  style: context.text.labelMedium!.copyWith(color: muted),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    why,
-                    style: context.text.bodyMedium!.copyWith(
-                      color: context.colors.onSurfaceVariant,
+                for (final (n, (name, at, url, lead)) in shown.indexed)
+                  InkWell(
+                    onTap: () => openLink(context, ref, url),
+                    onLongPress: () => copyLink(context, url),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      padding: const EdgeInsets.fromLTRB(14, 0, 4, 0),
+                      decoration: BoxDecoration(
+                        border: n == 0 ? null : Border(top: rule),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: name,
+                                    style: context.text.bodyMedium,
+                                  ),
+                                  if (lead)
+                                    TextSpan(
+                                      text: '  ${l.newsTextFromHere}',
+                                      style: context.text.labelSmall!.copyWith(
+                                        color: muted,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            stamp(at),
+                            style: context.text.labelMedium!.copyWith(
+                              color: muted,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 40,
+                            child: SymbolIcon(
+                              NewsIcons.openOriginal,
+                              size: 18,
+                              color: context.colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
-          if (summary != null) ...[
-            const SizedBox(height: DelveTokens.space2),
-            Text(
-              l.newsAiDisclaimer,
-              style: context.text.bodySmall!.copyWith(color: muted),
-            ),
-          ] else if (hasText && !item.isRelease) ...[
-            const SizedBox(height: DelveTokens.space2),
-            Row(
-              children: [
-                SymbolIcon(NewsIcons.summaryPending, size: 14, color: muted),
-                const SizedBox(width: DelveTokens.space1),
-                Expanded(
-                  child: Text(
-                    l.newsSummaryPending,
-                    style: context.text.bodySmall!.copyWith(color: muted),
+                if (cut)
+                  InkWell(
+                    key: const Key('news.story.sourcesAll'),
+                    onTap: () => setState(() => _all = true),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
+                      decoration: BoxDecoration(border: Border(top: rule)),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l.newsShowAll(rows.length),
+                              style: context.text.labelLarge!.copyWith(
+                                color: context.colors.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                          SymbolIcon(
+                            NewsIcons.expand,
+                            size: DelveTokens.iconMd,
+                            color: context.colors.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
               ],
             ),
-          ],
+          ),
         ],
       ),
     );
@@ -649,7 +694,7 @@ class _Releases extends ConsumerWidget {
     final muted = context.delve.textMuted;
     final rule = BorderSide(color: context.colors.outlineVariant);
     return Padding(
-      padding: const EdgeInsets.only(top: DelveTokens.space5),
+      padding: const EdgeInsets.only(top: 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -671,8 +716,8 @@ class _Releases extends ConsumerWidget {
                     onTap: () => openLink(context, ref, r.url),
                     onLongPress: () => copyLink(context, r.url),
                     child: Container(
-                      constraints: const BoxConstraints(minHeight: 56),
-                      padding: const EdgeInsets.fromLTRB(14, 8, 4, 8),
+                      constraints: const BoxConstraints(minHeight: 48),
+                      padding: const EdgeInsets.fromLTRB(14, 0, 4, 0),
                       decoration: BoxDecoration(
                         border: n == 0 ? null : Border(top: rule),
                       ),

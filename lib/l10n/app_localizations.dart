@@ -7590,26 +7590,20 @@ abstract class AppLocalizations {
   /// No description provided for @newsLastRound.
   ///
   /// In en, this message translates to:
-  /// **'Last round {time} · {n} stories in 24 h'**
+  /// **'Last round {time} · {n} stories today'**
   String newsLastRound(String time, int n);
 
   /// No description provided for @newsStoriesToday.
   ///
   /// In en, this message translates to:
-  /// **'{n} stories in 24 h'**
+  /// **'{n} stories today'**
   String newsStoriesToday(int n);
-
-  /// No description provided for @newsSectionCounts.
-  ///
-  /// In en, this message translates to:
-  /// **'{week} stories · {fresh} new'**
-  String newsSectionCounts(int week, int fresh);
 
   /// No description provided for @newsTopicStatus.
   ///
   /// In en, this message translates to:
-  /// **'{week} stories in 7 days · {fresh} new'**
-  String newsTopicStatus(int week, int fresh);
+  /// **'{count} today · {week} this week'**
+  String newsTopicStatus(int count, int week);
 
   /// No description provided for @newsSavedCount.
   ///
@@ -7620,8 +7614,8 @@ abstract class AppLocalizations {
   /// No description provided for @newsLastWeekStatus.
   ///
   /// In en, this message translates to:
-  /// **'Last week\'s best that you did not open'**
-  String get newsLastWeekStatus;
+  /// **'{n, plural, =1{1 story you did not open, best first} other{{n} stories you did not open, best first}}'**
+  String newsLastWeekStatus(int n);
 
   /// No description provided for @newsShowAll.
   ///
@@ -7644,8 +7638,8 @@ abstract class AppLocalizations {
   /// No description provided for @newsToday.
   ///
   /// In en, this message translates to:
-  /// **'Today'**
-  String get newsToday;
+  /// **'{n} today'**
+  String newsToday(int n);
 
   /// No description provided for @newsYesterday.
   ///
@@ -7773,12 +7767,6 @@ abstract class AppLocalizations {
   /// **'AI summary'**
   String get newsAiSummary;
 
-  /// No description provided for @newsAiNote.
-  ///
-  /// In en, this message translates to:
-  /// **'AI note'**
-  String get newsAiNote;
-
   /// No description provided for @newsWhy.
   ///
   /// In en, this message translates to:
@@ -7788,7 +7776,7 @@ abstract class AppLocalizations {
   /// No description provided for @newsAiDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'Written by the local model from the text below. It can contain errors.'**
+  /// **'Written by the local model. It can contain errors.'**
   String get newsAiDisclaimer;
 
   /// No description provided for @newsSummaryPending.
@@ -7812,7 +7800,7 @@ abstract class AppLocalizations {
   /// No description provided for @newsTeaserOnlySub.
   ///
   /// In en, this message translates to:
-  /// **'The agent fetches the article with its next hourly round and writes a summary after it.'**
+  /// **'The agent fetches the article within the hour and writes a summary after it.'**
   String get newsTeaserOnlySub;
 
   /// No description provided for @newsFetchText.
@@ -7836,7 +7824,7 @@ abstract class AppLocalizations {
   /// No description provided for @newsQueuedSub.
   ///
   /// In en, this message translates to:
-  /// **'You get the text here; nothing to wait for on this screen.'**
+  /// **'It appears here when it is ready.'**
   String get newsQueuedSub;
 
   /// No description provided for @newsNoText.
@@ -7952,6 +7940,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Less like this · counts from the next round'**
   String get newsLessCaption;
+
+  /// No description provided for @newsDayToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get newsDayToday;
+
+  /// No description provided for @newsRoundsHourly.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounds run every hour'**
+  String get newsRoundsHourly;
 }
 
 class _AppLocalizationsDelegate

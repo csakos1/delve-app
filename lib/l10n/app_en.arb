@@ -3722,47 +3722,9 @@
   },
   "newsAll": "All",
   "newsSaved": "Saved",
-  "newsLastRound": "Last round {time} · {n} stories in 24 h",
-  "@newsLastRound": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      },
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "newsStoriesToday": "{n} stories in 24 h",
-  "@newsStoriesToday": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "newsSectionCounts": "{week} stories · {fresh} new",
-  "@newsSectionCounts": {
-    "placeholders": {
-      "week": {
-        "type": "int"
-      },
-      "fresh": {
-        "type": "int"
-      }
-    }
-  },
-  "newsTopicStatus": "{week} stories in 7 days · {fresh} new",
-  "@newsTopicStatus": {
-    "placeholders": {
-      "week": {
-        "type": "int"
-      },
-      "fresh": {
-        "type": "int"
-      }
-    }
-  },
+  "newsLastRound": "Last round {time} · {n} stories today",
+  "newsStoriesToday": "{n} stories today",
+  "newsTopicStatus": "{count} today · {week} this week",
   "newsSavedCount": "{n, plural, =1{1 saved} other{{n} saved}}",
   "@newsSavedCount": {
     "placeholders": {
@@ -3771,7 +3733,7 @@
       }
     }
   },
-  "newsLastWeekStatus": "Last week's best that you did not open",
+  "newsLastWeekStatus": "{n, plural, =1{1 story you did not open, best first} other{{n} stories you did not open, best first}}",
   "newsShowAll": "Show all {n}",
   "@newsShowAll": {
     "placeholders": {
@@ -3782,7 +3744,7 @@
   },
   "newsNothingToday": "Nothing in the last 24 h",
   "newsLoadOlder": "Load older",
-  "newsToday": "Today",
+  "newsToday": "{n} today",
   "newsYesterday": "Yesterday",
   "newsEmptyTitle": "No stories yet",
   "newsEmptyBody": "The agent collects every hour. Stories scored 5 or more show here.",
@@ -3839,17 +3801,16 @@
   "newsCopyLink": "Copy link",
   "newsUndo": "Undo",
   "newsAiSummary": "AI summary",
-  "newsAiNote": "AI note",
   "newsWhy": "Why",
-  "newsAiDisclaimer": "Written by the local model from the text below. It can contain errors.",
+  "newsAiDisclaimer": "Written by the local model. It can contain errors.",
   "newsSummaryPending": "The summary is written when llama-server is idle.",
   "newsFromTheFeed": "From the feed",
   "newsTeaserOnly": "Only the feed's teaser is here.",
-  "newsTeaserOnlySub": "The agent fetches the article with its next hourly round and writes a summary after it.",
+  "newsTeaserOnlySub": "The agent fetches the article within the hour and writes a summary after it.",
   "newsFetchText": "Fetch text",
   "newsQueuedWord": "queued",
   "newsQueued": "Fetching text · within the hour",
-  "newsQueuedSub": "You get the text here; nothing to wait for on this screen.",
+  "newsQueuedSub": "It appears here when it is ready.",
   "newsNoText": "No article text",
   "newsTryAgain": "Try again",
   "newsReasonRobots": "The site doesn't allow automatic reading (robots.txt).",
@@ -3913,5 +3874,48 @@
   },
   "newsTeach": "Teach the agent",
   "newsMoreCaption": "More like this · counts from the next round",
-  "newsLessCaption": "Less like this · counts from the next round"
+  "newsLessCaption": "Less like this · counts from the next round",
+  "@newsToday": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@newsTopicStatus": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "@newsLastRound": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@newsStoriesToday": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@newsLastWeekStatus": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsDayToday": "Today",
+  "newsRoundsHourly": "Rounds run every hour"
 }
