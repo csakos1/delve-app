@@ -3671,5 +3671,247 @@
   "personaNameTaken": "A topic file with this name exists already",
   "personaNameEmpty": "The title needs a letter or a digit",
   "personaTitleEmpty": "Give it a title",
-  "personaTextEmpty": "Write something first"
+  "personaTextEmpty": "Write something first",
+  "moreNewsSub": "What the agent found for you",
+  "newsTitle": "News",
+  "newsNew": "{n} new",
+  "@newsNew": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsMustRead": "Must read",
+  "newsYourSetup": "Your setup",
+  "newsReleases": "Releases",
+  "newsSources": "{n} sources",
+  "@newsSources": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsFirstRound": "The first stories arrive after the next round",
+  "newsNothingNew": "Nothing new · last round {time}",
+  "@newsNothingNew": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "newsNothingNewShort": "Nothing new",
+  "newsLastWeek": "Last week",
+  "newsMissed": "{n, plural, =1{1 story you missed} other{{n} stories you missed}}",
+  "@newsMissed": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsFailingFeeds": "{n, plural, =1{1 feed is failing} other{{n} feeds are failing}}",
+  "@newsFailingFeeds": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsAll": "All",
+  "newsSaved": "Saved",
+  "newsLastRound": "Last round {time} · {n} stories in 24 h",
+  "@newsLastRound": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsStoriesToday": "{n} stories in 24 h",
+  "@newsStoriesToday": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsSectionCounts": "{week} stories · {fresh} new",
+  "@newsSectionCounts": {
+    "placeholders": {
+      "week": {
+        "type": "int"
+      },
+      "fresh": {
+        "type": "int"
+      }
+    }
+  },
+  "newsTopicStatus": "{week} stories in 7 days · {fresh} new",
+  "@newsTopicStatus": {
+    "placeholders": {
+      "week": {
+        "type": "int"
+      },
+      "fresh": {
+        "type": "int"
+      }
+    }
+  },
+  "newsSavedCount": "{n, plural, =1{1 saved} other{{n} saved}}",
+  "@newsSavedCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsLastWeekStatus": "Last week's best that you did not open",
+  "newsShowAll": "Show all {n}",
+  "@newsShowAll": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsNothingToday": "Nothing in the last 24 h",
+  "newsLoadOlder": "Load older",
+  "newsToday": "Today",
+  "newsYesterday": "Yesterday",
+  "newsEmptyTitle": "No stories yet",
+  "newsEmptyBody": "The agent collects every hour. Stories scored 5 or more show here.",
+  "newsEmptySavedTitle": "Nothing saved yet",
+  "newsEmptySavedBody": "Save a story from its menu or from the reading view.",
+  "newsEmptyTopicsOff": "Every topic is off",
+  "newsEmptyTopicsOffBody": "Switch a topic on in the News settings.",
+  "newsLoadFailed": "Couldn't load the news: {error}",
+  "@newsLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "newsStoryFailed": "Couldn't load the story: {error}",
+  "@newsStoryFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "newsActionFailed": "That didn't work: {error}",
+  "@newsActionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "newsMoreLikeThis": "More like this",
+  "newsLessLikeThis": "Less like this",
+  "newsHideSource": "Hide {name}",
+  "@newsHideSource": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "newsSourceHidden": "{name} hidden",
+  "@newsSourceHidden": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "newsSave": "Save",
+  "newsRemoveFromSaved": "Remove from saved",
+  "newsSavedSnack": "Saved",
+  "newsRemovedFromSaved": "Removed from saved",
+  "newsCopyLink": "Copy link",
+  "newsUndo": "Undo",
+  "newsAiSummary": "AI summary",
+  "newsAiNote": "AI note",
+  "newsWhy": "Why",
+  "newsAiDisclaimer": "Written by the local model from the text below. It can contain errors.",
+  "newsSummaryPending": "The summary is written when llama-server is idle.",
+  "newsFromTheFeed": "From the feed",
+  "newsTeaserOnly": "Only the feed's teaser is here.",
+  "newsTeaserOnlySub": "The agent fetches the article with its next hourly round and writes a summary after it.",
+  "newsFetchText": "Fetch text",
+  "newsQueuedWord": "queued",
+  "newsQueued": "Fetching text · within the hour",
+  "newsQueuedSub": "You get the text here; nothing to wait for on this screen.",
+  "newsNoText": "No article text",
+  "newsTryAgain": "Try again",
+  "newsReasonRobots": "The site doesn't allow automatic reading (robots.txt).",
+  "newsReasonNoText": "The page builds itself with scripts or asked for a bot check, so no text came back.",
+  "newsReasonUnresolved": "The Google News link didn't lead to an article.",
+  "newsReasonHttp": "The site refused the request (HTTP {code}).",
+  "@newsReasonHttp": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "newsReasonTimeout": "The agent didn't get to it within a day.",
+  "newsReasonOther": "The agent couldn't read it ({code}).",
+  "@newsReasonOther": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "newsTextSize": "{chars} characters",
+  "@newsTextSize": {
+    "placeholders": {
+      "chars": {
+        "type": "String"
+      }
+    }
+  },
+  "newsTextSizeAt": "{chars} characters · text fetched {time}",
+  "@newsTextSizeAt": {
+    "placeholders": {
+      "chars": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "newsTextFromHere": "text from here",
+  "newsReleasesToday": "{n, plural, =1{1 release} other{{n} releases}}",
+  "@newsReleasesToday": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsReleasesNote": "A day of releases is one row. It has no article text and no summary.",
+  "newsOpenOriginal": "Open original",
+  "newsOpenReleases": "Open releases on GitHub",
+  "newsOpensInBrowser": "{host} · opens in your browser",
+  "@newsOpensInBrowser": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "newsTeach": "Teach the agent",
+  "newsMoreCaption": "More like this · counts from the next round",
+  "newsLessCaption": "Less like this · counts from the next round"
 }

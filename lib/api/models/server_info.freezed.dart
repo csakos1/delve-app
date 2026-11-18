@@ -1742,7 +1742,8 @@ mixin _$NotifySettings {
 
  bool get approvals; bool get runDone; bool get water; bool get brief;/// Watch hits (W2); on unless turned off.
  bool get watches;/// A model switch that failed (M); on unless turned off.
- bool get system;
+ bool get system;/// A must-read story (N2); off until switched on.
+ bool get news;
 /// Create a copy of NotifySettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1755,16 +1756,16 @@ $NotifySettingsCopyWith<NotifySettings> get copyWith => _$NotifySettingsCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotifySettings&&(identical(other.approvals, approvals) || other.approvals == approvals)&&(identical(other.runDone, runDone) || other.runDone == runDone)&&(identical(other.water, water) || other.water == water)&&(identical(other.brief, brief) || other.brief == brief)&&(identical(other.watches, watches) || other.watches == watches)&&(identical(other.system, system) || other.system == system));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotifySettings&&(identical(other.approvals, approvals) || other.approvals == approvals)&&(identical(other.runDone, runDone) || other.runDone == runDone)&&(identical(other.water, water) || other.water == water)&&(identical(other.brief, brief) || other.brief == brief)&&(identical(other.watches, watches) || other.watches == watches)&&(identical(other.system, system) || other.system == system)&&(identical(other.news, news) || other.news == news));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,approvals,runDone,water,brief,watches,system);
+int get hashCode => Object.hash(runtimeType,approvals,runDone,water,brief,watches,system,news);
 
 @override
 String toString() {
-  return 'NotifySettings(approvals: $approvals, runDone: $runDone, water: $water, brief: $brief, watches: $watches, system: $system)';
+  return 'NotifySettings(approvals: $approvals, runDone: $runDone, water: $water, brief: $brief, watches: $watches, system: $system, news: $news)';
 }
 
 
@@ -1775,7 +1776,7 @@ abstract mixin class $NotifySettingsCopyWith<$Res>  {
   factory $NotifySettingsCopyWith(NotifySettings value, $Res Function(NotifySettings) _then) = _$NotifySettingsCopyWithImpl;
 @useResult
 $Res call({
- bool approvals, bool runDone, bool water, bool brief, bool watches, bool system
+ bool approvals, bool runDone, bool water, bool brief, bool watches, bool system, bool news
 });
 
 
@@ -1792,7 +1793,7 @@ class _$NotifySettingsCopyWithImpl<$Res>
 
 /// Create a copy of NotifySettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? approvals = null,Object? runDone = null,Object? water = null,Object? brief = null,Object? watches = null,Object? system = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? approvals = null,Object? runDone = null,Object? water = null,Object? brief = null,Object? watches = null,Object? system = null,Object? news = null,}) {
   return _then(_self.copyWith(
 approvals: null == approvals ? _self.approvals : approvals // ignore: cast_nullable_to_non_nullable
 as bool,runDone: null == runDone ? _self.runDone : runDone // ignore: cast_nullable_to_non_nullable
@@ -1800,6 +1801,7 @@ as bool,water: null == water ? _self.water : water // ignore: cast_nullable_to_n
 as bool,brief: null == brief ? _self.brief : brief // ignore: cast_nullable_to_non_nullable
 as bool,watches: null == watches ? _self.watches : watches // ignore: cast_nullable_to_non_nullable
 as bool,system: null == system ? _self.system : system // ignore: cast_nullable_to_non_nullable
+as bool,news: null == news ? _self.news : news // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -1885,10 +1887,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool approvals,  bool runDone,  bool water,  bool brief,  bool watches,  bool system)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool approvals,  bool runDone,  bool water,  bool brief,  bool watches,  bool system,  bool news)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NotifySettings() when $default != null:
-return $default(_that.approvals,_that.runDone,_that.water,_that.brief,_that.watches,_that.system);case _:
+return $default(_that.approvals,_that.runDone,_that.water,_that.brief,_that.watches,_that.system,_that.news);case _:
   return orElse();
 
 }
@@ -1906,10 +1908,10 @@ return $default(_that.approvals,_that.runDone,_that.water,_that.brief,_that.watc
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool approvals,  bool runDone,  bool water,  bool brief,  bool watches,  bool system)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool approvals,  bool runDone,  bool water,  bool brief,  bool watches,  bool system,  bool news)  $default,) {final _that = this;
 switch (_that) {
 case _NotifySettings():
-return $default(_that.approvals,_that.runDone,_that.water,_that.brief,_that.watches,_that.system);case _:
+return $default(_that.approvals,_that.runDone,_that.water,_that.brief,_that.watches,_that.system,_that.news);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1926,10 +1928,10 @@ return $default(_that.approvals,_that.runDone,_that.water,_that.brief,_that.watc
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool approvals,  bool runDone,  bool water,  bool brief,  bool watches,  bool system)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool approvals,  bool runDone,  bool water,  bool brief,  bool watches,  bool system,  bool news)?  $default,) {final _that = this;
 switch (_that) {
 case _NotifySettings() when $default != null:
-return $default(_that.approvals,_that.runDone,_that.water,_that.brief,_that.watches,_that.system);case _:
+return $default(_that.approvals,_that.runDone,_that.water,_that.brief,_that.watches,_that.system,_that.news);case _:
   return null;
 
 }
@@ -1941,7 +1943,7 @@ return $default(_that.approvals,_that.runDone,_that.water,_that.brief,_that.watc
 @JsonSerializable()
 
 class _NotifySettings implements NotifySettings {
-  const _NotifySettings({this.approvals = true, this.runDone = true, this.water = false, this.brief = false, this.watches = true, this.system = true});
+  const _NotifySettings({this.approvals = true, this.runDone = true, this.water = false, this.brief = false, this.watches = true, this.system = true, this.news = false});
   factory _NotifySettings.fromJson(Map<String, dynamic> json) => _$NotifySettingsFromJson(json);
 
 @override@JsonKey() final  bool approvals;
@@ -1952,6 +1954,8 @@ class _NotifySettings implements NotifySettings {
 @override@JsonKey() final  bool watches;
 /// A model switch that failed (M); on unless turned off.
 @override@JsonKey() final  bool system;
+/// A must-read story (N2); off until switched on.
+@override@JsonKey() final  bool news;
 
 /// Create a copy of NotifySettings
 /// with the given fields replaced by the non-null parameter values.
@@ -1966,16 +1970,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NotifySettings&&(identical(other.approvals, approvals) || other.approvals == approvals)&&(identical(other.runDone, runDone) || other.runDone == runDone)&&(identical(other.water, water) || other.water == water)&&(identical(other.brief, brief) || other.brief == brief)&&(identical(other.watches, watches) || other.watches == watches)&&(identical(other.system, system) || other.system == system));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NotifySettings&&(identical(other.approvals, approvals) || other.approvals == approvals)&&(identical(other.runDone, runDone) || other.runDone == runDone)&&(identical(other.water, water) || other.water == water)&&(identical(other.brief, brief) || other.brief == brief)&&(identical(other.watches, watches) || other.watches == watches)&&(identical(other.system, system) || other.system == system)&&(identical(other.news, news) || other.news == news));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,approvals,runDone,water,brief,watches,system);
+int get hashCode => Object.hash(runtimeType,approvals,runDone,water,brief,watches,system,news);
 
 @override
 String toString() {
-  return 'NotifySettings(approvals: $approvals, runDone: $runDone, water: $water, brief: $brief, watches: $watches, system: $system)';
+  return 'NotifySettings(approvals: $approvals, runDone: $runDone, water: $water, brief: $brief, watches: $watches, system: $system, news: $news)';
 }
 
 
@@ -1986,7 +1990,7 @@ abstract mixin class _$NotifySettingsCopyWith<$Res> implements $NotifySettingsCo
   factory _$NotifySettingsCopyWith(_NotifySettings value, $Res Function(_NotifySettings) _then) = __$NotifySettingsCopyWithImpl;
 @override @useResult
 $Res call({
- bool approvals, bool runDone, bool water, bool brief, bool watches, bool system
+ bool approvals, bool runDone, bool water, bool brief, bool watches, bool system, bool news
 });
 
 
@@ -2003,7 +2007,7 @@ class __$NotifySettingsCopyWithImpl<$Res>
 
 /// Create a copy of NotifySettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? approvals = null,Object? runDone = null,Object? water = null,Object? brief = null,Object? watches = null,Object? system = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? approvals = null,Object? runDone = null,Object? water = null,Object? brief = null,Object? watches = null,Object? system = null,Object? news = null,}) {
   return _then(_NotifySettings(
 approvals: null == approvals ? _self.approvals : approvals // ignore: cast_nullable_to_non_nullable
 as bool,runDone: null == runDone ? _self.runDone : runDone // ignore: cast_nullable_to_non_nullable
@@ -2011,6 +2015,7 @@ as bool,water: null == water ? _self.water : water // ignore: cast_nullable_to_n
 as bool,brief: null == brief ? _self.brief : brief // ignore: cast_nullable_to_non_nullable
 as bool,watches: null == watches ? _self.watches : watches // ignore: cast_nullable_to_non_nullable
 as bool,system: null == system ? _self.system : system // ignore: cast_nullable_to_non_nullable
+as bool,news: null == news ? _self.news : news // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

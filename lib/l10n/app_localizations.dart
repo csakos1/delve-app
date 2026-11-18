@@ -7496,6 +7496,462 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Write something first'**
   String get personaTextEmpty;
+
+  /// No description provided for @moreNewsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'What the agent found for you'**
+  String get moreNewsSub;
+
+  /// No description provided for @newsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get newsTitle;
+
+  /// No description provided for @newsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} new'**
+  String newsNew(int n);
+
+  /// No description provided for @newsMustRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Must read'**
+  String get newsMustRead;
+
+  /// No description provided for @newsYourSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Your setup'**
+  String get newsYourSetup;
+
+  /// No description provided for @newsReleases.
+  ///
+  /// In en, this message translates to:
+  /// **'Releases'**
+  String get newsReleases;
+
+  /// No description provided for @newsSources.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} sources'**
+  String newsSources(int n);
+
+  /// No description provided for @newsFirstRound.
+  ///
+  /// In en, this message translates to:
+  /// **'The first stories arrive after the next round'**
+  String get newsFirstRound;
+
+  /// No description provided for @newsNothingNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing new · last round {time}'**
+  String newsNothingNew(String time);
+
+  /// No description provided for @newsNothingNewShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing new'**
+  String get newsNothingNewShort;
+
+  /// No description provided for @newsLastWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Last week'**
+  String get newsLastWeek;
+
+  /// No description provided for @newsMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 story you missed} other{{n} stories you missed}}'**
+  String newsMissed(int n);
+
+  /// No description provided for @newsFailingFeeds.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 feed is failing} other{{n} feeds are failing}}'**
+  String newsFailingFeeds(int n);
+
+  /// No description provided for @newsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get newsAll;
+
+  /// No description provided for @newsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get newsSaved;
+
+  /// No description provided for @newsLastRound.
+  ///
+  /// In en, this message translates to:
+  /// **'Last round {time} · {n} stories in 24 h'**
+  String newsLastRound(String time, int n);
+
+  /// No description provided for @newsStoriesToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} stories in 24 h'**
+  String newsStoriesToday(int n);
+
+  /// No description provided for @newsSectionCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{week} stories · {fresh} new'**
+  String newsSectionCounts(int week, int fresh);
+
+  /// No description provided for @newsTopicStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'{week} stories in 7 days · {fresh} new'**
+  String newsTopicStatus(int week, int fresh);
+
+  /// No description provided for @newsSavedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 saved} other{{n} saved}}'**
+  String newsSavedCount(int n);
+
+  /// No description provided for @newsLastWeekStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Last week\'s best that you did not open'**
+  String get newsLastWeekStatus;
+
+  /// No description provided for @newsShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {n}'**
+  String newsShowAll(int n);
+
+  /// No description provided for @newsNothingToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing in the last 24 h'**
+  String get newsNothingToday;
+
+  /// No description provided for @newsLoadOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Load older'**
+  String get newsLoadOlder;
+
+  /// No description provided for @newsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get newsToday;
+
+  /// No description provided for @newsYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get newsYesterday;
+
+  /// No description provided for @newsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No stories yet'**
+  String get newsEmptyTitle;
+
+  /// No description provided for @newsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent collects every hour. Stories scored 5 or more show here.'**
+  String get newsEmptyBody;
+
+  /// No description provided for @newsEmptySavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing saved yet'**
+  String get newsEmptySavedTitle;
+
+  /// No description provided for @newsEmptySavedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a story from its menu or from the reading view.'**
+  String get newsEmptySavedBody;
+
+  /// No description provided for @newsEmptyTopicsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Every topic is off'**
+  String get newsEmptyTopicsOff;
+
+  /// No description provided for @newsEmptyTopicsOffBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch a topic on in the News settings.'**
+  String get newsEmptyTopicsOffBody;
+
+  /// No description provided for @newsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the news: {error}'**
+  String newsLoadFailed(String error);
+
+  /// No description provided for @newsStoryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the story: {error}'**
+  String newsStoryFailed(String error);
+
+  /// No description provided for @newsActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That didn\'t work: {error}'**
+  String newsActionFailed(String error);
+
+  /// No description provided for @newsMoreLikeThis.
+  ///
+  /// In en, this message translates to:
+  /// **'More like this'**
+  String get newsMoreLikeThis;
+
+  /// No description provided for @newsLessLikeThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Less like this'**
+  String get newsLessLikeThis;
+
+  /// No description provided for @newsHideSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide {name}'**
+  String newsHideSource(String name);
+
+  /// No description provided for @newsSourceHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} hidden'**
+  String newsSourceHidden(String name);
+
+  /// No description provided for @newsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get newsSave;
+
+  /// No description provided for @newsRemoveFromSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from saved'**
+  String get newsRemoveFromSaved;
+
+  /// No description provided for @newsSavedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get newsSavedSnack;
+
+  /// No description provided for @newsRemovedFromSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from saved'**
+  String get newsRemovedFromSaved;
+
+  /// No description provided for @newsCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get newsCopyLink;
+
+  /// No description provided for @newsUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get newsUndo;
+
+  /// No description provided for @newsAiSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'AI summary'**
+  String get newsAiSummary;
+
+  /// No description provided for @newsAiNote.
+  ///
+  /// In en, this message translates to:
+  /// **'AI note'**
+  String get newsAiNote;
+
+  /// No description provided for @newsWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Why'**
+  String get newsWhy;
+
+  /// No description provided for @newsAiDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Written by the local model from the text below. It can contain errors.'**
+  String get newsAiDisclaimer;
+
+  /// No description provided for @newsSummaryPending.
+  ///
+  /// In en, this message translates to:
+  /// **'The summary is written when llama-server is idle.'**
+  String get newsSummaryPending;
+
+  /// No description provided for @newsFromTheFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'From the feed'**
+  String get newsFromTheFeed;
+
+  /// No description provided for @newsTeaserOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the feed\'s teaser is here.'**
+  String get newsTeaserOnly;
+
+  /// No description provided for @newsTeaserOnlySub.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent fetches the article with its next hourly round and writes a summary after it.'**
+  String get newsTeaserOnlySub;
+
+  /// No description provided for @newsFetchText.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch text'**
+  String get newsFetchText;
+
+  /// No description provided for @newsQueuedWord.
+  ///
+  /// In en, this message translates to:
+  /// **'queued'**
+  String get newsQueuedWord;
+
+  /// No description provided for @newsQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching text · within the hour'**
+  String get newsQueued;
+
+  /// No description provided for @newsQueuedSub.
+  ///
+  /// In en, this message translates to:
+  /// **'You get the text here; nothing to wait for on this screen.'**
+  String get newsQueuedSub;
+
+  /// No description provided for @newsNoText.
+  ///
+  /// In en, this message translates to:
+  /// **'No article text'**
+  String get newsNoText;
+
+  /// No description provided for @newsTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get newsTryAgain;
+
+  /// No description provided for @newsReasonRobots.
+  ///
+  /// In en, this message translates to:
+  /// **'The site doesn\'t allow automatic reading (robots.txt).'**
+  String get newsReasonRobots;
+
+  /// No description provided for @newsReasonNoText.
+  ///
+  /// In en, this message translates to:
+  /// **'The page builds itself with scripts or asked for a bot check, so no text came back.'**
+  String get newsReasonNoText;
+
+  /// No description provided for @newsReasonUnresolved.
+  ///
+  /// In en, this message translates to:
+  /// **'The Google News link didn\'t lead to an article.'**
+  String get newsReasonUnresolved;
+
+  /// No description provided for @newsReasonHttp.
+  ///
+  /// In en, this message translates to:
+  /// **'The site refused the request (HTTP {code}).'**
+  String newsReasonHttp(String code);
+
+  /// No description provided for @newsReasonTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent didn\'t get to it within a day.'**
+  String get newsReasonTimeout;
+
+  /// No description provided for @newsReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'The agent couldn\'t read it ({code}).'**
+  String newsReasonOther(String code);
+
+  /// No description provided for @newsTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'{chars} characters'**
+  String newsTextSize(String chars);
+
+  /// No description provided for @newsTextSizeAt.
+  ///
+  /// In en, this message translates to:
+  /// **'{chars} characters · text fetched {time}'**
+  String newsTextSizeAt(String chars, String time);
+
+  /// No description provided for @newsTextFromHere.
+  ///
+  /// In en, this message translates to:
+  /// **'text from here'**
+  String get newsTextFromHere;
+
+  /// No description provided for @newsReleasesToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 release} other{{n} releases}}'**
+  String newsReleasesToday(int n);
+
+  /// No description provided for @newsReleasesNote.
+  ///
+  /// In en, this message translates to:
+  /// **'A day of releases is one row. It has no article text and no summary.'**
+  String get newsReleasesNote;
+
+  /// No description provided for @newsOpenOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open original'**
+  String get newsOpenOriginal;
+
+  /// No description provided for @newsOpenReleases.
+  ///
+  /// In en, this message translates to:
+  /// **'Open releases on GitHub'**
+  String get newsOpenReleases;
+
+  /// No description provided for @newsOpensInBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'{host} · opens in your browser'**
+  String newsOpensInBrowser(String host);
+
+  /// No description provided for @newsTeach.
+  ///
+  /// In en, this message translates to:
+  /// **'Teach the agent'**
+  String get newsTeach;
+
+  /// No description provided for @newsMoreCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'More like this · counts from the next round'**
+  String get newsMoreCaption;
+
+  /// No description provided for @newsLessCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Less like this · counts from the next round'**
+  String get newsLessCaption;
 }
 
 class _AppLocalizationsDelegate

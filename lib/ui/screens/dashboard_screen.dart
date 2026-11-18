@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../api/models/models.dart';
 import '../../app/dashboard.dart';
+import '../../app/news.dart';
 import '../../app/router.dart';
 import '../../app/system.dart';
 import '../../app/watches.dart';
@@ -21,6 +22,7 @@ import '../widgets/chart_paint.dart';
 import '../widgets/clipboard_ui.dart';
 import '../widgets/connection_ui.dart';
 import '../widgets/model_ui.dart';
+import '../widgets/news_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import '../widgets/system_ui.dart';
@@ -49,6 +51,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Future<void> _refresh({bool quiet = false}) async {
     unawaited(_refreshSystem());
     unawaited(_refreshWatches());
+    unawaited(_refreshNews());
     final service = ref.read(dashboardServiceProvider);
     if (service == null) return;
     try {
@@ -69,6 +72,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       await ref.read(watchesProvider.notifier).refresh();
     } on Object {
       // kept in WatchesView.error
+    }
+  }
+
+  /// The News block stays hidden until the server answers (N2).
+  Future<void> _refreshNews() async {
+    try {
+      await ref.read(newsProvider.notifier).refresh();
+    } on Object {
+      // kept in NewsView.error
     }
   }
 
@@ -127,6 +139,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               _ => const SizedBox(height: 320),
             },
             const BriefCard(),
+            const NewsCard(),
             const WatchesCard(),
             const SizedBox(height: DelveTokens.space3),
             const SystemCard(),

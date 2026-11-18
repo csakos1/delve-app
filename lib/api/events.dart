@@ -119,6 +119,7 @@ sealed class ServerEvent extends IncomingFrame {
     'schedule.deleted',
     'watch.updated',
     'watch.item',
+    'news.updated',
     'error',
   };
 
@@ -232,6 +233,11 @@ sealed class ServerEvent extends IncomingFrame {
     'schedule.deleted' => ScheduleDeleted(seq, _str(d, 'id')),
     'watch.updated' => WatchUpdated(seq, Watch.fromJson(d)),
     'watch.item' => WatchItemSeen(seq, WatchItem.fromJson(d)),
+    'news.updated' => NewsUpdated(
+      seq,
+      fresh: _int(d, 'new'),
+      texts: _int(d, 'texts'),
+    ),
     'error' => ServerError(
       seq,
       code: _str(d, 'code'),
@@ -492,6 +498,14 @@ final class WatchUpdated extends WatchChange {
 final class WatchItemSeen extends WatchChange {
   const WatchItemSeen(super.seq, this.item);
   final WatchItem item;
+}
+
+/// News (N1): a collector round brought [fresh] new stories and / or
+/// [texts] article texts; the app reloads what it shows.
+final class NewsUpdated extends ServerEvent {
+  const NewsUpdated(super.seq, {required this.fresh, required this.texts});
+  final int fresh;
+  final int texts;
 }
 
 final class UnknownEvent extends ServerEvent {

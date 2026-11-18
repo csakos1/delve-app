@@ -120,6 +120,7 @@ class DelveApi {
     bool? brief,
     bool? watches,
     bool? system,
+    bool? news,
   }) async => _parse(
     await _json(
       ApiRoutes.patchDevice,
@@ -131,6 +132,7 @@ class DelveApi {
           'brief': ?brief,
           'watches': ?watches,
           'system': ?system,
+          'news': ?news,
         },
       },
     ),
@@ -471,6 +473,96 @@ class DelveApi {
     Watch.fromJson,
   );
 
+  // --- news (N2) -----------------------------------------------------------
+
+  /// The Dashboard block.
+  Future<NewsDigest> newsDigest() async =>
+      _parse(await _json(ApiRoutes.news), NewsDigest.fromJson);
+
+  /// The News page's All view: each topic that is on, in its order.
+  Future<List<NewsSection>> newsSections() async {
+    final json = await _json(ApiRoutes.newsSections);
+    return _parse(
+      json,
+      (j) => [for (final s in _list(j, 'data')) NewsSection.fromJson(s)],
+    );
+  }
+
+  /// Stories newest first: of one [topic], or the [saved] ones, or the
+  /// [weekly] list (one page, best first); [minScore] leaves out the lower
+  /// and the unscored ones; [before] continues from an item id.
+  Future<NewsItemPage> newsItems({
+    String? topic,
+    bool saved = false,
+    bool weekly = false,
+    int? minScore,
+    int? before,
+    int limit = 20,
+  }) async {
+    final json = await _json(
+      ApiRoutes.newsItems,
+      query: {
+        'topic': topic,
+        'saved': saved ? 'true' : null,
+        'weekly': weekly ? 'true' : null,
+        'min_score': minScore,
+        'before': before,
+        'limit': limit,
+      },
+    );
+    return _parse(
+      json,
+      (j) => NewsItemPage([
+        for (final i in _list(j, 'data')) NewsItem.fromJson(i),
+      ], j['next_before'] as int?),
+    );
+  }
+
+  /// One story with its other sources and its text; 404
+  /// `news_item_not_found`. A merged item's id opens its story.
+  Future<NewsStory> newsStory(int id) async => _parse(
+    await _json(ApiRoutes.newsItem, params: {'item_id': '$id'}),
+    NewsStory.fromJson,
+  );
+
+  /// Read / saved / feedback (`more` | `less`; [clearFeedback] sends null).
+  Future<NewsStory> markNews(
+    int id, {
+    bool? read,
+    bool? saved,
+    String? feedback,
+    bool clearFeedback = false,
+  }) async => _parse(
+    await _json(
+      ApiRoutes.markNewsItem,
+      params: {'item_id': '$id'},
+      body: {
+        'read': ?read,
+        'saved': ?saved,
+        if (feedback != null || clearFeedback) 'feedback': feedback,
+      },
+    ),
+    NewsStory.fromJson,
+  );
+
+  /// "Fetch text": the collector's next hourly round fetches the article
+  /// (a failed one is tried again); 409 `news_no_text` for releases.
+  Future<NewsStory> fetchNewsText(int id) async => _parse(
+    await _json(ApiRoutes.fetchNewsText, params: {'item_id': '$id'}),
+    NewsStory.fromJson,
+  );
+
+  /// A feed on or off ("Hide this source" = off).
+  Future<NewsSource> setNewsSource(String id, {required bool enabled}) async =>
+      _parse(
+        await _json(
+          ApiRoutes.patchNewsSource,
+          params: {'source_id': id},
+          body: {'enabled': enabled},
+        ),
+        NewsSource.fromJson,
+      );
+
   // --- attachments (B6) ---------------------------------------------------
 
   /// Uploads one photo or file (the raw bytes, the type in `Content-Type`);
@@ -540,6 +632,13 @@ class ConversationPage {
 class WatchItemPage {
   const WatchItemPage(this.items, this.nextBefore);
   final List<WatchItem> items;
+  final int? nextBefore;
+}
+
+/// `GET /news/items`: one page and the id to continue from (null = last).
+class NewsItemPage {
+  const NewsItemPage(this.items, this.nextBefore);
+  final List<NewsItem> items;
   final int? nextBefore;
 }
 

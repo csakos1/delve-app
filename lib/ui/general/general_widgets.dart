@@ -1158,7 +1158,7 @@ class ChatsFilterChips extends StatelessWidget {
           ]) ...[
             if (f != ChatsFilter.all) const SizedBox(width: DelveTokens.space2),
             Center(
-              child: _FilterChip(
+              child: DelveFilterChip(
                 key: Key('chats.filter.${f.name}'),
                 selected: value == f,
                 icon: icon,
@@ -1174,8 +1174,10 @@ class ChatsFilterChips extends StatelessWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
+/// A filter chip (design 02a / 24): h 32, radius 8; on = primaryContainer
+/// with a check. Also the News page's chips (26).
+class DelveFilterChip extends StatelessWidget {
+  const DelveFilterChip({
     super.key,
     required this.selected,
     required this.icon,

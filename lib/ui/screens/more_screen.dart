@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../widgets/news_ui.dart';
 import '../widgets/page_scaffolds.dart';
 
 /// The sub-pages reachable from More.
@@ -11,6 +12,7 @@ enum MorePage {
   system('system', DelveIcons.system, Routes.system),
   schedules('schedules', DelveIcons.schedules, Routes.schedules),
   watches('watches', DelveIcons.watches, Routes.watches),
+  news('news', NewsIcons.news, Routes.news),
   clipboard('clipboard', DelveIcons.paste, Routes.clipboard),
   mirroring('mirroring', DelveIcons.notifications, Routes.mirroring),
   about('about', DelveIcons.person, Routes.about),
@@ -32,6 +34,7 @@ enum MorePage {
     MorePage.system => l.moreSystem,
     MorePage.schedules => l.moreSchedules,
     MorePage.watches => l.moreWatches,
+    MorePage.news => l.newsTitle,
     MorePage.clipboard => l.moreClipboard,
     MorePage.mirroring => l.moreMirroring,
     MorePage.about => l.moreAbout,
@@ -44,6 +47,7 @@ enum MorePage {
     MorePage.system => l.moreSystemSub,
     MorePage.schedules => l.moreSchedulesSub,
     MorePage.watches => l.moreWatchesSub,
+    MorePage.news => l.moreNewsSub,
     MorePage.clipboard => l.moreClipboardSub,
     MorePage.mirroring => l.moreMirroringSub,
     MorePage.about => l.moreAboutSub,
@@ -53,7 +57,7 @@ enum MorePage {
   };
 }
 
-/// 13-0 More — System, Schedules, Watches, Clipboard, Mirroring, About me,
+/// 13-0 More — System, Schedules, Watches, News, Clipboard, Mirroring, About me,
 /// Observability, Settings, Archived chats.
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});

@@ -108,6 +108,9 @@ abstract class NotifySettings with _$NotifySettings {
 
     /// A model switch that failed (M); on unless turned off.
     @Default(true) bool system,
+
+    /// A must-read story (N2); off until switched on.
+    @Default(false) bool news,
   }) = _NotifySettings;
 
   factory NotifySettings.fromJson(Map<String, Object?> json) =>

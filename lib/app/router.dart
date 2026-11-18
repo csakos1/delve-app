@@ -17,6 +17,8 @@ import '../ui/screens/general_chat_screen.dart';
 import '../ui/screens/general_settings_screen.dart';
 import '../ui/screens/mirror_screen.dart';
 import '../ui/screens/more_screen.dart';
+import '../ui/screens/news_screen.dart';
+import '../ui/screens/news_story_screen.dart';
 import '../ui/screens/observability_screen.dart';
 import '../ui/screens/pairing_screen.dart';
 import '../ui/screens/persona_screen.dart';
@@ -69,6 +71,11 @@ abstract final class Routes {
       '/more/schedules/edit/${Uri.encodeComponent(id)}';
   static const observability = '/more/observability';
   static const watches = '/more/watches';
+
+  /// News (N2): the page, last week's list, one story's reading view.
+  static const news = '/more/news';
+  static const newsWeekly = '/more/news?view=weekly';
+  static String newsStory(int id) => '/more/news/story/$id';
   static String watch(String slug) =>
       '/more/watches/${Uri.encodeComponent(slug)}';
   static const settings = '/more/settings';
@@ -241,13 +248,16 @@ GoRouter buildRouter({
                     GoRoute(
                       path: page.segment,
                       parentNavigatorKey: rootKey,
-                      builder: (_, _) => switch (page) {
+                      builder: (_, state) => switch (page) {
                         MorePage.settings => const SettingsScreen(),
                         MorePage.archived => const ArchivedChatsScreen(),
                         MorePage.system => const SystemScreen(),
                         MorePage.schedules => const SchedulesScreen(),
                         MorePage.observability => const ObservabilityScreen(),
                         MorePage.watches => const WatchesScreen(),
+                        MorePage.news => NewsScreen(
+                          weekly: state.uri.queryParameters['view'] == 'weekly',
+                        ),
                         MorePage.clipboard => const ClipboardScreen(),
                         MorePage.mirroring => const MirrorScreen(),
                         MorePage.about => const PersonaScreen(),
@@ -270,6 +280,14 @@ GoRouter buildRouter({
                             builder: (_, _) => const GeneralSettingsScreen(),
                           ),
                         ],
+                        if (page == MorePage.news)
+                          GoRoute(
+                            path: 'story/:id',
+                            parentNavigatorKey: rootKey,
+                            builder: (_, state) => NewsStoryScreen(
+                              id: int.parse(state.pathParameters['id']!),
+                            ),
+                          ),
                         if (page == MorePage.watches)
                           GoRoute(
                             path: ':slug',

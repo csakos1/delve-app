@@ -156,6 +156,11 @@ class SyncEngine {
   /// `watch.updated` / `watch.item` events (W2).
   Stream<WatchChange> get watchChanges => _watchController.stream;
 
+  final _newsController = StreamController<NewsUpdated>.broadcast();
+
+  /// `news.updated` events (N2).
+  Stream<NewsUpdated> get newsUpdates => _newsController.stream;
+
   Uri get webSocketUrl => webSocketUri(credentials.server, ApiRoutes.ws.$2);
 
   bool _started = false;
@@ -283,6 +288,7 @@ class SyncEngine {
     await _systemController.close();
     await _scheduleController.close();
     await _watchController.close();
+    await _newsController.close();
   }
 
   // ---------------------------------------------------------------------------
@@ -624,6 +630,9 @@ class SyncEngine {
           }
           for (final change in outcome.watches) {
             _watchController.add(change);
+          }
+          for (final news in outcome.news) {
+            _newsController.add(news);
           }
         }
         for (final err in outcome.errors) {

@@ -4795,4 +4795,311 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get personaTextEmpty => 'Write something first';
+
+  @override
+  String get moreNewsSub => 'What the agent found for you';
+
+  @override
+  String get newsTitle => 'News';
+
+  @override
+  String newsNew(int n) {
+    return '$n new';
+  }
+
+  @override
+  String get newsMustRead => 'Must read';
+
+  @override
+  String get newsYourSetup => 'Your setup';
+
+  @override
+  String get newsReleases => 'Releases';
+
+  @override
+  String newsSources(int n) {
+    return '$n sources';
+  }
+
+  @override
+  String get newsFirstRound => 'The first stories arrive after the next round';
+
+  @override
+  String newsNothingNew(String time) {
+    return 'Nothing new · last round $time';
+  }
+
+  @override
+  String get newsNothingNewShort => 'Nothing new';
+
+  @override
+  String get newsLastWeek => 'Last week';
+
+  @override
+  String newsMissed(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n stories you missed',
+      one: '1 story you missed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String newsFailingFeeds(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n feeds are failing',
+      one: '1 feed is failing',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get newsAll => 'All';
+
+  @override
+  String get newsSaved => 'Saved';
+
+  @override
+  String newsLastRound(String time, int n) {
+    return 'Last round $time · $n stories in 24 h';
+  }
+
+  @override
+  String newsStoriesToday(int n) {
+    return '$n stories in 24 h';
+  }
+
+  @override
+  String newsSectionCounts(int week, int fresh) {
+    return '$week stories · $fresh new';
+  }
+
+  @override
+  String newsTopicStatus(int week, int fresh) {
+    return '$week stories in 7 days · $fresh new';
+  }
+
+  @override
+  String newsSavedCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n saved',
+      one: '1 saved',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get newsLastWeekStatus => 'Last week\'s best that you did not open';
+
+  @override
+  String newsShowAll(int n) {
+    return 'Show all $n';
+  }
+
+  @override
+  String get newsNothingToday => 'Nothing in the last 24 h';
+
+  @override
+  String get newsLoadOlder => 'Load older';
+
+  @override
+  String get newsToday => 'Today';
+
+  @override
+  String get newsYesterday => 'Yesterday';
+
+  @override
+  String get newsEmptyTitle => 'No stories yet';
+
+  @override
+  String get newsEmptyBody =>
+      'The agent collects every hour. Stories scored 5 or more show here.';
+
+  @override
+  String get newsEmptySavedTitle => 'Nothing saved yet';
+
+  @override
+  String get newsEmptySavedBody =>
+      'Save a story from its menu or from the reading view.';
+
+  @override
+  String get newsEmptyTopicsOff => 'Every topic is off';
+
+  @override
+  String get newsEmptyTopicsOffBody =>
+      'Switch a topic on in the News settings.';
+
+  @override
+  String newsLoadFailed(String error) {
+    return 'Couldn\'t load the news: $error';
+  }
+
+  @override
+  String newsStoryFailed(String error) {
+    return 'Couldn\'t load the story: $error';
+  }
+
+  @override
+  String newsActionFailed(String error) {
+    return 'That didn\'t work: $error';
+  }
+
+  @override
+  String get newsMoreLikeThis => 'More like this';
+
+  @override
+  String get newsLessLikeThis => 'Less like this';
+
+  @override
+  String newsHideSource(String name) {
+    return 'Hide $name';
+  }
+
+  @override
+  String newsSourceHidden(String name) {
+    return '$name hidden';
+  }
+
+  @override
+  String get newsSave => 'Save';
+
+  @override
+  String get newsRemoveFromSaved => 'Remove from saved';
+
+  @override
+  String get newsSavedSnack => 'Saved';
+
+  @override
+  String get newsRemovedFromSaved => 'Removed from saved';
+
+  @override
+  String get newsCopyLink => 'Copy link';
+
+  @override
+  String get newsUndo => 'Undo';
+
+  @override
+  String get newsAiSummary => 'AI summary';
+
+  @override
+  String get newsAiNote => 'AI note';
+
+  @override
+  String get newsWhy => 'Why';
+
+  @override
+  String get newsAiDisclaimer =>
+      'Written by the local model from the text below. It can contain errors.';
+
+  @override
+  String get newsSummaryPending =>
+      'The summary is written when llama-server is idle.';
+
+  @override
+  String get newsFromTheFeed => 'From the feed';
+
+  @override
+  String get newsTeaserOnly => 'Only the feed\'s teaser is here.';
+
+  @override
+  String get newsTeaserOnlySub =>
+      'The agent fetches the article with its next hourly round and writes a summary after it.';
+
+  @override
+  String get newsFetchText => 'Fetch text';
+
+  @override
+  String get newsQueuedWord => 'queued';
+
+  @override
+  String get newsQueued => 'Fetching text · within the hour';
+
+  @override
+  String get newsQueuedSub =>
+      'You get the text here; nothing to wait for on this screen.';
+
+  @override
+  String get newsNoText => 'No article text';
+
+  @override
+  String get newsTryAgain => 'Try again';
+
+  @override
+  String get newsReasonRobots =>
+      'The site doesn\'t allow automatic reading (robots.txt).';
+
+  @override
+  String get newsReasonNoText =>
+      'The page builds itself with scripts or asked for a bot check, so no text came back.';
+
+  @override
+  String get newsReasonUnresolved =>
+      'The Google News link didn\'t lead to an article.';
+
+  @override
+  String newsReasonHttp(String code) {
+    return 'The site refused the request (HTTP $code).';
+  }
+
+  @override
+  String get newsReasonTimeout => 'The agent didn\'t get to it within a day.';
+
+  @override
+  String newsReasonOther(String code) {
+    return 'The agent couldn\'t read it ($code).';
+  }
+
+  @override
+  String newsTextSize(String chars) {
+    return '$chars characters';
+  }
+
+  @override
+  String newsTextSizeAt(String chars, String time) {
+    return '$chars characters · text fetched $time';
+  }
+
+  @override
+  String get newsTextFromHere => 'text from here';
+
+  @override
+  String newsReleasesToday(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n releases',
+      one: '1 release',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get newsReleasesNote =>
+      'A day of releases is one row. It has no article text and no summary.';
+
+  @override
+  String get newsOpenOriginal => 'Open original';
+
+  @override
+  String get newsOpenReleases => 'Open releases on GitHub';
+
+  @override
+  String newsOpensInBrowser(String host) {
+    return '$host · opens in your browser';
+  }
+
+  @override
+  String get newsTeach => 'Teach the agent';
+
+  @override
+  String get newsMoreCaption => 'More like this · counts from the next round';
+
+  @override
+  String get newsLessCaption => 'Less like this · counts from the next round';
 }

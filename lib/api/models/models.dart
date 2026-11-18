@@ -5,6 +5,7 @@ export 'brief.dart';
 export 'conversation.dart';
 export 'message.dart';
 export 'mirror.dart';
+export 'news.dart';
 export 'persona.dart';
 export 'run.dart';
 export 'schedule.dart';

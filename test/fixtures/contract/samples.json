@@ -1,6 +1,279 @@
 {
   "_note": "Generated from delve-backend serializers (decision 176); keys must equal contract.json.",
   "shapes": {
+    "news_item": {
+      "id": 8121,
+      "topic": "sailing",
+      "source": "sail-world.com",
+      "kind": "feed",
+      "title": "Team USA launches its new AC75 ahead of the Naples regatta",
+      "url": "https://www.sail-world.com/news/290112",
+      "publisher": "Sail-World",
+      "excerpt": "The American challenger rolled out its second boat in Naples.",
+      "published_at": "2026-10-19T19:39:00.123456+00:00",
+      "seen_at": "2026-10-19T19:59:00.123456+00:00",
+      "gn": false,
+      "sources": 2,
+      "releases": null,
+      "score": 9,
+      "why": "Vízre tette új AC75-ösét a Team USA Nápoly előtt.",
+      "setup": false,
+      "summary_hu": "A Team USA vízre tette második AC75-ösét Nápolyban. A hajó két hét tesztelés után indul az előregattán.",
+      "text_state": "ok",
+      "original_url": "https://www.sail-world.com/news/290112",
+      "read": false,
+      "saved": true,
+      "feedback": "more"
+    },
+    "news_item_release": {
+      "id": 8140,
+      "topic": "local_ai",
+      "source": "llama-cpp",
+      "kind": "release",
+      "title": "llama.cpp - 2 releases (b11690 ... b11712)",
+      "url": "https://github.com/ggml-org/llama.cpp/releases",
+      "publisher": "llama.cpp",
+      "excerpt": null,
+      "published_at": "2026-10-19T21:39:00.123456+00:00",
+      "seen_at": "2026-10-19T21:39:00.123456+00:00",
+      "gn": false,
+      "sources": 1,
+      "releases": [
+        {
+          "tag": "b11712",
+          "url": "https://github.com/ggml-org/llama.cpp/releases/tag/b11712",
+          "published_at": "2026-10-19T21:39:00.123456+00:00"
+        },
+        {
+          "tag": "b11690",
+          "url": "https://github.com/ggml-org/llama.cpp/releases/tag/b11690",
+          "published_at": "2026-10-19T16:39:00.123456+00:00"
+        }
+      ],
+      "score": 6,
+      "why": "Új llama.cpp kiadások a géped inference-szerveréhez.",
+      "setup": true,
+      "summary_hu": null,
+      "text_state": null,
+      "original_url": "https://github.com/ggml-org/llama.cpp/releases",
+      "read": false,
+      "saved": false,
+      "feedback": null
+    },
+    "news_release": {
+      "tag": "b11712",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/tag/b11712",
+      "published_at": "2026-10-19T21:39:00.123456+00:00"
+    },
+    "news_story": {
+      "id": 8121,
+      "topic": "sailing",
+      "source": "sail-world.com",
+      "kind": "feed",
+      "title": "Team USA launches its new AC75 ahead of the Naples regatta",
+      "url": "https://www.sail-world.com/news/290112",
+      "publisher": "Sail-World",
+      "excerpt": "The American challenger rolled out its second boat in Naples.",
+      "published_at": "2026-10-19T19:39:00.123456+00:00",
+      "seen_at": "2026-10-19T19:59:00.123456+00:00",
+      "gn": false,
+      "sources": 2,
+      "releases": null,
+      "score": 9,
+      "why": "Vízre tette új AC75-ösét a Team USA Nápoly előtt.",
+      "setup": false,
+      "summary_hu": "A Team USA vízre tette második AC75-ösét Nápolyban. A hajó két hét tesztelés után indul az előregattán.",
+      "text_state": "ok",
+      "original_url": "https://www.sail-world.com/news/290112",
+      "read": false,
+      "saved": true,
+      "feedback": "more",
+      "others": [
+        {
+          "id": 8133,
+          "publisher": "Scuttlebutt",
+          "title": "Team USA splashes AC75 number two",
+          "url": "https://www.sailingscuttlebutt.com/2026/10/19/team-usa",
+          "published_at": "2026-10-19T20:39:00.123456+00:00"
+        }
+      ],
+      "text": "The American challenger rolled out its second boat on Tuesday.\n\nTesting starts next week.",
+      "text_at": "2026-10-19T20:39:00.123456+00:00",
+      "text_error": null
+    },
+    "news_story_failed": {
+      "id": 8121,
+      "topic": "sailing",
+      "source": "sail-world.com",
+      "kind": "feed",
+      "title": "Team USA launches its new AC75 ahead of the Naples regatta",
+      "url": "https://www.sail-world.com/news/290112",
+      "publisher": "Sail-World",
+      "excerpt": "The American challenger rolled out its second boat in Naples.",
+      "published_at": "2026-10-19T19:39:00.123456+00:00",
+      "seen_at": "2026-10-19T19:59:00.123456+00:00",
+      "gn": false,
+      "sources": 1,
+      "releases": null,
+      "score": 9,
+      "why": "Vízre tette új AC75-ösét a Team USA Nápoly előtt.",
+      "setup": false,
+      "summary_hu": null,
+      "text_state": "failed",
+      "original_url": "https://www.sail-world.com/news/290112",
+      "read": false,
+      "saved": true,
+      "feedback": "more",
+      "others": [],
+      "text": null,
+      "text_at": null,
+      "text_error": "robots"
+    },
+    "news_other": {
+      "id": 8133,
+      "publisher": "Scuttlebutt",
+      "title": "Team USA splashes AC75 number two",
+      "url": "https://www.sailingscuttlebutt.com/2026/10/19/team-usa",
+      "published_at": "2026-10-19T20:39:00.123456+00:00"
+    },
+    "news_section": {
+      "topic": "sailing",
+      "name": "Sailing",
+      "count": 4,
+      "week": 14,
+      "new": 2,
+      "top": [
+        {
+          "id": 8121,
+          "topic": "sailing",
+          "source": "sail-world.com",
+          "kind": "feed",
+          "title": "Team USA launches its new AC75 ahead of the Naples regatta",
+          "url": "https://www.sail-world.com/news/290112",
+          "publisher": "Sail-World",
+          "excerpt": "The American challenger rolled out its second boat in Naples.",
+          "published_at": "2026-10-19T19:39:00.123456+00:00",
+          "seen_at": "2026-10-19T19:59:00.123456+00:00",
+          "gn": false,
+          "sources": 2,
+          "releases": null,
+          "score": 9,
+          "why": "Vízre tette új AC75-ösét a Team USA Nápoly előtt.",
+          "setup": false,
+          "summary_hu": "A Team USA vízre tette második AC75-ösét Nápolyban. A hajó két hét tesztelés után indul az előregattán.",
+          "text_state": "ok",
+          "original_url": "https://www.sail-world.com/news/290112",
+          "read": false,
+          "saved": true,
+          "feedback": "more"
+        }
+      ]
+    },
+    "news_digest": {
+      "top": [
+        {
+          "id": 8121,
+          "topic": "sailing",
+          "source": "sail-world.com",
+          "kind": "feed",
+          "title": "Team USA launches its new AC75 ahead of the Naples regatta",
+          "url": "https://www.sail-world.com/news/290112",
+          "publisher": "Sail-World",
+          "excerpt": "The American challenger rolled out its second boat in Naples.",
+          "published_at": "2026-10-19T19:39:00.123456+00:00",
+          "seen_at": "2026-10-19T19:59:00.123456+00:00",
+          "gn": false,
+          "sources": 2,
+          "releases": null,
+          "score": 9,
+          "why": "Vízre tette új AC75-ösét a Team USA Nápoly előtt.",
+          "setup": false,
+          "summary_hu": "A Team USA vízre tette második AC75-ösét Nápolyban. A hajó két hét tesztelés után indul az előregattán.",
+          "text_state": "ok",
+          "original_url": "https://www.sail-world.com/news/290112",
+          "read": false,
+          "saved": true,
+          "feedback": "more"
+        },
+        {
+          "id": 8140,
+          "topic": "local_ai",
+          "source": "llama-cpp",
+          "kind": "release",
+          "title": "llama.cpp - 2 releases (b11690 ... b11712)",
+          "url": "https://github.com/ggml-org/llama.cpp/releases",
+          "publisher": "llama.cpp",
+          "excerpt": null,
+          "published_at": "2026-10-19T21:39:00.123456+00:00",
+          "seen_at": "2026-10-19T21:39:00.123456+00:00",
+          "gn": false,
+          "sources": 1,
+          "releases": [
+            {
+              "tag": "b11712",
+              "url": "https://github.com/ggml-org/llama.cpp/releases/tag/b11712",
+              "published_at": "2026-10-19T21:39:00.123456+00:00"
+            },
+            {
+              "tag": "b11690",
+              "url": "https://github.com/ggml-org/llama.cpp/releases/tag/b11690",
+              "published_at": "2026-10-19T16:39:00.123456+00:00"
+            }
+          ],
+          "score": 6,
+          "why": "Új llama.cpp kiadások a géped inference-szerveréhez.",
+          "setup": true,
+          "summary_hu": null,
+          "text_state": null,
+          "original_url": "https://github.com/ggml-org/llama.cpp/releases",
+          "read": false,
+          "saved": false,
+          "feedback": null
+        }
+      ],
+      "new": 12,
+      "updated_at": "2026-10-19T21:39:00.123456+00:00",
+      "state": "ok",
+      "sources": 41,
+      "failing": 3,
+      "weekly": {
+        "count": 8
+      }
+    },
+    "news_topic": {
+      "id": "sailing",
+      "name": "Sailing",
+      "description": "America's Cup, SailGP, the Balaton.",
+      "position": 0,
+      "enabled": true,
+      "sources": 7,
+      "items_24h": 5
+    },
+    "news_source": {
+      "id": "sail-world.com",
+      "topic": "sailing",
+      "url": "https://www.sail-world.com/rss",
+      "kind": "feed",
+      "window_h": 48,
+      "every_min": 60,
+      "enabled": true,
+      "origin": "import",
+      "last_at": "2026-10-19T21:39:00.123456+00:00",
+      "last_ok_at": "2026-10-19T21:39:00.123456+00:00",
+      "last_status": "error",
+      "last_http": 503,
+      "last_error_code": "http_503",
+      "last_error": "Service Unavailable",
+      "last_items": 0,
+      "last_new": 0,
+      "errors_in_row": 3
+    },
+    "news_settings": {
+      "setup": "An invented reader's desktop.",
+      "digest_at": "07:00",
+      "push": true,
+      "push_max": 2
+    },
     "watch": {
       "slug": "rtx-4070-super-180k",
       "name": "RTX 4070 Super ≤180k",
@@ -5269,6 +5542,11 @@
       "notified_at": "2026-10-19T21:20:00.123456+00:00",
       "available_at": null
     },
+    "news.updated": {
+      "new": 3,
+      "texts": 1,
+      "updated_at": "2026-10-19T21:39:00.123456+00:00"
+    },
     "error": {
       "code": "thinking_route_not_applied",
       "ref_id": "run_8e4b1c2d3a4f5e6b",
@@ -5278,7 +5556,7 @@
   "connection": {
     "hello.ok": {
       "server_version": "0.1.0",
-      "api_revision": 13,
+      "api_revision": 18,
       "revision": "eb4045ed6a94",
       "hermes": "ok",
       "hermes_version": "0.22.2",
@@ -5293,7 +5571,7 @@
     },
     "meta": {
       "server_version": "0.1.0",
-      "api_revision": 13,
+      "api_revision": 18,
       "revision": "eb4045ed6a94",
       "python": "3.14.8",
       "hermes_expected_version": "0.22.2",
@@ -5301,7 +5579,7 @@
     },
     "status": {
       "server_version": "0.1.0",
-      "api_revision": 13,
+      "api_revision": 18,
       "revision": null,
       "hermes": null,
       "hermes_version": null,
@@ -5375,7 +5653,8 @@
         "water": false,
         "brief": false,
         "watches": true,
-        "system": true
+        "system": true,
+        "news": false
       }
     }
   }

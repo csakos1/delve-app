@@ -18,6 +18,8 @@ from delve.mirror import mirror_out
 from delve.persona import Persona, Section, Topic, persona_out, section_out, topic_out
 from pathlib import Path
 from delve.watches import item_out, watch_out
+from delve.db.models import NewsItem, NewsSource, NewsTopic
+from delve import news as nw
 import math
 
 t0 = datetime(2026, 10, 19, 21, 39, 0, 123456, tzinfo=timezone.utc)
@@ -178,7 +180,57 @@ persona = Persona(
     ),
     available=True,
 )
+# N2: News (an invented reader; a merged sailing story with its text, a day of releases)
+n_topic = NewsTopic(id="sailing", name="Sailing", description="America's Cup, SailGP, the Balaton.",
+    position=0, enabled=True)
+n_source = NewsSource(id="sail-world.com", topic_id="sailing", url="https://www.sail-world.com/rss",
+    kind="feed", window_h=48, every_min=60, enabled=True, origin="import", last_at=t0,
+    last_ok_at=t0, last_status="error", last_http=503, last_error_code="http_503",
+    last_error="Service Unavailable", last_items=0, last_new=0, errors_in_row=3)
+n_story = NewsItem(id=8121, key="0" * 32, source_id="sail-world.com", topic_id="sailing", kind="feed",
+    title="Team USA launches its new AC75 ahead of the Naples regatta",
+    url="https://www.sail-world.com/news/290112", publisher="Sail-World",
+    excerpt="The American challenger rolled out its second boat in Naples.",
+    published_at=t0 - timedelta(hours=2), seen_at=t0 - timedelta(hours=1, minutes=40), gn=False,
+    releases=None, score=9, why="Vízre tette új AC75-ösét a Team USA Nápoly előtt.", setup=False,
+    summary_hu="A Team USA vízre tette második AC75-ösét Nápolyban. A hajó két hét tesztelés után indul az előregattán.",
+    text="The American challenger rolled out its second boat on Tuesday.\n\nTesting starts next week.",
+    text_state="ok", text_error=None, text_url="https://www.sail-world.com/news/290112",
+    text_at=t0 - timedelta(hours=1), read_at=None, saved_at=t0 - timedelta(minutes=30), feedback="more")
+n_other = NewsItem(id=8133, publisher="Scuttlebutt", title="Team USA splashes AC75 number two",
+    url="https://www.sailingscuttlebutt.com/2026/10/19/team-usa", published_at=t0 - timedelta(hours=1))
+n_release = NewsItem(id=8140, key="1" * 32, source_id="llama-cpp", topic_id="local_ai", kind="release",
+    title="llama.cpp - 2 releases (b11690 ... b11712)", url="https://github.com/ggml-org/llama.cpp/releases",
+    publisher="llama.cpp", excerpt=None, published_at=t0, seen_at=t0, gn=False,
+    releases=[{"tag": "b11712", "url": "https://github.com/ggml-org/llama.cpp/releases/tag/b11712",
+               "published_at": t0.isoformat()},
+              {"tag": "b11690", "url": "https://github.com/ggml-org/llama.cpp/releases/tag/b11690",
+               "published_at": (t0 - timedelta(hours=5)).isoformat()}],
+    score=6, why="Új llama.cpp kiadások a géped inference-szerveréhez.", setup=True, summary_hu=None,
+    text_state=None, text_url=None, read_at=None, saved_at=None, feedback=None)
+n_item = nw.item_out(n_story, 2)
+n_rel = nw.item_out(n_release)
+n_story_out = {**n_item, "others": [nw.other_out(n_other)], "text": n_story.text,
+    "text_at": n_story.text_at.isoformat(), "text_error": None}
 shapes = {
+    "news_item": n_item,
+    "news_item_release": n_rel,
+    "news_release": n_release.releases[0],
+    "news_story": n_story_out,
+    "news_story_failed": {**n_rel, **nw.item_out(NewsItem(**{c: getattr(n_story, c) for c in (
+        "id", "source_id", "topic_id", "kind", "title", "url", "publisher", "excerpt", "published_at",
+        "seen_at", "gn", "releases", "score", "why", "setup", "read_at", "saved_at", "feedback")},
+        summary_hu=None, text_state="failed", text_url=None)), "others": [], "text": None, "text_at": None,
+        "text_error": "robots"},
+    "news_other": nw.other_out(n_other),
+    "news_section": {"topic": "sailing", "name": "Sailing", "count": 4, "week": 14, "new": 2,
+                     "top": [n_item]},
+    "news_digest": {"top": [n_item, n_rel], "new": 12, "updated_at": t0.isoformat(), "state": "ok",
+                    "sources": 41, "failing": 3, "weekly": {"count": 8}},
+    "news_topic": nw.topic_out(n_topic, {"sources": 7, "items_24h": 5}),
+    "news_source": nw.source_out(n_source),
+    "news_settings": nw.settings_out({"setup": "An invented reader's desktop.", "digest_at": "07:00",
+                                      "push": True, "push_max": 2}),
     "watch": watch_out(watch, watch_counts),
     "watch_item": item_out(hit),
     "conversation": conversation_out(conv),
@@ -244,6 +296,7 @@ events = {
     "schedule.deleted": {"id": str(prompt_sched.id)},
     "watch.updated": watch_out(watch, watch_counts),
     "watch.item": item_out(hit),
+    "news.updated": {"new": 3, "texts": 1, "updated_at": t0.isoformat()},
     "error": {"code": "thinking_route_not_applied", "ref_id": run.run_id, "message": "The thinking run did not use the thinking provider."},
 }
 for k, v in events.items():
@@ -262,7 +315,7 @@ connection = {
     # GET/PATCH /api/v1/devices/me (api/devices.py _device_out; no shared serializer)
     "device_me": {"id": "4f1c2b3a-9d8e-4f7a-8b6c-5d4e3f2a1b0c", "name": "pixel", "created_at": t0.isoformat(),
                   "last_seen_at": (t0 + timedelta(minutes=1)).isoformat(), "fcm": True, "push": True,
-                  "notify": {"approvals": True, "run_done": False, "water": False, "brief": False, "watches": True, "system": True}},
+                  "notify": {"approvals": True, "run_done": False, "water": False, "brief": False, "watches": True, "system": True, "news": False}},
 }
 out = {"_note": "Generated from delve-backend serializers (decision 176); keys must equal contract.json.",
        "shapes": shapes, "events": events, "connection": connection}

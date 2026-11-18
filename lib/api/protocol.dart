@@ -3,7 +3,7 @@
 /// Oldest backend contract this build works with (`/meta` `api_revision`).
 /// Raise it together with the models when the app starts relying on a newer
 /// contract; a smaller server revision shows the "server too old" screen.
-const int kMinApiRevision = 13; // 13: the personal profile
+const int kMinApiRevision = 18; // 18: News (sections with counts)
 
 /// REST routes the app calls (method + path template); checked against the
 /// backend contract in `test/contract_test.dart`.
@@ -70,6 +70,28 @@ abstract final class ApiRoutes {
   static const putPersonaProfile = ('PUT', '/api/v1/persona/profile');
   static const putPersonaTopic = ('PUT', '/api/v1/persona/topics/{name}');
   static const deletePersonaTopic = ('DELETE', '/api/v1/persona/topics/{name}');
+
+  /// News (N1-N2): the Dashboard block, the page, a story, its marks and
+  /// "Fetch text"; the topics, feeds and settings.
+  static const news = ('GET', '/api/v1/news');
+  static const newsSections = ('GET', '/api/v1/news/sections');
+  static const newsItems = ('GET', '/api/v1/news/items');
+  static const newsItem = ('GET', '/api/v1/news/items/{item_id}');
+  static const markNewsItem = ('PATCH', '/api/v1/news/items/{item_id}');
+  static const fetchNewsText = ('POST', '/api/v1/news/items/{item_id}/text');
+  static const newsTopics = ('GET', '/api/v1/news/topics');
+  static const createNewsTopic = ('POST', '/api/v1/news/topics');
+  static const patchNewsTopic = ('PATCH', '/api/v1/news/topics/{topic_id}');
+  static const deleteNewsTopic = ('DELETE', '/api/v1/news/topics/{topic_id}');
+  static const newsSources = ('GET', '/api/v1/news/sources');
+  static const createNewsSource = ('POST', '/api/v1/news/sources');
+  static const patchNewsSource = ('PATCH', '/api/v1/news/sources/{source_id}');
+  static const deleteNewsSource = (
+    'DELETE',
+    '/api/v1/news/sources/{source_id}',
+  );
+  static const newsSettings = ('GET', '/api/v1/news/settings');
+  static const patchNewsSettings = ('PATCH', '/api/v1/news/settings');
   static const ws = ('WS', '/api/v1/ws');
 
   static const List<(String, String)> all = <(String, String)>[
@@ -113,6 +135,22 @@ abstract final class ApiRoutes {
     putPersonaProfile,
     putPersonaTopic,
     deletePersonaTopic,
+    news,
+    newsSections,
+    newsItems,
+    newsItem,
+    markNewsItem,
+    fetchNewsText,
+    newsTopics,
+    createNewsTopic,
+    patchNewsTopic,
+    deleteNewsTopic,
+    newsSources,
+    createNewsSource,
+    patchNewsSource,
+    deleteNewsSource,
+    newsSettings,
+    patchNewsSettings,
     ws,
   ];
 

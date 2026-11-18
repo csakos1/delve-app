@@ -83,6 +83,15 @@ void main() {
           'persona': (j) => Persona.fromJson(j).toJson(),
           'persona_section': (j) => PersonaSection.fromJson(j).toJson(),
           'persona_topic': (j) => PersonaTopic.fromJson(j).toJson(),
+          'news_item': (j) => NewsItem.fromJson(j).toJson(),
+          'news_release': (j) => NewsRelease.fromJson(j).toJson(),
+          'news_story': (j) => NewsStory.fromJson(j).toJson(),
+          'news_other': (j) => NewsOther.fromJson(j).toJson(),
+          'news_section': (j) => NewsSection.fromJson(j).toJson(),
+          'news_digest': (j) => NewsDigest.fromJson(j).toJson(),
+          'news_topic': (j) => NewsTopic.fromJson(j).toJson(),
+          'news_source': (j) => NewsSource.fromJson(j).toJson(),
+          'news_settings': (j) => NewsSettings.fromJson(j).toJson(),
         };
 
     test('every contract shape has a model', () {
@@ -99,6 +108,40 @@ void main() {
         expect(jsonTree(json, want), want);
       });
     }
+
+    test('news shapes keep their values', () {
+      final story = NewsStory.fromJson(obj(sampleShapes['news_story']));
+      final i = story.item;
+      expect((i.id, i.topic, i.sources, i.score), (8121, 'sailing', 2, 9));
+      expect((i.mustRead, i.touchesSetup, i.isRelease), (true, false, false));
+      expect((i.textState, i.saved, i.feedback), ('ok', true, 'more'));
+      expect(i.summaryHu, startsWith('A Team USA'));
+      expect(story.others.single.publisher, 'Scuttlebutt');
+      expect(story.text, contains('\n\n'));
+      expect(story.textAt!.isUtc, isTrue);
+      final failed = NewsStory.fromJson(obj(sampleShapes['news_story_failed']));
+      expect(
+        (failed.item.textState, failed.text, failed.textError),
+        ('failed', null, 'robots'),
+      );
+      final rel = NewsItem.fromJson(obj(sampleShapes['news_item_release']));
+      expect(
+        (rel.isRelease, rel.touchesSetup, rel.canFetchText),
+        (true, true, false),
+      );
+      expect(rel.releases!.map((r) => r.tag), ['b11712', 'b11690']);
+      final d = NewsDigest.fromJson(obj(sampleShapes['news_digest']));
+      expect(
+        (d.fresh, d.failing, d.weekly?.count, d.top.length),
+        (12, 3, 8, 2),
+      );
+      final sec = NewsSection.fromJson(obj(sampleShapes['news_section']));
+      expect((sec.count, sec.week, sec.fresh), (4, 14, 2));
+      final src = NewsSource.fromJson(obj(sampleShapes['news_source']));
+      expect((src.errorsInRow, src.lastHttp, src.windowH), (3, 503, 48));
+      final t = NewsTopic.fromJson(obj(sampleShapes['news_topic']));
+      expect((t.items24h, t.sources), (5, 7));
+    });
 
     test('nested approval of a tool step has the approval keys', () {
       final step = ToolStep.fromJson(obj(sampleShapes['tool_step']));
