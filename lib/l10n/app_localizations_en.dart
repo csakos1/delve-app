@@ -5011,7 +5011,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newsTeaserOnlySub =>
-      'The agent fetches the article within the hour and writes a summary after it.';
+      'Fetch text has the agent read the article now; the summary follows when llama-server is idle.';
 
   @override
   String get newsFetchText => 'Fetch text';
@@ -5023,7 +5023,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newsQueued => 'Fetching text · within the hour';
 
   @override
-  String get newsQueuedSub => 'It appears here when it is ready.';
+  String get newsQueuedSub =>
+      'The desktop couldn\'t start it now, so the hourly round brings it.';
 
   @override
   String get newsNoText => 'No article text';
@@ -5109,4 +5110,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newsRoundsHourly => 'Rounds run every hour';
+
+  @override
+  String get newsFetchingWord => 'fetching';
+
+  @override
+  String get newsFetchingNow => 'Fetching the text now';
+
+  @override
+  String get newsFetchingNowSub =>
+      'Usually under a minute. It appears here by itself.';
 }

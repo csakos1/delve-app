@@ -3806,11 +3806,11 @@
   "newsSummaryPending": "The summary is written when llama-server is idle.",
   "newsFromTheFeed": "From the feed",
   "newsTeaserOnly": "Only the feed's teaser is here.",
-  "newsTeaserOnlySub": "The agent fetches the article within the hour and writes a summary after it.",
+  "newsTeaserOnlySub": "Fetch text has the agent read the article now; the summary follows when llama-server is idle.",
   "newsFetchText": "Fetch text",
   "newsQueuedWord": "queued",
   "newsQueued": "Fetching text · within the hour",
-  "newsQueuedSub": "It appears here when it is ready.",
+  "newsQueuedSub": "The desktop couldn't start it now, so the hourly round brings it.",
   "newsNoText": "No article text",
   "newsTryAgain": "Try again",
   "newsReasonRobots": "The site doesn't allow automatic reading (robots.txt).",
@@ -3917,5 +3917,8 @@
     }
   },
   "newsDayToday": "Today",
-  "newsRoundsHourly": "Rounds run every hour"
+  "newsRoundsHourly": "Rounds run every hour",
+  "newsFetchingWord": "fetching",
+  "newsFetchingNow": "Fetching the text now",
+  "newsFetchingNowSub": "Usually under a minute. It appears here by itself."
 }

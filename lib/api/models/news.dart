@@ -206,6 +206,7 @@ class NewsStory {
     this.others = const [],
     this.text,
     this.textAt,
+    this.textNow = false,
     this.textError,
   });
 
@@ -220,6 +221,7 @@ class NewsStory {
       final String s => DateTime.parse(s),
       _ => null,
     },
+    textNow: json['text_now'] as bool? ?? false,
     textError: json['text_error'] as String?,
   );
 
@@ -227,6 +229,10 @@ class NewsStory {
   final List<NewsOther> others;
   final String? text;
   final DateTime? textAt;
+
+  /// A “Fetch text” started the agent's job at once (API 19): the text comes
+  /// in seconds; false while it waits for the hourly round.
+  final bool textNow;
   final String? textError;
 
   Map<String, Object?> toJson() => {
@@ -234,6 +240,7 @@ class NewsStory {
     'others': [for (final o in others) o.toJson()],
     'text': text,
     'text_at': textAt?.toIso8601String(),
+    'text_now': textNow,
     'text_error': textError,
   };
 
@@ -242,6 +249,7 @@ class NewsStory {
     others: others,
     text: text,
     textAt: textAt,
+    textNow: textNow,
     textError: textError,
   );
 }

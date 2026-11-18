@@ -211,7 +211,7 @@ n_release = NewsItem(id=8140, key="1" * 32, source_id="llama-cpp", topic_id="loc
 n_item = nw.item_out(n_story, 2)
 n_rel = nw.item_out(n_release)
 n_story_out = {**n_item, "others": [nw.other_out(n_other)], "text": n_story.text,
-    "text_at": n_story.text_at.isoformat(), "text_error": None}
+    "text_at": n_story.text_at.isoformat(), "text_now": False, "text_error": None}
 shapes = {
     "news_item": n_item,
     "news_item_release": n_rel,
@@ -221,6 +221,7 @@ shapes = {
         "id", "source_id", "topic_id", "kind", "title", "url", "publisher", "excerpt", "published_at",
         "seen_at", "gn", "releases", "score", "why", "setup", "read_at", "saved_at", "feedback")},
         summary_hu=None, text_state="failed", text_url=None)), "others": [], "text": None, "text_at": None,
+        "text_now": False,
         "text_error": "robots"},
     "news_other": nw.other_out(n_other),
     "news_section": {"topic": "sailing", "name": "Sailing", "count": 4, "week": 14, "new": 2,

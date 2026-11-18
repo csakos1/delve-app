@@ -644,6 +644,16 @@ class _TextState extends StatelessWidget {
       ),
     );
     final children = switch (i.textState) {
+      'queued' when story.textNow => [
+        StatusText(
+          kind: StatusKind.info,
+          icon: NewsIcons.fetchText,
+          label: l.newsFetchingWord,
+        ),
+        const SizedBox(height: DelveTokens.space2),
+        Text(l.newsFetchingNow, style: context.text.bodyMedium),
+        Text(l.newsFetchingNowSub, style: small),
+      ],
       'queued' => [
         StatusText(
           kind: StatusKind.info,

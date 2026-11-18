@@ -7800,7 +7800,7 @@ abstract class AppLocalizations {
   /// No description provided for @newsTeaserOnlySub.
   ///
   /// In en, this message translates to:
-  /// **'The agent fetches the article within the hour and writes a summary after it.'**
+  /// **'Fetch text has the agent read the article now; the summary follows when llama-server is idle.'**
   String get newsTeaserOnlySub;
 
   /// No description provided for @newsFetchText.
@@ -7824,7 +7824,7 @@ abstract class AppLocalizations {
   /// No description provided for @newsQueuedSub.
   ///
   /// In en, this message translates to:
-  /// **'It appears here when it is ready.'**
+  /// **'The desktop couldn\'t start it now, so the hourly round brings it.'**
   String get newsQueuedSub;
 
   /// No description provided for @newsNoText.
@@ -7952,6 +7952,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rounds run every hour'**
   String get newsRoundsHourly;
+
+  /// No description provided for @newsFetchingWord.
+  ///
+  /// In en, this message translates to:
+  /// **'fetching'**
+  String get newsFetchingWord;
+
+  /// No description provided for @newsFetchingNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching the text now'**
+  String get newsFetchingNow;
+
+  /// No description provided for @newsFetchingNowSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Usually under a minute. It appears here by itself.'**
+  String get newsFetchingNowSub;
 }
 
 class _AppLocalizationsDelegate

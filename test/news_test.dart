@@ -303,13 +303,14 @@ void main() {
       env.server.json('POST', '/api/v1/news/items/8121/text', {
         ...failed,
         'text_state': 'queued',
+        'text_now': true,
         'text_error': null,
       });
       await t.tap(find.byKey(const Key('news.story.fetch')));
       await t.pumpAndSettle();
       expect(env.server.calls, contains('POST /api/v1/news/items/8121/text'));
       expect(find.byKey(const Key('news.story.state.queued')), findsOneWidget);
-      expect(find.text('Fetching text · within the hour'), findsOneWidget);
+      expect(find.text('Fetching the text now'), findsOneWidget);
     });
   });
 }

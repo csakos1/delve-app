@@ -99,6 +99,7 @@
       ],
       "text": "The American challenger rolled out its second boat on Tuesday.\n\nTesting starts next week.",
       "text_at": "2026-10-19T20:39:00.123456+00:00",
+      "text_now": false,
       "text_error": null
     },
     "news_story_failed": {
@@ -127,6 +128,7 @@
       "others": [],
       "text": null,
       "text_at": null,
+      "text_now": false,
       "text_error": "robots"
     },
     "news_other": {
@@ -5556,7 +5558,7 @@
   "connection": {
     "hello.ok": {
       "server_version": "0.1.0",
-      "api_revision": 18,
+      "api_revision": 19,
       "revision": "eb4045ed6a94",
       "hermes": "ok",
       "hermes_version": "0.22.2",
@@ -5571,7 +5573,7 @@
     },
     "meta": {
       "server_version": "0.1.0",
-      "api_revision": 18,
+      "api_revision": 19,
       "revision": "eb4045ed6a94",
       "python": "3.14.8",
       "hermes_expected_version": "0.22.2",
@@ -5579,7 +5581,7 @@
     },
     "status": {
       "server_version": "0.1.0",
-      "api_revision": 18,
+      "api_revision": 19,
       "revision": null,
       "hermes": null,
       "hermes_version": null,
