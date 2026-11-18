@@ -361,5 +361,89 @@ void main() {
       expect(t.takeException(), isNull);
       expect(find.text('Lake Balaton water level'), findsOneWidget);
     });
+
+    testWidgets('scrolling back up from the bottom does not jump', (t) async {
+      // a tall page: the brief leaves the list's cache at the bottom
+      t.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(t.platformDispatcher.clearTextScaleFactorTestValue);
+      final today = DateTime.now();
+      final brief = AgentCard.fromJson(FakeServer.sample('card_brief'));
+      final cards = [
+        water('t', today, level: 98),
+        brief.copyWith(ts: today.toUtc()),
+      ];
+      await pumpDelve(
+        t,
+        before: (env) async => env.server
+          ..on(
+            'GET',
+            '/api/v1/cards',
+            (r) => FakeReply(200, {
+              'data': [
+                for (final c in cards.reversed)
+                  if (c.type == r.queryParameters['type']) json(c),
+              ],
+            }),
+          )
+          ..json('GET', '/api/v1/news', FakeServer.sample('news_digest')),
+      );
+      // bounded pumps: pumpAndSettle can run for minutes on a tall page
+      Future<void> settle() async {
+        for (var i = 0; i < 10; i++) {
+          await t.pump(const Duration(milliseconds: 50));
+        }
+      }
+
+      await t.tap(find.text('Dashboard').last);
+      await settle();
+
+      final page = find.byType(DashboardScreen);
+      final list = find.descendant(of: page, matching: find.byType(ListView));
+      final position = t
+          .state<ScrollableState>(
+            find.descendant(of: list.first, matching: find.byType(Scrollable)),
+          )
+          .position;
+      // down until the News card is built (downwards nothing jumps); where
+      // it would be at offset 0: at offset p it must be p higher
+      final news = find.byKey(const Key('dashboard.news'));
+      for (var i = 0; i < 100 && news.evaluate().isEmpty; i++) {
+        position.jumpTo(position.pixels + 40);
+        await settle();
+      }
+      expect(news, findsOneWidget);
+      final top = t.getTopLeft(news).dy + position.pixels;
+
+      void check() {
+        if (news.evaluate().isEmpty) return;
+        expect(
+          t.getTopLeft(news).dy,
+          moreOrLessEquals(top - position.pixels, epsilon: 0.5),
+          reason: 'at ${position.pixels}',
+        );
+      }
+
+      for (var i = 0; i < 5; i++) {
+        position.jumpTo(position.maxScrollExtent);
+        await settle();
+      }
+      expect(
+        find.byKey(const Key('dashboard.brief'), skipOffstage: false),
+        findsNothing,
+        reason: 'the brief must have left the cache for this test',
+      );
+      // the tags of a narrow Dashboard row at 1.3 shorten, nothing overflows
+      expect(t.takeException(), isNull);
+
+      // back up in small steps, as a finger would (at most 400 of them)
+      for (var i = 0; i < 400 && position.pixels > 0; i++) {
+        position.jumpTo(position.pixels > 40 ? position.pixels - 40 : 0);
+        await t.pump();
+        check();
+        await settle();
+        check();
+      }
+      expect(position.pixels, 0);
+    });
   });
 }

@@ -206,11 +206,16 @@ class TopicLabel extends ConsumerWidget {
       children: [
         SymbolIcon(style.glyph, size: 14, color: color),
         const SizedBox(width: 5),
-        Text(
-          name.toUpperCase(),
-          style: context.text.labelSmall!.copyWith(
-            color: color,
-            letterSpacing: 0.9,
+        Flexible(
+          child: Text(
+            name.toUpperCase(),
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+            style: context.text.labelSmall!.copyWith(
+              color: color,
+              letterSpacing: 0.9,
+            ),
           ),
         ),
       ],
@@ -246,7 +251,17 @@ class _Tag extends StatelessWidget {
           color: color,
         ),
         const SizedBox(width: 4),
-        Text(label, style: context.text.labelSmall!.copyWith(color: color)),
+        // a tag wider than its line (big text, a narrow Dashboard row)
+        // shortens instead of overflowing
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+            style: context.text.labelSmall!.copyWith(color: color),
+          ),
+        ),
       ],
     );
     if (bg == null) return row;

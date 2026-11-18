@@ -300,7 +300,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
           ),
           _ApprovalsButton(pending: pending),
         ],
-        child: Column(
+        // the progress line, the search field, the chips and the banner stay
+        // put: in the header, which tints while the list scrolls
+        below: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (skeleton || (status.resyncing && !retrying))
@@ -333,9 +336,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
             if (hasKey) ChatsFilterChips(value: filter, onChanged: _setFilter),
             if (retrying && filter != ChatsFilter.general)
               _RetryBanner(status: status, generalWorks: hasKey),
-            Expanded(child: body),
           ],
         ),
+        child: body,
       ),
       floatingActionButton: empty
           ? null

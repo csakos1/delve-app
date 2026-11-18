@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/fake_openrouter.dart';
 import 'support/fake_server.dart';
 import 'support/harness.dart';
 import 'support/ws_fixtures.dart';
@@ -426,6 +427,48 @@ void main() {
       await t.drag(list, const Offset(0, 300));
       await t.pumpAndSettle();
       expect(header(), delveColorScheme.surface);
+    });
+
+    testWidgets('the chips under the title tint with the header', (t) async {
+      await pumpDelve(
+        t,
+        generalKey: testOpenRouterKey,
+        before: (env) async {
+          for (var i = 0; i < 30; i++) {
+            await env.db.putConversation(
+              conversation(
+                'c_$i',
+                title: 'Chat $i',
+                updated: t0.add(Duration(minutes: i)),
+              ),
+            );
+          }
+        },
+      );
+      final page = find.byType(ChatsScreen);
+      final header = find.descendant(
+        of: page,
+        matching: find.byKey(const Key('page.header')),
+      );
+      Color? color() =>
+          (t.widget<AnimatedContainer>(header).decoration! as BoxDecoration)
+              .color;
+      // the chips are in the header, not in the scrolled part
+      expect(
+        find.descendant(
+          of: header,
+          matching: find.byKey(const Key('chats.filters')),
+        ),
+        findsOneWidget,
+      );
+      final list = find.byKey(const Key('chats.list'));
+      expect(color(), delveColorScheme.surface);
+      await t.drag(list, const Offset(0, -300));
+      await t.pumpAndSettle();
+      expect(color(), delveColorScheme.surfaceContainer);
+      await t.drag(list, const Offset(0, 300));
+      await t.pumpAndSettle();
+      expect(color(), delveColorScheme.surface);
     });
 
     testWidgets('empty: message and a single New chat button', (t) async {

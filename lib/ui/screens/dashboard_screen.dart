@@ -97,6 +97,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final readings = ref.watch(waterReadingsProvider);
+    // The brief's stream stays alive while the Dashboard is open. Only the
+    // card listened to it, so a long scroll down disposed the card, and with
+    // it the stream; scrolling back up rebuilt the card empty (0 dp) for a
+    // frame and then at full height, and the list pushed everything under
+    // it down by the brief's height - the page jumped.
+    ref.listen(latestBriefProvider, (_, _) {});
     final updated = _updated;
     return TopLevelPage(
       title: l.navDashboard,

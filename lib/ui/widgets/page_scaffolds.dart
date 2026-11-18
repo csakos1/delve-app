@@ -14,6 +14,7 @@ class TopLevelPage extends StatefulWidget {
     this.actions = const [],
     this.tintOnScroll = false,
     this.bar,
+    this.below,
   });
 
   final String title;
@@ -24,6 +25,10 @@ class TopLevelPage extends StatefulWidget {
   /// Replaces the title and actions (Files' selection mode, 23d): on
   /// surface-2, the status bar included.
   final Widget? bar;
+
+  /// What stays put under the title (Chats: the filter chips, the search
+  /// field): part of the header, so it tints with it while the page scrolls.
+  final Widget? below;
 
   @override
   State<TopLevelPage> createState() => _TopLevelPageState();
@@ -67,30 +72,36 @@ class _TopLevelPageState extends State<TopLevelPage> {
                 ? cs.surfaceContainer
                 : cs.surface,
             padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
-            child:
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                 widget.bar ??
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    DelveTokens.space4,
-                    DelveTokens.space4,
-                    DelveTokens.space2,
-                    DelveTokens.space2,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Semantics(
-                          header: true,
-                          child: Text(
-                            widget.title,
-                            style: context.text.headlineMedium,
-                          ),
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        DelveTokens.space4,
+                        DelveTokens.space4,
+                        DelveTokens.space2,
+                        DelveTokens.space2,
                       ),
-                      ...widget.actions,
-                    ],
-                  ),
-                ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Semantics(
+                              header: true,
+                              child: Text(
+                                widget.title,
+                                style: context.text.headlineMedium,
+                              ),
+                            ),
+                          ),
+                          ...widget.actions,
+                        ],
+                      ),
+                    ),
+                ?widget.below,
+              ],
+            ),
           ),
           Expanded(child: body),
         ],
