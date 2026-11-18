@@ -195,6 +195,9 @@ _NewsSource _$NewsSourceFromJson(Map<String, dynamic> json) => _NewsSource(
   lastItems: (json['last_items'] as num?)?.toInt(),
   lastNew: (json['last_new'] as num?)?.toInt(),
   errorsInRow: (json['errors_in_row'] as num?)?.toInt() ?? 0,
+  lastItemAt: json['last_item_at'] == null
+      ? null
+      : DateTime.parse(json['last_item_at'] as String),
 );
 
 Map<String, dynamic> _$NewsSourceToJson(_NewsSource instance) =>
@@ -216,6 +219,7 @@ Map<String, dynamic> _$NewsSourceToJson(_NewsSource instance) =>
       'last_items': instance.lastItems,
       'last_new': instance.lastNew,
       'errors_in_row': instance.errorsInRow,
+      'last_item_at': instance.lastItemAt?.toIso8601String(),
     };
 
 _NewsSettings _$NewsSettingsFromJson(Map<String, dynamic> json) =>

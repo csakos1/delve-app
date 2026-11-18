@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../api/models/models.dart';
 import '../../app/news.dart';
+import '../../app/router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../format.dart';
@@ -112,6 +114,15 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
     return Scaffold(
       appBar: PageColourBar(
         title: widget.weekly ? l.newsLastWeek : l.newsTitle,
+        actions: [
+          if (!widget.weekly)
+            IconButton(
+              key: const Key('news.settings'),
+              tooltip: l.newsSettingsTitle,
+              onPressed: () => context.push(Routes.newsSettings),
+              icon: const SymbolIcon(DelveIcons.settings),
+            ),
+        ],
       ),
       body: UnderBarFade(
         child: RefreshIndicator(
@@ -182,6 +193,10 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
           child: _Empty(
             title: l.newsEmptyTopicsOff,
             body: l.newsEmptyTopicsOffBody,
+            action: (
+              l.newsSettingsOpen,
+              () => context.push(Routes.newsSettings),
+            ),
           ),
         ),
       ];
@@ -598,9 +613,12 @@ class _DayHeader extends StatelessWidget {
 }
 
 class _Empty extends StatelessWidget {
-  const _Empty({required this.title, required this.body});
+  const _Empty({required this.title, required this.body, this.action});
   final String title;
   final String body;
+
+  /// A tonal button under the text (“Open News settings”).
+  final (String, VoidCallback)? action;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -623,6 +641,14 @@ class _Empty extends StatelessWidget {
             color: context.colors.onSurfaceVariant,
           ),
         ),
+        if (action case (final label, final onPressed)) ...[
+          const SizedBox(height: DelveTokens.space4),
+          FilledButton.tonal(
+            key: const Key('news.empty.settings'),
+            onPressed: onPressed,
+            child: Text(label),
+          ),
+        ],
       ],
     ),
   );

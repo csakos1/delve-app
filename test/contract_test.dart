@@ -139,6 +139,7 @@ void main() {
       expect((sec.count, sec.week, sec.fresh), (4, 14, 2));
       final src = NewsSource.fromJson(obj(sampleShapes['news_source']));
       expect((src.errorsInRow, src.lastHttp, src.windowH), (3, 503, 48));
+      expect(src.lastItemAt, isNotNull);
       final t = NewsTopic.fromJson(obj(sampleShapes['news_topic']));
       expect((t.items24h, t.sources), (5, 7));
     });

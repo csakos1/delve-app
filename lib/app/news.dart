@@ -152,8 +152,18 @@ class NewsController extends Notifier<NewsView> {
   /// "Hide this source": the feed off (or on again for Undo); the lists
   /// reload without it.
   Future<void> setSource(String sourceId, {required bool enabled}) async {
-    await _api!.setNewsSource(sourceId, enabled: enabled);
-    if (ref.mounted) unawaited(_quiet(refresh));
+    final source = await _api!.setNewsSource(sourceId, enabled: enabled);
+    if (!ref.mounted) return;
+    ref.read(newsConfigProvider.notifier).putSource(source);
+    unawaited(_quiet(refresh));
+  }
+
+  /// After a change in News settings (a topic on or off, the order, a feed):
+  /// what the Dashboard and the News page show is reloaded quietly.
+  void reloadQuietly() {
+    if (state.digest != null || state.sections != null) {
+      unawaited(_quiet(refresh));
+    }
   }
 }
 
@@ -393,3 +403,216 @@ final newsStoryProvider =
     NotifierProvider.family<NewsStoryController, NewsStoryView, int>(
       NewsStoryController.new,
     );
+
+/// A feed counts as failing from this many failed rounds in a row (the
+/// backend's `FAILING_IN_ROW`; the Dashboard's “N feeds are failing”).
+const int kNewsFailingInRow = 3;
+
+/// News settings (N2c): the topics, the feeds and the digest / push
+/// settings, loaded together when the page opens.
+@immutable
+class NewsConfig {
+  const NewsConfig({this.topics, this.sources, this.settings, this.error});
+
+  /// In their order (null before the first answer).
+  final List<NewsTopic>? topics;
+  final List<NewsSource>? sources;
+  final NewsSettings? settings;
+
+  /// The last load failed (older data may still be shown).
+  final Object? error;
+
+  bool get loaded => topics != null && sources != null && settings != null;
+
+  NewsTopic? topic(String? id) {
+    for (final t in topics ?? const <NewsTopic>[]) {
+      if (t.id == id) return t;
+    }
+    return null;
+  }
+
+  NewsSource? source(String id) {
+    for (final s in sources ?? const <NewsSource>[]) {
+      if (s.id == id) return s;
+    }
+    return null;
+  }
+
+  /// The failing feeds first (most failed rounds first), then the others in
+  /// the server's order.
+  List<NewsSource> get feeds {
+    final all = sources ?? const <NewsSource>[];
+    final failing = [
+      for (final s in all)
+        if (s.errorsInRow >= kNewsFailingInRow) s,
+    ]..sort((a, b) => b.errorsInRow.compareTo(a.errorsInRow));
+    return [
+      ...failing,
+      for (final s in all)
+        if (s.errorsInRow < kNewsFailingInRow) s,
+    ];
+  }
+
+  int get failing => [
+    for (final s in sources ?? const <NewsSource>[])
+      if (s.errorsInRow >= kNewsFailingInRow) s,
+  ].length;
+
+  NewsConfig copyWith({
+    List<NewsTopic>? topics,
+    List<NewsSource>? sources,
+    NewsSettings? settings,
+    Object? error,
+    bool clearError = false,
+  }) => NewsConfig(
+    topics: topics ?? this.topics,
+    sources: sources ?? this.sources,
+    settings: settings ?? this.settings,
+    error: clearError ? null : error ?? this.error,
+  );
+}
+
+class NewsConfigController extends Notifier<NewsConfig> {
+  @override
+  NewsConfig build() {
+    ref.watch(apiProvider); // another server starts empty
+    return const NewsConfig();
+  }
+
+  DelveApi get _api => ref.read(apiProvider)!;
+  NewsController get _news => ref.read(newsProvider.notifier);
+
+  /// Topics, feeds and settings; a failure is kept and rethrown.
+  Future<void> refresh() async {
+    final api = ref.read(apiProvider);
+    if (api == null) return;
+    try {
+      final r = await Future.wait<Object>([
+        api.newsTopics(),
+        api.newsSources(),
+        api.newsSettings(),
+      ]);
+      if (ref.mounted) {
+        state = NewsConfig(
+          topics: r[0] as List<NewsTopic>,
+          sources: r[1] as List<NewsSource>,
+          settings: r[2] as NewsSettings,
+        );
+      }
+    } on Object catch (e) {
+      if (ref.mounted) state = state.copyWith(error: e);
+      rethrow;
+    }
+  }
+
+  void _putTopic(NewsTopic t) {
+    final topics = state.topics;
+    if (topics == null) return;
+    state = state.copyWith(
+      topics: [for (final x in topics) x.id == t.id ? t : x],
+    );
+  }
+
+  /// The server's newest copy of a feed (also from the News menu's Hide).
+  void putSource(NewsSource s) {
+    final sources = state.sources;
+    if (sources == null) return;
+    state = state.copyWith(
+      sources: [for (final x in sources) x.id == s.id ? s : x],
+    );
+  }
+
+  /// A topic on or off; the News page's sections follow.
+  Future<void> setTopicEnabled(String id, bool enabled) async {
+    final t = await _api.patchNewsTopic(id, enabled: enabled);
+    if (!ref.mounted) return;
+    _putTopic(t);
+    _news.reloadQuietly();
+  }
+
+  /// A topic's description and switch (the editor's Save); only what
+  /// changed is sent.
+  Future<void> saveTopic(
+    String id, {
+    String? description,
+    bool? enabled,
+  }) async {
+    if (description == null && enabled == null) return;
+    final t = await _api.patchNewsTopic(
+      id,
+      description: description,
+      enabled: enabled,
+    );
+    if (!ref.mounted) return;
+    _putTopic(t);
+    if (enabled != null) _news.reloadQuietly();
+  }
+
+  /// Drag to reorder: shown at once, then every topic whose place changed
+  /// gets its new `position` (its index). A failure reloads the list.
+  Future<void> moveTopic(int from, int to) async {
+    final topics = state.topics;
+    if (topics == null || from == to) return;
+    final list = [...topics];
+    final moved = list.removeAt(from);
+    list.insert(to > from ? to - 1 : to, moved);
+    final placed = [
+      for (final (i, t) in list.indexed)
+        t.position == i ? t : t.copyWith(position: i),
+    ];
+    final changed = [
+      for (final (i, t) in list.indexed)
+        if (t.position != i) t.id,
+    ];
+    state = state.copyWith(topics: placed);
+    try {
+      for (final (i, t) in placed.indexed) {
+        if (changed.contains(t.id)) {
+          await _api.patchNewsTopic(t.id, position: i);
+        }
+      }
+    } on Object {
+      if (ref.mounted) unawaited(refresh().catchError((_) {}));
+      rethrow;
+    }
+    if (ref.mounted) _news.reloadQuietly();
+  }
+
+  /// A feed on or off ("Collect from this feed").
+  Future<void> setSourceEnabled(String id, bool enabled) async {
+    final s = await _api.setNewsSource(id, enabled: enabled);
+    if (!ref.mounted) return;
+    putSource(s);
+    _news.reloadQuietly();
+  }
+
+  /// Deletes a feed on the desktop.
+  Future<void> deleteSource(String id) async {
+    await _api.deleteNewsSource(id);
+    if (!ref.mounted) return;
+    final sources = state.sources;
+    if (sources != null) {
+      state = state.copyWith(
+        sources: [
+          for (final s in sources)
+            if (s.id != id) s,
+        ],
+      );
+    }
+    _news.reloadQuietly();
+  }
+
+  /// The digest time, the must-read push, its daily limit.
+  Future<void> setSettings({String? digestAt, bool? push, int? pushMax}) async {
+    final s = await _api.patchNewsSettings(
+      digestAt: digestAt,
+      push: push,
+      pushMax: pushMax,
+    );
+    if (ref.mounted) state = state.copyWith(settings: s);
+  }
+}
+
+final newsConfigProvider = NotifierProvider<NewsConfigController, NewsConfig>(
+  NewsConfigController.new,
+);

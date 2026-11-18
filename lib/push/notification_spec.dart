@@ -4,7 +4,8 @@ import '../ui/format.dart';
 import 'push_message.dart';
 
 /// The Android notification channels (design 18, 21e).
-enum NotifyChannel { approvals, runs, cards, watches, system }
+/// `news`: must-read stories (N2c), default importance.
+enum NotifyChannel { approvals, runs, cards, watches, system, news }
 
 /// Action ids on a notification.
 abstract final class NotifyActions {
@@ -17,6 +18,9 @@ abstract final class NotifyActions {
 
   /// A watch hit: opens the app, which opens the listing in the browser.
   static const openLink = 'open_link';
+
+  /// A story: saved in the background (also from the lock screen).
+  static const save = 'save';
 }
 
 class NotifyAction {
@@ -174,6 +178,33 @@ NotificationSpec watchNotification(AppLocalizations l, WatchPush p) {
     payload: PushTarget(kind: 'watch', slug: p.slug, url: p.url).encode(),
     actions: [
       NotifyAction(NotifyActions.openLink, l.notifyOpenLink, opensApp: true),
+      NotifyAction(NotifyActions.open, l.notifyOpen, opensApp: true),
+    ],
+  );
+}
+
+/// D3-f: the story's title; “Sailing · Sail-World · 7 sources”, the why
+/// when expanded; Save / Open. No topic colour (Android draws it). One per
+/// story.
+NotificationSpec newsNotification(AppLocalizations l, NewsPush p) {
+  final line = [
+    ?p.topic,
+    ?p.publisher,
+    if (p.sources > 1) l.newsSources(p.sources),
+  ].join(' · ');
+  final why = p.why;
+  return NotificationSpec(
+    id: notificationId('news:${p.item}'),
+    channel: NotifyChannel.news,
+    title: p.title,
+    body: why == null
+        ? line
+        : line.isEmpty
+        ? why
+        : '$line\n$why',
+    payload: PushTarget(kind: 'news', item: p.item, url: p.url).encode(),
+    actions: [
+      NotifyAction(NotifyActions.save, l.notifyNewsSave, opensApp: false),
       NotifyAction(NotifyActions.open, l.notifyOpen, opensApp: true),
     ],
   );

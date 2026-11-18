@@ -121,6 +121,26 @@ sealed class PushMessage {
           down: down,
           at: s('at') ?? '',
         );
+      case 'news':
+        final item = int.tryParse(s('item') ?? '');
+        final title = s('title');
+        final url = s('url');
+        if (item == null || title == null || title.isEmpty || url == null) {
+          return null;
+        }
+        String? text(String key) => switch (s(key)) {
+          null || '' => null,
+          final v => v,
+        };
+        return NewsPush(
+          item: item,
+          title: title,
+          url: url,
+          topic: text('topic'),
+          publisher: text('publisher'),
+          why: text('why'),
+          sources: int.tryParse(s('sources') ?? '') ?? 1,
+        );
       case 'run_done':
         final conversationId = s('conversation_id');
         final runId = s('run_id');
@@ -288,6 +308,34 @@ final class ModelSwitchPush extends PushMessage {
   final String at;
 }
 
+/// A must-read story (N1b, the app's side N2c): score 9, at most a few a day.
+final class NewsPush extends PushMessage {
+  const NewsPush({
+    required this.item,
+    required this.title,
+    required this.url,
+    this.topic,
+    this.publisher,
+    this.why,
+    this.sources = 1,
+  });
+
+  /// The story's id (`news_items.id`).
+  final int item;
+  final String title;
+  final String url;
+
+  /// The topic's name.
+  final String? topic;
+  final String? publisher;
+
+  /// Why it matters (Hungarian, from the local model).
+  final String? why;
+
+  /// Its sources, itself included (API 20; 1 from an older backend).
+  final int sources;
+}
+
 /// Notification id for a key (request id, run id): FNV-1a, positive 31 bit.
 /// Stable across isolates and app starts, so the background handler can
 /// replace or remove what another isolate showed.
@@ -308,6 +356,7 @@ class PushTarget {
     this.requestId,
     this.slug,
     this.url,
+    this.item,
   });
 
   static PushTarget? decode(String? payload) {
@@ -320,27 +369,31 @@ class PushTarget {
       final req = j['request_id'];
       final slug = j['slug'];
       final url = j['url'];
+      final item = j['item'];
       if (kind is! String) return null;
-      // a watch's notification needs its watch; a chat's its chat; a card's
-      // opens the dashboard, a system one the System screen
-      if (kind == 'watch'
-          ? slug is! String
-          : kind != 'card' && kind != 'system' && conv is! String) {
-        return null;
-      }
+      // a watch's notification needs its watch, a story's its story, a
+      // chat's its chat; a card's opens the dashboard, a system one System
+      final ok = switch (kind) {
+        'watch' => slug is String,
+        'news' => item is int,
+        'card' || 'system' => true,
+        _ => conv is String,
+      };
+      if (!ok) return null;
       return PushTarget(
         kind: kind,
         conversationId: conv is String ? conv : null,
         requestId: req is String ? req : null,
         slug: slug is String ? slug : null,
         url: url is String ? url : null,
+        item: item is int ? item : null,
       );
     } on FormatException {
       return null;
     }
   }
 
-  /// `approval`, `run_done`, `card`, `watch` or `system`.
+  /// `approval`, `run_done`, `card`, `watch`, `system` or `news`.
   final String kind;
 
   /// null for a card, a watch and a system notification.
@@ -351,11 +404,15 @@ class PushTarget {
   final String? slug;
   final String? url;
 
+  /// A story's notification: the story (`news_items.id`).
+  final int? item;
+
   String encode() => jsonEncode({
     'kind': kind,
     'conversation_id': ?conversationId,
     'request_id': ?requestId,
     'slug': ?slug,
     'url': ?url,
+    'item': ?item,
   });
 }

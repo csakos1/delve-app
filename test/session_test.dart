@@ -33,7 +33,7 @@ void main() {
     final c = env.container();
     final s = await settle(c);
     expect(s, isA<SessionPaired>());
-    expect((s as SessionPaired).meta?.apiRevision, 19);
+    expect((s as SessionPaired).meta?.apiRevision, 20);
     expect(c.read(apiProvider)?.token, 'dlv_test-token');
   });
 

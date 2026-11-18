@@ -175,6 +175,9 @@ abstract class NewsSource with _$NewsSource {
     int? lastItems,
     int? lastNew,
     @Default(0) int errorsInRow,
+
+    /// When the feed's newest story arrived (API 20); null without one.
+    DateTime? lastItemAt,
   }) = _NewsSource;
 
   factory NewsSource.fromJson(Map<String, Object?> json) =>

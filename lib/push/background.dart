@@ -32,18 +32,27 @@ Future<void> firebaseBackgroundMessage(RemoteMessage message) async {
   );
 }
 
-/// An action that does not open the app (Deny), from any isolate.
+/// An action that does not open the app (Deny, a story's Save), from any
+/// isolate.
 @pragma('vm:entry-point')
 void notificationActionBackground(NotificationResponse response) {
   WidgetsFlutterBinding.ensureInitialized();
-  unawaited(
-    denyFromNotification(
+  final store = SecureCredentialStore();
+  final notifications = LocalNotifications();
+  unawaited(switch (response.actionId) {
+    NotifyActions.save => saveNewsFromNotification(
       response.actionId,
       response.payload,
-      store: SecureCredentialStore(),
-      notifications: LocalNotifications(),
+      store: store,
+      notifications: notifications,
     ),
-  );
+    _ => denyFromNotification(
+      response.actionId,
+      response.payload,
+      store: store,
+      notifications: notifications,
+    ),
+  });
 }
 
 /// One push: show, replace or remove its notification. [visibleChat] is the
@@ -79,6 +88,9 @@ Future<void> handlePush(
     case final ModelSwitchPush p:
       // also in the foreground: the banner is on another screen
       await notifications.show(modelSwitchNotification(l, p));
+    case final NewsPush p:
+      // also in the foreground: a must-read is rare and wanted
+      await notifications.show(newsNotification(l, p));
     case null:
       break;
   }
@@ -135,5 +147,72 @@ Future<bool> denyFromNotification(
     return false;
   } finally {
     api.close();
+  }
+}
+
+/// A story's Save from its notification (also on the lock screen): REST,
+/// never queued. The notification goes away once the server saved it (or
+/// the story is gone); a failure replaces it with the reason and Open.
+/// Returns whether it was saved.
+Future<bool> saveNewsFromNotification(
+  String? actionId,
+  String? payload, {
+  required CredentialStore store,
+  required Notifications notifications,
+  HttpClientAdapter? adapter,
+}) async {
+  if (actionId != NotifyActions.save) return false;
+  final target = PushTarget.decode(payload);
+  final item = target?.item;
+  if (target == null || item == null) return false;
+  final creds = await store.read();
+  if (creds == null) {
+    await notifications.cancel(notificationId('news:$item')); // unpaired
+    return false;
+  }
+  final api = DelveApi(
+    server: creds.server,
+    token: creds.token,
+    adapter: adapter,
+  );
+  try {
+    return await saveNews(api, item, payload!, notifications);
+  } finally {
+    api.close();
+  }
+}
+
+/// Saves story [item] and removes its notification; see
+/// [saveNewsFromNotification].
+Future<bool> saveNews(
+  DelveApi api,
+  int item,
+  String payload,
+  Notifications notifications,
+) async {
+  final id = notificationId('news:$item');
+  try {
+    await api.markNews(item, saved: true);
+    await notifications.cancel(id);
+    return true;
+  } on ApiError catch (e) {
+    if (e is ApiRequestError && e.status == 404) {
+      await notifications.cancel(id); // the story is gone
+      return false;
+    }
+    final l = lookupAppLocalizations(const Locale('en'));
+    await notifications.show(
+      NotificationSpec(
+        id: id,
+        channel: NotifyChannel.news,
+        title: l.notifyNewsSaveFailed(apiErrorText(l, e)),
+        body: '',
+        payload: payload,
+        actions: [
+          NotifyAction(NotifyActions.open, l.notifyOpen, opensApp: true),
+        ],
+      ),
+    );
+    return false;
   }
 }

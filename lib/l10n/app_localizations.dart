@@ -7970,6 +7970,384 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Usually under a minute. It appears here by itself.'**
   String get newsFetchingNowSub;
+
+  /// No description provided for @newsSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'News settings'**
+  String get newsSettingsTitle;
+
+  /// No description provided for @newsSettingsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open News settings'**
+  String get newsSettingsOpen;
+
+  /// No description provided for @newsSettingsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the News settings: {error}'**
+  String newsSettingsLoadFailed(String error);
+
+  /// No description provided for @newsSettingsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save: {error}'**
+  String newsSettingsSaveFailed(String error);
+
+  /// No description provided for @newsSetTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Topics'**
+  String get newsSetTopics;
+
+  /// No description provided for @newsSetTopicsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'drag to reorder · tap for the description'**
+  String get newsSetTopicsNote;
+
+  /// No description provided for @newsTopicSources.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 source} other{{n} sources}}'**
+  String newsTopicSources(int n);
+
+  /// No description provided for @newsTopicStories.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 story in 24 h} other{{n} stories in 24 h}}'**
+  String newsTopicStories(int n);
+
+  /// No description provided for @newsTopicDrag.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder {name}'**
+  String newsTopicDrag(String name);
+
+  /// No description provided for @newsTopicEditorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'What you care about'**
+  String get newsTopicEditorLabel;
+
+  /// No description provided for @newsTopicEditorNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The model reads this when it scores a story. Used from the next round.'**
+  String get newsTopicEditorNote;
+
+  /// No description provided for @newsTopicSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get newsTopicSave;
+
+  /// No description provided for @newsSetFeeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Feeds'**
+  String get newsSetFeeds;
+
+  /// No description provided for @newsFeedsFailingNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} · {failing} failing'**
+  String newsFeedsFailingNote(int n, int failing);
+
+  /// No description provided for @newsFeedsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Failing feeds first. Tap a feed for its last answer.'**
+  String get newsFeedsHint;
+
+  /// No description provided for @newsFeedStatusOk.
+  ///
+  /// In en, this message translates to:
+  /// **'ok'**
+  String get newsFeedStatusOk;
+
+  /// No description provided for @newsFeedStatusNotModified.
+  ///
+  /// In en, this message translates to:
+  /// **'not modified'**
+  String get newsFeedStatusNotModified;
+
+  /// No description provided for @newsFeedStatusSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'skipped'**
+  String get newsFeedStatusSkipped;
+
+  /// No description provided for @newsFeedStatusError.
+  ///
+  /// In en, this message translates to:
+  /// **'error'**
+  String get newsFeedStatusError;
+
+  /// No description provided for @newsFeedStatusNever.
+  ///
+  /// In en, this message translates to:
+  /// **'not checked yet'**
+  String get newsFeedStatusNever;
+
+  /// No description provided for @newsFeedInRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} in a row'**
+  String newsFeedInRow(int n);
+
+  /// No description provided for @newsFeedChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'checked {time}'**
+  String newsFeedChecked(String time);
+
+  /// No description provided for @newsFeedKindFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'RSS'**
+  String get newsFeedKindFeed;
+
+  /// No description provided for @newsFeedKindGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google News'**
+  String get newsFeedKindGoogle;
+
+  /// No description provided for @newsFeedKindReleases.
+  ///
+  /// In en, this message translates to:
+  /// **'Releases'**
+  String get newsFeedKindReleases;
+
+  /// No description provided for @newsFeedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed'**
+  String get newsFeedTitle;
+
+  /// No description provided for @newsFeedFailedRounds.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{This feed failed the last round} other{This feed has failed {n} rounds in a row}}'**
+  String newsFeedFailedRounds(int n);
+
+  /// No description provided for @newsFeedCopyAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the address'**
+  String get newsFeedCopyAddress;
+
+  /// No description provided for @newsFeedAddressCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Address copied'**
+  String get newsFeedAddressCopied;
+
+  /// No description provided for @newsFeedRowStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get newsFeedRowStatus;
+
+  /// No description provided for @newsFeedRowAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Last answer'**
+  String get newsFeedRowAnswer;
+
+  /// No description provided for @newsFeedRowErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'Errors in a row'**
+  String get newsFeedRowErrors;
+
+  /// No description provided for @newsFeedRowChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Last checked'**
+  String get newsFeedRowChecked;
+
+  /// No description provided for @newsFeedRowLastStory.
+  ///
+  /// In en, this message translates to:
+  /// **'Last story'**
+  String get newsFeedRowLastStory;
+
+  /// No description provided for @newsFeedRowTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic'**
+  String get newsFeedRowTopic;
+
+  /// No description provided for @newsFeedRowKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Kind'**
+  String get newsFeedRowKind;
+
+  /// No description provided for @newsFeedNone.
+  ///
+  /// In en, this message translates to:
+  /// **'none yet'**
+  String get newsFeedNone;
+
+  /// No description provided for @newsFeedAnswerItems.
+  ///
+  /// In en, this message translates to:
+  /// **'{items} items · {fresh} new'**
+  String newsFeedAnswerItems(int items, int fresh);
+
+  /// No description provided for @newsFeedCollect.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect from this feed'**
+  String get newsFeedCollect;
+
+  /// No description provided for @newsFeedDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete feed'**
+  String get newsFeedDelete;
+
+  /// No description provided for @newsFeedDeleteNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting removes the feed from the desktop. Its stories stay until they age out after 30 days.'**
+  String get newsFeedDeleteNote;
+
+  /// No description provided for @newsFeedDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this feed?'**
+  String get newsFeedDeleteTitle;
+
+  /// No description provided for @newsFeedDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{address} is no longer read. Its stories stay until they age out.'**
+  String newsFeedDeleteBody(String address);
+
+  /// No description provided for @newsFeedDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get newsFeedDeleteConfirm;
+
+  /// No description provided for @newsFeedDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed deleted'**
+  String get newsFeedDeleted;
+
+  /// No description provided for @newsFeedGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This feed is not on the desktop any more.'**
+  String get newsFeedGone;
+
+  /// No description provided for @newsSetDigestPush.
+  ///
+  /// In en, this message translates to:
+  /// **'Digest and push'**
+  String get newsSetDigestPush;
+
+  /// No description provided for @newsDigestTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Digest time'**
+  String get newsDigestTime;
+
+  /// No description provided for @newsDigestTimeSub.
+  ///
+  /// In en, this message translates to:
+  /// **'The day\'s first stories are ready by then'**
+  String get newsDigestTimeSub;
+
+  /// No description provided for @newsMustReadPush.
+  ///
+  /// In en, this message translates to:
+  /// **'Must-read push'**
+  String get newsMustReadPush;
+
+  /// No description provided for @newsMustReadPushSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Score 9 only · between {time} and 22:00'**
+  String newsMustReadPushSub(String time);
+
+  /// No description provided for @newsPushMax.
+  ///
+  /// In en, this message translates to:
+  /// **'At most per day'**
+  String get newsPushMax;
+
+  /// No description provided for @newsPushMaxSub.
+  ///
+  /// In en, this message translates to:
+  /// **'0 turns the push off for the day'**
+  String get newsPushMaxSub;
+
+  /// No description provided for @newsPushFewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewer'**
+  String get newsPushFewer;
+
+  /// No description provided for @newsPushMoreTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get newsPushMoreTooltip;
+
+  /// No description provided for @newsPushPhoneOff.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone shows them once Settings → Notifications → News is on.'**
+  String get newsPushPhoneOff;
+
+  /// No description provided for @settingsNotifyNews.
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get settingsNotifyNews;
+
+  /// No description provided for @settingsNotifyNewsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =0{Must-reads are off for now (the daily limit is 0)} =1{At most 1 must-read a day} other{At most {n} must-reads a day}}'**
+  String settingsNotifyNewsSub(int n);
+
+  /// No description provided for @settingsNotifyNewsSubPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Must-read stories, a few a day'**
+  String get settingsNotifyNewsSubPlain;
+
+  /// No description provided for @notifyChannelNews.
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get notifyChannelNews;
+
+  /// No description provided for @notifyChannelNewsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Must-read stories the agent found'**
+  String get notifyChannelNewsDesc;
+
+  /// No description provided for @notifyNewsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get notifyNewsSave;
+
+  /// No description provided for @notifyNewsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save: {error}'**
+  String notifyNewsSaveFailed(String error);
 }
 
 class _AppLocalizationsDelegate

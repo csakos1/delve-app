@@ -3920,5 +3920,172 @@
   "newsRoundsHourly": "Rounds run every hour",
   "newsFetchingWord": "fetching",
   "newsFetchingNow": "Fetching the text now",
-  "newsFetchingNowSub": "Usually under a minute. It appears here by itself."
+  "newsFetchingNowSub": "Usually under a minute. It appears here by itself.",
+  "newsSettingsTitle": "News settings",
+  "newsSettingsOpen": "Open News settings",
+  "newsSettingsLoadFailed": "Couldn't load the News settings: {error}",
+  "@newsSettingsLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "newsSettingsSaveFailed": "Couldn't save: {error}",
+  "@newsSettingsSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "newsSetTopics": "Topics",
+  "newsSetTopicsNote": "drag to reorder · tap for the description",
+  "newsTopicSources": "{n, plural, =1{1 source} other{{n} sources}}",
+  "@newsTopicSources": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsTopicStories": "{n, plural, =1{1 story in 24 h} other{{n} stories in 24 h}}",
+  "@newsTopicStories": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsTopicDrag": "Drag to reorder {name}",
+  "@newsTopicDrag": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "newsTopicEditorLabel": "What you care about",
+  "newsTopicEditorNote": "The model reads this when it scores a story. Used from the next round.",
+  "newsTopicSave": "Save",
+  "newsSetFeeds": "Feeds",
+  "newsFeedsFailingNote": "{n} · {failing} failing",
+  "@newsFeedsFailingNote": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "failing": {
+        "type": "int"
+      }
+    }
+  },
+  "newsFeedsHint": "Failing feeds first. Tap a feed for its last answer.",
+  "newsFeedStatusOk": "ok",
+  "newsFeedStatusNotModified": "not modified",
+  "newsFeedStatusSkipped": "skipped",
+  "newsFeedStatusError": "error",
+  "newsFeedStatusNever": "not checked yet",
+  "newsFeedInRow": "{n} in a row",
+  "@newsFeedInRow": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsFeedChecked": "checked {time}",
+  "@newsFeedChecked": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "newsFeedKindFeed": "RSS",
+  "newsFeedKindGoogle": "Google News",
+  "newsFeedKindReleases": "Releases",
+  "newsFeedTitle": "Feed",
+  "newsFeedFailedRounds": "{n, plural, =1{This feed failed the last round} other{This feed has failed {n} rounds in a row}}",
+  "@newsFeedFailedRounds": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newsFeedCopyAddress": "Copy the address",
+  "newsFeedAddressCopied": "Address copied",
+  "newsFeedRowStatus": "Status",
+  "newsFeedRowAnswer": "Last answer",
+  "newsFeedRowErrors": "Errors in a row",
+  "newsFeedRowChecked": "Last checked",
+  "newsFeedRowLastStory": "Last story",
+  "newsFeedRowTopic": "Topic",
+  "newsFeedRowKind": "Kind",
+  "newsFeedNone": "none yet",
+  "newsFeedAnswerItems": "{items} items · {fresh} new",
+  "@newsFeedAnswerItems": {
+    "placeholders": {
+      "items": {
+        "type": "int"
+      },
+      "fresh": {
+        "type": "int"
+      }
+    }
+  },
+  "newsFeedCollect": "Collect from this feed",
+  "newsFeedDelete": "Delete feed",
+  "newsFeedDeleteNote": "Deleting removes the feed from the desktop. Its stories stay until they age out after 30 days.",
+  "newsFeedDeleteTitle": "Delete this feed?",
+  "newsFeedDeleteBody": "{address} is no longer read. Its stories stay until they age out.",
+  "@newsFeedDeleteBody": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "newsFeedDeleteConfirm": "Delete",
+  "newsFeedDeleted": "Feed deleted",
+  "newsFeedGone": "This feed is not on the desktop any more.",
+  "newsSetDigestPush": "Digest and push",
+  "newsDigestTime": "Digest time",
+  "newsDigestTimeSub": "The day's first stories are ready by then",
+  "newsMustReadPush": "Must-read push",
+  "newsMustReadPushSub": "Score 9 only · between {time} and 22:00",
+  "@newsMustReadPushSub": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "newsPushMax": "At most per day",
+  "newsPushMaxSub": "0 turns the push off for the day",
+  "newsPushFewer": "Fewer",
+  "newsPushMoreTooltip": "More",
+  "newsPushPhoneOff": "This phone shows them once Settings → Notifications → News is on.",
+  "settingsNotifyNews": "News",
+  "settingsNotifyNewsSub": "{n, plural, =0{Must-reads are off for now (the daily limit is 0)} =1{At most 1 must-read a day} other{At most {n} must-reads a day}}",
+  "@settingsNotifyNewsSub": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsNotifyNewsSubPlain": "Must-read stories, a few a day",
+  "notifyChannelNews": "News",
+  "notifyChannelNewsDesc": "Must-read stories the agent found",
+  "notifyNewsSave": "Save",
+  "notifyNewsSaveFailed": "Couldn't save: {error}",
+  "@notifyNewsSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

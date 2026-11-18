@@ -787,4 +787,171 @@ void main() {
       expect(n.shown.single.title, startsWith('Morning brief'));
     });
   });
+
+  group('news (D3-f)', () {
+    const title = 'Team USA launches its new AC75 ahead of the Naples regatta';
+    const why = 'Vízre tette új AC75-ösét a Team USA Nápoly előtt.';
+
+    Map<String, Object?> newsData({String sources = '7', String why = why}) => {
+      'kind': 'news',
+      'item': '8121',
+      'title': title,
+      'publisher': 'Sail-World',
+      'topic': 'Sailing',
+      'why': why,
+      'url': 'https://www.sail-world.com/news/290112',
+      'score': '9',
+      'sources': sources,
+    };
+
+    NewsPush parse(Map<String, Object?> data) =>
+        PushMessage.parse(data)! as NewsPush;
+
+    test('parses; an older backend without sources counts one', () {
+      final p = parse(newsData());
+      expect(
+        (p.item, p.title, p.topic, p.publisher, p.why, p.sources),
+        (8121, title, 'Sailing', 'Sail-World', why, 7),
+      );
+      expect(parse({...newsData()}..remove('sources')).sources, 1);
+      expect(parse(newsData(why: '')).why, isNull);
+      expect(PushMessage.parse({...newsData(), 'item': 'x'}), isNull);
+      expect(PushMessage.parse({...newsData(), 'title': ''}), isNull);
+    });
+
+    test('the title; topic · publisher · sources; the why; Save, Open', () {
+      final s = newsNotification(l, parse(newsData()));
+      expect(s.channel, NotifyChannel.news);
+      expect(s.id, notificationId('news:8121'));
+      expect(s.title, title);
+      expect(s.body, 'Sailing · Sail-World · 7 sources\n$why');
+      expect(
+        [for (final a in s.actions) (a.id, a.opensApp)],
+        [('save', false), ('open', true)],
+      );
+      final target = PushTarget.decode(s.payload)!;
+      expect(
+        (target.kind, target.item, target.url),
+        ('news', 8121, 'https://www.sail-world.com/news/290112'),
+      );
+      // one source and no why: one line
+      expect(
+        newsNotification(l, parse(newsData(sources: '1', why: ''))).body,
+        'Sailing · Sail-World',
+      );
+      // a story's target without its id is broken
+      expect(PushTarget.decode('{"kind":"news"}'), isNull);
+    });
+
+    test('shown in the foreground too', () async {
+      final n = FakeNotifications();
+      await handlePush(newsData(), n, now: now, foreground: true);
+      expect(n.shown.single.channel, NotifyChannel.news);
+    });
+
+    group('Save from the notification', () {
+      late FakeServer server;
+      late FakeNotifications n;
+      late MemoryCredentialStore store;
+      final payload = const PushTarget(
+        kind: 'news',
+        item: 8121,
+        url: 'https://www.sail-world.com/news/290112',
+      ).encode();
+
+      setUp(() {
+        server = FakeServer();
+        n = FakeNotifications();
+        store = MemoryCredentialStore(pairedCredentials());
+      });
+
+      Future<bool> save([String? action = 'save']) => saveNewsFromNotification(
+        action,
+        payload,
+        store: store,
+        notifications: n,
+        adapter: server,
+      );
+
+      test('saves over REST and removes the notification', () async {
+        server.json('PATCH', '/api/v1/news/items/8121', {
+          ...FakeServer.sample('news_story'),
+          'saved': true,
+        });
+        expect(await save(), isTrue);
+        expect(server.calls, ['PATCH /api/v1/news/items/8121']);
+        expect(server.requests.single.data, {'saved': true});
+        expect(n.cancelled, [notificationId('news:8121')]);
+      });
+
+      test('the story is gone: just removed', () async {
+        server.json(
+          'PATCH',
+          '/api/v1/news/items/8121',
+          FakeServer.detail('news_item_not_found'),
+          status: 404,
+        );
+        expect(await save(), isFalse);
+        expect(n.cancelled, [notificationId('news:8121')]);
+        expect(n.shown, isEmpty);
+      });
+
+      test('a failure replaces it with the reason and Open', () async {
+        server.json(
+          'PATCH',
+          '/api/v1/news/items/8121',
+          FakeServer.detail('internal'),
+          status: 500,
+        );
+        expect(await save(), isFalse);
+        final s = n.shown.single;
+        expect(s.id, notificationId('news:8121'));
+        expect(s.channel, NotifyChannel.news);
+        expect(s.title, startsWith("Couldn't save: "));
+        expect([for (final a in s.actions) a.id], ['open']);
+      });
+
+      test('other actions and unpaired phones do nothing', () async {
+        expect(await save('open'), isFalse);
+        await store.clear();
+        expect(await save(), isFalse);
+        expect(server.calls, isEmpty);
+        expect(n.cancelled, [notificationId('news:8121')]);
+      });
+    });
+
+    testWidgets('Settings → Notifications: the News switch', (t) async {
+      final env = await pumpDelve(
+        t,
+        push: const PushState(available: true, permitted: true),
+      );
+      await t.tap(find.text('More'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Settings'));
+      await t.pumpAndSettle();
+      final news = find.byKey(const Key('settings.notify.news'));
+      await t.ensureVisible(news);
+      await t.pumpAndSettle();
+      expect(t.widget<Switch>(news).value, isFalse);
+      expect(find.text('Must-read stories, a few a day'), findsOneWidget);
+      final on = {
+        ...FakeServer.device,
+        'notify': {
+          ...(FakeServer.device['notify']! as Map<String, Object?>),
+          'news': true,
+        },
+      };
+      env.server.on('PATCH', '/api/v1/devices/me', (r) {
+        env.server.json('GET', '/api/v1/devices/me', on);
+        return FakeReply(200, on);
+      });
+      await t.tap(news);
+      await t.pumpAndSettle();
+      final patch = env.server.requests.lastWhere((r) => r.method == 'PATCH');
+      expect(patch.data, {
+        'notify': {'news': true},
+      });
+      expect(t.widget<Switch>(news).value, isTrue);
+    });
+  });
 }

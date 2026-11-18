@@ -18,6 +18,7 @@ import '../ui/screens/general_settings_screen.dart';
 import '../ui/screens/mirror_screen.dart';
 import '../ui/screens/more_screen.dart';
 import '../ui/screens/news_screen.dart';
+import '../ui/screens/news_settings_screen.dart';
 import '../ui/screens/news_story_screen.dart';
 import '../ui/screens/observability_screen.dart';
 import '../ui/screens/pairing_screen.dart';
@@ -76,6 +77,12 @@ abstract final class Routes {
   static const news = '/more/news';
   static const newsWeekly = '/more/news?view=weekly';
   static String newsStory(int id) => '/more/news/story/$id';
+
+  /// News settings (N2c): from the News page's gear and the Dashboard's
+  /// failing-feeds row; one feed from there.
+  static const newsSettings = '/more/news/settings';
+  static String newsFeed(String id) =>
+      '/more/news/feed/${Uri.encodeComponent(id)}';
   static String watch(String slug) =>
       '/more/watches/${Uri.encodeComponent(slug)}';
   static const settings = '/more/settings';
@@ -280,7 +287,7 @@ GoRouter buildRouter({
                             builder: (_, _) => const GeneralSettingsScreen(),
                           ),
                         ],
-                        if (page == MorePage.news)
+                        if (page == MorePage.news) ...[
                           GoRoute(
                             path: 'story/:id',
                             parentNavigatorKey: rootKey,
@@ -288,6 +295,18 @@ GoRouter buildRouter({
                               id: int.parse(state.pathParameters['id']!),
                             ),
                           ),
+                          GoRoute(
+                            path: 'settings',
+                            parentNavigatorKey: rootKey,
+                            builder: (_, _) => const NewsSettingsScreen(),
+                          ),
+                          GoRoute(
+                            path: 'feed/:id',
+                            parentNavigatorKey: rootKey,
+                            builder: (_, state) =>
+                                NewsFeedScreen(id: state.pathParameters['id']!),
+                          ),
+                        ],
                         if (page == MorePage.watches)
                           GoRoute(
                             path: ':slug',

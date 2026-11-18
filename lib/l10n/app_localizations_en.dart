@@ -5120,4 +5120,250 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get newsFetchingNowSub =>
       'Usually under a minute. It appears here by itself.';
+
+  @override
+  String get newsSettingsTitle => 'News settings';
+
+  @override
+  String get newsSettingsOpen => 'Open News settings';
+
+  @override
+  String newsSettingsLoadFailed(String error) {
+    return 'Couldn\'t load the News settings: $error';
+  }
+
+  @override
+  String newsSettingsSaveFailed(String error) {
+    return 'Couldn\'t save: $error';
+  }
+
+  @override
+  String get newsSetTopics => 'Topics';
+
+  @override
+  String get newsSetTopicsNote => 'drag to reorder · tap for the description';
+
+  @override
+  String newsTopicSources(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n sources',
+      one: '1 source',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String newsTopicStories(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n stories in 24 h',
+      one: '1 story in 24 h',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String newsTopicDrag(String name) {
+    return 'Drag to reorder $name';
+  }
+
+  @override
+  String get newsTopicEditorLabel => 'What you care about';
+
+  @override
+  String get newsTopicEditorNote =>
+      'The model reads this when it scores a story. Used from the next round.';
+
+  @override
+  String get newsTopicSave => 'Save';
+
+  @override
+  String get newsSetFeeds => 'Feeds';
+
+  @override
+  String newsFeedsFailingNote(int n, int failing) {
+    return '$n · $failing failing';
+  }
+
+  @override
+  String get newsFeedsHint =>
+      'Failing feeds first. Tap a feed for its last answer.';
+
+  @override
+  String get newsFeedStatusOk => 'ok';
+
+  @override
+  String get newsFeedStatusNotModified => 'not modified';
+
+  @override
+  String get newsFeedStatusSkipped => 'skipped';
+
+  @override
+  String get newsFeedStatusError => 'error';
+
+  @override
+  String get newsFeedStatusNever => 'not checked yet';
+
+  @override
+  String newsFeedInRow(int n) {
+    return '$n in a row';
+  }
+
+  @override
+  String newsFeedChecked(String time) {
+    return 'checked $time';
+  }
+
+  @override
+  String get newsFeedKindFeed => 'RSS';
+
+  @override
+  String get newsFeedKindGoogle => 'Google News';
+
+  @override
+  String get newsFeedKindReleases => 'Releases';
+
+  @override
+  String get newsFeedTitle => 'Feed';
+
+  @override
+  String newsFeedFailedRounds(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'This feed has failed $n rounds in a row',
+      one: 'This feed failed the last round',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get newsFeedCopyAddress => 'Copy the address';
+
+  @override
+  String get newsFeedAddressCopied => 'Address copied';
+
+  @override
+  String get newsFeedRowStatus => 'Status';
+
+  @override
+  String get newsFeedRowAnswer => 'Last answer';
+
+  @override
+  String get newsFeedRowErrors => 'Errors in a row';
+
+  @override
+  String get newsFeedRowChecked => 'Last checked';
+
+  @override
+  String get newsFeedRowLastStory => 'Last story';
+
+  @override
+  String get newsFeedRowTopic => 'Topic';
+
+  @override
+  String get newsFeedRowKind => 'Kind';
+
+  @override
+  String get newsFeedNone => 'none yet';
+
+  @override
+  String newsFeedAnswerItems(int items, int fresh) {
+    return '$items items · $fresh new';
+  }
+
+  @override
+  String get newsFeedCollect => 'Collect from this feed';
+
+  @override
+  String get newsFeedDelete => 'Delete feed';
+
+  @override
+  String get newsFeedDeleteNote =>
+      'Deleting removes the feed from the desktop. Its stories stay until they age out after 30 days.';
+
+  @override
+  String get newsFeedDeleteTitle => 'Delete this feed?';
+
+  @override
+  String newsFeedDeleteBody(String address) {
+    return '$address is no longer read. Its stories stay until they age out.';
+  }
+
+  @override
+  String get newsFeedDeleteConfirm => 'Delete';
+
+  @override
+  String get newsFeedDeleted => 'Feed deleted';
+
+  @override
+  String get newsFeedGone => 'This feed is not on the desktop any more.';
+
+  @override
+  String get newsSetDigestPush => 'Digest and push';
+
+  @override
+  String get newsDigestTime => 'Digest time';
+
+  @override
+  String get newsDigestTimeSub => 'The day\'s first stories are ready by then';
+
+  @override
+  String get newsMustReadPush => 'Must-read push';
+
+  @override
+  String newsMustReadPushSub(String time) {
+    return 'Score 9 only · between $time and 22:00';
+  }
+
+  @override
+  String get newsPushMax => 'At most per day';
+
+  @override
+  String get newsPushMaxSub => '0 turns the push off for the day';
+
+  @override
+  String get newsPushFewer => 'Fewer';
+
+  @override
+  String get newsPushMoreTooltip => 'More';
+
+  @override
+  String get newsPushPhoneOff =>
+      'This phone shows them once Settings → Notifications → News is on.';
+
+  @override
+  String get settingsNotifyNews => 'News';
+
+  @override
+  String settingsNotifyNewsSub(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'At most $n must-reads a day',
+      one: 'At most 1 must-read a day',
+      zero: 'Must-reads are off for now (the daily limit is 0)',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsNotifyNewsSubPlain => 'Must-read stories, a few a day';
+
+  @override
+  String get notifyChannelNews => 'News';
+
+  @override
+  String get notifyChannelNewsDesc => 'Must-read stories the agent found';
+
+  @override
+  String get notifyNewsSave => 'Save';
+
+  @override
+  String notifyNewsSaveFailed(String error) {
+    return 'Couldn\'t save: $error';
+  }
 }

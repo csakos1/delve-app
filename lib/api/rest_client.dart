@@ -563,6 +563,65 @@ class DelveApi {
         NewsSource.fromJson,
       );
 
+  /// The topics in their order, with their feeds and stories of the day.
+  Future<List<NewsTopic>> newsTopics() async {
+    final json = await _json(ApiRoutes.newsTopics);
+    return _parse(
+      json,
+      (j) => [for (final t in _list(j, 'data')) NewsTopic.fromJson(t)],
+    );
+  }
+
+  /// A topic's [description], place ([position]) or switch ([enabled]); 404
+  /// `news_topic_not_found`.
+  Future<NewsTopic> patchNewsTopic(
+    String id, {
+    String? description,
+    int? position,
+    bool? enabled,
+  }) async => _parse(
+    await _json(
+      ApiRoutes.patchNewsTopic,
+      params: {'topic_id': id},
+      body: {
+        'description': ?description,
+        'position': ?position,
+        'enabled': ?enabled,
+      },
+    ),
+    NewsTopic.fromJson,
+  );
+
+  /// The feeds and what each answered last.
+  Future<List<NewsSource>> newsSources() async {
+    final json = await _json(ApiRoutes.newsSources);
+    return _parse(
+      json,
+      (j) => [for (final s in _list(j, 'data')) NewsSource.fromJson(s)],
+    );
+  }
+
+  /// Removes a feed from the desktop (its stories stay until they age out).
+  Future<void> deleteNewsSource(String id) async {
+    await _json(ApiRoutes.deleteNewsSource, params: {'source_id': id});
+  }
+
+  Future<NewsSettings> newsSettings() async =>
+      _parse(await _json(ApiRoutes.newsSettings), NewsSettings.fromJson);
+
+  /// The digest time (`HH:MM`), the must-read push and its daily limit (0-5).
+  Future<NewsSettings> patchNewsSettings({
+    String? digestAt,
+    bool? push,
+    int? pushMax,
+  }) async => _parse(
+    await _json(
+      ApiRoutes.patchNewsSettings,
+      body: {'digest_at': ?digestAt, 'push': ?push, 'push_max': ?pushMax},
+    ),
+    NewsSettings.fromJson,
+  );
+
   // --- attachments (B6) ---------------------------------------------------
 
   /// Uploads one photo or file (the raw bytes, the type in `Content-Type`);

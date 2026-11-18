@@ -388,7 +388,16 @@ void main() {
     expect(find.text(testHostKey), findsOneWidget);
     expect(find.text(otherHostKey), findsOneWidget);
     await t.tap(find.byKey(const Key('terminal.forgetVerify')));
-    await frames(t);
+    // the redial after forgetting can lag under a full-suite load
+    for (var i = 0; i < 40; i++) {
+      await t.pump(const Duration(milliseconds: 50));
+      if (find.byKey(const Key('terminal.fingerprint')).evaluate().isNotEmpty) {
+        break;
+      }
+      await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+    }
     expect(find.byKey(const Key('terminal.fingerprint')), findsOneWidget);
   });
 

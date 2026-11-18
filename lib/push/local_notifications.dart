@@ -124,6 +124,7 @@ class LocalNotifications implements PhoneNotifications {
         l.notifyChannelSystem,
         l.notifyChannelSystemDesc,
       ),
+      NotifyChannel.news => (l.notifyChannelNews, l.notifyChannelNewsDesc),
     };
     final android = AndroidNotificationDetails(
       spec.channel.name,
@@ -148,7 +149,8 @@ class LocalNotifications implements PhoneNotifications {
             a.id,
             a.label,
             showsUserInterface: a.opensApp,
-            // Deny stays until the server confirmed (the handler removes it)
+            // Deny and Save stay until the server confirmed (the handler
+            // removes them)
             cancelNotification: a.opensApp,
           ),
       ],

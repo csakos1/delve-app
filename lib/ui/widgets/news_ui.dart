@@ -35,6 +35,7 @@ abstract final class NewsIcons {
   static const IconData lastWeek = Symbols.history_rounded;
   static const IconData failingFeeds = Symbols.rss_feed_rounded;
   static const IconData expand = Symbols.expand_more_rounded;
+  static const IconData tune = Symbols.tune_rounded;
 }
 
 /// A topic's quiet colour and glyph (design 26 D3, Components → “Topic
@@ -181,14 +182,24 @@ class TopicEdge extends StatelessWidget {
 
 /// The topic label: glyph 14 + small caps in the topic colour.
 class TopicLabel extends ConsumerWidget {
-  const TopicLabel({super.key, required this.topic, this.read = false});
+  const TopicLabel({
+    super.key,
+    required this.topic,
+    this.read = false,
+    this.name,
+  });
   final String? topic;
   final bool read;
+
+  /// The topic's name when the caller knows it (a topic that is off is not
+  /// among the News page's sections).
+  final String? name;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final style = TopicStyle.of(topic);
-    final name = ref.watch(newsProvider.select((v) => v.topicName(topic)));
+    final known = ref.watch(newsProvider.select((v) => v.topicName(topic)));
+    final name = this.name ?? known;
     final color = read ? style.readLabel : style.color;
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -721,26 +732,40 @@ class NewsCard extends ConsumerWidget {
                 ),
             ],
             if (digest.failing > 0)
-              Container(
+              InkWell(
                 key: const Key('dashboard.news.failing'),
-                margin: const EdgeInsets.only(top: DelveTokens.space2),
-                constraints: const BoxConstraints(minHeight: 40),
-                decoration: BoxDecoration(border: Border(top: rule)),
-                child: Row(
-                  children: [
-                    SymbolIcon(
-                      NewsIcons.failingFeeds,
-                      size: DelveTokens.iconSm,
-                      color: muted,
-                    ),
-                    const SizedBox(width: DelveTokens.space2),
-                    Expanded(
-                      child: Text(
-                        l.newsFailingFeeds(digest.failing),
-                        style: context.text.bodySmall!.copyWith(color: muted),
+                onTap: () => context.push(Routes.newsSettings),
+                child: Container(
+                  margin: const EdgeInsets.only(top: DelveTokens.space2),
+                  constraints: const BoxConstraints(minHeight: 40),
+                  decoration: BoxDecoration(border: Border(top: rule)),
+                  child: Row(
+                    children: [
+                      SymbolIcon(
+                        NewsIcons.failingFeeds,
+                        size: DelveTokens.iconSm,
+                        color: muted,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: DelveTokens.space2),
+                      Expanded(
+                        child: Text(
+                          l.newsFailingFeeds(digest.failing),
+                          style: context.text.bodySmall!.copyWith(color: muted),
+                        ),
+                      ),
+                      Text(
+                        l.newsSetFeeds,
+                        style: context.text.labelMedium!.copyWith(
+                          color: context.colors.onSurfaceVariant,
+                        ),
+                      ),
+                      SymbolIcon(
+                        DelveIcons.chevronRight,
+                        size: 18,
+                        color: muted,
+                      ),
+                    ],
+                  ),
                 ),
               ),
           ],

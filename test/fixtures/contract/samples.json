@@ -268,7 +268,8 @@
       "last_error": "Service Unavailable",
       "last_items": 0,
       "last_new": 0,
-      "errors_in_row": 3
+      "errors_in_row": 3,
+      "last_item_at": "2026-10-19T16:39:00.123456+00:00"
     },
     "news_settings": {
       "setup": "An invented reader's desktop.",
@@ -5558,7 +5559,7 @@
   "connection": {
     "hello.ok": {
       "server_version": "0.1.0",
-      "api_revision": 19,
+      "api_revision": 20,
       "revision": "eb4045ed6a94",
       "hermes": "ok",
       "hermes_version": "0.22.2",
@@ -5573,7 +5574,7 @@
     },
     "meta": {
       "server_version": "0.1.0",
-      "api_revision": 19,
+      "api_revision": 20,
       "revision": "eb4045ed6a94",
       "python": "3.14.8",
       "hermes_expected_version": "0.22.2",
@@ -5581,7 +5582,7 @@
     },
     "status": {
       "server_version": "0.1.0",
-      "api_revision": 19,
+      "api_revision": 20,
       "revision": null,
       "hermes": null,
       "hermes_version": null,

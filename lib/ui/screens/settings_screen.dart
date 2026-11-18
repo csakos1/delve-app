@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../api/api_error.dart';
 import '../../api/models/models.dart';
+import '../../app/news.dart';
 import '../../app/router.dart';
 import '../../app/session.dart';
 import '../../general/general_providers.dart';
@@ -22,6 +23,7 @@ import '../../theme/delve_theme.dart';
 import '../format.dart';
 import '../general/general_format.dart';
 import '../widgets/connection_ui.dart';
+import '../widgets/news_ui.dart' show NewsIcons;
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 
@@ -316,6 +318,7 @@ class _NotificationsState extends ConsumerState<_Notifications> {
         brief: key == 'brief' ? value : null,
         watches: key == 'watches' ? value : null,
         system: key == 'system' ? value : null,
+        news: key == 'news' ? value : null,
       );
       ref.invalidate(deviceInfoProvider);
       await ref.read(deviceInfoProvider.future);
@@ -339,6 +342,10 @@ class _NotificationsState extends ConsumerState<_Notifications> {
     final device = widget.device.value;
     final push = ref.watch(pushStateProvider).value ?? const PushState();
     final notify = device?.notify;
+    // the daily limit when News settings were opened in this run
+    final newsMax = ref.watch(
+      newsConfigProvider.select((c) => c.settings?.pushMax),
+    );
 
     final Widget? banner = switch ((push, device)) {
       (PushState(available: false), _) => StatusBanner(
@@ -434,6 +441,15 @@ class _NotificationsState extends ConsumerState<_Notifications> {
           l.settingsNotifyWatches,
           l.settingsNotifyWatchesSub,
           notify?.watches,
+        ),
+        row(
+          'news',
+          NewsIcons.news,
+          l.settingsNotifyNews,
+          newsMax == null
+              ? l.settingsNotifyNewsSubPlain
+              : l.settingsNotifyNewsSub(newsMax),
+          notify?.news,
         ),
         row(
           'system',

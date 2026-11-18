@@ -2045,7 +2045,8 @@ mixin _$NewsSource {
  String get id; String? get topic; String get url;/// `feed` | `release`.
  String get kind; int get windowH; int get everyMin; bool get enabled;/// `import` | `app` | `agent`.
  String get origin; DateTime? get lastAt; DateTime? get lastOkAt;/// `ok` | `not_modified` | `skipped` | `error` | null.
- String? get lastStatus; int? get lastHttp; String? get lastErrorCode; String? get lastError; int? get lastItems; int? get lastNew; int get errorsInRow;
+ String? get lastStatus; int? get lastHttp; String? get lastErrorCode; String? get lastError; int? get lastItems; int? get lastNew; int get errorsInRow;/// When the feed's newest story arrived (API 20); null without one.
+ DateTime? get lastItemAt;
 /// Create a copy of NewsSource
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2058,16 +2059,16 @@ $NewsSourceCopyWith<NewsSource> get copyWith => _$NewsSourceCopyWithImpl<NewsSou
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NewsSource&&(identical(other.id, id) || other.id == id)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.url, url) || other.url == url)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.windowH, windowH) || other.windowH == windowH)&&(identical(other.everyMin, everyMin) || other.everyMin == everyMin)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.lastAt, lastAt) || other.lastAt == lastAt)&&(identical(other.lastOkAt, lastOkAt) || other.lastOkAt == lastOkAt)&&(identical(other.lastStatus, lastStatus) || other.lastStatus == lastStatus)&&(identical(other.lastHttp, lastHttp) || other.lastHttp == lastHttp)&&(identical(other.lastErrorCode, lastErrorCode) || other.lastErrorCode == lastErrorCode)&&(identical(other.lastError, lastError) || other.lastError == lastError)&&(identical(other.lastItems, lastItems) || other.lastItems == lastItems)&&(identical(other.lastNew, lastNew) || other.lastNew == lastNew)&&(identical(other.errorsInRow, errorsInRow) || other.errorsInRow == errorsInRow));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NewsSource&&(identical(other.id, id) || other.id == id)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.url, url) || other.url == url)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.windowH, windowH) || other.windowH == windowH)&&(identical(other.everyMin, everyMin) || other.everyMin == everyMin)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.lastAt, lastAt) || other.lastAt == lastAt)&&(identical(other.lastOkAt, lastOkAt) || other.lastOkAt == lastOkAt)&&(identical(other.lastStatus, lastStatus) || other.lastStatus == lastStatus)&&(identical(other.lastHttp, lastHttp) || other.lastHttp == lastHttp)&&(identical(other.lastErrorCode, lastErrorCode) || other.lastErrorCode == lastErrorCode)&&(identical(other.lastError, lastError) || other.lastError == lastError)&&(identical(other.lastItems, lastItems) || other.lastItems == lastItems)&&(identical(other.lastNew, lastNew) || other.lastNew == lastNew)&&(identical(other.errorsInRow, errorsInRow) || other.errorsInRow == errorsInRow)&&(identical(other.lastItemAt, lastItemAt) || other.lastItemAt == lastItemAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,topic,url,kind,windowH,everyMin,enabled,origin,lastAt,lastOkAt,lastStatus,lastHttp,lastErrorCode,lastError,lastItems,lastNew,errorsInRow);
+int get hashCode => Object.hash(runtimeType,id,topic,url,kind,windowH,everyMin,enabled,origin,lastAt,lastOkAt,lastStatus,lastHttp,lastErrorCode,lastError,lastItems,lastNew,errorsInRow,lastItemAt);
 
 @override
 String toString() {
-  return 'NewsSource(id: $id, topic: $topic, url: $url, kind: $kind, windowH: $windowH, everyMin: $everyMin, enabled: $enabled, origin: $origin, lastAt: $lastAt, lastOkAt: $lastOkAt, lastStatus: $lastStatus, lastHttp: $lastHttp, lastErrorCode: $lastErrorCode, lastError: $lastError, lastItems: $lastItems, lastNew: $lastNew, errorsInRow: $errorsInRow)';
+  return 'NewsSource(id: $id, topic: $topic, url: $url, kind: $kind, windowH: $windowH, everyMin: $everyMin, enabled: $enabled, origin: $origin, lastAt: $lastAt, lastOkAt: $lastOkAt, lastStatus: $lastStatus, lastHttp: $lastHttp, lastErrorCode: $lastErrorCode, lastError: $lastError, lastItems: $lastItems, lastNew: $lastNew, errorsInRow: $errorsInRow, lastItemAt: $lastItemAt)';
 }
 
 
@@ -2078,7 +2079,7 @@ abstract mixin class $NewsSourceCopyWith<$Res>  {
   factory $NewsSourceCopyWith(NewsSource value, $Res Function(NewsSource) _then) = _$NewsSourceCopyWithImpl;
 @useResult
 $Res call({
- String id, String? topic, String url, String kind, int windowH, int everyMin, bool enabled, String origin, DateTime? lastAt, DateTime? lastOkAt, String? lastStatus, int? lastHttp, String? lastErrorCode, String? lastError, int? lastItems, int? lastNew, int errorsInRow
+ String id, String? topic, String url, String kind, int windowH, int everyMin, bool enabled, String origin, DateTime? lastAt, DateTime? lastOkAt, String? lastStatus, int? lastHttp, String? lastErrorCode, String? lastError, int? lastItems, int? lastNew, int errorsInRow, DateTime? lastItemAt
 });
 
 
@@ -2095,7 +2096,7 @@ class _$NewsSourceCopyWithImpl<$Res>
 
 /// Create a copy of NewsSource
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? topic = freezed,Object? url = null,Object? kind = null,Object? windowH = null,Object? everyMin = null,Object? enabled = null,Object? origin = null,Object? lastAt = freezed,Object? lastOkAt = freezed,Object? lastStatus = freezed,Object? lastHttp = freezed,Object? lastErrorCode = freezed,Object? lastError = freezed,Object? lastItems = freezed,Object? lastNew = freezed,Object? errorsInRow = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? topic = freezed,Object? url = null,Object? kind = null,Object? windowH = null,Object? everyMin = null,Object? enabled = null,Object? origin = null,Object? lastAt = freezed,Object? lastOkAt = freezed,Object? lastStatus = freezed,Object? lastHttp = freezed,Object? lastErrorCode = freezed,Object? lastError = freezed,Object? lastItems = freezed,Object? lastNew = freezed,Object? errorsInRow = null,Object? lastItemAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,topic: freezed == topic ? _self.topic : topic // ignore: cast_nullable_to_non_nullable
@@ -2114,7 +2115,8 @@ as String?,lastError: freezed == lastError ? _self.lastError : lastError // igno
 as String?,lastItems: freezed == lastItems ? _self.lastItems : lastItems // ignore: cast_nullable_to_non_nullable
 as int?,lastNew: freezed == lastNew ? _self.lastNew : lastNew // ignore: cast_nullable_to_non_nullable
 as int?,errorsInRow: null == errorsInRow ? _self.errorsInRow : errorsInRow // ignore: cast_nullable_to_non_nullable
-as int,
+as int,lastItemAt: freezed == lastItemAt ? _self.lastItemAt : lastItemAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -2199,10 +2201,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? topic,  String url,  String kind,  int windowH,  int everyMin,  bool enabled,  String origin,  DateTime? lastAt,  DateTime? lastOkAt,  String? lastStatus,  int? lastHttp,  String? lastErrorCode,  String? lastError,  int? lastItems,  int? lastNew,  int errorsInRow)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? topic,  String url,  String kind,  int windowH,  int everyMin,  bool enabled,  String origin,  DateTime? lastAt,  DateTime? lastOkAt,  String? lastStatus,  int? lastHttp,  String? lastErrorCode,  String? lastError,  int? lastItems,  int? lastNew,  int errorsInRow,  DateTime? lastItemAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NewsSource() when $default != null:
-return $default(_that.id,_that.topic,_that.url,_that.kind,_that.windowH,_that.everyMin,_that.enabled,_that.origin,_that.lastAt,_that.lastOkAt,_that.lastStatus,_that.lastHttp,_that.lastErrorCode,_that.lastError,_that.lastItems,_that.lastNew,_that.errorsInRow);case _:
+return $default(_that.id,_that.topic,_that.url,_that.kind,_that.windowH,_that.everyMin,_that.enabled,_that.origin,_that.lastAt,_that.lastOkAt,_that.lastStatus,_that.lastHttp,_that.lastErrorCode,_that.lastError,_that.lastItems,_that.lastNew,_that.errorsInRow,_that.lastItemAt);case _:
   return orElse();
 
 }
@@ -2220,10 +2222,10 @@ return $default(_that.id,_that.topic,_that.url,_that.kind,_that.windowH,_that.ev
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? topic,  String url,  String kind,  int windowH,  int everyMin,  bool enabled,  String origin,  DateTime? lastAt,  DateTime? lastOkAt,  String? lastStatus,  int? lastHttp,  String? lastErrorCode,  String? lastError,  int? lastItems,  int? lastNew,  int errorsInRow)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? topic,  String url,  String kind,  int windowH,  int everyMin,  bool enabled,  String origin,  DateTime? lastAt,  DateTime? lastOkAt,  String? lastStatus,  int? lastHttp,  String? lastErrorCode,  String? lastError,  int? lastItems,  int? lastNew,  int errorsInRow,  DateTime? lastItemAt)  $default,) {final _that = this;
 switch (_that) {
 case _NewsSource():
-return $default(_that.id,_that.topic,_that.url,_that.kind,_that.windowH,_that.everyMin,_that.enabled,_that.origin,_that.lastAt,_that.lastOkAt,_that.lastStatus,_that.lastHttp,_that.lastErrorCode,_that.lastError,_that.lastItems,_that.lastNew,_that.errorsInRow);case _:
+return $default(_that.id,_that.topic,_that.url,_that.kind,_that.windowH,_that.everyMin,_that.enabled,_that.origin,_that.lastAt,_that.lastOkAt,_that.lastStatus,_that.lastHttp,_that.lastErrorCode,_that.lastError,_that.lastItems,_that.lastNew,_that.errorsInRow,_that.lastItemAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2240,10 +2242,10 @@ return $default(_that.id,_that.topic,_that.url,_that.kind,_that.windowH,_that.ev
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? topic,  String url,  String kind,  int windowH,  int everyMin,  bool enabled,  String origin,  DateTime? lastAt,  DateTime? lastOkAt,  String? lastStatus,  int? lastHttp,  String? lastErrorCode,  String? lastError,  int? lastItems,  int? lastNew,  int errorsInRow)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? topic,  String url,  String kind,  int windowH,  int everyMin,  bool enabled,  String origin,  DateTime? lastAt,  DateTime? lastOkAt,  String? lastStatus,  int? lastHttp,  String? lastErrorCode,  String? lastError,  int? lastItems,  int? lastNew,  int errorsInRow,  DateTime? lastItemAt)?  $default,) {final _that = this;
 switch (_that) {
 case _NewsSource() when $default != null:
-return $default(_that.id,_that.topic,_that.url,_that.kind,_that.windowH,_that.everyMin,_that.enabled,_that.origin,_that.lastAt,_that.lastOkAt,_that.lastStatus,_that.lastHttp,_that.lastErrorCode,_that.lastError,_that.lastItems,_that.lastNew,_that.errorsInRow);case _:
+return $default(_that.id,_that.topic,_that.url,_that.kind,_that.windowH,_that.everyMin,_that.enabled,_that.origin,_that.lastAt,_that.lastOkAt,_that.lastStatus,_that.lastHttp,_that.lastErrorCode,_that.lastError,_that.lastItems,_that.lastNew,_that.errorsInRow,_that.lastItemAt);case _:
   return null;
 
 }
@@ -2255,7 +2257,7 @@ return $default(_that.id,_that.topic,_that.url,_that.kind,_that.windowH,_that.ev
 @JsonSerializable()
 
 class _NewsSource implements NewsSource {
-  const _NewsSource({required this.id, this.topic, required this.url, required this.kind, this.windowH = 48, this.everyMin = 60, this.enabled = true, this.origin = 'import', this.lastAt, this.lastOkAt, this.lastStatus, this.lastHttp, this.lastErrorCode, this.lastError, this.lastItems, this.lastNew, this.errorsInRow = 0});
+  const _NewsSource({required this.id, this.topic, required this.url, required this.kind, this.windowH = 48, this.everyMin = 60, this.enabled = true, this.origin = 'import', this.lastAt, this.lastOkAt, this.lastStatus, this.lastHttp, this.lastErrorCode, this.lastError, this.lastItems, this.lastNew, this.errorsInRow = 0, this.lastItemAt});
   factory _NewsSource.fromJson(Map<String, dynamic> json) => _$NewsSourceFromJson(json);
 
 @override final  String id;
@@ -2278,6 +2280,8 @@ class _NewsSource implements NewsSource {
 @override final  int? lastItems;
 @override final  int? lastNew;
 @override@JsonKey() final  int errorsInRow;
+/// When the feed's newest story arrived (API 20); null without one.
+@override final  DateTime? lastItemAt;
 
 /// Create a copy of NewsSource
 /// with the given fields replaced by the non-null parameter values.
@@ -2292,16 +2296,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NewsSource&&(identical(other.id, id) || other.id == id)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.url, url) || other.url == url)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.windowH, windowH) || other.windowH == windowH)&&(identical(other.everyMin, everyMin) || other.everyMin == everyMin)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.lastAt, lastAt) || other.lastAt == lastAt)&&(identical(other.lastOkAt, lastOkAt) || other.lastOkAt == lastOkAt)&&(identical(other.lastStatus, lastStatus) || other.lastStatus == lastStatus)&&(identical(other.lastHttp, lastHttp) || other.lastHttp == lastHttp)&&(identical(other.lastErrorCode, lastErrorCode) || other.lastErrorCode == lastErrorCode)&&(identical(other.lastError, lastError) || other.lastError == lastError)&&(identical(other.lastItems, lastItems) || other.lastItems == lastItems)&&(identical(other.lastNew, lastNew) || other.lastNew == lastNew)&&(identical(other.errorsInRow, errorsInRow) || other.errorsInRow == errorsInRow));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NewsSource&&(identical(other.id, id) || other.id == id)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.url, url) || other.url == url)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.windowH, windowH) || other.windowH == windowH)&&(identical(other.everyMin, everyMin) || other.everyMin == everyMin)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.lastAt, lastAt) || other.lastAt == lastAt)&&(identical(other.lastOkAt, lastOkAt) || other.lastOkAt == lastOkAt)&&(identical(other.lastStatus, lastStatus) || other.lastStatus == lastStatus)&&(identical(other.lastHttp, lastHttp) || other.lastHttp == lastHttp)&&(identical(other.lastErrorCode, lastErrorCode) || other.lastErrorCode == lastErrorCode)&&(identical(other.lastError, lastError) || other.lastError == lastError)&&(identical(other.lastItems, lastItems) || other.lastItems == lastItems)&&(identical(other.lastNew, lastNew) || other.lastNew == lastNew)&&(identical(other.errorsInRow, errorsInRow) || other.errorsInRow == errorsInRow)&&(identical(other.lastItemAt, lastItemAt) || other.lastItemAt == lastItemAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,topic,url,kind,windowH,everyMin,enabled,origin,lastAt,lastOkAt,lastStatus,lastHttp,lastErrorCode,lastError,lastItems,lastNew,errorsInRow);
+int get hashCode => Object.hash(runtimeType,id,topic,url,kind,windowH,everyMin,enabled,origin,lastAt,lastOkAt,lastStatus,lastHttp,lastErrorCode,lastError,lastItems,lastNew,errorsInRow,lastItemAt);
 
 @override
 String toString() {
-  return 'NewsSource(id: $id, topic: $topic, url: $url, kind: $kind, windowH: $windowH, everyMin: $everyMin, enabled: $enabled, origin: $origin, lastAt: $lastAt, lastOkAt: $lastOkAt, lastStatus: $lastStatus, lastHttp: $lastHttp, lastErrorCode: $lastErrorCode, lastError: $lastError, lastItems: $lastItems, lastNew: $lastNew, errorsInRow: $errorsInRow)';
+  return 'NewsSource(id: $id, topic: $topic, url: $url, kind: $kind, windowH: $windowH, everyMin: $everyMin, enabled: $enabled, origin: $origin, lastAt: $lastAt, lastOkAt: $lastOkAt, lastStatus: $lastStatus, lastHttp: $lastHttp, lastErrorCode: $lastErrorCode, lastError: $lastError, lastItems: $lastItems, lastNew: $lastNew, errorsInRow: $errorsInRow, lastItemAt: $lastItemAt)';
 }
 
 
@@ -2312,7 +2316,7 @@ abstract mixin class _$NewsSourceCopyWith<$Res> implements $NewsSourceCopyWith<$
   factory _$NewsSourceCopyWith(_NewsSource value, $Res Function(_NewsSource) _then) = __$NewsSourceCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String? topic, String url, String kind, int windowH, int everyMin, bool enabled, String origin, DateTime? lastAt, DateTime? lastOkAt, String? lastStatus, int? lastHttp, String? lastErrorCode, String? lastError, int? lastItems, int? lastNew, int errorsInRow
+ String id, String? topic, String url, String kind, int windowH, int everyMin, bool enabled, String origin, DateTime? lastAt, DateTime? lastOkAt, String? lastStatus, int? lastHttp, String? lastErrorCode, String? lastError, int? lastItems, int? lastNew, int errorsInRow, DateTime? lastItemAt
 });
 
 
@@ -2329,7 +2333,7 @@ class __$NewsSourceCopyWithImpl<$Res>
 
 /// Create a copy of NewsSource
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? topic = freezed,Object? url = null,Object? kind = null,Object? windowH = null,Object? everyMin = null,Object? enabled = null,Object? origin = null,Object? lastAt = freezed,Object? lastOkAt = freezed,Object? lastStatus = freezed,Object? lastHttp = freezed,Object? lastErrorCode = freezed,Object? lastError = freezed,Object? lastItems = freezed,Object? lastNew = freezed,Object? errorsInRow = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? topic = freezed,Object? url = null,Object? kind = null,Object? windowH = null,Object? everyMin = null,Object? enabled = null,Object? origin = null,Object? lastAt = freezed,Object? lastOkAt = freezed,Object? lastStatus = freezed,Object? lastHttp = freezed,Object? lastErrorCode = freezed,Object? lastError = freezed,Object? lastItems = freezed,Object? lastNew = freezed,Object? errorsInRow = null,Object? lastItemAt = freezed,}) {
   return _then(_NewsSource(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,topic: freezed == topic ? _self.topic : topic // ignore: cast_nullable_to_non_nullable
@@ -2348,7 +2352,8 @@ as String?,lastError: freezed == lastError ? _self.lastError : lastError // igno
 as String?,lastItems: freezed == lastItems ? _self.lastItems : lastItems // ignore: cast_nullable_to_non_nullable
 as int?,lastNew: freezed == lastNew ? _self.lastNew : lastNew // ignore: cast_nullable_to_non_nullable
 as int?,errorsInRow: null == errorsInRow ? _self.errorsInRow : errorsInRow // ignore: cast_nullable_to_non_nullable
-as int,
+as int,lastItemAt: freezed == lastItemAt ? _self.lastItemAt : lastItemAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

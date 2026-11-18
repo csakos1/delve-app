@@ -229,7 +229,7 @@ shapes = {
     "news_digest": {"top": [n_item, n_rel], "new": 12, "updated_at": t0.isoformat(), "state": "ok",
                     "sources": 41, "failing": 3, "weekly": {"count": 8}},
     "news_topic": nw.topic_out(n_topic, {"sources": 7, "items_24h": 5}),
-    "news_source": nw.source_out(n_source),
+    "news_source": nw.source_out(n_source, t0 - timedelta(hours=5)),
     "news_settings": nw.settings_out({"setup": "An invented reader's desktop.", "digest_at": "07:00",
                                       "push": True, "push_max": 2}),
     "watch": watch_out(watch, watch_counts),

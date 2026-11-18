@@ -184,6 +184,14 @@ class PushController {
       }
       return;
     }
+    // a story's Save normally reaches the background handler; if the plugin
+    // hands it to this isolate instead, save here
+    if (tap.actionId == NotifyActions.save) {
+      if (target.item case final item?) {
+        await saveNews(api, item, tap.payload!, notifications);
+      }
+      return;
+    }
     if (tap.actionId == NotifyActions.openLink && target.url != null) {
       _events.add(PushOpenLink(target));
       return;
