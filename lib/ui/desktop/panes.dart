@@ -228,6 +228,8 @@ class DesktopPanes extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // The list column has its own ScaffoldMessenger: its snackbars (Archived
+    // · Undo) show in the column only, not a second time across the content.
     final cs = context.colors;
     final layouts = ref.watch(paneLayoutsProvider.notifier);
     ref.watch(paneLayoutsProvider);
@@ -249,7 +251,11 @@ class DesktopPanes extends ConsumerWidget {
         if (at.listDocked)
           SizedBox(
             width: at.listWidth,
-            child: pane(list!, cs.surfaceContainerLow, const Key('pane.list')),
+            child: pane(
+              ScaffoldMessenger(child: list!),
+              cs.surfaceContainerLow,
+              const Key('pane.list'),
+            ),
           ),
         Expanded(child: pane(content, cs.surface, const Key('pane.content'))),
         if (at.inspectorDocked)
@@ -341,7 +347,7 @@ class DesktopPanes extends ConsumerWidget {
                   width: DelveDesktop.listDefault,
                   child: _Floating(
                     child: pane(
-                      list!,
+                      ScaffoldMessenger(child: list!),
                       cs.surfaceContainerLow,
                       const Key('pane.list.overlay'),
                     ),

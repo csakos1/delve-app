@@ -515,4 +515,25 @@ void main() {
       expect(c.read(chatInspectorTabProvider), ChatInspectorTab.run);
     });
   });
+
+  testWidgets('archiving from the list: one snackbar, in the list column', (
+    t,
+  ) async {
+    await pumpDelve(t, caps: _linux, window: _frame, before: seedFinished);
+    final row = find.byKey(const Key('chats.row'));
+    final mouse = await t.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    addTearDown(mouse.removePointer);
+    await mouse.moveTo(t.getCenter(row));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('chats.row.archive')));
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 500));
+    final bar = find.byType(SnackBar);
+    expect(bar, findsOneWidget);
+    expect(
+      find.descendant(of: find.byKey(const Key('pane.list')), matching: bar),
+      findsOneWidget,
+    );
+  });
 }
