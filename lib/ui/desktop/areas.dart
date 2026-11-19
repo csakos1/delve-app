@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/router.dart';
 import '../../l10n/app_localizations.dart';
@@ -91,3 +92,27 @@ enum DesktopArea {
     return null;
   }
 }
+
+/// Where each area was left (L2b2): the rail and Ctrl+digit bring an area
+/// back as it was – the open chat, a Settings page. The shell remembers
+/// every location it shows; nothing listens.
+class DesktopPlaces {
+  final Map<DesktopArea, String> _last = {};
+
+  void remember(String location) {
+    final area = DesktopArea.of(location);
+    if (area != null) _last[area] = location;
+  }
+
+  /// Where [area] opens from [location]: the place it was left; from inside
+  /// it, its first page (Chats stays: the open chat is a selection, not a
+  /// page under the list).
+  String target(DesktopArea area, String location) {
+    if (DesktopArea.of(location) == area) {
+      return area == DesktopArea.chats ? location : area.route;
+    }
+    return _last[area] ?? area.route;
+  }
+}
+
+final desktopPlacesProvider = Provider<DesktopPlaces>((ref) => DesktopPlaces());

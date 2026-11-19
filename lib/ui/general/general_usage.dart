@@ -29,9 +29,17 @@ Future<void> showGeneralUsageSheet(
 /// desktop numbers – Input · Output · Cost · Answers, the context of the
 /// last answer, the answers by model and the key's spend this period.
 class GeneralUsageSheet extends ConsumerWidget {
-  const GeneralUsageSheet({super.key, required this.chatId});
+  const GeneralUsageSheet({
+    super.key,
+    required this.chatId,
+    this.embedded = false,
+  });
 
   final String chatId;
+
+  /// The desktop inspector's Usage tab (L2b2): no heading, no close button,
+  /// the inspector's padding and height.
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,26 +60,29 @@ class GeneralUsageSheet extends ConsumerWidget {
     final contextMax = chat?.lastContextLength;
 
     final children = <Widget>[
-      Row(
-        children: [
-          Expanded(
-            child: Text(l.usageTitle, style: context.text.headlineSmall),
-          ),
-          IconButton(
-            key: const Key('generalUsage.close'),
-            tooltip: l.close,
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const SymbolIcon(DelveIcons.close),
-          ),
-        ],
-      ),
-      Text(
-        title == null || title.isEmpty ? l.newChat : title,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: context.text.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
-      ),
-      const SizedBox(height: DelveTokens.space4),
+      if (!embedded) ...[
+        Row(
+          children: [
+            Expanded(
+              child: Text(l.usageTitle, style: context.text.headlineSmall),
+            ),
+            IconButton(
+              key: const Key('generalUsage.close'),
+              tooltip: l.close,
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const SymbolIcon(DelveIcons.close),
+            ),
+          ],
+        ),
+        Text(
+          title == null || title.isEmpty ? l.newChat : title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: context.text.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DelveTokens.space4),
+      ] else
+        const SizedBox(height: DelveTokens.space2),
       Row(
         children: [
           Expanded(
@@ -166,6 +177,13 @@ class GeneralUsageSheet extends ConsumerWidget {
       const _KeyCard(),
     ];
 
+    if (embedded) {
+      return ListView(
+        key: const Key('generalUsage.inspector'),
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        children: children,
+      );
+    }
     return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.85,

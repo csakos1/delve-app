@@ -18,6 +18,7 @@ import 'package:delve/share/share_channel.dart';
 import 'package:delve/sync/connection_status.dart';
 import 'package:delve/sync/sync_providers.dart';
 import 'package:delve/terminal/terminal_providers.dart';
+import 'package:delve/ui/desktop/intake.dart';
 import 'package:delve/ui/links.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
@@ -83,6 +84,9 @@ class TestEnv {
   /// Links the app opened (url_launcher is off in tests).
   final LinkLog links = LinkLog();
 
+  /// The desktop's clipboard for Ctrl+V (wl-paste is off in tests).
+  final FakePasteboard pasteboard = FakePasteboard();
+
   /// Connection state the screens see (the socket itself is off in tests).
   final ConnectionStatus? status;
 
@@ -134,6 +138,7 @@ class TestEnv {
       generalKeyStoreProvider.overrideWithValue(generalKeys),
       openRouterAdapterProvider.overrideWithValue(openRouter),
       mirrorPlatformProvider.overrideWithValue(mirror),
+      desktopPasteboardProvider.overrideWithValue(pasteboard),
       if (caps case final c?) platformCapsProvider.overrideWithValue(c),
       if (push case final p?)
         pushStateProvider.overrideWith((ref) => Stream.value(p)),
@@ -175,6 +180,7 @@ class TestEnv {
         generalKeyStoreProvider.overrideWithValue(generalKeys),
         openRouterAdapterProvider.overrideWithValue(openRouter),
         mirrorPlatformProvider.overrideWithValue(mirror),
+        desktopPasteboardProvider.overrideWithValue(pasteboard),
         if (caps case final c?) platformCapsProvider.overrideWithValue(c),
         if (push case final p?)
           pushStateProvider.overrideWith((ref) => Stream.value(p)),
@@ -269,6 +275,18 @@ class AttachmentFakes {
   final AttachmentApi api;
   final AttachmentPicker picker;
   final ImagePrep prep;
+}
+
+/// The desktop's clipboard: [next] is what Ctrl+V finds.
+class FakePasteboard implements DesktopPasteboard {
+  PasteContent next = const PasteText();
+  int reads = 0;
+
+  @override
+  Future<PasteContent> read() async {
+    reads++;
+    return next;
+  }
 }
 
 /// The links a test's app opened; [result] is what the "browser" answers.

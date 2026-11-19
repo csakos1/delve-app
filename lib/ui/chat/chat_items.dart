@@ -9,6 +9,7 @@ import '../../data/db/database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../sync/live_runs.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_row.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import 'approval_card.dart';
@@ -27,7 +28,8 @@ void _copyWithNote(BuildContext context, String text) {
 }
 
 /// The user's message: surface-2 bubble on the right (radius 16/16/4/16),
-/// at most 86 % wide, its photos and files above it. Long press copies.
+/// at most 86 % wide, its photos and files above it. Long press copies (the
+/// desktop: right click, Copy).
 class UserBubble extends StatelessWidget {
   const UserBubble({
     super.key,
@@ -68,6 +70,17 @@ class UserBubble extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: GestureDetector(
                 onLongPress: () => _copyWithNote(context, text),
+                onSecondaryTapUp: desktopMenuOn(
+                  context,
+                  () => [
+                    DesktopMenuItem(
+                      key: const Key('msg.menu.copy'),
+                      icon: DelveIcons.copy,
+                      label: AppLocalizations.of(context).desktopMenuCopy,
+                      onSelected: () => _copyWithNote(context, text),
+                    ),
+                  ],
+                ),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -256,6 +269,7 @@ class RunBlock extends StatelessWidget {
     this.onRetry,
     this.onAnswer,
     this.selfDevice,
+    this.onInspect,
   });
 
   final MessageRow message;
@@ -276,6 +290,10 @@ class RunBlock extends StatelessWidget {
 
   /// This phone's device name (answers it gave read "by you").
   final String? selfDevice;
+
+  /// The desktop: shows this run (and a step of it) in the inspector – the
+  /// context menus' “Show in inspector”; null: not offered.
+  final void Function(int? stepId)? onInspect;
 
   bool get active =>
       (run != null && openRunStatuses.contains(run!.status)) ||
@@ -325,7 +343,7 @@ class RunBlock extends StatelessWidget {
             live: thinkingNow,
             since: run?.startedAt ?? live?.startedAt ?? message.createdAt,
             tokens: live?.contextGrowth ?? 0,
-            seconds: _thoughtSeconds(run, live),
+            seconds: thoughtSeconds(run, live),
             reasoning: message.reasoning,
           ),
         ),
@@ -353,6 +371,24 @@ class RunBlock extends StatelessWidget {
           node: nodeColor,
           child: GestureDetector(
             onLongPress: () => _copyWithNote(context, message.content),
+            onSecondaryTapUp: desktopMenuOn(
+              context,
+              () => [
+                DesktopMenuItem(
+                  key: const Key('msg.menu.copy'),
+                  icon: DelveIcons.copy,
+                  label: l.desktopMenuCopy,
+                  onSelected: () => _copyWithNote(context, message.content),
+                ),
+                if (onInspect case final inspect?)
+                  DesktopMenuItem(
+                    key: const Key('run.menu.inspect'),
+                    icon: DelveIcons.inspector,
+                    label: l.desktopMenuShowRun,
+                    onSelected: () => inspect(null),
+                  ),
+              ],
+            ),
             child: DelveMarkdown(data: text),
           ),
         )
@@ -418,16 +454,6 @@ class RunBlock extends StatelessWidget {
     );
   }
 
-  /// How long the model thought: the run's time to its first text
-  /// (`perf.first_delta_s`), or what this app saw live.
-  static double? _thoughtSeconds(RunRow? run, LiveRun? live) {
-    final measured = run?.perf?['first_delta_s'];
-    if (measured is num) return measured.toDouble();
-    final first = live?.firstDeltaAt;
-    if (live == null || first == null) return null;
-    return first.difference(live.startedAt).inMilliseconds / 1000;
-  }
-
   /// An answerable approval replaces its step (04, 08a); otherwise the tool
   /// card, with how its approval ended.
   Widget _step(ToolStepRow step) {
@@ -441,7 +467,13 @@ class RunBlock extends StatelessWidget {
         onAnswer: answer == null ? null : (c) => answer(approval, c),
       );
     }
-    return ToolStepCard(step: step, approval: approval, selfDevice: selfDevice);
+    final inspect = onInspect;
+    return ToolStepCard(
+      step: step,
+      approval: approval,
+      selfDevice: selfDevice,
+      onInspect: inspect == null ? null : () => inspect(step.id),
+    );
   }
 
   Color _stepNode(BuildContext context, ToolStepRow step, Color normal) {
@@ -455,6 +487,16 @@ class RunBlock extends StatelessWidget {
       _ => normal,
     };
   }
+}
+
+/// How long the model thought: the run's time to its first text
+/// (`perf.first_delta_s`), or what this app saw live.
+double? thoughtSeconds(RunRow? run, LiveRun? live) {
+  final measured = run?.perf?['first_delta_s'];
+  if (measured is num) return measured.toDouble();
+  final first = live?.firstDeltaAt;
+  if (live == null || first == null) return null;
+  return first.difference(live.startedAt).inMilliseconds / 1000;
 }
 
 /// One entry on the run rail: the rail segment, its node, the content.

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models/models.dart';
+import '../../app/layout.dart';
 import '../../app/platform.dart';
 import '../../attachments/attachment_store.dart';
 import '../../attachments/composer_attachments.dart';
@@ -663,8 +664,8 @@ Future<AttachSource?> showAttachSourceSheet(
   },
 );
 
-/// The composer's "+": asks for Photos, Camera or File and adds what is
-/// picked (it starts uploading at once); a snackbar says what did not fit.
+/// The composer's "+" (and the desktop's Ctrl+O): asks for Photos, Camera
+/// or File (the desktop: the file dialog at once) and adds what is picked (it starts uploading at once); a snackbar says what did not fit.
 /// With [noImagesModel] (the loaded model has no image input) no image is
 /// taken, not even through File.
 Future<void> pickAttachmentsInto(
@@ -675,6 +676,8 @@ Future<void> pickAttachmentsInto(
 }) async {
   final l = AppLocalizations.of(context);
   final messenger = ScaffoldMessenger.of(context);
+  // the desktop: no sheet – the file dialog (photos are files there too)
+  final desktop = DesktopLayout.of(context);
   void snack(String text) {
     messenger
       ..hideCurrentSnackBar()
@@ -686,10 +689,9 @@ Future<void> pickAttachmentsInto(
     snack(l.attachLimit(kMaxAttachments));
     return;
   }
-  final source = await showAttachSourceSheet(
-    context,
-    noImagesModel: noImagesModel,
-  );
+  final source = desktop
+      ? AttachSource.file
+      : await showAttachSourceSheet(context, noImagesModel: noImagesModel);
   if (source == null || !context.mounted) return;
   List<PickedAttachment> picked;
   try {

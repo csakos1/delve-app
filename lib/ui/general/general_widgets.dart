@@ -1036,6 +1036,8 @@ class GeneralListRow extends StatelessWidget {
     this.background,
     this.selected = false,
     this.onArchive,
+    this.onUnarchive,
+    this.onDelete,
   });
 
   final GeneralChatRow chat;
@@ -1047,6 +1049,11 @@ class GeneralListRow extends StatelessWidget {
 
   /// The desktop's hover action and menu entry; null: none.
   final VoidCallback? onArchive;
+
+  /// The desktop's archive filter (L2b2): Unarchive and Delete on hover and
+  /// in the menu.
+  final VoidCallback? onUnarchive;
+  final VoidCallback? onDelete;
 
   /// The row's surface (the desktop's list column and its selected row);
   /// null: the page colour.
@@ -1148,6 +1155,8 @@ class GeneralListRow extends StatelessWidget {
     String? title,
   ) {
     final archive = onArchive;
+    final unarchive = onUnarchive;
+    final delete = onDelete;
     return DesktopRowFrame(
       key: const Key('chats.row.general'),
       selected: selected,
@@ -1161,6 +1170,20 @@ class GeneralListRow extends StatelessWidget {
             tooltip: l.chatsArchive,
             onPressed: archive,
           ),
+        if (unarchive != null)
+          DesktopRowAction(
+            key: const Key('chats.row.unarchive'),
+            icon: DelveIcons.unarchive,
+            tooltip: l.archivedRestore,
+            onPressed: unarchive,
+          ),
+        if (delete != null)
+          DesktopRowAction(
+            key: const Key('chats.row.delete'),
+            icon: DelveIcons.delete,
+            tooltip: l.generalMenuDelete,
+            onPressed: delete,
+          ),
       ],
       menu: [
         DesktopMenuItem(
@@ -1173,6 +1196,20 @@ class GeneralListRow extends StatelessWidget {
             icon: DelveIcons.archive,
             label: l.chatsArchive,
             onSelected: archive,
+          ),
+        if (unarchive != null)
+          DesktopMenuItem(
+            icon: DelveIcons.unarchive,
+            label: l.archivedRestore,
+            onSelected: unarchive,
+          ),
+        if (delete != null)
+          DesktopMenuItem(
+            key: const Key('chats.menu.delete'),
+            icon: DelveIcons.delete,
+            label: l.generalMenuDelete,
+            onSelected: delete,
+            destructive: true,
           ),
       ],
       child: Column(
@@ -1249,12 +1286,16 @@ class ChatsFilterChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    // the desktop (L2b2): 26 px chips in a 38 px row
+    final desktop = DesktopLayout.of(context);
     return SizedBox(
-      height: 48,
+      height: desktop ? 38 : 48,
       child: ListView(
         key: const Key('chats.filters'),
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space4),
+        padding: EdgeInsets.symmetric(
+          horizontal: desktop ? 12 : DelveTokens.space4,
+        ),
         children: [
           for (final (f, icon, label) in [
             (ChatsFilter.all, null, l.chatsFilterAll),
@@ -1308,6 +1349,9 @@ class DelveFilterChip extends StatelessWidget {
     final fg = selected ? cs.onPrimaryContainer : cs.onSurfaceVariant;
     final lead = selected ? DelveIcons.check : icon;
     final dotColor = selected ? null : dot;
+    // the desktop (design 27 “Density”): 26 high, padding 0 / 10
+    final desktop = DesktopLayout.of(context);
+    final side = desktop ? 10.0 : DelveTokens.space4;
     return Semantics(
       selected: selected,
       button: true,
@@ -1325,22 +1369,23 @@ class DelveFilterChip extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: SizedBox(
-            height: 32,
+            height: desktop ? 26 : 32,
             child: Padding(
               padding: EdgeInsets.fromLTRB(
                 lead == null && dotColor == null
-                    ? DelveTokens.space4
-                    : DelveTokens.space2 + (dotColor != null ? 4 : 0),
+                    ? side
+                    : (desktop ? 6 : DelveTokens.space2) +
+                          (dotColor != null ? 4 : 0),
                 0,
-                DelveTokens.space4,
+                side,
                 0,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (lead != null) ...[
-                    SymbolIcon(lead, size: 18, color: fg),
-                    const SizedBox(width: DelveTokens.space2),
+                    SymbolIcon(lead, size: desktop ? 15 : 18, color: fg),
+                    SizedBox(width: desktop ? 6 : DelveTokens.space2),
                   ] else if (dotColor != null) ...[
                     Container(
                       width: 8,
@@ -1354,9 +1399,11 @@ class DelveFilterChip extends StatelessWidget {
                   ],
                   Text(
                     label,
-                    style: context.text.labelLarge!.copyWith(
-                      color: selected ? fg : cs.onSurface,
-                    ),
+                    style:
+                        (desktop
+                                ? DelveDesktopText.control
+                                : context.text.labelLarge!)
+                            .copyWith(color: selected ? fg : cs.onSurface),
                   ),
                 ],
               ),
@@ -1390,6 +1437,7 @@ class ChatKindSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final cs = context.colors;
+    if (DesktopLayout.of(context)) return _desktop(context, l, cs);
     Widget segment(ChatKind kind, IconData icon, String title, String sub) {
       final on = value == kind;
       final fg = on ? cs.onPrimaryContainer : cs.onSurface;
@@ -1487,6 +1535,103 @@ class ChatKindSwitch extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// The desktop's choice (27W-2h): two 260 px cells side by side, the
+  /// selected one `accent-container`, radius 10.
+  Widget _desktop(BuildContext context, AppLocalizations l, ColorScheme cs) {
+    Widget cell(ChatKind kind, IconData icon, String title, String sub) {
+      final on = value == kind;
+      final fg = on ? cs.onPrimaryContainer : cs.onSurface;
+      final subFg = on ? cs.onPrimaryContainer : cs.onSurfaceVariant;
+      return Semantics(
+        selected: on,
+        button: true,
+        label: title,
+        child: SizedBox(
+          width: 260,
+          child: Material(
+            color: on ? cs.primaryContainer : Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+              side: on ? BorderSide.none : BorderSide(color: cs.outlineVariant),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              key: Key('newChat.kind.${kind.name}'),
+              onTap: () => onChanged(kind),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SymbolIcon(
+                      on ? DelveIcons.check : icon,
+                      size: 18,
+                      color: fg,
+                    ),
+                    const SizedBox(width: DelveTokens.space2),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: DelveDesktopText.rowTitle.copyWith(
+                              color: fg,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            sub,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: DelveDesktopText.rowSecondary.copyWith(
+                              color: subFg,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      key: const Key('newChat.kind'),
+      padding: const EdgeInsets.only(top: DelveTokens.space4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Flexible(
+            child: cell(
+              ChatKind.agent,
+              DelveIcons.computer,
+              l.newChatAgent,
+              l.newChatAgentSub,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: cell(
+              ChatKind.general,
+              DelveIcons.cloud,
+              l.newChatGeneral,
+              l.newChatGeneralSub,
+            ),
+          ),
+        ],
       ),
     );
   }

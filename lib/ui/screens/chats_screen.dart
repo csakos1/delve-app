@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,6 +16,10 @@ import '../../l10n/app_localizations.dart';
 import '../../sync/connection_status.dart';
 import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_row.dart';
+import '../desktop/intake.dart';
+import '../desktop/layers.dart';
+import '../desktop/panes.dart' show KeyCap;
 import '../format.dart';
 import '../general/general_format.dart';
 import '../general/general_widgets.dart';
@@ -29,7 +34,9 @@ import '../widgets/status_ui.dart';
 ///
 /// In the desktop layout it is the Chats list column (L2a): the open chat's
 /// row is selected, New chat is a header button (no FAB), Approvals has its
-/// own rail item, and Archived is the foot row.
+/// own rail item, and Archived is the foot row – a filter of the list
+/// (L2b2), with Unarchive (and Delete for General) on hover. J / K / ↓ / ↑
+/// open the next / previous chat, E archives the open one, Ctrl+Z undoes.
 class ChatsScreen extends ConsumerStatefulWidget {
   const ChatsScreen({super.key, this.selected});
 
@@ -44,10 +51,92 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   final _search = TextEditingController();
   bool _searching = false;
 
+  /// The desktop: the list shows the archived chats (the foot row, L2b2).
+  bool _archived = false;
+
+  /// The desktop's last archive, for Ctrl+Z: `c:<id>` or `g:<id>`.
+  String? _undo;
+
+  /// The rows as shown (`c:<id>` / `g:<id>`), for J / K.
+  List<String> _rows = const [];
+
+  late final ListCommandSlot _keys;
+  late final ListCommands _commands = ListCommands(
+    next: () => _step(1),
+    previous: () => _step(-1),
+    archive: _archiveOpen,
+    undo: _undoArchive,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _keys = ref.read(listCommandSlotProvider);
+  }
+
   @override
   void dispose() {
+    _keys.unregister(this);
     _search.dispose();
     super.dispose();
+  }
+
+  bool get _inArchive => _archived && DesktopLayout.of(context);
+
+  /// The chat a row key opens.
+  static String _routeOf(String row) => row.startsWith('g:')
+      ? Routes.generalChat(row.substring(2))
+      : Routes.chat(row.substring(2));
+
+  /// J / K: the next / previous row opens.
+  void _step(int by) {
+    if (_rows.isEmpty) return;
+    final at = _rows.indexOf(widget.selected ?? '');
+    final next = at < 0
+        ? (by > 0 ? 0 : _rows.length - 1)
+        : (at + by).clamp(0, _rows.length - 1);
+    if (next != at) context.go(_routeOf(_rows[next]));
+  }
+
+  /// Where to go once [gone] has left the list (taken before it leaves):
+  /// the row that takes its place, or the empty content.
+  String _routeAfter(String gone) {
+    final at = _rows.indexOf(gone);
+    final rest = [..._rows]..remove(gone);
+    if (rest.isEmpty || at < 0) return Routes.chats;
+    return _routeOf(rest[at.clamp(0, rest.length - 1)]);
+  }
+
+  /// E: the open chat is archived.
+  void _archiveOpen() {
+    final open = widget.selected;
+    if (_inArchive || open == null || !_rows.contains(open)) return;
+    if (open.startsWith('g:')) {
+      unawaited(_archiveGeneral(open.substring(2)));
+    } else {
+      unawaited(_archive(open.substring(2)));
+    }
+  }
+
+  /// Ctrl+Z: the last archive is undone.
+  void _undoArchive() {
+    final row = _undo;
+    if (row == null) return;
+    _undo = null;
+    final id = row.substring(2);
+    if (row.startsWith('g:')) {
+      unawaited(
+        ref.read(generalChatServiceProvider).archive(id, archived: false),
+      );
+    } else {
+      unawaited(_restore(ref.read(chatListPagerProvider(false).notifier), id));
+    }
+  }
+
+  /// The foot row: the archive in the list, or back.
+  void _toggleArchived() {
+    setState(() => _archived = !_archived);
+    if (_archived) unawaited(_refresh());
   }
 
   void _toggleSearch() => setState(() {
@@ -75,7 +164,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   Future<void> _refresh() async {
     final l = AppLocalizations.of(context);
     try {
-      await ref.read(chatListPagerProvider(false).notifier).refresh();
+      await ref.read(chatListPagerProvider(_inArchive).notifier).refresh();
     } on Exception catch (e) {
       if (mounted) _snack(l.chatsRefreshFailed(apiErrorText(l, e)));
     }
@@ -84,7 +173,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   Future<void> _loadMore() async {
     final l = AppLocalizations.of(context);
     try {
-      await ref.read(chatListPagerProvider(false).notifier).loadMore();
+      await ref.read(chatListPagerProvider(_inArchive).notifier).loadMore();
     } on Exception catch (e) {
       if (mounted) _snack(l.chatsRefreshFailed(apiErrorText(l, e)));
     }
@@ -94,12 +183,14 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   Future<bool> _archive(String id) async {
     final l = AppLocalizations.of(context);
     final pager = ref.read(chatListPagerProvider(false).notifier);
+    final after = _routeAfter('c:$id');
     try {
       await pager.setArchived(id, archived: true);
     } on Exception catch (e) {
       if (mounted) _snack(l.chatsArchiveFailed(apiErrorText(l, e)));
       return false;
     }
+    _archivedOnDesktop('c:$id', after);
     if (mounted) {
       _snack(
         l.chatsArchived,
@@ -116,7 +207,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   Future<bool> _archiveGeneral(String id) async {
     final l = AppLocalizations.of(context);
     final service = ref.read(generalChatServiceProvider);
+    final after = _routeAfter('g:$id');
     await service.archive(id);
+    _archivedOnDesktop('g:$id', after);
     if (mounted) {
       _snack(
         l.chatsArchived,
@@ -127,6 +220,78 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
       );
     }
     return true;
+  }
+
+  /// The desktop: Ctrl+Z can undo [row]'s archive; the open chat makes way
+  /// for [after].
+  void _archivedOnDesktop(String row, String after) {
+    if (!mounted || !DesktopLayout.of(context)) return;
+    _undo = row;
+    if (widget.selected == row) context.go(after);
+  }
+
+  /// The archive (desktop): an agent chat back to the list.
+  Future<void> _unarchive(String id) async {
+    final l = AppLocalizations.of(context);
+    final pager = ref.read(chatListPagerProvider(true).notifier);
+    try {
+      await pager.setArchived(id, archived: false);
+    } on Exception catch (e) {
+      if (mounted) _snack(l.archivedRestoreFailed(apiErrorText(l, e)));
+      return;
+    }
+    if (mounted) {
+      _snack(
+        l.archivedRestored,
+        action: SnackBarAction(
+          label: l.chatsUndo,
+          onPressed: () => unawaited(_archiveAgain(pager, id)),
+        ),
+      );
+    }
+  }
+
+  Future<void> _archiveAgain(ChatListPager pager, String id) async {
+    final l = AppLocalizations.of(context);
+    try {
+      await pager.setArchived(id, archived: true);
+    } on Exception catch (e) {
+      if (mounted) _snack(l.chatsArchiveFailed(apiErrorText(l, e)));
+    }
+  }
+
+  /// The archive (desktop): a General chat back to the list.
+  Future<void> _unarchiveGeneral(String id) async {
+    final l = AppLocalizations.of(context);
+    final service = ref.read(generalChatServiceProvider);
+    await service.archive(id, archived: false);
+    if (mounted) {
+      _snack(
+        l.archivedRestored,
+        action: SnackBarAction(
+          label: l.chatsUndo,
+          onPressed: () => unawaited(service.archive(id)),
+        ),
+      );
+    }
+  }
+
+  /// The archive (desktop): a General chat deleted, after the dialog.
+  Future<void> _deleteGeneral(GeneralChatRow g) async {
+    final l = AppLocalizations.of(context);
+    final ok = await showDesktopConfirm(
+      context,
+      title: l.generalDeleteTitle,
+      body: l.generalDeleteBody,
+      action: l.generalMenuDelete,
+      destructive: true,
+    );
+    if (!ok || !mounted) return;
+    final after = _routeAfter('g:${g.id}');
+    await ref.read(generalChatServiceProvider).deleteChat(g.id);
+    if (!mounted) return;
+    if (widget.selected == 'g:${g.id}') context.go(after);
+    _snack(l.generalDeleted);
   }
 
   void _setFilter(ChatsFilter f) => unawaited(
@@ -155,13 +320,15 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
         if (!_searching) _toggleSearch();
       });
     }
-    final items = ref.watch(chatListProvider(false)).value;
+    final archive = desktop && _archived;
+    if (desktop) _keys.register(this, _commands);
+    final items = ref.watch(chatListProvider(archive)).value;
     final status =
         ref.watch(connectionStatusProvider).value ?? ConnectionStatus.initial;
     final neverLoaded = ref.watch(
       syncStateProvider.select((s) => s.value?.lastSeq == null),
     );
-    final paging = ref.watch(chatListPagerProvider(false));
+    final paging = ref.watch(chatListPagerProvider(archive));
     final pending = ref.watch(answerableApprovalCountProvider).value ?? 0;
     // General (24): its chats live on this phone; the filter chips show
     // once a key is saved
@@ -172,7 +339,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
           )
         : ChatsFilter.all;
     final general =
-        ref.watch(generalChatsProvider(false)).value ??
+        ref.watch(generalChatsProvider(archive)).value ??
         const <GeneralChatRow>[];
     final models = {
       for (final m
@@ -194,6 +361,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     final agentMore =
         !paging.exhausted && agentItems.length >= ChatListPager.pageSize;
     final skeleton =
+        !archive &&
         filter != ChatsFilter.general &&
         generalItems.isEmpty &&
         (items == null || (items.isEmpty && neverLoaded && connecting));
@@ -220,10 +388,41 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
             (query.isEmpty || _matchesGeneral(g, query)))
           _Entry.general(g),
     ]..sort((a, b) => b.at.compareTo(a.at));
+    _rows = [
+      for (final e in shown)
+        if (e.general case final g?)
+          'g:${g.id}'
+        else
+          'c:${e.agent!.conversation.id}',
+    ];
+    // the desktop's new chat: a draft row on top (27W-2h)
+    final draft = desktop && !archive && widget.selected == 'new';
 
     final Widget body;
     if (skeleton) {
       body = const _SkeletonList();
+    } else if (archive && items == null) {
+      // the archive's first page is on its way
+      body = const SizedBox.shrink();
+    } else if (desktop && empty && !draft) {
+      // the desktop's compact empty states (27W-2b)
+      body = archive
+          ? _DesktopEmpty(
+              icon: DelveIcons.archive,
+              title: l.desktopArchivedEmpty,
+            )
+          : filter == ChatsFilter.general
+          ? _DesktopEmpty(icon: DelveIcons.cloud, title: l.chatsGeneralEmpty)
+          : _DesktopEmpty(
+              icon: DelveIcons.forum,
+              title: l.chatsEmptyTitle,
+              newChat: true,
+            );
+    } else if (desktop && shown.isEmpty && !draft) {
+      body = _DesktopEmpty(
+        icon: DelveIcons.search,
+        title: l.chatsNoMatch(_search.text.trim()),
+      );
     } else if (empty && filter == ChatsFilter.general) {
       body = Center(
         child: Text(
@@ -251,6 +450,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
       );
     } else {
       final more = query.isEmpty && agentMore;
+      final lead = draft ? 1 : 0;
       body = RefreshIndicator(
         onRefresh: _refresh,
         child: ListView.builder(
@@ -258,8 +458,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           // clear of the FAB (none on the desktop)
           padding: EdgeInsets.only(bottom: desktop ? DelveTokens.space2 : 96),
-          itemCount: shown.length + (more ? 1 : 0),
-          itemBuilder: (context, i) {
+          itemCount: lead + shown.length + (more ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (draft && index == 0) return const _DraftRow();
+            final i = index - lead;
             if (i == shown.length) {
               return LoadMoreFooter(
                 loading: paging.loading,
@@ -284,9 +486,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                   chat: g,
                   modelName: modelShortName(g.modelId, models[g.modelId]),
                   selected: widget.selected == 'g:${g.id}',
-                  onArchive: desktop
+                  onArchive: desktop && !archive
                       ? () => unawaited(_archiveGeneral(g.id))
                       : null,
+                  onUnarchive: archive
+                      ? () => unawaited(_unarchiveGeneral(g.id))
+                      : null,
+                  onDelete: archive ? () => unawaited(_deleteGeneral(g)) : null,
                   onTap: () => context.open(Routes.generalChat(g.id)),
                 ),
               );
@@ -306,7 +512,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
               child: ChatRow(
                 item: item,
                 selected: widget.selected == 'c:$id',
-                onArchive: desktop ? () => unawaited(_archive(id)) : null,
+                onArchive: desktop && !archive
+                    ? () => unawaited(_archive(id))
+                    : null,
+                onUnarchive: archive ? () => unawaited(_unarchive(id)) : null,
                 onTap: () => context.open(Routes.chat(id)),
               ),
             );
@@ -318,14 +527,14 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     return Scaffold(
       backgroundColor: desktop ? cs.surfaceContainerLow : null,
       body: TopLevelPage(
-        title: l.navChats,
+        title: archive ? l.moreArchived : l.navChats,
         tintOnScroll: true,
         background: desktop ? cs.surfaceContainerLow : null,
         actions: [
           IconButton(
             key: const Key('chats.search'),
             tooltip: _searching ? l.chatsSearchClose : l.chatsSearch,
-            onPressed: empty || skeleton ? null : _toggleSearch,
+            onPressed: (empty && !desktop) || skeleton ? null : _toggleSearch,
             icon: SymbolIcon(_searching ? DelveIcons.close : DelveIcons.search),
           ),
           if (desktop)
@@ -348,7 +557,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
               const LinearProgressIndicator(key: Key('chats.progress'))
             else
               const SizedBox(height: 2),
-            if (_searching)
+            if (_searching && desktop)
+              _DesktopSearchField(
+                controller: _search,
+                onChanged: () => setState(() {}),
+                onClose: _toggleSearch,
+              )
+            else if (_searching)
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   DelveTokens.space4,
@@ -381,7 +596,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(child: body),
-                  const _ArchivedRow(),
+                  _ArchivedRow(selected: archive, onTap: _toggleArchived),
                 ],
               )
             : body,
@@ -444,20 +659,23 @@ class _RetryBanner extends StatelessWidget {
   }
 }
 
-/// The desktop list column's foot (L2a): Archived chats (a filter of the
-/// list from L2b on).
+/// The desktop list column's foot (L2a): Archived chats – a filter of the
+/// list (L2b2), `surface-3` while it is on.
 class _ArchivedRow extends StatelessWidget {
-  const _ArchivedRow();
+  const _ArchivedRow({required this.selected, required this.onTap});
+
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final cs = context.colors;
     return Material(
-      color: cs.surfaceContainerLow,
+      color: selected ? cs.surfaceContainerHigh : cs.surfaceContainerLow,
       child: InkWell(
         key: const Key('chats.archived'),
-        onTap: () => context.open(Routes.archived),
+        onTap: onTap,
         child: Container(
           height: 36,
           padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space4),
@@ -484,6 +702,167 @@ class _ArchivedRow extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The desktop list column's empty states (27W-2b): no chats, a filter or
+/// a search with nothing in it, the empty archive – an icon and a line,
+/// New chat with its key where it helps.
+class _DesktopEmpty extends StatelessWidget {
+  const _DesktopEmpty({
+    required this.icon,
+    required this.title,
+    this.newChat = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final bool newChat;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Center(
+      key: const Key('chats.desktopEmpty'),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(DelveTokens.space6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SymbolIcon(icon, size: 30, color: context.delve.textDisabled),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: context.text.titleSmall,
+            ),
+            if (newChat) ...[
+              const SizedBox(height: DelveTokens.space3),
+              FilledButton.tonal(
+                key: const Key('chats.emptyNew'),
+                onPressed: () => context.open(Routes.newChat),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l.newChat),
+                    const SizedBox(width: DelveTokens.space2),
+                    KeyCap(l.desktopKeyNewChat),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The desktop's new chat in the list (27W-2h): a selected draft row on top
+/// until its first message makes it a chat.
+class _DraftRow extends StatelessWidget {
+  const _DraftRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final cs = context.colors;
+    return DesktopRowFrame(
+      key: const Key('chats.row.draft'),
+      selected: true,
+      onTap: () {},
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l.newChat,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: DelveDesktopText.rowTitle.copyWith(color: cs.onSurface),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            l.desktopDraft,
+            style: DelveDesktopText.rowSecondary.copyWith(
+              color: context.delve.textMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The desktop list's search (Ctrl+F): a 36 px field under the header; Esc
+/// closes it.
+class _DesktopSearchField extends StatefulWidget {
+  const _DesktopSearchField({
+    required this.controller,
+    required this.onChanged,
+    required this.onClose,
+  });
+
+  final TextEditingController controller;
+  final VoidCallback onChanged;
+  final VoidCallback onClose;
+
+  @override
+  State<_DesktopSearchField> createState() => _DesktopSearchFieldState();
+}
+
+class _DesktopSearchFieldState extends State<_DesktopSearchField> {
+  final FocusNode _focus = FocusNode(debugLabel: 'chats.search');
+
+  @override
+  void initState() {
+    super.initState();
+    // the shell holds the focus: asked for, not autofocus
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focus.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final cs = context.colors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.escape): widget.onClose,
+        },
+        child: SizedBox(
+          height: 36,
+          child: TextField(
+            key: const Key('chats.searchField'),
+            controller: widget.controller,
+            focusNode: _focus,
+            textInputAction: TextInputAction.search,
+            style: context.text.bodyMedium,
+            onChanged: (_) => widget.onChanged(),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: l.chatsSearchHint,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+              prefixIcon: const SymbolIcon(DelveIcons.search, size: 16),
+              prefixIconConstraints: const BoxConstraints(minWidth: 32),
+              filled: true,
+              fillColor: cs.surfaceContainer,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DelveDesktop.buttonRadius),
+              ),
+            ),
           ),
         ),
       ),

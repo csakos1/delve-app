@@ -21,6 +21,7 @@ class ChatRow extends StatelessWidget {
     this.background,
     this.selected = false,
     this.onArchive,
+    this.onUnarchive,
   });
 
   final ChatListItem item;
@@ -31,6 +32,10 @@ class ChatRow extends StatelessWidget {
 
   /// The desktop's hover action and menu entry; null: none.
   final VoidCallback? onArchive;
+
+  /// The desktop's archive filter (L2b2): Unarchive on hover and in the
+  /// menu.
+  final VoidCallback? onUnarchive;
 
   /// The row's surface (the desktop's list column and its selected row);
   /// null: the page colour.
@@ -158,6 +163,7 @@ class ChatRow extends StatelessWidget {
     final d = context.delve;
     final c = item.conversation;
     final archive = onArchive;
+    final unarchive = onUnarchive;
     return DesktopRowFrame(
       key: const Key('chats.row'),
       selected: selected,
@@ -170,6 +176,13 @@ class ChatRow extends StatelessWidget {
             icon: DelveIcons.archive,
             tooltip: l.chatsArchive,
             onPressed: archive,
+          ),
+        if (unarchive != null)
+          DesktopRowAction(
+            key: const Key('chats.row.unarchive'),
+            icon: DelveIcons.unarchive,
+            tooltip: l.archivedRestore,
+            onPressed: unarchive,
           ),
       ],
       menu: [
@@ -184,6 +197,13 @@ class ChatRow extends StatelessWidget {
             icon: DelveIcons.archive,
             label: l.chatsArchive,
             onSelected: archive,
+          ),
+        if (unarchive != null)
+          DesktopMenuItem(
+            key: const Key('chats.menu.unarchive'),
+            icon: DelveIcons.unarchive,
+            label: l.archivedRestore,
+            onSelected: unarchive,
           ),
       ],
       child: Column(

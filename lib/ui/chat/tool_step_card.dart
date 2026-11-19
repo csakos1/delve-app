@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../data/db/database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_row.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import 'approval_card.dart';
@@ -98,6 +99,7 @@ class ToolStepCard extends StatefulWidget {
     required this.step,
     this.approval,
     this.selfDevice,
+    this.onInspect,
   });
 
   final ToolStepRow step;
@@ -107,6 +109,9 @@ class ToolStepCard extends StatefulWidget {
 
   /// This phone's device name (its answers read "by you").
   final String? selfDevice;
+
+  /// The desktop: shows this step in the inspector (its context menu).
+  final VoidCallback? onInspect;
 
   @override
   State<ToolStepCard> createState() => _ToolStepCardState();
@@ -155,7 +160,62 @@ class _ToolStepCardState extends State<ToolStepCard> {
     };
     final duration = step.durationS;
     final command = step.preview?.trim();
+    final output = stepResultText(step);
 
+    // the desktop: right click – Copy command, Copy output, Show in inspector
+    return GestureDetector(
+      onSecondaryTapUp: desktopMenuOn(
+        context,
+        () => [
+          if (command != null && command.isNotEmpty)
+            DesktopMenuItem(
+              key: const Key('step.menu.copyCommand'),
+              icon: DelveIcons.copy,
+              label: l.desktopMenuCopyCommand,
+              onSelected: () => _copy(command),
+            ),
+          if (output != null && output.isNotEmpty)
+            DesktopMenuItem(
+              key: const Key('step.menu.copyOutput'),
+              icon: DelveIcons.copy,
+              label: l.desktopMenuCopyOutput,
+              onSelected: () => _copy(output),
+            ),
+          if (widget.onInspect case final inspect?)
+            DesktopMenuItem(
+              key: const Key('step.menu.inspect'),
+              icon: DelveIcons.inspector,
+              label: l.desktopMenuShowInInspector,
+              onSelected: inspect,
+            ),
+        ],
+      ),
+      child: _card(
+        context,
+        look,
+        border,
+        struck,
+        note,
+        result,
+        duration,
+        command,
+      ),
+    );
+  }
+
+  Widget _card(
+    BuildContext context,
+    StepLook look,
+    Color border,
+    bool struck,
+    String? note,
+    String? result,
+    double? duration,
+    String? command,
+  ) {
+    final cs = context.colors;
+    final d = context.delve;
+    final step = widget.step;
     return Container(
       key: ValueKey('step.${step.id}'),
       decoration: BoxDecoration(

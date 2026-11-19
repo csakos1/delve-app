@@ -443,7 +443,19 @@ Ctrl+B list, Ctrl+I inspector, Ctrl+] its next tab, Ctrl+U a chat's Usage, Ctrl+
 search, Esc an overlay pane. Chats: desktop rows (hover Archive and menu, right-click menu), the
 chat in a 720 reading column under a 48 pane header, an agent chat's inspector (Run: steps,
 the selected step's output, a waiting approval, context; Usage), Enter sends and Shift+Enter
-is a new line.
+is a new line. Composer and chat (`lib/ui/desktop/intake.dart`): files dropped on a chat
+(`desktop_drop`) and Ctrl+V of an image or of copied files (`wl-paste`; text pastes as before)
+are attached like “+”, which opens the file dialog at once, as Ctrl+O does; Ctrl+. stops the
+run, Ctrl+T switches Thinking (the open chat registers these keys with the shell); right-click
+menus on messages and steps (Copy, Copy command / output, Show in inspector – it pins that run,
+“Latest run” lets go); the inspector's Run tab also shows the model and the thinking.
+The list column: Archived is a filter of the list (the foot row; Unarchive on hover, and Delete
+for General chats with the desktop dialog), 26 px filter chips, a 36 px search, compact empty
+states, a draft row for a new chat; J / K / ↓ / ↑ open the next / previous chat, E archives the
+open one, Ctrl+Z undoes it (`ListCommands`, outside text fields). Ctrl+F in an open chat searches
+it (`lib/ui/desktop/chat_find.dart`); a General chat has a Usage inspector and its model picker
+is a popover (`lib/ui/desktop/layers.dart`, with the confirmation dialog). Each area opens again
+where it was left (`DesktopPlaces`).
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.

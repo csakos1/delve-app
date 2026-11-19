@@ -18,6 +18,11 @@ import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../chat/attachments.dart' show AttachSource;
 import '../chat/composer.dart';
+import '../desktop/areas.dart';
+import '../desktop/chat_find.dart';
+import '../desktop/chat_inspector.dart';
+import '../desktop/intake.dart';
+import '../desktop/layers.dart';
 import '../desktop/panes.dart';
 import '../general/general_format.dart';
 import '../general/general_usage.dart';
@@ -51,9 +56,30 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
   bool _newReasoning = true;
   String? _newEffort;
 
+  /// The desktop's chat keys go to the chat that is open (L2b2); they act
+  /// on what the last build saw.
+  late final ChatCommandSlot _slot;
+  late final ChatCommands _commands = ChatCommands(
+    attachFile: _attachFromKey,
+    paste: _paste,
+    stop: _stopAnswer,
+    toggleThinking: _toggleReasoning,
+    find: _openFind,
+  );
+  _Seen? _seen;
+
+  /// Ctrl+F in the chat (L2b2) and the item it shows.
+  final ChatFind _find = ChatFind();
+  final FindScroller _scroller = FindScroller();
+
+  /// The model chip: the desktop's model picker opens under it.
+  final GlobalKey _chipKey = GlobalKey(debugLabel: 'general.modelChip');
+
   @override
   void initState() {
     super.initState();
+    _slot = ref.read(chatCommandSlotProvider);
+    _find.addListener(_findChanged);
     _chatId = widget.chatId;
     _attachments = ComposerAttachments(
       api: () => _local,
@@ -76,6 +102,8 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
 
   @override
   void dispose() {
+    _slot.unregister(this);
+    _find.dispose();
     _attachments.dispose();
     _text.dispose();
     super.dispose();
@@ -180,19 +208,38 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
     final l = AppLocalizations.of(context);
     _dropIdleFocus();
     final title = chat?.title?.trim();
-    final picked = await showModelPicker(
-      context,
-      current: current,
-      subtitle: l.pickerSub(title == null || title.isEmpty ? l.newChat : title),
+    final subtitle = l.pickerSub(
+      title == null || title.isEmpty ? l.newChat : title,
     );
+    // the desktop (27W-14f): a popover under the model chip
+    final chip = _chipKey.currentContext;
+    final String? picked;
+    if (chip != null && DesktopLayout.of(context)) {
+      picked = await showDesktopPopover<String>(
+        chip,
+        size: const Size(
+          DelveDesktop.modelPickerWidth,
+          DelveDesktop.modelPickerHeight,
+        ),
+        builder: (_) => ModelPickerSheet(current: current, subtitle: subtitle),
+      );
+    } else {
+      picked = await showModelPicker(
+        context,
+        current: current,
+        subtitle: subtitle,
+      );
+    }
     if (picked == null || !mounted) return;
+    // a variable assigned in a branch is not promoted inside a closure
+    final model = picked;
     final id = _chatId;
     if (id == null) {
-      setState(() => _newModel = picked);
+      setState(() => _newModel = model);
       return;
     }
     await _guard(
-      () => ref.read(generalChatServiceProvider).setModel(id, picked),
+      () => ref.read(generalChatServiceProvider).setModel(id, model),
     );
   }
 
@@ -206,6 +253,16 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
   }
 
   void _openUsage(String chatId) {
+    if (DesktopLayout.of(context)) {
+      // the desktop (L2b2): Usage is the inspector's tab
+      showChatInspectorTab(
+        ref,
+        context,
+        DesktopArea.chats.name,
+        ChatInspectorTab.usage,
+      );
+      return;
+    }
     _dropIdleFocus();
     unawaited(showGeneralUsageSheet(context, chatId: chatId));
   }
@@ -242,12 +299,17 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
       return;
     }
     final readsImages = model?.readsImages ?? false;
+    // the desktop: the file dialog at once (the sheet stays for a model
+    // without images: it offers another model)
+    final desktop = DesktopLayout.of(context);
     _dropIdleFocus();
-    final choice = await _showAddSheet(
-      context,
-      model: modelShortName(modelId, model),
-      readsImages: readsImages,
-    );
+    final choice = desktop && readsImages
+        ? _AddChoice.files
+        : await _showAddSheet(
+            context,
+            model: modelShortName(modelId, model),
+            readsImages: readsImages,
+          );
     if (choice == null || !mounted) return;
     if (choice == _AddChoice.switchModel) {
       final chat = _chatId == null
@@ -276,6 +338,66 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
     if (images.length < picked.length) _snack(l.generalImagesOnly);
     final left = _attachments.addAll(images);
     if (left > 0) _snack(l.attachLeftOut(left, kMaxAttachments));
+  }
+
+  // --- the desktop: drop, paste and keys (L2b2) -----------------------------------
+
+  /// A drop, a paste: images only, and only for a model that reads them.
+  void _addPicked(List<PickedAttachment> picked) {
+    final seen = _seen;
+    if (picked.isEmpty || seen == null || !seen.hasKey) return;
+    final l = AppLocalizations.of(context);
+    addPickedInto(
+      context,
+      _attachments,
+      picked,
+      refuseImages: seen.readsImages ? null : l.modelCantReadImages(seen.name),
+      imagesOnly: l.generalImagesOnly,
+    );
+  }
+
+  void _dropped(List<String> paths) =>
+      _addPicked([for (final p in paths) ?pickedFromPath(p)]);
+
+  /// Ctrl+V: an image (or image files) from the clipboard; false for text.
+  Future<bool> _paste() async {
+    final content = await ref.read(desktopPasteboardProvider).read();
+    if (!mounted) return false;
+    final picked = pickedOfPaste(content);
+    if (picked == null) return false;
+    _addPicked(picked);
+    return true;
+  }
+
+  /// Ctrl+O: as “+”.
+  void _attachFromKey() {
+    final seen = _seen;
+    if (seen == null || !seen.hasKey) return;
+    unawaited(_addImages(seen.model, seen.modelId));
+  }
+
+  /// Ctrl+.: the streaming answer stops.
+  void _stopAnswer() {
+    final id = _chatId;
+    if (id != null && (_seen?.streaming ?? false)) {
+      ref.read(generalChatServiceProvider).stop(id);
+    }
+  }
+
+  void _findChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// Ctrl+F: search in this chat (a new one has nothing to find).
+  void _openFind() {
+    if (_chatId != null) _find.show();
+  }
+
+  /// Ctrl+T: thinking on / off, where the model lets it change.
+  void _toggleReasoning() {
+    final seen = _seen;
+    if (seen == null || !seen.canToggle) return;
+    unawaited(_setReasoning(!seen.reasoning));
   }
 
   // --- chat menu -----------------------------------------------------------------
@@ -443,6 +565,16 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
         ? effort
         : null;
     final locked = spec?.mandatory ?? false;
+    _seen = _Seen(
+      hasKey: hasKey,
+      model: model,
+      modelId: modelId,
+      name: name,
+      readsImages: model?.readsImages ?? false,
+      streaming: streaming,
+      reasoning: on || locked,
+      canToggle: spec != null && spec.supported && !locked,
+    );
     final pill = spec == null || !spec.supported
         ? null
         : GeneralThinkingPill(
@@ -463,6 +595,18 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
         : 0;
 
     final desktop = DesktopLayout.of(context);
+    if (desktop) _slot.register(this, _commands);
+    // Ctrl+F (L2b2): the matches newest first, the current one framed
+    final finding = desktop && _find.open && chatId != null;
+    final matches = finding
+        ? findMatches(_find.query, [for (final m in messages) m.content])
+        : const <int>[];
+    final current = matches.isEmpty
+        ? null
+        : matches[_find.position(matches.length)];
+    if (finding) {
+      _scroller.follow(_find, current == null ? null : items[current].key);
+    }
     return Scaffold(
       appBar: AppBar(
         key: const Key('general.topBar'),
@@ -486,6 +630,7 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
         ),
         actions: [
           ModelChip(
+            key: _chipKey,
             name: chipName,
             pct: chat == null ? null : generalContextPct(chat),
             onTap: () => unawaited(_pickModel(modelId, chat)),
@@ -543,79 +688,136 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
             )
           else
             const SizedBox(width: DelveTokens.space3),
-        ],
-      ),
-      body: ReadingColumn(
-        child: Column(
-          children: [
-            if (chatId == null && widget.kindSwitch != null) widget.kindSwitch!,
-            Expanded(
-              child: UnderBarFade(
-                fadeKey: const Key('general.fade'),
-                child: items.isEmpty
-                    ? (noKey ? const SizedBox.shrink() : _Intro(model: name))
-                    : ListView.separated(
-                        key: const Key('general.list'),
-                        reverse: true,
-                        padding: const EdgeInsets.fromLTRB(
-                          DelveTokens.space4,
-                          UnderBarFade.height,
-                          DelveTokens.space4,
-                          DelveTokens.space4,
-                        ),
-                        itemCount: items.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: DelveTokens.space4),
-                        itemBuilder: (_, i) => items[items.length - 1 - i],
-                      ),
+          if (desktop && chat != null) ...[
+            IconButton(
+              key: const Key('general.find'),
+              tooltip: l.desktopFindTooltip,
+              onPressed: _openFind,
+              icon: const SymbolIcon(
+                DelveIcons.search,
+                size: DelveDesktop.iconButtonIcon,
               ),
             ),
-            if (warning != null)
-              _Banner(
-                child: StatusBanner(
-                  key: const Key('general.providerWarning'),
-                  kind: StatusKind.warn,
-                  icon: DelveIcons.shield,
-                  text: l.generalProviderWarning(warning.provider ?? '?'),
-                  actionLabel: l.generalAcknowledge,
-                  onAction: () => unawaited(
-                    ref
-                        .read(generalChatServiceProvider)
-                        .acknowledgeWarning(warning.id),
+            const InspectorToggle(),
+            const SizedBox(width: 10),
+          ],
+        ],
+      ),
+      body: DesktopDropZone(
+        onPaths: _dropped,
+        child: ReadingColumn(
+          child: Column(
+            children: [
+              if (chatId == null && widget.kindSwitch != null)
+                widget.kindSwitch!,
+              if (finding) ChatFindBar(find: _find, count: matches.length),
+              Expanded(
+                child: UnderBarFade(
+                  fadeKey: const Key('general.fade'),
+                  child: items.isEmpty
+                      ? (noKey ? const SizedBox.shrink() : _Intro(model: name))
+                      : ListView.separated(
+                          key: const Key('general.list'),
+                          reverse: true,
+                          padding: const EdgeInsets.fromLTRB(
+                            DelveTokens.space4,
+                            UnderBarFade.height,
+                            DelveTokens.space4,
+                            DelveTokens.space4,
+                          ),
+                          // while searching every item is built (Ctrl+F)
+                          cacheExtent: finding ? 100000 : null,
+                          itemCount: items.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: DelveTokens.space4),
+                          itemBuilder: (_, i) {
+                            final at = items.length - 1 - i;
+                            final item = items[at];
+                            final key = item.key;
+                            if (!desktop || key == null) return item;
+                            return FindMark(
+                              key: _scroller.keyOf(key),
+                              current: finding && at == current,
+                              child: item,
+                            );
+                          },
+                        ),
+                ),
+              ),
+              if (warning != null)
+                _Banner(
+                  child: StatusBanner(
+                    key: const Key('general.providerWarning'),
+                    kind: StatusKind.warn,
+                    icon: DelveIcons.shield,
+                    text: l.generalProviderWarning(warning.provider ?? '?'),
+                    actionLabel: l.generalAcknowledge,
+                    onAction: () => unawaited(
+                      ref
+                          .read(generalChatServiceProvider)
+                          .acknowledgeWarning(warning.id),
+                    ),
                   ),
                 ),
-              ),
-            if (unreadImages > 0 && warning == null)
-              _Banner(
-                child: StatusBanner(
-                  key: const Key('general.noImages'),
-                  kind: StatusKind.info,
-                  icon: DelveIcons.imageGone,
-                  text: l.generalNoImages(name, unreadImages),
+              if (unreadImages > 0 && warning == null)
+                _Banner(
+                  child: StatusBanner(
+                    key: const Key('general.noImages'),
+                    kind: StatusKind.info,
+                    icon: DelveIcons.imageGone,
+                    text: l.generalNoImages(name, unreadImages),
+                  ),
                 ),
-              ),
-            if (noKey)
-              _NoKey(onAdd: () => context.open(Routes.generalSettings))
-            else
-              Composer(
-                controller: _text,
-                onSend: (text) => _send(text, modelId),
-                onStop: streaming && chatId != null
-                    ? () => ref.read(generalChatServiceProvider).stop(chatId)
-                    : null,
-                leading: [?pill],
-                attachments: _attachments,
-                onAdd: hasKey
-                    ? () => unawaited(_addImages(model, modelId))
-                    : null,
-                hintText: l.generalComposerHint(name),
-                sendBlocked: streaming || warning != null || !usable || !hasKey,
-              ),
-          ],
+              if (noKey)
+                _NoKey(onAdd: () => context.open(Routes.generalSettings))
+              else
+                Composer(
+                  controller: _text,
+                  onSend: (text) => _send(text, modelId),
+                  onStop: streaming && chatId != null
+                      ? () => ref.read(generalChatServiceProvider).stop(chatId)
+                      : null,
+                  leading: [?pill],
+                  attachments: _attachments,
+                  onAdd: hasKey
+                      ? () => unawaited(_addImages(model, modelId))
+                      : null,
+                  hintText: l.generalComposerHint(name),
+                  sendBlocked:
+                      streaming || warning != null || !usable || !hasKey,
+                  onPaste: desktop && hasKey ? _paste : null,
+                  autofocus: desktop && chatId == null,
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+/// What the last build saw, for the desktop's chat keys.
+@immutable
+class _Seen {
+  const _Seen({
+    required this.hasKey,
+    required this.model,
+    required this.modelId,
+    required this.name,
+    required this.readsImages,
+    required this.streaming,
+    required this.reasoning,
+    required this.canToggle,
+  });
+
+  final bool hasKey;
+  final OrModelRow? model;
+  final String modelId;
+  final String name;
+  final bool readsImages;
+  final bool streaming;
+  final bool reasoning;
+  final bool canToggle;
 }
 
 class _Banner extends StatelessWidget {

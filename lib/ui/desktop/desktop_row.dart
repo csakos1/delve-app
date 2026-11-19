@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../app/layout.dart';
 import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
 
@@ -89,6 +90,15 @@ Future<void> showDesktopMenu(
   );
   picked?.onSelected();
 }
+
+/// The desktop's right click on a message or a step (design 27W-14d):
+/// [items] as a context menu; on the phone nothing (long press copies).
+GestureTapUpCallback? desktopMenuOn(
+  BuildContext context,
+  List<DesktopMenuItem> Function() items,
+) => DesktopLayout.of(context)
+    ? (d) => unawaited(showDesktopMenu(context, d.globalPosition, items()))
+    : null;
 
 /// A row of a desktop list column (design 27): radius 8, padding 8 / 10,
 /// min height 52 (two lines), 1 px apart; hover one surface step up

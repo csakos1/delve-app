@@ -30,7 +30,9 @@ import '../chat/chat_items.dart';
 import '../chat/composer.dart';
 import '../chat/usage.dart';
 import '../desktop/areas.dart';
+import '../desktop/chat_find.dart';
 import '../desktop/chat_inspector.dart';
+import '../desktop/intake.dart';
 import '../desktop/panes.dart';
 import '../format.dart';
 import '../general/general_widgets.dart'
@@ -127,9 +129,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   /// The message field (filled from [ChatScreen.draft]).
   late final TextEditingController _text;
 
+  /// The desktop's chat keys go to the chat that is open (L2b2).
+  late final ChatCommandSlot _slot;
+  late final ChatCommands _commands = ChatCommands(
+    attachFile: _attachFromKey,
+    paste: _paste,
+    stop: _stopOpenRun,
+    toggleThinking: _toggleThinking,
+    find: _openFind,
+  );
+
+  /// Ctrl+F in the chat (L2b2) and the item it shows.
+  final ChatFind _find = ChatFind();
+  final FindScroller _scroller = FindScroller();
+
   @override
   void initState() {
     super.initState();
+    _slot = ref.read(chatCommandSlotProvider);
+    _find.addListener(_findChanged);
     _kind = widget.kind;
     _text = TextEditingController(text: widget.draft?.text ?? '');
     _attachments = ComposerAttachments(
@@ -179,6 +197,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
+    _slot.unregister(this);
+    _find.dispose();
     _captionTimer?.cancel();
     _opened?.close();
     _attachments.dispose();
@@ -332,11 +352,100 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  // --- the desktop: drop, paste and keys (L2b2) -----------------------------------
+
+  /// The note when the loaded model reads no images (they are left out).
+  String? _noImagesNote() {
+    final llama = ref.read(systemProvider).info?.llama;
+    if (llama == null || llama.vision != false) return null;
+    return AppLocalizations.of(context).modelCantReadImages(_modelName(llama));
+  }
+
+  bool get _canAttachNow =>
+      ref.read(attachmentApiProvider) != null &&
+      ref.read(connectionStatusProvider).value?.phase == ConnectionPhase.live;
+
+  /// A drop, a paste: into the composer, as “+” would add them.
+  void _addPicked(List<PickedAttachment> picked) {
+    if (picked.isEmpty) return;
+    if (!_canAttachNow) {
+      _snack(AppLocalizations.of(context).attachNeedsConnection);
+      return;
+    }
+    addPickedInto(context, _attachments, picked, refuseImages: _noImagesNote());
+  }
+
+  void _dropped(List<String> paths) =>
+      _addPicked([for (final p in paths) ?pickedFromPath(p)]);
+
+  /// Ctrl+V: an image or files from the clipboard; false for text.
+  Future<bool> _paste() async {
+    final content = await ref.read(desktopPasteboardProvider).read();
+    if (!mounted) return false;
+    final picked = pickedOfPaste(content);
+    if (picked == null) return false;
+    _addPicked(picked);
+    return true;
+  }
+
+  /// Ctrl+O: the file dialog, as “+”.
+  void _attachFromKey() {
+    if (!_canAttachNow) {
+      _snack(AppLocalizations.of(context).attachNeedsConnection);
+      return;
+    }
+    unawaited(_addAttachments());
+  }
+
+  /// Ctrl+.: the chat's open run stops.
+  void _stopOpenRun() {
+    final id = widget.conversationId;
+    final target = id == null
+        ? null
+        : ref.read(chatProvider(id)).value?.openRuns.firstOrNull;
+    if (target != null) unawaited(_stop(target.runId));
+  }
+
+  /// Ctrl+T: Thinking for the next message, where the model lets it change.
+  void _toggleThinking() {
+    final llama = ref.read(systemProvider).info?.llama;
+    if (llama?.thinking == 'always' || llama?.thinking == 'none') return;
+    if (ref.read(chatActionsProvider) == null) return;
+    final id = widget.conversationId;
+    final on = id == null
+        ? _newThinking
+        : _thinkingPending ??
+              ref.read(chatProvider(id)).value?.conversation?.thinking ??
+              false;
+    unawaited(_setThinking(!on));
+  }
+
+  void _findChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// Ctrl+F: search in this chat (a new chat has nothing to find).
+  void _openFind() {
+    if (widget.conversationId != null) _find.show();
+  }
+
+  /// What Ctrl+F searches, item by item as [_items] lays them out.
+  static List<String> _texts(ChatData data) => [
+    for (final m in data.messages) '${m.content}\n${m.interim ?? ''}',
+    for (final o in data.outbox) o.body,
+  ];
+
+  /// The desktop: this chat takes the chat keys while it is built.
+  void _takeKeys(BuildContext context) {
+    if (DesktopLayout.of(context)) _slot.register(this, _commands);
+  }
+
   Widget _composer({
     required bool connected,
     VoidCallback? onStop,
     int queued = 0,
     required bool thinking,
+    bool autofocus = false,
   }) {
     final l = AppLocalizations.of(context);
     final canAttach = connected && ref.watch(attachmentApiProvider) != null;
@@ -363,6 +472,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       onAdd: canAttach ? () => unawaited(_addAttachments()) : null,
       attachmentsAllowed: connected,
       controller: _text,
+      onPaste: DesktopLayout.of(context) ? _paste : null,
+      autofocus: autofocus,
     );
   }
 
@@ -467,6 +578,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Widget _buildNew(BuildContext context) {
     final l = AppLocalizations.of(context);
+    _takeKeys(context);
     final first = _firstClientMsgId;
     // watched, not listened: the rebuild this triggers runs the post-frame
     // callback (a callback on its own schedules no frame); watched until the
@@ -520,32 +632,40 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       appBar: _ChatAppBar(title: l.newChat, desktop: DesktopLayout.of(context)),
-      body: ReadingColumn(
-        child: Column(
-          children: [
-            if (_offersKinds && sent == null) _kindSwitch(ChatKind.agent),
-            Expanded(
-              child: UnderBarFade(
-                fadeKey: const Key('chat.fade'),
-                child: sent == null
-                    ? _NewChatIntro(host: host.split('.').first)
-                    : ListView(
-                        reverse: true,
-                        padding: _listPadding,
-                        children: [sent],
-                      ),
+      body: DesktopDropZone(
+        onPaths: _dropped,
+        child: ReadingColumn(
+          child: Column(
+            children: [
+              if (_offersKinds && sent == null) _kindSwitch(ChatKind.agent),
+              Expanded(
+                child: UnderBarFade(
+                  fadeKey: const Key('chat.fade'),
+                  child: sent == null
+                      ? _NewChatIntro(host: host.split('.').first)
+                      : ListView(
+                          reverse: true,
+                          padding: _listPadding,
+                          children: [sent],
+                        ),
+                ),
               ),
-            ),
-            if (widget.draft?.watchHint ?? false)
-              ValueListenableBuilder<TextEditingValue>(
-                valueListenable: _text,
-                // gone once something is typed or sent
-                builder: (_, value, _) => value.text.isEmpty && sent == null
-                    ? _WatchHint(onPick: _fillExample)
-                    : const SizedBox.shrink(),
+              if (widget.draft?.watchHint ?? false)
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _text,
+                  // gone once something is typed or sent
+                  builder: (_, value, _) => value.text.isEmpty && sent == null
+                      ? _WatchHint(onPick: _fillExample)
+                      : const SizedBox.shrink(),
+                ),
+              // the desktop's new chat: the composer has the focus (27W-2h)
+              _composer(
+                connected: connected,
+                thinking: _newThinking,
+                autofocus: DesktopLayout.of(context),
               ),
-            _composer(connected: connected, thinking: _newThinking),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -568,6 +688,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget _buildChat(BuildContext context, String id) {
     final l = AppLocalizations.of(context);
     final desktop = DesktopLayout.of(context);
+    _takeKeys(context);
     final data = ref.watch(chatProvider(id)).value;
     final live = ref.watch(liveRunsProvider.select((m) => m[id]));
     final connected = ref.watch(
@@ -599,7 +720,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         : ref.watch(_createdMessageProvider(first)).value;
     final items = data == null
         ? [if (carried != null) _writtenBubble(carried)]
-        : _items(data, live, connected: connected, selfDevice: selfDevice);
+        : _items(
+            data,
+            live,
+            connected: connected,
+            selfDevice: selfDevice,
+            desktop: desktop,
+          );
+    // Ctrl+F (L2b2): the matches newest first, the current one framed
+    final finding = desktop && _find.open;
+    final matches = finding && data != null
+        ? findMatches(_find.query, _texts(data))
+        : const <int>[];
+    final current = matches.isEmpty
+        ? null
+        : matches[_find.position(matches.length)];
+    if (finding) {
+      _scroller.follow(_find, current == null ? null : items[current].key);
+    }
 
     return Scaffold(
       appBar: _ChatAppBar(
@@ -626,55 +764,82 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     : () => unawaited(_openUsage(id, title)),
               ),
             ),
+          if (desktop && conversation != null)
+            IconButton(
+              key: const Key('chat.find'),
+              tooltip: l.desktopFindTooltip,
+              onPressed: _openFind,
+              icon: const SymbolIcon(
+                DelveIcons.search,
+                size: DelveDesktop.iconButtonIcon,
+              ),
+            ),
         ],
       ),
-      body: ReadingColumn(
-        child: Column(
-          children: [
-            Expanded(
-              child: UnderBarFade(
-                fadeKey: const Key('chat.fade'),
-                child: ListView.separated(
-                  key: const Key('chat.list'),
-                  reverse: true,
-                  padding: _listPadding,
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: DelveTokens.space3),
-                  // reversed: the newest item sits at the bottom, next to the
-                  // composer, and stays there while text streams in
-                  itemBuilder: (_, i) => items[items.length - 1 - i],
-                ),
-              ),
-            ),
-            if (conversation != null && conversation.contextWarn)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  DelveTokens.space3,
-                  0,
-                  DelveTokens.space3,
-                  DelveTokens.space2,
-                ),
-                child: StatusBanner(
-                  key: const Key('chat.contextWarn'),
-                  kind: StatusKind.warn,
-                  icon: DelveIcons.warning,
-                  text: l.chatContextWarn(
-                    (conversation.contextPct ?? 0).round(),
+      body: DesktopDropZone(
+        onPaths: _dropped,
+        child: ReadingColumn(
+          child: Column(
+            children: [
+              if (finding) ChatFindBar(find: _find, count: matches.length),
+              Expanded(
+                child: UnderBarFade(
+                  fadeKey: const Key('chat.fade'),
+                  child: ListView.separated(
+                    key: const Key('chat.list'),
+                    reverse: true,
+                    padding: _listPadding,
+                    // while searching every item is built, so a match far up
+                    // can be scrolled to
+                    cacheExtent: finding ? 100000 : null,
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: DelveTokens.space3),
+                    // reversed: the newest item sits at the bottom, next to the
+                    // composer, and stays there while text streams in
+                    itemBuilder: (_, i) {
+                      final at = items.length - 1 - i;
+                      final item = items[at];
+                      final key = item.key;
+                      if (!desktop || key == null) return item;
+                      return FindMark(
+                        key: _scroller.keyOf(key),
+                        current: finding && at == current,
+                        child: item,
+                      );
+                    },
                   ),
-                  actionLabel: l.newChat,
-                  onAction: () => context.pushReplacement(Routes.newChat),
                 ),
               ),
-            _composer(
-              connected: connected,
-              onStop: stopTarget == null
-                  ? null
-                  : () => unawaited(_stop(stopTarget.runId)),
-              queued: data?.queuedCount ?? 0,
-              thinking: _thinkingPending ?? conversation?.thinking ?? false,
-            ),
-          ],
+              if (conversation != null && conversation.contextWarn)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DelveTokens.space3,
+                    0,
+                    DelveTokens.space3,
+                    DelveTokens.space2,
+                  ),
+                  child: StatusBanner(
+                    key: const Key('chat.contextWarn'),
+                    kind: StatusKind.warn,
+                    icon: DelveIcons.warning,
+                    text: l.chatContextWarn(
+                      (conversation.contextPct ?? 0).round(),
+                    ),
+                    actionLabel: l.newChat,
+                    onAction: () => context.pushReplacement(Routes.newChat),
+                  ),
+                ),
+              _composer(
+                connected: connected,
+                onStop: stopTarget == null
+                    ? null
+                    : () => unawaited(_stop(stopTarget.runId)),
+                queued: data?.queuedCount ?? 0,
+                thinking: _thinkingPending ?? conversation?.thinking ?? false,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -687,6 +852,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     LiveRun? live, {
     required bool connected,
     String? selfDevice,
+    bool desktop = false,
   }) {
     final out = <Widget>[];
     for (final m in data.messages) {
@@ -722,6 +888,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onRetry: asked == null ? null : () => unawaited(_resend(asked)),
               onAnswer: connected ? _answer : null,
               selfDevice: selfDevice,
+              // the desktop's “Show in inspector” (context menus, L2b2)
+              onInspect: desktop && runId != null
+                  ? (stepId) => showRunInInspector(
+                      ref,
+                      context,
+                      area: DesktopArea.chats.name,
+                      conversationId: m.conversationId,
+                      runId: runId,
+                      stepId: stepId,
+                    )
+                  : null,
             ),
           );
         default:
@@ -738,6 +915,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     for (final o in data.outbox) {
       out.add(
         OutboxBubble(
+          key: ValueKey('outbox.${o.clientMsgId}'),
           row: o,
           onOpenAttachment: _openAttachment,
           onRetry: () =>

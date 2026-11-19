@@ -82,6 +82,12 @@ abstract final class DelveDesktop {
   static const double railDividerMargin = 6;
   static const double railMarkSlot = 34;
   static const double railMark = 20;
+
+  /// The mark's air (L2b2: the 34 slot sat it against the window's top and
+  /// the first item) and its optical nudge to the right.
+  static const double railMarkTop = 14;
+  static const double railMarkBottom = 12;
+  static const double railMarkNudge = 1.5;
   static const double railDot = 8;
 
   // density
@@ -96,9 +102,22 @@ abstract final class DelveDesktop {
   static const double cardRadius = 14;
   static const double menuRadius = 10;
   static const double dialogRadius = 16;
+  static const double dialogWidth = 460;
+  static const double popoverRadius = 12;
+
+  /// The General model picker as a popover (27W-14f).
+  static const double modelPickerWidth = 380;
+  static const double modelPickerHeight = 520;
   static const double keyCapHeight = 18;
   static const double keyCapRadius = 4;
   static const double tooltipRadius = 6;
+
+  // composer (Components “Density”)
+  static const double composerRadius = 20;
+  static const double composerAdd = 32;
+  static const double composerSend = 34;
+  static const double thinkingPill = 28;
+  static const double composerBottom = 14;
 
   // motion
   static const Duration hover = Duration(milliseconds: 100);

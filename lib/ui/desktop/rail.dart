@@ -35,11 +35,14 @@ class DesktopRail extends ConsumerWidget {
         ],
     ].where((g) => g.isNotEmpty).toList();
 
+    final places = ref.read(desktopPlacesProvider);
     Widget item(DesktopArea a) => _RailItem(
       area: a,
       selected: a == selected,
       dot: a == DesktopArea.approvals && pending > 0,
       pending: pending,
+      // the area as it was left (L2b2)
+      onTap: () => context.go(places.target(a, location)),
     );
 
     return ColoredBox(
@@ -49,9 +52,18 @@ class DesktopRail extends ConsumerWidget {
         width: DelveDesktop.railWidth,
         child: Column(
           children: [
-            const SizedBox(
-              height: DelveDesktop.railMarkSlot,
-              child: Center(child: DelveMark(height: DelveDesktop.railMark)),
+            // air above and below the mark; 1.5 px right of the box centre:
+            // the D's round side carries its weight (L2b2)
+            const Padding(
+              padding: EdgeInsets.only(
+                top: DelveDesktop.railMarkTop,
+                bottom: DelveDesktop.railMarkBottom,
+                left: DelveDesktop.railMarkNudge,
+              ),
+              child: Center(
+                key: Key('rail.mark'),
+                child: DelveMark(height: DelveDesktop.railMark),
+              ),
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -96,12 +108,14 @@ class _RailItem extends StatefulWidget {
     required this.selected,
     required this.dot,
     required this.pending,
+    required this.onTap,
   });
 
   final DesktopArea area;
   final bool selected;
   final bool dot;
   final int pending;
+  final VoidCallback onTap;
 
   @override
   State<_RailItem> createState() => _RailItemState();
@@ -178,7 +192,7 @@ class _RailItemState extends State<_RailItem> {
             child: GestureDetector(
               key: Key('rail.${a.name}'),
               behavior: HitTestBehavior.opaque,
-              onTap: () => context.go(a.route),
+              onTap: widget.onTap,
               child: AnimatedContainer(
                 duration: DelveDesktop.hover,
                 width: DelveDesktop.railItemWidth,

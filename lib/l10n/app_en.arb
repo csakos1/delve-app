@@ -4164,5 +4164,43 @@
   "desktopInspectorNoRun": "No run in this chat yet",
   "desktopInspectorNoSteps": "No tool steps in this run",
   "desktopInspectorNoOutput": "No output",
-  "desktopInspectorContext": "Context"
+  "desktopInspectorContext": "Context",
+  "desktopDropToAttach": "Drop to attach",
+  "desktopDropHint": "Photos and files · up to {max} per message",
+  "@desktopDropHint": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "desktopComposerAttach": "Attach a file (Ctrl+O)",
+  "desktopMenuCopy": "Copy",
+  "desktopMenuCopyCommand": "Copy command",
+  "desktopMenuCopyOutput": "Copy output",
+  "desktopMenuShowInInspector": "Show in inspector",
+  "desktopMenuShowRun": "Show the run in the inspector",
+  "desktopInspectorThinking": "Thinking",
+  "desktopInspectorReasoningLater": "The reasoning arrives when the run ends",
+  "desktopInspectorModel": "Model",
+  "desktopInspectorLatest": "Latest run",
+  "desktopDraft": "Draft",
+  "desktopFindHint": "Find in this chat",
+  "desktopFindCount": "{at} / {count}",
+  "@desktopFindCount": {
+    "placeholders": {
+      "at": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "desktopFindNone": "No matches",
+  "desktopFindTooltip": "Find in the chat (Ctrl+F)",
+  "desktopFindNewer": "Newer match (Shift+Enter)",
+  "desktopFindOlder": "Older match (Enter)",
+  "desktopFindClose": "Close (Esc)",
+  "desktopArchivedEmpty": "No archived chats. Archive one with E or from its row."
 }

@@ -29,6 +29,8 @@ class Composer extends StatefulWidget {
     this.controller,
     this.hintText,
     this.sendBlocked = false,
+    this.onPaste,
+    this.autofocus = false,
   });
 
   /// The field's placeholder (General: “Message GLM 5.3…”); null: the
@@ -68,12 +70,21 @@ class Composer extends StatefulWidget {
   /// otherwise the composer keeps its own.
   final TextEditingController? controller;
 
+  /// The desktop's Ctrl+V in the field: true when it attached what the
+  /// clipboard holds (an image, files); otherwise the field pastes the text.
+  final Future<bool> Function()? onPaste;
+
+  /// The field takes the focus when the composer appears (the desktop's new
+  /// chat, Ctrl+N).
+  final bool autofocus;
+
   @override
   State<Composer> createState() => _ComposerState();
 }
 
 class _ComposerState extends State<Composer> {
   TextEditingController? _own;
+  final FocusNode _focus = FocusNode(debugLabel: 'composer');
   bool _sending = false;
 
   TextEditingController get _controller => widget.controller ?? _own!;
@@ -84,6 +95,13 @@ class _ComposerState extends State<Composer> {
     if (widget.controller == null) _own = TextEditingController();
     _controller.addListener(_changed);
     widget.attachments?.addListener(_changed);
+    // a requested focus, not `autofocus`: the desktop shell holds the focus
+    // already, and autofocus only takes an empty scope
+    if (widget.autofocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focus.requestFocus();
+      });
+    }
   }
 
   @override
@@ -114,6 +132,7 @@ class _ComposerState extends State<Composer> {
     widget.attachments?.removeListener(_changed);
     widget.controller?.removeListener(_changed);
     _own?.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -138,8 +157,21 @@ class _ComposerState extends State<Composer> {
     }
   }
 
+  /// Ctrl+V: what the clipboard holds is attached, or the text pasted.
+  Future<void> _paste() async {
+    final attached = await widget.onPaste?.call() ?? false;
+    if (attached || !mounted) return;
+    final focus = FocusManager.instance.primaryFocus?.context;
+    if (focus == null || !focus.mounted) return;
+    Actions.maybeInvoke(
+      focus,
+      const PasteTextIntent(SelectionChangedCause.keyboard),
+    );
+  }
+
   /// The desktop (L2b): Enter sends, Shift+Enter is a new line (the phone's
-  /// Enter stays a new line; Send is the button).
+  /// Enter stays a new line; Send is the button); Ctrl+V attaches an image
+  /// or files from the clipboard (L2b2).
   Widget _desktopKeys(BuildContext context, Widget field) {
     if (!DesktopLayout.of(context)) return field;
     void send() => unawaited(_send());
@@ -147,6 +179,9 @@ class _ComposerState extends State<Composer> {
       bindings: {
         const SingleActivator(LogicalKeyboardKey.enter): send,
         const SingleActivator(LogicalKeyboardKey.numpadEnter): send,
+        if (widget.onPaste != null)
+          const SingleActivator(LogicalKeyboardKey.keyV, control: true): () =>
+              unawaited(_paste()),
       },
       child: field,
     );
@@ -157,6 +192,9 @@ class _ComposerState extends State<Composer> {
     final l = AppLocalizations.of(context);
     final cs = context.colors;
     final d = context.delve;
+    // the desktop's density (design 27): radius 20, “+” 32, send / stop 34,
+    // 14 above the pane's bottom edge; the reading column is the margin
+    final desktop = DesktopLayout.of(context);
     final attachments = widget.attachments;
     final hasContent =
         _controller.text.trim().isNotEmpty ||
@@ -176,6 +214,7 @@ class _ComposerState extends State<Composer> {
         icon: DelveIcons.stop,
         filledIcon: true,
         onPressed: widget.onStop,
+        size: desktop ? DelveDesktop.composerSend : null,
       );
     } else {
       action = _RoundButton(
@@ -183,18 +222,21 @@ class _ComposerState extends State<Composer> {
         semantics: l.composerSend,
         icon: DelveIcons.send,
         onPressed: _canSend && !_sending && !widget.sendBlocked ? _send : null,
+        size: desktop ? DelveDesktop.composerSend : null,
       );
     }
 
     // edge-to-edge (main.dart): keep clear of the system navigation bar; with
     // the keyboard open the inset is 0 (the keyboard already pushes us up)
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        DelveTokens.space3,
-        0,
-        DelveTokens.space3,
-        DelveTokens.space2 + MediaQuery.paddingOf(context).bottom,
-      ),
+      padding: desktop
+          ? const EdgeInsets.only(bottom: DelveDesktop.composerBottom)
+          : EdgeInsets.fromLTRB(
+              DelveTokens.space3,
+              0,
+              DelveTokens.space3,
+              DelveTokens.space2 + MediaQuery.paddingOf(context).bottom,
+            ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -228,17 +270,22 @@ class _ComposerState extends State<Composer> {
               ),
             ),
           Container(
-            constraints: const BoxConstraints(
-              minHeight: DelveTokens.composerMin,
+            // the desktop (L2b2): as high as its content – no empty half
+            constraints: BoxConstraints(
+              minHeight: desktop ? 0 : DelveTokens.composerMin,
             ),
-            padding: const EdgeInsets.all(DelveTokens.space2),
+            padding: desktop
+                ? const EdgeInsets.fromLTRB(6, 4, 6, 6)
+                : const EdgeInsets.all(DelveTokens.space2),
             decoration: BoxDecoration(
               color: cs.surfaceContainerLow,
               border: Border.all(
                 color: cs.outlineVariant,
                 width: DelveTokens.hairline,
               ),
-              borderRadius: BorderRadius.circular(DelveTokens.rxl),
+              borderRadius: BorderRadius.circular(
+                desktop ? DelveDesktop.composerRadius : DelveTokens.rxl,
+              ),
               boxShadow: DelveTokens.elevation1,
             ),
             child: Column(
@@ -252,6 +299,7 @@ class _ComposerState extends State<Composer> {
                   TextField(
                     key: const Key('composer.field'),
                     controller: _controller,
+                    focusNode: _focus,
                     minLines: 1,
                     maxLines: 6,
                     keyboardType: TextInputType.multiline,
@@ -267,11 +315,18 @@ class _ComposerState extends State<Composer> {
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
-                      contentPadding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+                      contentPadding: desktop
+                          ? const EdgeInsets.fromLTRB(10, 8, 10, 6)
+                          : const EdgeInsets.fromLTRB(10, 6, 10, 8),
                     ),
                   ),
                 ),
                 Row(
+                  // the desktop: “+”, the pill and send sit on the bottom
+                  // line
+                  crossAxisAlignment: desktop
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.center,
                   children: [
                     _RoundButton(
                       key: const Key('composer.add'),
@@ -279,6 +334,8 @@ class _ComposerState extends State<Composer> {
                       icon: DelveIcons.add,
                       tonal: true,
                       onPressed: widget.onAdd,
+                      size: desktop ? DelveDesktop.composerAdd : null,
+                      tooltip: desktop ? l.desktopComposerAttach : null,
                     ),
                     for (final w in widget.leading) ...[
                       const SizedBox(width: DelveTokens.space2),
@@ -294,8 +351,12 @@ class _ComposerState extends State<Composer> {
                   child: caption == null
                       ? const SizedBox(width: double.infinity)
                       : Padding(
-                          padding: const EdgeInsets.only(
-                            left: DelveTokens.touchTarget + DelveTokens.space3,
+                          padding: EdgeInsets.only(
+                            left:
+                                (desktop
+                                    ? DelveDesktop.composerAdd
+                                    : DelveTokens.touchTarget) +
+                                DelveTokens.space3,
                             bottom: DelveTokens.space1,
                           ),
                           child: Text(
@@ -316,7 +377,8 @@ class _ComposerState extends State<Composer> {
   }
 }
 
-/// 44 dp circle in a 48 dp hit box.
+/// 44 dp circle in a 48 dp hit box; on the desktop a [size] circle that is
+/// its own hit box.
 class _RoundButton extends StatelessWidget {
   const _RoundButton({
     super.key,
@@ -325,6 +387,8 @@ class _RoundButton extends StatelessWidget {
     required this.onPressed,
     this.filledIcon = false,
     this.tonal = false,
+    this.size,
+    this.tooltip,
   });
 
   final String semantics;
@@ -334,6 +398,13 @@ class _RoundButton extends StatelessWidget {
 
   /// surface-3 instead of accent.
   final bool tonal;
+
+  /// The desktop's circle (32 for “+”, 34 for send / stop); null: the
+  /// phone's 44 in 48.
+  final double? size;
+
+  /// The desktop's tooltip (with the key).
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -352,13 +423,14 @@ class _RoundButton extends StatelessWidget {
       bg = cs.surfaceContainerHigh;
       fg = d.textDisabled;
     }
-    return Semantics(
+    final size = this.size;
+    final button = Semantics(
       button: true,
       enabled: enabled,
       label: semantics,
       excludeSemantics: true,
       child: SizedBox.square(
-        dimension: DelveTokens.touchTarget,
+        dimension: size ?? DelveTokens.touchTarget,
         child: Center(
           child: Material(
             color: bg,
@@ -367,11 +439,11 @@ class _RoundButton extends StatelessWidget {
             child: InkWell(
               onTap: onPressed,
               child: SizedBox.square(
-                dimension: DelveTokens.sendButton,
+                dimension: size ?? DelveTokens.sendButton,
                 child: Center(
                   child: SymbolIcon(
                     icon,
-                    size: 22,
+                    size: size == null ? 22 : 18,
                     filled: filledIcon,
                     color: fg,
                   ),
@@ -382,6 +454,8 @@ class _RoundButton extends StatelessWidget {
         ),
       ),
     );
+    final tip = tooltip;
+    return tip == null ? button : Tooltip(message: tip, child: button);
   }
 }
 
@@ -416,18 +490,20 @@ class ThinkingPill extends StatelessWidget {
       bg = Colors.transparent;
       side = BorderSide(color: cs.outline);
     }
+    // the desktop: a 28 pill that is its own hit box
+    final desktop = DesktopLayout.of(context);
     return Semantics(
       toggled: on,
       enabled: enabled,
       label: l.composerThinking,
       excludeSemantics: true,
       child: SizedBox(
-        height: DelveTokens.touchTarget,
+        height: desktop ? DelveDesktop.thinkingPill : DelveTokens.touchTarget,
         child: Center(
           child: AnimatedContainer(
             duration: DelveTokens.short,
             curve: Curves.easeOutCubic,
-            height: 32,
+            height: desktop ? DelveDesktop.thinkingPill : 32,
             decoration: ShapeDecoration(
               color: bg,
               shape: StadiumBorder(side: side),
@@ -448,7 +524,7 @@ class ThinkingPill extends StatelessWidget {
                     children: [
                       SymbolIcon(
                         DelveIcons.thinking,
-                        size: 18,
+                        size: desktop ? 16 : 18,
                         filled: on,
                         color: fg,
                       ),

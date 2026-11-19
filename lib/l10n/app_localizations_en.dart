@@ -5479,4 +5479,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopInspectorContext => 'Context';
+
+  @override
+  String get desktopDropToAttach => 'Drop to attach';
+
+  @override
+  String desktopDropHint(int max) {
+    return 'Photos and files · up to $max per message';
+  }
+
+  @override
+  String get desktopComposerAttach => 'Attach a file (Ctrl+O)';
+
+  @override
+  String get desktopMenuCopy => 'Copy';
+
+  @override
+  String get desktopMenuCopyCommand => 'Copy command';
+
+  @override
+  String get desktopMenuCopyOutput => 'Copy output';
+
+  @override
+  String get desktopMenuShowInInspector => 'Show in inspector';
+
+  @override
+  String get desktopMenuShowRun => 'Show the run in the inspector';
+
+  @override
+  String get desktopInspectorThinking => 'Thinking';
+
+  @override
+  String get desktopInspectorReasoningLater =>
+      'The reasoning arrives when the run ends';
+
+  @override
+  String get desktopInspectorModel => 'Model';
+
+  @override
+  String get desktopInspectorLatest => 'Latest run';
+
+  @override
+  String get desktopDraft => 'Draft';
+
+  @override
+  String get desktopFindHint => 'Find in this chat';
+
+  @override
+  String desktopFindCount(int at, int count) {
+    return '$at / $count';
+  }
+
+  @override
+  String get desktopFindNone => 'No matches';
+
+  @override
+  String get desktopFindTooltip => 'Find in the chat (Ctrl+F)';
+
+  @override
+  String get desktopFindNewer => 'Newer match (Shift+Enter)';
+
+  @override
+  String get desktopFindOlder => 'Older match (Enter)';
+
+  @override
+  String get desktopFindClose => 'Close (Esc)';
+
+  @override
+  String get desktopArchivedEmpty =>
+      'No archived chats. Archive one with E or from its row.';
 }

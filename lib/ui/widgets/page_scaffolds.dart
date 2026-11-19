@@ -387,4 +387,7 @@ abstract final class DelveIcons {
   static const IconData importChats = Symbols.upload_file_rounded;
   static const IconData share = Symbols.share_rounded;
   static const IconData unfoldMore = Symbols.unfold_more_rounded;
+
+  /// Files dragged over a chat (desktop, L2b2).
+  static const IconData dropToAttach = Symbols.upload_file_rounded;
 }

@@ -5,12 +5,17 @@ import 'package:delve/api/models/models.dart';
 import 'package:delve/app/layout.dart';
 import 'package:delve/app/platform.dart';
 import 'package:delve/app/router.dart';
+import 'package:delve/data/db/store.dart';
+import 'package:delve/general/general_database.dart';
 import 'package:delve/l10n/app_localizations.dart';
 import 'package:delve/theme/delve_theme.dart';
+import 'package:delve/ui/chat/chat_items.dart' show UserBubble;
 import 'package:delve/ui/desktop/areas.dart';
+import 'package:delve/ui/desktop/chat_find.dart';
 import 'package:delve/ui/desktop/chat_inspector.dart';
 import 'package:delve/ui/desktop/chats_area.dart';
 import 'package:delve/ui/desktop/desktop_shell.dart';
+import 'package:delve/ui/desktop/intake.dart';
 import 'package:delve/ui/desktop/panes.dart';
 import 'package:delve/ui/desktop/status_bar.dart';
 import 'package:delve/ui/screens/archived_chats_screen.dart';
@@ -18,13 +23,19 @@ import 'package:delve/ui/screens/chat_screen.dart';
 import 'package:delve/ui/screens/chats_screen.dart';
 import 'package:delve/ui/screens/dashboard_screen.dart';
 import 'package:delve/ui/screens/system_screen.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'chat_screen_test.dart' show seedFinished;
+import 'attachments_test.dart'
+    show FakeAttachmentApi, FakePicker, FakePrep, file, photo, png;
+import 'chat_screen_test.dart'
+    show FakeChatActions, conversation, liveStatus, seedFinished, seedRunning;
+import 'support/fake_openrouter.dart' show testOpenRouterKey;
+import 'support/fake_server.dart' show FakeReply;
 import 'support/harness.dart';
 
 final _linux = PlatformCaps.linux(host: 'archlinux');
@@ -35,6 +46,26 @@ Future<void> _ctrl(WidgetTester t, LogicalKeyboardKey key) async {
   await t.sendKeyEvent(key);
   await t.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
   await t.pumpAndSettle();
+}
+
+/// Ctrl+[key] without settling (a running run's clock never settles).
+Future<void> _ctrlNow(WidgetTester t, LogicalKeyboardKey key) async {
+  await t.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+  await t.sendKeyEvent(key);
+  await t.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+  for (var i = 0; i < 5; i++) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
+}
+
+/// What the desktop_drop plugin sends while files are dragged.
+Future<void> _dropEvent(WidgetTester t, String method, Object? args) async {
+  await t.binding.defaultBinaryMessenger.handlePlatformMessage(
+    'desktop_drop',
+    const StandardMethodCodec().encodeMethodCall(MethodCall(method, args)),
+    (_) {},
+  );
+  await t.pump();
 }
 
 /// [DesktopPanes] alone in a window of [width] × 900.
@@ -395,9 +426,12 @@ void main() {
       expect(find.byType(ChatsScreen), findsOneWidget); // the list stays
       expect(find.byType(BackButton), findsNothing);
 
+      // Archived is the list's filter (L2b2): the new chat stays open
       await t.tap(find.byKey(const Key('chats.archived')));
       await t.pumpAndSettle();
-      expect(find.byType(ArchivedChatsScreen), findsOneWidget);
+      expect(find.byType(ArchivedChatsScreen), findsNothing);
+      expect(find.byKey(const Key('chats.desktopEmpty')), findsOneWidget);
+      expect(find.byType(ChatScreen), findsOneWidget);
       expect(find.byKey(const Key('rail.chats')), findsOneWidget);
     });
 
@@ -535,5 +569,534 @@ void main() {
       find.descendant(of: find.byKey(const Key('pane.list')), matching: bar),
       findsOneWidget,
     );
+  });
+
+  group('composer and chat on the desktop (L2b2)', () {
+    test('what the clipboard offers', () {
+      expect(pasteImageType(['image/png']), 'image/png');
+      expect(pasteImageType(['text/html', 'image/jpeg']), 'image/jpeg');
+      expect(pasteImageType(['image/x-foo']), 'image/x-foo');
+      // a spreadsheet's cells come with a picture: the text wins
+      expect(pasteImageType(['text/plain;charset=utf-8', 'image/png']), isNull);
+      expect(pasteImageType(['UTF8_STRING', 'image/png']), isNull);
+      expect(pasteImageType(const <String>[]), isNull);
+      expect(
+        filePathsOfUriList(
+          'file:///home/a/x.png\r\n# copied\nhttps://e.com/y\n'
+          'file:///tmp/a%20b.txt\n',
+        ),
+        ['/home/a/x.png', '/tmp/a b.txt'],
+      );
+    });
+
+    test('a paste and a path as attachments', () {
+      final image = pickedOfPaste(
+        PasteImage(png, 'image/png'),
+        now: DateTime(2026, 11, 19, 16, 5, 9),
+      )!.single;
+      expect((image.kind, image.name), ('image', 'pasted-160509.png'));
+      expect(pickedOfPaste(const PasteText()), isNull);
+
+      final dir = Directory.systemTemp.createTempSync('delve_drop');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      final notes = File('${dir.path}/notes.txt')..writeAsStringSync('hi');
+      final p = pickedFromPath(notes.path)!;
+      expect(
+        (p.kind, p.name, p.mime, p.size),
+        ('file', 'notes.txt', 'text/plain', 2),
+      );
+      expect(pickedFromPath('${dir.path}/IMG_2.PNG'), isNull); // not there
+      File('${dir.path}/IMG_2.PNG').writeAsBytesSync(png);
+      expect(pickedFromPath('${dir.path}/IMG_2.PNG')!.kind, 'image');
+      expect(pickedFromPath(dir.path), isNull); // a folder
+      expect(
+        pickedOfPaste(PasteFiles([notes.path, dir.path]))!.map((p) => p.name),
+        ['notes.txt'],
+      );
+    });
+
+    late FakeChatActions actions;
+    late FakeAttachmentApi api;
+    late FakePicker picker;
+    setUp(() {
+      actions = FakeChatActions();
+      api = FakeAttachmentApi();
+      picker = FakePicker();
+    });
+
+    /// The app at 1440 × 900, connected, with the finished chat open.
+    Future<TestEnv> start(WidgetTester t) async {
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        actions: actions,
+        status: liveStatus,
+        attachments: AttachmentFakes(
+          api: api,
+          picker: picker,
+          prep: FakePrep(),
+        ),
+        before: (env) async {
+          actions.db = env.db;
+          await seedFinished(env);
+        },
+      );
+      await t.tap(find.byKey(const Key('chats.row')));
+      await t.pumpAndSettle();
+      return env;
+    }
+
+    testWidgets('Ctrl+V in the composer attaches an image; text still '
+        'pastes', (t) async {
+      final env = await start(t);
+      await t.tap(find.byKey(const Key('composer.field')));
+      await t.pump();
+      env.pasteboard.next = PasteImage(png, 'image/png');
+      await _ctrl(t, LogicalKeyboardKey.keyV);
+      expect(env.pasteboard.reads, 1);
+      expect(find.textContaining('pasted-'), findsOneWidget);
+      expect(api.uploads.single.$1, 'image');
+
+      // text: the field pastes it as before
+      final messenger = t.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async => switch (call.method) {
+          'Clipboard.getData' => <String, Object?>{
+            'text': 'from the clipboard',
+          },
+          'Clipboard.hasStrings' => <String, Object?>{'value': true},
+          _ => null,
+        },
+      );
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+      env.pasteboard.next = const PasteText();
+      await _ctrl(t, LogicalKeyboardKey.keyV);
+      expect(env.pasteboard.reads, 2);
+      expect(find.text('from the clipboard'), findsOneWidget);
+      expect(api.uploads, hasLength(1));
+    });
+
+    testWidgets('Ctrl+O and + open the file dialog at once (no sheet)', (
+      t,
+    ) async {
+      await start(t);
+      picker.next = [file('notes.txt')];
+      await _ctrl(t, LogicalKeyboardKey.keyO);
+      expect(picker.asked, ['files 4']);
+      expect(find.text('notes.txt'), findsOneWidget);
+
+      picker.next = [photo('IMG_3.PNG')];
+      await t.tap(find.byKey(const Key('composer.add')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('attach.photos')), findsNothing);
+      expect(picker.asked, ['files 4', 'files 3']);
+      expect(find.text('IMG_3.jpg'), findsOneWidget);
+    });
+
+    testWidgets('files dragged over the chat: the frame; dropped: attached, '
+        'a folder skipped', (t) async {
+      await start(t);
+      final dir = Directory.systemTemp.createTempSync('delve_drop');
+      addTearDown(() => dir.deleteSync(recursive: true));
+      final note = File('${dir.path}/note.txt')..writeAsStringSync('x');
+      final at = t.getCenter(find.byKey(const Key('chat.list')));
+
+      await _dropEvent(t, 'entered', [at.dx, at.dy]);
+      expect(find.byKey(const Key('chat.drop')), findsOneWidget);
+      expect(find.text('Drop to attach'), findsOneWidget);
+      await _dropEvent(t, 'exited', null);
+      expect(find.byKey(const Key('chat.drop')), findsNothing);
+
+      await _dropEvent(t, 'entered', [at.dx, at.dy]);
+      await _dropEvent(t, 'performOperation', [note.path, dir.path]);
+      expect(find.byKey(const Key('chat.drop')), findsNothing);
+      expect(find.text('note.txt'), findsOneWidget);
+      // the file is read for real
+      for (var i = 0; i < 20 && api.uploads.isEmpty; i++) {
+        await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)),
+        );
+        await t.pump();
+      }
+      expect(api.uploads, [('file', 'note.txt', 'text/plain', 1)]);
+    });
+
+    testWidgets('right click on a message and a step; Show in inspector pins '
+        'the run, Latest run lets go', (t) async {
+      await start(t);
+      await t.tap(
+        find.descendant(
+          of: find.byType(UserBubble),
+          matching: find.text('Check the kernel'),
+        ),
+        buttons: kSecondaryButton,
+        kind: PointerDeviceKind.mouse,
+      );
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('msg.menu.copy')), findsOneWidget);
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await t.pumpAndSettle();
+
+      // the inspector follows the newest run (the failed one: no steps)
+      expect(find.byKey(const Key('inspector.run.output')), findsNothing);
+      await t.tap(
+        find.byKey(const ValueKey('step.1')),
+        buttons: kSecondaryButton,
+        kind: PointerDeviceKind.mouse,
+      );
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('step.menu.copyCommand')), findsOneWidget);
+      expect(find.byKey(const Key('step.menu.copyOutput')), findsOneWidget);
+      await t.tap(find.byKey(const Key('step.menu.inspect')));
+      await t.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('inspector.run.output')),
+          matching: find.textContaining('7.2.11'),
+        ),
+        findsOneWidget,
+      );
+      await t.tap(find.byKey(const Key('inspector.run.latest')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('inspector.run.latest')), findsNothing);
+      expect(find.byKey(const Key('inspector.run.output')), findsNothing);
+    });
+
+    testWidgets('Ctrl+T switches Thinking, Ctrl+. stops the run', (t) async {
+      await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        actions: actions,
+        status: liveStatus,
+        settle: false,
+        before: (env) async {
+          actions.db = env.db;
+          await seedRunning(env);
+        },
+      );
+      await t.tap(find.byKey(const Key('chats.row')));
+      for (var i = 0; i < 5; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+      await _ctrlNow(t, LogicalKeyboardKey.keyT);
+      expect(actions.calls, contains('thinking c_1 true'));
+      await _ctrlNow(t, LogicalKeyboardKey.period);
+      expect(actions.calls, contains('stop run_c'));
+    });
+
+    testWidgets('the phone: no drop zone, no chat keys', (t) async {
+      final env = await pumpDelve(
+        t,
+        actions: actions,
+        status: liveStatus,
+        attachments: AttachmentFakes(
+          api: api,
+          picker: picker,
+          prep: FakePrep(),
+        ),
+        before: (env) async {
+          actions.db = env.db;
+          await seedFinished(env);
+        },
+      );
+      await t.tap(find.text('Kernel check'));
+      await t.pumpAndSettle();
+      expect(find.byType(DesktopDropZone), findsOneWidget);
+      expect(find.byKey(const Key('chat.drop')), findsNothing);
+      // + still asks Photos / Camera / File
+      await t.tap(find.byKey(const Key('composer.add')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('attach.photos')), findsOneWidget);
+      expect(env.pasteboard.reads, 0);
+    });
+  });
+
+  group('fixes and the list and General on the desktop (L2b2b)', () {
+    test('an area opens where it was left; Chats keeps its chat', () {
+      final places = DesktopPlaces();
+      expect(places.target(DesktopArea.chats, Routes.dashboard), Routes.chats);
+      places
+        ..remember(Routes.chat('c_1'))
+        ..remember(Routes.connectionLog)
+        ..remember(Routes.dashboard);
+      expect(
+        places.target(DesktopArea.chats, Routes.dashboard),
+        Routes.chat('c_1'),
+      );
+      expect(
+        places.target(DesktopArea.settings, Routes.dashboard),
+        Routes.connectionLog,
+      );
+      // from inside an area: its first page; Chats stays where it is
+      expect(
+        places.target(DesktopArea.settings, Routes.connectionLog),
+        Routes.settings,
+      );
+      expect(
+        places.target(DesktopArea.chats, Routes.chat('c_1')),
+        Routes.chat('c_1'),
+      );
+    });
+
+    test('find: the matches newest first, Enter older, Shift+Enter newer', () {
+      expect(findMatches('kernel', ['Check the Kernel', 'ok', 'kernel 7']), [
+        2,
+        0,
+      ]);
+      expect(findMatches('  ', ['x']), isEmpty);
+      final f = ChatFind()..search('k');
+      addTearDown(f.dispose);
+      expect(f.position(3), 0);
+      f.older(3);
+      expect(f.position(3), 1);
+      f
+        ..newer(3)
+        ..newer(3);
+      expect(f.position(3), 2); // wraps
+    });
+
+    testWidgets('back on Chats, the chat left open is open again', (t) async {
+      await pumpDelve(t, caps: _linux, window: _frame, before: seedFinished);
+      await t.tap(find.byKey(const Key('chats.row')));
+      await t.pumpAndSettle();
+      await _ctrl(t, LogicalKeyboardKey.digit4);
+      expect(find.byType(DashboardScreen), findsOneWidget);
+      await t.tap(find.byKey(const Key('rail.chats')));
+      await t.pumpAndSettle();
+      expect(find.byType(ChatScreen), findsOneWidget);
+      expect(find.byType(ChatsPlaceholder), findsNothing);
+      await _ctrl(t, LogicalKeyboardKey.digit4);
+      await _ctrl(t, LogicalKeyboardKey.digit2);
+      expect(find.byType(ChatScreen), findsOneWidget);
+    });
+
+    testWidgets('the rail mark has air above and below; the composer is as '
+        'high as its content, its buttons on the bottom line', (t) async {
+      await pumpDelve(t, caps: _linux, window: _frame, before: seedFinished);
+      final mark = t.getRect(find.byKey(const Key('rail.mark')));
+      final first = t.getRect(find.byKey(const Key('rail.chats')));
+      expect(mark.top, DelveDesktop.railMarkTop);
+      expect(first.top - mark.bottom, greaterThanOrEqualTo(12));
+
+      await t.tap(find.byKey(const Key('chats.row')));
+      await t.pumpAndSettle();
+      final add = t.getRect(find.byKey(const Key('composer.add')));
+      final send = t.getRect(find.byKey(const Key('composer.send')));
+      final field = t.getRect(find.byKey(const Key('composer.field')));
+      expect(add.bottom, moreOrLessEquals(send.bottom, epsilon: 0.5));
+      // field, buttons and a little padding: no empty half any more
+      expect(send.bottom - field.top, lessThan(DelveTokens.composerMin - 10));
+    });
+
+    testWidgets('J / K open the next / previous chat, E archives the open '
+        'one, Ctrl+Z brings it back', (t) async {
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        before: (env) async {
+          await seedFinished(env);
+          await env.db.putConversation(
+            Conversation.fromJson({
+              ...conversation('c_2', title: 'Older chat').toJson(),
+              'updated_at': DateTime.utc(2020).toIso8601String(),
+            }),
+          );
+        },
+      );
+      env.server.on(
+        'PATCH',
+        '/api/v1/conversations/c_1',
+        (r) => FakeReply(200, {
+          ...conversation('c_1').toJson(),
+          'archived': (r.data as Map<String, Object?>)['archived'],
+        }),
+      );
+      List<Object?> patches() => [
+        for (final r in env.server.requests)
+          if (r.method == 'PATCH') r.data,
+      ];
+      String? open() => find.byType(ChatScreen).evaluate().isEmpty
+          ? null
+          : t.widget<ChatScreen>(find.byType(ChatScreen)).conversationId;
+      Future<void> key(LogicalKeyboardKey k) async {
+        await t.sendKeyEvent(k);
+        await t.pumpAndSettle();
+      }
+
+      await key(LogicalKeyboardKey.keyJ);
+      expect(open(), 'c_1');
+      await key(LogicalKeyboardKey.arrowDown);
+      expect(open(), 'c_2');
+      await key(LogicalKeyboardKey.keyK);
+      expect(open(), 'c_1');
+
+      await key(LogicalKeyboardKey.keyE);
+      expect(patches(), [
+        {'archived': true},
+      ]);
+      expect(open(), 'c_2'); // the next row took its place
+      expect(find.text('Kernel check'), findsNothing);
+
+      await _ctrl(t, LogicalKeyboardKey.keyZ);
+      expect(patches(), [
+        {'archived': true},
+        {'archived': false},
+      ]);
+      expect(find.text('Kernel check'), findsWidgets);
+    });
+
+    testWidgets('Archived is the list filter: Unarchive on hover; a General '
+        'chat is deleted after the dialog', (t) async {
+      final now = DateTime.now().toUtc();
+      await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        generalKey: testOpenRouterKey,
+        before: (env) async {
+          final db = env.general;
+          await db
+              .into(db.generalChats)
+              .insert(
+                GeneralChatsCompanion.insert(
+                  id: 'g_1',
+                  modelId: 'z-ai/glm-5.3',
+                  createdAt: now,
+                  updatedAt: now,
+                  title: const Value('Dog names'),
+                  archived: const Value(true),
+                ),
+              );
+        },
+      );
+      expect(find.text('Dog names'), findsNothing);
+      await t.tap(find.byKey(const Key('chats.archived')));
+      await t.pumpAndSettle();
+      expect(find.text('Archived chats'), findsWidgets);
+      final row = find.byKey(const Key('chats.row.general'));
+      expect(row, findsOneWidget);
+
+      final mouse = await t.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+      await mouse.moveTo(t.getCenter(row));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('chats.row.unarchive')), findsOneWidget);
+      await t.tap(find.byKey(const Key('chats.row.delete')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('desktop.confirm')), findsOneWidget);
+      await t.tap(find.byKey(const Key('desktop.confirm.cancel')));
+      await t.pumpAndSettle();
+      expect(row, findsOneWidget);
+
+      // the dialog covered the row: a move brings the hover back
+      await mouse.moveTo(t.getCenter(row) + const Offset(2, 0));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('chats.row.delete')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('desktop.confirm.ok')));
+      await t.pumpAndSettle();
+      expect(row, findsNothing);
+      expect(find.byKey(const Key('chats.desktopEmpty')), findsOneWidget);
+
+      // back to the list, once the “Chat deleted” snackbar (over the foot
+      // row) has gone
+      await t.pump(const Duration(seconds: 6));
+      await t.pumpAndSettle();
+      expect(find.byType(SnackBar), findsNothing);
+      await t.tap(find.byKey(const Key('chats.archived')));
+      await t.pumpAndSettle();
+      expect(find.text('Chats'), findsWidgets);
+    });
+
+    testWidgets('Ctrl+F in an open chat: the bar, the count, Enter to the '
+        'older match, Esc closes', (t) async {
+      await pumpDelve(t, caps: _linux, window: _frame, before: seedFinished);
+      await t.tap(find.byKey(const Key('chats.row')));
+      await t.pumpAndSettle();
+      await _ctrl(t, LogicalKeyboardKey.keyF);
+      expect(find.byKey(const Key('chat.findBar')), findsOneWidget);
+      // the list's search stays closed: the chat searches itself
+      expect(find.byKey(const Key('chats.searchField')), findsNothing);
+
+      await t.enterText(find.byKey(const Key('chat.findField')), 'kernel');
+      await t.pumpAndSettle();
+      // “Check the kernel” and “**Kernel** 7.2.11 …”
+      expect(find.text('1 / 2'), findsOneWidget);
+      final current = find.byWidgetPredicate((w) => w is FindMark && w.current);
+      expect(current, findsOneWidget);
+      await t.sendKeyEvent(LogicalKeyboardKey.enter);
+      await t.pumpAndSettle();
+      expect(find.text('2 / 2'), findsOneWidget);
+      expect(
+        find.descendant(of: current, matching: find.byType(UserBubble)),
+        findsOneWidget,
+      );
+
+      await t.enterText(find.byKey(const Key('chat.findField')), 'nothing');
+      await t.pumpAndSettle();
+      expect(find.text('No matches'), findsOneWidget);
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('chat.findBar')), findsNothing);
+    });
+
+    testWidgets('a General chat has the Usage inspector; its model picker is '
+        'a popover', (t) async {
+      final now = DateTime.now().toUtc();
+      await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        generalKey: testOpenRouterKey,
+        before: (env) async {
+          final db = env.general;
+          await db
+              .into(db.generalChats)
+              .insert(
+                GeneralChatsCompanion.insert(
+                  id: 'g_1',
+                  modelId: 'z-ai/glm-5.3',
+                  createdAt: now,
+                  updatedAt: now,
+                  title: const Value('Dog names'),
+                ),
+              );
+        },
+      );
+      await t.tap(find.byKey(const Key('chats.row.general')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('inspector.general')), findsOneWidget);
+      expect(find.byKey(const Key('generalUsage.inspector')), findsOneWidget);
+      expect(find.byKey(const Key('pane.inspector.toggle')), findsOneWidget);
+
+      await t.tap(find.byKey(const Key('general.modelChip')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('desktop.popover')), findsOneWidget);
+      expect(find.byKey(const Key('picker')), findsOneWidget);
+      expect(find.byType(BottomSheet), findsNothing);
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('desktop.popover')), findsNothing);
+    });
+
+    testWidgets('a new chat: a draft row on top, two kind cells, the '
+        'composer has the focus', (t) async {
+      await pumpDelve(t, caps: _linux, window: _frame, before: seedFinished);
+      await _ctrl(t, LogicalKeyboardKey.keyN);
+      expect(find.byKey(const Key('chats.row.draft')), findsOneWidget);
+      expect(find.byKey(const Key('newChat.kind.agent')), findsOneWidget);
+      expect(find.byKey(const Key('newChat.kind.general')), findsOneWidget);
+      final field = t.widget<TextField>(
+        find.byKey(const Key('composer.field')),
+      );
+      expect(field.focusNode!.hasFocus, isTrue);
+    });
   });
 }

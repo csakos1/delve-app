@@ -8522,6 +8522,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Context'**
   String get desktopInspectorContext;
+
+  /// No description provided for @desktopDropToAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop to attach'**
+  String get desktopDropToAttach;
+
+  /// No description provided for @desktopDropHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos and files · up to {max} per message'**
+  String desktopDropHint(int max);
+
+  /// No description provided for @desktopComposerAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach a file (Ctrl+O)'**
+  String get desktopComposerAttach;
+
+  /// No description provided for @desktopMenuCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get desktopMenuCopy;
+
+  /// No description provided for @desktopMenuCopyCommand.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy command'**
+  String get desktopMenuCopyCommand;
+
+  /// No description provided for @desktopMenuCopyOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy output'**
+  String get desktopMenuCopyOutput;
+
+  /// No description provided for @desktopMenuShowInInspector.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in inspector'**
+  String get desktopMenuShowInInspector;
+
+  /// No description provided for @desktopMenuShowRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the run in the inspector'**
+  String get desktopMenuShowRun;
+
+  /// No description provided for @desktopInspectorThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking'**
+  String get desktopInspectorThinking;
+
+  /// No description provided for @desktopInspectorReasoningLater.
+  ///
+  /// In en, this message translates to:
+  /// **'The reasoning arrives when the run ends'**
+  String get desktopInspectorReasoningLater;
+
+  /// No description provided for @desktopInspectorModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get desktopInspectorModel;
+
+  /// No description provided for @desktopInspectorLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest run'**
+  String get desktopInspectorLatest;
+
+  /// No description provided for @desktopDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get desktopDraft;
+
+  /// No description provided for @desktopFindHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Find in this chat'**
+  String get desktopFindHint;
+
+  /// No description provided for @desktopFindCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{at} / {count}'**
+  String desktopFindCount(int at, int count);
+
+  /// No description provided for @desktopFindNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get desktopFindNone;
+
+  /// No description provided for @desktopFindTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Find in the chat (Ctrl+F)'**
+  String get desktopFindTooltip;
+
+  /// No description provided for @desktopFindNewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Newer match (Shift+Enter)'**
+  String get desktopFindNewer;
+
+  /// No description provided for @desktopFindOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Older match (Enter)'**
+  String get desktopFindOlder;
+
+  /// No description provided for @desktopFindClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close (Esc)'**
+  String get desktopFindClose;
+
+  /// No description provided for @desktopArchivedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No archived chats. Archive one with E or from its row.'**
+  String get desktopArchivedEmpty;
 }
 
 class _AppLocalizationsDelegate

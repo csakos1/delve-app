@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../api/models/models.dart';
 import '../../api/protocol.dart';
 import '../../app/chat.dart';
+import '../../app/system.dart';
 import '../../data/db/database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../sync/connection_status.dart';
@@ -11,8 +13,11 @@ import '../../sync/live_runs.dart';
 import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
 import '../chat/approval_card.dart';
+import '../chat/chat_items.dart' show thoughtSeconds;
+import '../chat/thinking_block.dart';
 import '../chat/tool_step_card.dart';
 import '../chat/usage.dart';
+import '../general/general_usage.dart';
 import '../widgets/page_scaffolds.dart';
 import 'panes.dart';
 import 'status_bar.dart' show clockText;
@@ -37,6 +42,42 @@ final chatInspectorTabProvider =
     NotifierProvider<ChatInspectorTabs, ChatInspectorTab>(
       ChatInspectorTabs.new,
     );
+
+/// A run (and a step of it) picked in the chat for the inspector – the
+/// context menus' “Show in inspector” (L2b2).
+@immutable
+class InspectorPin {
+  const InspectorPin(this.conversationId, this.runId, [this.stepId]);
+
+  final String conversationId;
+  final String runId;
+  final int? stepId;
+
+  @override
+  bool operator ==(Object other) =>
+      other is InspectorPin &&
+      other.conversationId == conversationId &&
+      other.runId == runId &&
+      other.stepId == stepId;
+
+  @override
+  int get hashCode => Object.hash(conversationId, runId, stepId);
+}
+
+/// The pinned run; null: the inspector follows the live (else the newest)
+/// run.
+class InspectorPins extends Notifier<InspectorPin?> {
+  @override
+  InspectorPin? build() => null;
+
+  void pin(InspectorPin pin) => state = pin;
+
+  void clear() => state = null;
+}
+
+final inspectorPinProvider = NotifierProvider<InspectorPins, InspectorPin?>(
+  InspectorPins.new,
+);
 
 /// An agent chat's inspector (L2b): a 48 px tab row (Run · Usage), then the
 /// tab. Docked it has no close button (the content header's toggle closes
@@ -94,6 +135,39 @@ class ChatInspector extends ConsumerWidget {
             ),
           },
         ),
+      ],
+    );
+  }
+}
+
+/// A General chat's inspector (L2b2): one tab, Usage – the phone's General
+/// Usage sheet.
+class GeneralInspector extends StatelessWidget {
+  const GeneralInspector({super.key, required this.chatId});
+
+  final String chatId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      key: const Key('inspector.general'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: DelveDesktop.paneHeader,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Row(
+              children: [
+                _Tab(label: l.usageTitle, selected: true, onTap: () {}),
+                const Spacer(),
+                const InspectorOverlayClose(),
+              ],
+            ),
+          ),
+        ),
+        Expanded(child: GeneralUsageSheet(chatId: chatId, embedded: true)),
       ],
     );
   }
@@ -184,8 +258,15 @@ class RunInspector extends ConsumerStatefulWidget {
 }
 
 class _RunInspectorState extends ConsumerState<RunInspector> {
-  /// The step whose output shows; null: the newest.
+  /// The step whose output shows; null: the pinned one, else the newest.
   int? _selected;
+
+  /// The pin last seen: a new pin drops the step picked here.
+  InspectorPin? _pinSeen;
+
+  /// The finished run the usage was fetched again for (once: a run that
+  /// ended after the fetch is not in it yet).
+  String? _refetchedFor;
 
   Future<void> _answer(ApprovalRow a, ApprovalChoice choice) async {
     final l = AppLocalizations.of(context);
@@ -201,6 +282,25 @@ class _RunInspectorState extends ConsumerState<RunInspector> {
     }
   }
 
+  /// The model that wrote [run]: from the chat's usage (fetched once more
+  /// when a finished run is not in it yet); a live run: the loaded model.
+  String? _modelOf(RunRow run, LiveRun? live) {
+    final id = widget.conversationId;
+    final usage = ref.watch(conversationUsageProvider(id)).value;
+    final known = usage?.runs.where((r) => r.runId == run.runId).firstOrNull;
+    if (known?.model case final m?) return m;
+    if (live != null || openRunStatuses.contains(run.status)) {
+      return ref.watch(systemProvider.select((v) => v.info?.llama.model));
+    }
+    if (usage != null && known == null && _refetchedFor != run.runId) {
+      _refetchedFor = run.runId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.invalidate(conversationUsageProvider(id));
+      });
+    }
+    return usage?.lastModel;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -214,7 +314,16 @@ class _RunInspectorState extends ConsumerState<RunInspector> {
         (s) => s.value?.phase == ConnectionPhase.live,
       ),
     );
-    final run = data == null ? null : inspectedRun(data, live);
+    final pin = ref.watch(inspectorPinProvider);
+    if (pin != _pinSeen) {
+      _pinSeen = pin;
+      _selected = null;
+    }
+    final latest = data == null ? null : inspectedRun(data, live);
+    final pinned = data != null && pin != null && pin.conversationId == id
+        ? data.runs[pin.runId]
+        : null;
+    final run = pinned ?? latest;
     if (data == null || run == null) {
       return Center(
         key: const Key('inspector.run.none'),
@@ -225,8 +334,10 @@ class _RunInspectorState extends ConsumerState<RunInspector> {
       );
     }
     final steps = data.steps[run.runId] ?? const <ToolStepRow>[];
+    final wanted = _selected ?? (pinned == null ? null : pin?.stepId);
     final selected =
-        steps.where((s) => s.id == _selected).firstOrNull ?? steps.lastOrNull;
+        steps.where((s) => s.id == wanted).firstOrNull ?? steps.lastOrNull;
+    final liveHere = live != null && live.runId == run.runId ? live : null;
     final waiting = [
       for (final s in steps)
         if (data.approvals[s.approvalRequestId] case final a?)
@@ -244,6 +355,11 @@ class _RunInspectorState extends ConsumerState<RunInspector> {
     };
     final output = selected == null ? null : stepResultText(selected);
     final pct = data.conversation?.contextPct ?? live?.context?.pct;
+    final answer = data.messages
+        .where((m) => m.role == 'assistant' && m.runId == run.runId)
+        .firstOrNull;
+    final thinking = run.thinking || (liveHere?.thinking ?? false);
+    final model = _modelOf(run, liveHere);
 
     Widget eyebrow(String text) => Padding(
       padding: const EdgeInsets.only(top: 10, bottom: 6),
@@ -261,12 +377,41 @@ class _RunInspectorState extends ConsumerState<RunInspector> {
       key: const Key('inspector.run'),
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       children: [
-        eyebrow(l.desktopInspectorRun),
+        Row(
+          children: [
+            Expanded(child: eyebrow(l.desktopInspectorRun)),
+            // a pinned older run: back to the one the chat is at
+            if (pinned != null && pinned.runId != latest?.runId)
+              TextButton(
+                key: const Key('inspector.run.latest'),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(0, 28),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: () =>
+                    ref.read(inspectorPinProvider.notifier).clear(),
+                child: Text(l.desktopInspectorLatest),
+              ),
+          ],
+        ),
         Text(
           runLine,
           key: const Key('inspector.run.line'),
           style: DelveText.monoSmall.copyWith(color: cs.onSurfaceVariant),
         ),
+        if (model != null) ...[
+          eyebrow(l.desktopInspectorModel),
+          Text(
+            model,
+            key: const Key('inspector.run.model'),
+            style: DelveText.monoSmall.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+        if (thinking) ...[
+          eyebrow(l.desktopInspectorThinking),
+          _Thinking(run: run, live: liveHere, answer: answer),
+        ],
         if (steps.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: DelveTokens.space2),
@@ -434,5 +579,87 @@ void showChatInspectorTab(
   final p = layouts.of(area);
   if (overlay ? !p.inspectorOverlay : !p.inspectorOpen) {
     layouts.toggleInspector(area, overlay: overlay);
+  }
+}
+
+/// Shows [runId] of [conversationId] (and [stepId], its output) on the
+/// inspector's Run tab, opening the inspector (“Show in inspector”).
+void showRunInInspector(
+  WidgetRef ref,
+  BuildContext context, {
+  required String area,
+  required String conversationId,
+  required String runId,
+  int? stepId,
+}) {
+  ref
+      .read(inspectorPinProvider.notifier)
+      .pin(InspectorPin(conversationId, runId, stepId));
+  showChatInspectorTab(ref, context, area, ChatInspectorTab.run);
+}
+
+/// The run's thinking in the inspector (design 27W-2c): live, the clock and
+/// the tokens; afterwards how long, and the whole reasoning as selectable
+/// text (the server sends it when the run ends).
+class _Thinking extends StatelessWidget {
+  const _Thinking({
+    required this.run,
+    required this.live,
+    required this.answer,
+  });
+
+  final RunRow run;
+  final LiveRun? live;
+  final MessageRow? answer;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final cs = context.colors;
+    final d = context.delve;
+    final live = this.live;
+    if (live != null && live.isThinking) {
+      return ThinkingBlock(
+        key: const Key('inspector.thinking.live'),
+        live: true,
+        since: run.startedAt ?? live.startedAt,
+        tokens: live.contextGrowth,
+      );
+    }
+    final seconds = thoughtSeconds(run, live);
+    final reasoning = answer?.reasoning?.trim();
+    return Column(
+      key: const Key('inspector.thinking'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          seconds == null
+              ? l.thinkingThought
+              : l.thinkingThoughtFor(formatDuration(seconds)),
+          style: context.text.labelMedium!.copyWith(color: d.textMuted),
+        ),
+        const SizedBox(height: 6),
+        if (reasoning == null || reasoning.isEmpty)
+          Text(
+            l.desktopInspectorReasoningLater,
+            style: context.text.bodySmall!.copyWith(color: d.textMuted),
+          )
+        else
+          Container(
+            key: const Key('inspector.thinking.text'),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(DelveTokens.rsm),
+            ),
+            child: SelectableText(
+              reasoning,
+              style: context.text.bodySmall!.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }

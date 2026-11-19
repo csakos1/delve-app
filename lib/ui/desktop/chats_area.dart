@@ -64,21 +64,24 @@ class _ChatsAreaState extends ConsumerState<ChatsArea> {
   @override
   Widget build(BuildContext context) {
     final selected = selectedChat(widget.location);
-    // an agent chat has an inspector (its run and Usage); General chats,
-    // a new chat and the empty pane have none
-    final agentChat = selected != null && selected.startsWith('c:')
-        ? selected.substring(2)
-        : null;
+    // an agent chat has an inspector (its run and Usage), a General chat
+    // its Usage (L2b2); a new chat and the empty pane have none
+    final id = selected == null || selected == 'new'
+        ? null
+        : selected.substring(2);
+    final Widget? inspector = switch (selected?.substring(0, 2)) {
+      'c:' => ChatInspector(
+        key: ValueKey('inspector.$id'),
+        conversationId: id!,
+      ),
+      'g:' => GeneralInspector(key: ValueKey('inspector.$id'), chatId: id!),
+      _ => null,
+    };
     return DesktopPanes(
       area: _area,
       list: ChatsScreen(selected: selected),
       content: widget.content,
-      inspector: agentChat == null
-          ? null
-          : ChatInspector(
-              key: ValueKey('inspector.$agentChat'),
-              conversationId: agentChat,
-            ),
+      inspector: inspector,
     );
   }
 }

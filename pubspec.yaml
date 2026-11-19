@@ -52,6 +52,10 @@ dependencies:
   # General export / import (G1c): one .zip with chats, images, settings
   archive: ^4.0.7
 
+  # the desktop (L2b2): files dropped on a chat. 0.8.4 is the last release
+  # for Flutter 3.41 (0.9 wants 3.47)
+  desktop_drop: 0.8.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
