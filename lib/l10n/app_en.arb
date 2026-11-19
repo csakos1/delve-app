@@ -4315,5 +4315,12 @@
   "desktopScheduleRunsTab": "Runs",
   "desktopScheduleOlderRuns": "Load older",
   "desktopScheduleBriefRuns": "The brief is written without a run: each one is a card on the Dashboard.",
-  "desktopScheduleRunsOld": "This server lists only the last run; the rest needs a backend with API 22."
+  "desktopScheduleRunsOld": "This server lists only the last run; the rest needs a backend with API 22.",
+  "settingsRememberPanes": "Remember pane widths",
+  "settingsRememberPanesSub": "Each area's list and inspector widths, and whether they are open, across starts",
+  "settingsInspectorDefault": "Open the inspector by default",
+  "settingsInspectorDefaultSub": "Where a page has one: a chat's run, a story's sources, a watch's listing",
+  "settingsTextSize": "Text size",
+  "settingsTextSizeSub": "Only the text grows; panes and icons keep their size",
+  "settingsTextSizeSystem": "System"
 }

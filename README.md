@@ -480,6 +480,12 @@ switch, Run now, Edit, the prompt, where it posts, thinking, the last run; Delet
 desktop dialog) and its runs in the Runs inspector (`GET /schedules/{id}/runs`, backend API 22;
 an older server and the brief show only the last run). The editor replaces the page in the
 content: Ctrl+S saves, Esc cancels, both lead back to the page.
+Settings has its sections in the list column and one section in the content
+(`settings_area.dart`; the Connection log, Terminal and General chat pages open there too).
+Settings → Desktop tools adds, in the desktop layout, Remember pane widths, Open the inspector
+by default and the text size (System · 100 · 115 · 130 %, text only); they live in
+`desktop.json` in the app's data folder (`path_provider`; `lib/ui/desktop/desktop_prefs.dart`),
+with each area's list and inspector widths and whether they are open.
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.

@@ -106,6 +106,10 @@ abstract final class Routes {
   /// The desktop's watch with one listing selected (the Hit inspector).
   static String watchHit(String slug, int id) => '${watch(slug)}?hit=$id';
   static const settings = '/more/settings';
+
+  /// The desktop's Settings: one [section] in the content (L2c3).
+  static String settingsAt(String section) =>
+      Uri(path: settings, queryParameters: {'section': section}).toString();
   static const connectionLog = '/more/settings/log';
 
   /// 22h Terminal settings: from Settings and from the Terminal tab.

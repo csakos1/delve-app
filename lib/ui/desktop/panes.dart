@@ -10,6 +10,7 @@ import '../../app/layout.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
+import 'desktop_prefs.dart';
 
 /// One area's panes as the reader left them: the widths and whether the
 /// list and the inspector are open. Docked panes keep this; the overlays of
@@ -53,8 +54,9 @@ class PaneLayout {
   );
 }
 
-/// The panes of every area, by area key (kept while the app runs; keeping
-/// them across starts comes with Settings → Desktop tools, L2c).
+/// The panes of every area, by area key. Settings → Desktop tools keeps
+/// them across starts ([DesktopPrefsController]: Remember pane widths) and
+/// says whether an area's inspector starts open.
 class PaneLayouts extends Notifier<Map<String, PaneLayout>> {
   @override
   Map<String, PaneLayout> build() => const {};
@@ -68,9 +70,31 @@ class PaneLayouts extends Notifier<Map<String, PaneLayout>> {
 
   PaneLayout of(String area, {double? list}) =>
       state[area] ??
-      PaneLayout(list: list ?? _listDefaults[area] ?? DelveDesktop.listDefault);
+      PaneLayout(
+        list: list ?? _listDefaults[area] ?? DelveDesktop.listDefault,
+        inspectorOpen: ref.read(desktopPrefsProvider).inspectorByDefault,
+      );
 
-  void _set(String area, PaneLayout layout) => state = {...state, area: layout};
+  void _set(String area, PaneLayout layout) {
+    state = {...state, area: layout};
+    ref.read(desktopPrefsProvider.notifier).panesChanged(state);
+  }
+
+  /// The panes the file kept (at start): areas not touched yet take them.
+  void restore(Map<String, PaneLayout> panes) {
+    if (panes.isEmpty) return;
+    state = {...panes, ...state};
+  }
+
+  /// Settings → Open the inspector by default: every area's docked
+  /// inspector follows at once.
+  void setInspectorsOpen({required bool open}) {
+    state = {
+      for (final e in state.entries)
+        e.key: e.value.copyWith(inspectorOpen: open),
+    };
+    ref.read(desktopPrefsProvider.notifier).panesChanged(state);
+  }
 
   void setList(String area, double width, {double? fallback}) => _set(
     area,

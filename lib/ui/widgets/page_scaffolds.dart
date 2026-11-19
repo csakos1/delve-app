@@ -407,6 +407,8 @@ abstract final class DelveIcons {
 
   /// The desktop inspector's toggle (L2).
   static const IconData inspector = Symbols.view_sidebar_rounded;
+  static const IconData desktop = Symbols.desktop_windows_rounded;
+  static const IconData panes = Symbols.view_column_rounded;
   static const IconData rename = Symbols.edit_rounded;
   static const IconData kill = Symbols.delete_forever_rounded;
   static const IconData cloud = Symbols.cloud_rounded;

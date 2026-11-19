@@ -18,6 +18,7 @@ import 'package:delve/share/share_channel.dart';
 import 'package:delve/sync/connection_status.dart';
 import 'package:delve/sync/sync_providers.dart';
 import 'package:delve/terminal/terminal_providers.dart';
+import 'package:delve/ui/desktop/desktop_prefs.dart';
 import 'package:delve/ui/desktop/intake.dart';
 import 'package:delve/ui/links.dart';
 import 'package:drift/drift.dart' show DatabaseConnection;
@@ -87,6 +88,9 @@ class TestEnv {
   /// The desktop's clipboard for Ctrl+V (wl-paste is off in tests).
   final FakePasteboard pasteboard = FakePasteboard();
 
+  /// The desktop's settings file (no path_provider in tests).
+  final MemoryDesktopPrefsStore desktopPrefs = MemoryDesktopPrefsStore();
+
   /// Connection state the screens see (the socket itself is off in tests).
   final ConnectionStatus? status;
 
@@ -139,6 +143,7 @@ class TestEnv {
       openRouterAdapterProvider.overrideWithValue(openRouter),
       mirrorPlatformProvider.overrideWithValue(mirror),
       desktopPasteboardProvider.overrideWithValue(pasteboard),
+      desktopPrefsStoreProvider.overrideWithValue(desktopPrefs),
       if (caps case final c?) platformCapsProvider.overrideWithValue(c),
       if (push case final p?)
         pushStateProvider.overrideWith((ref) => Stream.value(p)),
@@ -181,6 +186,7 @@ class TestEnv {
         openRouterAdapterProvider.overrideWithValue(openRouter),
         mirrorPlatformProvider.overrideWithValue(mirror),
         desktopPasteboardProvider.overrideWithValue(pasteboard),
+        desktopPrefsStoreProvider.overrideWithValue(desktopPrefs),
         if (caps case final c?) platformCapsProvider.overrideWithValue(c),
         if (push case final p?)
           pushStateProvider.overrideWith((ref) => Stream.value(p)),

@@ -7,6 +7,7 @@ import '../ui/desktop/chats_area.dart';
 import '../ui/desktop/desktop_shell.dart';
 import '../ui/desktop/news_area.dart';
 import '../ui/desktop/schedules_area.dart';
+import '../ui/desktop/settings_area.dart';
 import '../ui/desktop/watches_area.dart';
 import '../ui/general/general_widgets.dart' show ChatKind;
 import '../ui/screens/approvals_screen.dart';
@@ -64,6 +65,7 @@ GoRouter buildDesktopRouter({
   final schedulesKey = GlobalKey<NavigatorState>(
     debugLabel: 'desktop.schedules',
   );
+  final settingsKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.settings');
 
   Widget morePage(MorePage page, GoRouterState state) => switch (page) {
     MorePage.settings => const SettingsScreen(),
@@ -324,33 +326,53 @@ GoRouter buildDesktopRouter({
               ),
             ],
           ),
+          // Settings: the sections stay; a section or a sub-page in the content
+          ShellRoute(
+            navigatorKey: settingsKey,
+            pageBuilder: (context, state, child) => NoTransitionPage<void>(
+              key: state.pageKey,
+              child: SettingsArea(
+                location: state.uri.toString(),
+                content: child,
+              ),
+            ),
+            routes: [
+              GoRoute(
+                path: Routes.settings,
+                pageBuilder: (_, state) => _flat(
+                  state,
+                  SettingsScreen(section: state.uri.queryParameters['section']),
+                ),
+              ),
+              GoRoute(
+                path: Routes.connectionLog,
+                pageBuilder: (_, state) =>
+                    _flat(state, const ConnectionLogScreen()),
+              ),
+              GoRoute(
+                path: Routes.terminalSettings,
+                pageBuilder: (_, state) =>
+                    _flat(state, const TerminalSettingsScreen()),
+              ),
+              GoRoute(
+                path: Routes.generalSettings,
+                pageBuilder: (_, state) =>
+                    _flat(state, const GeneralSettingsScreen()),
+              ),
+            ],
+          ),
           for (final page in MorePage.values)
             if (page == MorePage.mirroring)
               GoRoute(path: page.route, redirect: (_, _) => Routes.dashboard)
             else if (page == MorePage.news ||
                 page == MorePage.watches ||
-                page == MorePage.schedules)
+                page == MorePage.schedules ||
+                page == MorePage.settings)
               ...const <RouteBase>[]
             else
               GoRoute(
                 path: page.route,
                 pageBuilder: (_, state) => _flat(state, morePage(page, state)),
-                routes: [
-                  if (page == MorePage.settings) ...[
-                    GoRoute(
-                      path: 'log',
-                      builder: (_, _) => const ConnectionLogScreen(),
-                    ),
-                    GoRoute(
-                      path: 'terminal',
-                      builder: (_, _) => const TerminalSettingsScreen(),
-                    ),
-                    GoRoute(
-                      path: 'general',
-                      builder: (_, _) => const GeneralSettingsScreen(),
-                    ),
-                  ],
-                ],
               ),
           // after the pages under it: More itself is the phone's
           GoRoute(path: Routes.more, redirect: (_, _) => Routes.dashboard),

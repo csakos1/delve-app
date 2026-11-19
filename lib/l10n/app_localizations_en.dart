@@ -5699,4 +5699,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get desktopScheduleRunsOld =>
       'This server lists only the last run; the rest needs a backend with API 22.';
+
+  @override
+  String get settingsRememberPanes => 'Remember pane widths';
+
+  @override
+  String get settingsRememberPanesSub =>
+      'Each area\'s list and inspector widths, and whether they are open, across starts';
+
+  @override
+  String get settingsInspectorDefault => 'Open the inspector by default';
+
+  @override
+  String get settingsInspectorDefaultSub =>
+      'Where a page has one: a chat\'s run, a story\'s sources, a watch\'s listing';
+
+  @override
+  String get settingsTextSize => 'Text size';
+
+  @override
+  String get settingsTextSizeSub =>
+      'Only the text grows; panes and icons keep their size';
+
+  @override
+  String get settingsTextSizeSystem => 'System';
 }

@@ -21,6 +21,9 @@ import '../../sync/sync_providers.dart';
 import '../../terminal/terminal_providers.dart';
 import '../../terminal/terminal_service.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_page.dart';
+import '../desktop/desktop_prefs.dart';
+import '../desktop/list_area.dart' show SectionRow;
 import '../format.dart';
 import '../general/general_format.dart';
 import '../widgets/connection_ui.dart';
@@ -28,10 +31,73 @@ import '../widgets/news_ui.dart' show NewsIcons;
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 
+/// The sections of Settings, in their order (the phone's eyebrows; the
+/// desktop's list column, 27W-11a).
+enum SettingsSection {
+  server,
+  device,
+  notifications,
+  desktopTools,
+  terminal,
+  general,
+  thinkingRoute,
+  versions;
+
+  /// A section by its name (`?section=`); unknown: Server.
+  static SettingsSection of(String? name) => values.firstWhere(
+    (s) => s.name == name,
+    orElse: () => SettingsSection.server,
+  );
+
+  String title(AppLocalizations l) => switch (this) {
+    server => l.settingsServer,
+    device => l.settingsThisDevice,
+    notifications => l.settingsNotifications,
+    desktopTools => l.settingsDesktopTools,
+    terminal => l.settingsTerminal,
+    general => l.settingsGeneralSection,
+    thinkingRoute => l.settingsThinkingRoute,
+    versions => l.settingsVersions,
+  };
+
+  IconData get icon => switch (this) {
+    server => DelveIcons.server,
+    device => DelveIcons.device,
+    notifications => DelveIcons.notifications,
+    desktopTools => DelveIcons.desktop,
+    terminal => DelveIcons.terminal,
+    general => DelveIcons.cloud,
+    thinkingRoute => DelveIcons.thinking,
+    versions => DelveIcons.app,
+  };
+}
+
+/// The sections this app shows: Notifications where it gets them, Desktop
+/// tools where Terminal and Files are a choice (and in the desktop layout,
+/// which has its own settings there), Terminal once the tools are on.
+List<SettingsSection> settingsSections({
+  required PlatformCaps caps,
+  required bool tools,
+  required bool desktop,
+}) => [
+  for (final s in SettingsSection.values)
+    if (switch (s) {
+      SettingsSection.notifications => caps.notifications,
+      SettingsSection.desktopTools => !caps.desktopToolsByDefault || desktop,
+      SettingsSection.terminal => tools,
+      _ => true,
+    })
+      s,
+];
+
 /// 16 Settings — server and connection, this device, notifications,
-/// thinking route, versions, unpair.
+/// thinking route, versions, unpair. On the desktop (27W-11a) one [section]
+/// as a page of the content; the sections are in the list column.
 class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.section});
+
+  /// The desktop: the section shown (null: Server).
+  final String? section;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,6 +109,7 @@ class SettingsScreen extends ConsumerWidget {
     final app = ref.watch(appInfoProvider).value;
     final caps = ref.watch(platformCapsProvider);
     final tools = ref.watch(desktopToolsProvider);
+    final desktop = DesktopLayout.of(context);
     final mono = DelveText.mono.copyWith(
       color: context.colors.onSurfaceVariant,
     );
@@ -56,12 +123,168 @@ class SettingsScreen extends ConsumerWidget {
       _ => null,
     };
 
+    final unpair = [
+      const SizedBox(height: DelveTokens.space6),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space4),
+        child: _maybeLeft(
+          desktop: desktop,
+          child: OutlinedButton.icon(
+            key: const Key('settings.unpair'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: context.delve.alertFg,
+              side: BorderSide(color: context.delve.alertBorder),
+            ),
+            icon: const SymbolIcon(DelveIcons.unpair, size: DelveTokens.iconMd),
+            label: Text(l.settingsUnpair),
+            onPressed: () => _confirmUnpair(context, ref),
+          ),
+        ),
+      ),
+      const SizedBox(height: DelveTokens.space3),
+      Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: desktop ? DelveTokens.space4 : 0,
+        ),
+        child: Text(
+          l.settingsUnpairNote,
+          textAlign: desktop ? TextAlign.start : TextAlign.center,
+          style: context.text.bodyMedium!.copyWith(
+            color: context.delve.textMuted,
+          ),
+        ),
+      ),
+    ];
+
+    List<Widget> rowsOf(SettingsSection s) => switch (s) {
+      SettingsSection.server => [
+        _Item(
+          icon: DelveIcons.server,
+          title: l.settingsServerUrl,
+          subtitle: creds.server.toString(),
+          subtitleStyle: mono,
+          trailing: IconButton(
+            tooltip: l.copy,
+            icon: const SymbolIcon(DelveIcons.copy),
+            onPressed: () async {
+              await Clipboard.setData(
+                ClipboardData(text: creds.server.toString()),
+              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l.copied)));
+              }
+            },
+          ),
+        ),
+        const _ConnectionRow(),
+      ],
+      SettingsSection.device => [
+        _Item(
+          icon: DelveIcons.device,
+          title: device.value?.name ?? creds.deviceName,
+          subtitle: switch (device) {
+            AsyncData(:final value) => l.settingsPairedSeen(
+              DateFormat('d MMM y').format(value.createdAt.toLocal()),
+              _seen(l, value.lastSeenAt),
+            ),
+            AsyncError(:final error) => failed(error),
+            _ => null,
+          },
+        ),
+        // the desktop: unpairing is about this device
+        if (desktop) ...unpair,
+      ],
+      // the phone (FCM) and the desktop (the socket, L3)
+      SettingsSection.notifications => [_Notifications(device: device)],
+      SettingsSection.desktopTools => [
+        if (!caps.desktopToolsByDefault)
+          _Item(
+            icon: DelveIcons.terminal,
+            title: l.settingsDesktopToolsRow,
+            subtitle: l.settingsDesktopToolsSub,
+            trailing: Switch(
+              key: const Key('settings.desktopTools'),
+              value: tools,
+              onChanged: (on) => unawaited(
+                ref.read(desktopToolsProvider.notifier).set(on: on),
+              ),
+            ),
+          ),
+        if (desktop) const _DesktopPrefsRows(),
+      ],
+      SettingsSection.terminal => [const _TerminalRow()],
+      SettingsSection.general => [const _GeneralRow()],
+      SettingsSection.thinkingRoute => [
+        _ThinkingRoute(status: status, failed: failed),
+      ],
+      SettingsSection.versions => [
+        _Item(
+          icon: DelveIcons.app,
+          title: l.settingsApp,
+          subtitle: app?.toString(),
+          subtitleStyle: mono,
+        ),
+        _Item(
+          icon: DelveIcons.server,
+          title: l.settingsServerVersion,
+          subtitle: statusText(
+            (s) => s.revision == null
+                ? s.serverVersion
+                : '${s.serverVersion} · revision ${_short(s.revision!)}',
+          ),
+          subtitleStyle: mono,
+        ),
+        _Item(
+          icon: DelveIcons.api,
+          title: l.settingsApiRevision,
+          subtitle: statusText((s) => '${s.apiRevision}'),
+          subtitleStyle: mono,
+        ),
+        _Item(
+          icon: DelveIcons.agent,
+          title: l.settingsHermes,
+          subtitle: statusText(
+            (s) => s.hermes == 'down'
+                ? '${s.hermesVersion ?? l.settingsUnknown} · ${l.settingsHermesDown}'
+                : s.hermesVersion ?? l.settingsUnknown,
+          ),
+          subtitleStyle: mono,
+        ),
+      ],
+    };
+
+    void reload() {
+      ref
+        ..invalidate(serverStatusProvider)
+        ..invalidate(deviceInfoProvider);
+    }
+
+    if (desktop) {
+      final shown = SettingsSection.of(section);
+      return DesktopPage(
+        key: Key('settings.page.${shown.name}'),
+        title: shown.title(l),
+        actions: [
+          DesktopRefreshButton(
+            buttonKey: const Key('settings.refresh'),
+            onPressed: reload,
+          ),
+        ],
+        child: DesktopPageBody(
+          maxWidth: DelveDesktop.detailColumn,
+          top: DelveTokens.space2,
+          children: rowsOf(shown),
+        ),
+      );
+    }
+
     return SubPage(
       title: l.moreSettings,
       child: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(serverStatusProvider);
-          ref.invalidate(deviceInfoProvider);
+          reload();
           try {
             await ref.read(serverStatusProvider.future);
           } on Object {
@@ -71,131 +294,21 @@ class SettingsScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.only(bottom: DelveTokens.space8),
           children: [
-            _Section(l.settingsServer),
-            _Item(
-              icon: DelveIcons.server,
-              title: l.settingsServerUrl,
-              subtitle: creds.server.toString(),
-              subtitleStyle: mono,
-              trailing: IconButton(
-                tooltip: l.copy,
-                icon: const SymbolIcon(DelveIcons.copy),
-                onPressed: () async {
-                  await Clipboard.setData(
-                    ClipboardData(text: creds.server.toString()),
-                  );
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(l.copied)));
-                  }
-                },
-              ),
-            ),
-            const _ConnectionRow(),
-            _Section(l.settingsThisDevice),
-            _Item(
-              icon: DelveIcons.device,
-              title: device.value?.name ?? creds.deviceName,
-              subtitle: switch (device) {
-                AsyncData(:final value) => l.settingsPairedSeen(
-                  DateFormat('d MMM y').format(value.createdAt.toLocal()),
-                  _seen(l, value.lastSeenAt),
-                ),
-                AsyncError(:final error) => failed(error),
-                _ => null,
-              },
-            ),
-            // the phone (FCM) and the desktop (the socket, L3)
-            if (caps.notifications) ...[
-              _Section(l.settingsNotifications),
-              _Notifications(device: device),
-            ],
-            if (!caps.desktopToolsByDefault) ...[
-              _Section(l.settingsDesktopTools),
-              _Item(
-                icon: DelveIcons.terminal,
-                title: l.settingsDesktopToolsRow,
-                subtitle: l.settingsDesktopToolsSub,
-                trailing: Switch(
-                  key: const Key('settings.desktopTools'),
-                  value: tools,
-                  onChanged: (on) => unawaited(
-                    ref.read(desktopToolsProvider.notifier).set(on: on),
-                  ),
-                ),
-              ),
-            ],
-            if (tools) ...[_Section(l.settingsTerminal), const _TerminalRow()],
-            _Section(l.settingsGeneralSection),
-            const _GeneralRow(),
-            _Section(l.settingsThinkingRoute),
-            _ThinkingRoute(status: status, failed: failed),
-            _Section(l.settingsVersions),
-            _Item(
-              icon: DelveIcons.app,
-              title: l.settingsApp,
-              subtitle: app?.toString(),
-              subtitleStyle: mono,
-            ),
-            _Item(
-              icon: DelveIcons.server,
-              title: l.settingsServerVersion,
-              subtitle: statusText(
-                (s) => s.revision == null
-                    ? s.serverVersion
-                    : '${s.serverVersion} · revision ${_short(s.revision!)}',
-              ),
-              subtitleStyle: mono,
-            ),
-            _Item(
-              icon: DelveIcons.api,
-              title: l.settingsApiRevision,
-              subtitle: statusText((s) => '${s.apiRevision}'),
-              subtitleStyle: mono,
-            ),
-            _Item(
-              icon: DelveIcons.agent,
-              title: l.settingsHermes,
-              subtitle: statusText(
-                (s) => s.hermes == 'down'
-                    ? '${s.hermesVersion ?? l.settingsUnknown} · ${l.settingsHermesDown}'
-                    : s.hermesVersion ?? l.settingsUnknown,
-              ),
-              subtitleStyle: mono,
-            ),
-            const SizedBox(height: DelveTokens.space6),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: DelveTokens.space4,
-              ),
-              child: OutlinedButton.icon(
-                key: const Key('settings.unpair'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: context.delve.alertFg,
-                  side: BorderSide(color: context.delve.alertBorder),
-                ),
-                icon: const SymbolIcon(
-                  DelveIcons.unpair,
-                  size: DelveTokens.iconMd,
-                ),
-                label: Text(l.settingsUnpair),
-                onPressed: () => _confirmUnpair(context, ref),
-              ),
-            ),
-            const SizedBox(height: DelveTokens.space3),
-            Text(
-              l.settingsUnpairNote,
-              textAlign: TextAlign.center,
-              style: context.text.bodyMedium!.copyWith(
-                color: context.delve.textMuted,
-              ),
-            ),
+            for (final s in settingsSections(
+              caps: caps,
+              tools: tools,
+              desktop: false,
+            )) ...[_Section(s.title(l)), ...rowsOf(s)],
+            ...unpair,
           ],
         ),
       ),
     );
   }
+
+  /// The phone: the button across the page; the desktop: at its size.
+  static Widget _maybeLeft({required bool desktop, required Widget child}) =>
+      desktop ? Align(alignment: Alignment.centerLeft, child: child) : child;
 
   static String _short(String sha) =>
       sha.length > 7 ? sha.substring(0, 7) : sha;
@@ -663,4 +776,114 @@ class _Item extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// Settings → Desktop tools in the desktop layout (27W-11a): Remember pane
+/// widths, Open the inspector by default, Text size.
+class _DesktopPrefsRows extends ConsumerWidget {
+  const _DesktopPrefsRows();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final prefs = ref.watch(desktopPrefsProvider);
+    final ctl = ref.read(desktopPrefsProvider.notifier);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Item(
+          icon: DelveIcons.panes,
+          title: l.settingsRememberPanes,
+          subtitle: l.settingsRememberPanesSub,
+          trailing: Switch(
+            key: const Key('settings.rememberPanes'),
+            value: prefs.rememberPanes,
+            onChanged: (on) => ctl.setRememberPanes(on: on),
+          ),
+        ),
+        _Item(
+          icon: DelveIcons.inspector,
+          title: l.settingsInspectorDefault,
+          subtitle: l.settingsInspectorDefaultSub,
+          trailing: Switch(
+            key: const Key('settings.inspectorDefault'),
+            value: prefs.inspectorByDefault,
+            onChanged: (on) => ctl.setInspectorByDefault(on: on),
+          ),
+        ),
+        _Item(
+          icon: DelveIcons.textSize,
+          title: l.settingsTextSize,
+          subtitle: l.settingsTextSizeSub,
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            DelveTokens.space4 + DelveTokens.iconLg + DelveTokens.space6,
+            0,
+            DelveTokens.space4,
+            DelveTokens.space3,
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: SegmentedButton<DesktopTextScale>(
+              key: const Key('settings.textSize'),
+              showSelectedIcon: false,
+              segments: [
+                for (final s in DesktopTextScale.values)
+                  ButtonSegment(
+                    value: s,
+                    label: Text(switch (s.factor) {
+                      null => l.settingsTextSizeSystem,
+                      final f => '${(f * 100).round()} %',
+                    }, key: Key('settings.textSize.${s.name}')),
+                  ),
+              ],
+              selected: {prefs.textScale},
+              onSelectionChanged: (v) => ctl.setTextScale(v.single),
+              style: SegmentedButton.styleFrom(
+                selectedBackgroundColor: context.colors.primaryContainer,
+                selectedForegroundColor: context.colors.primary,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The desktop's list column of Settings (27W-11a): every section as a
+/// 32 px row; the open one selected.
+class SettingsNav extends ConsumerWidget {
+  const SettingsNav({super.key, required this.section});
+
+  final SettingsSection section;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final sections = settingsSections(
+      caps: ref.watch(platformCapsProvider),
+      tools: ref.watch(desktopToolsProvider),
+      desktop: true,
+    );
+    return TopLevelPage(
+      key: const Key('settings.nav'),
+      title: l.moreSettings,
+      background: context.colors.surfaceContainerLow,
+      child: ListView(
+        padding: const EdgeInsets.only(top: 2, bottom: DelveTokens.space4),
+        children: [
+          for (final s in sections)
+            SectionRow(
+              key: Key('settings.nav.${s.name}'),
+              label: s.title(l),
+              icon: s.icon,
+              selected: s == section,
+              onTap: () => context.open(Routes.settingsAt(s.name)),
+            ),
+        ],
+      ),
+    );
+  }
 }

@@ -15,11 +15,14 @@ import 'package:delve/ui/desktop/chat_find.dart';
 import 'package:delve/ui/desktop/chat_inspector.dart';
 import 'package:delve/ui/desktop/chats_area.dart';
 import 'package:delve/ui/desktop/desktop_page.dart';
+import 'package:delve/ui/desktop/desktop_prefs.dart';
 import 'package:delve/ui/desktop/desktop_shell.dart';
 import 'package:delve/ui/desktop/intake.dart';
+import 'package:delve/ui/desktop/list_area.dart' show SectionRow;
 import 'package:delve/ui/desktop/news_area.dart';
 import 'package:delve/ui/desktop/panes.dart';
 import 'package:delve/ui/desktop/schedules_area.dart';
+import 'package:delve/ui/desktop/settings_area.dart';
 import 'package:delve/ui/desktop/status_bar.dart';
 import 'package:delve/ui/desktop/watches_area.dart';
 import 'package:delve/ui/general/general_widgets.dart' show DelveFilterChip;
@@ -33,6 +36,7 @@ import 'package:delve/ui/screens/news_story_screen.dart';
 import 'package:delve/ui/screens/observability_screen.dart';
 import 'package:delve/ui/screens/schedule_editor_screen.dart';
 import 'package:delve/ui/screens/schedules_screen.dart';
+import 'package:delve/ui/screens/settings_screen.dart';
 import 'package:delve/ui/screens/system_screen.dart';
 import 'package:delve/ui/screens/watch_detail_screen.dart';
 import 'package:delve/ui/screens/watches_screen.dart';
@@ -1868,6 +1872,174 @@ void main() {
       await t.pumpAndSettle();
       expect(find.byKey(const Key('watch.tab.hits')), findsNothing);
       expect(find.text('HITS · 3'), findsOneWidget);
+    });
+  });
+
+  group('Settings and the desktop prefs (L2c3a)', () {
+    Map<String, Object?> stored(TestEnv env) =>
+        jsonDecode(env.desktopPrefs.text ?? '{}') as Map<String, Object?>;
+
+    Future<TestEnv> settings(WidgetTester t, {String? file}) async {
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        before: (env) async => env.desktopPrefs.text = file,
+      );
+      await _ctrl(t, LogicalKeyboardKey.comma);
+      return env;
+    }
+
+    ProviderContainer container(WidgetTester t) =>
+        ProviderScope.containerOf(t.element(find.byType(DesktopShell)));
+
+    test('the panes as the file keeps them', () {
+      final panes = {
+        'chats': const PaneLayout(list: 380, inspectorOpen: false),
+        'news': const PaneLayout(list: 360, listOpen: false, inspector: 420),
+      };
+      final back = panesFromJson(jsonDecode(jsonEncode(panesToJson(panes))));
+      expect(back['chats']!.list, 380);
+      expect(back['chats']!.inspectorOpen, isFalse);
+      expect(back['news']!.listOpen, isFalse);
+      expect(back['news']!.inspector, 420);
+      expect(panesFromJson({'x': 'broken'}), isEmpty);
+    });
+
+    test('the section of a location', () {
+      expect(selectedSettingsSection(Routes.settings), SettingsSection.server);
+      expect(
+        selectedSettingsSection(Routes.settingsAt('desktopTools')),
+        SettingsSection.desktopTools,
+      );
+      expect(
+        selectedSettingsSection(Routes.connectionLog),
+        SettingsSection.server,
+      );
+      expect(
+        selectedSettingsSection(Routes.generalSettings),
+        SettingsSection.general,
+      );
+    });
+
+    testWidgets('the sections in the list column, one in the content', (
+      t,
+    ) async {
+      await settings(t);
+      expect(find.byType(SettingsArea), findsOneWidget);
+      expect(find.byKey(const Key('settings.nav')), findsOneWidget);
+      expect(find.byKey(const Key('settings.page.server')), findsOneWidget);
+      expect(find.byKey(const Key('settings.connection')), findsOneWidget);
+      // one section only: no Versions rows here
+      expect(find.byKey(const Key('settings.unpair')), findsNothing);
+      await t.tap(find.byKey(const Key('settings.nav.device')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('settings.page.device')), findsOneWidget);
+      expect(find.byKey(const Key('settings.unpair')), findsOneWidget);
+
+      // a sub-page keeps its section selected
+      await t.tap(find.byKey(const Key('settings.nav.server')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('settings.connection')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('settings.nav')), findsOneWidget);
+      expect(
+        t
+            .widget<SectionRow>(find.byKey(const Key('settings.nav.server')))
+            .selected,
+        isTrue,
+      );
+    });
+
+    testWidgets('Desktop tools: Remember pane widths keeps the widths in '
+        'the file; off, the file forgets them', (t) async {
+      final env = await settings(t);
+      await t.tap(find.byKey(const Key('settings.nav.desktopTools')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('settings.desktopTools')), findsOneWidget);
+      expect(
+        t.widget<Switch>(find.byKey(const Key('settings.rememberPanes'))).value,
+        isTrue,
+      );
+      container(t).read(paneLayoutsProvider.notifier).setList('chats', 377);
+      await t.pumpAndSettle();
+      final panes = stored(env)['panes']! as Map<String, Object?>;
+      expect((panes['chats']! as Map<String, Object?>)['list'], 377);
+
+      await t.tap(find.byKey(const Key('settings.rememberPanes')));
+      await t.pumpAndSettle();
+      expect(stored(env)['remember_panes'], isFalse);
+      expect(stored(env).containsKey('panes'), isFalse);
+    });
+
+    testWidgets('the kept widths come back at start; the inspector default '
+        'comes from the file', (t) async {
+      await settings(
+        t,
+        file: jsonEncode({
+          'remember_panes': true,
+          'inspector_by_default': false,
+          'panes': {
+            'chats': {
+              'list': 333,
+              'list_open': true,
+              'inspector': 340,
+              'inspector_open': true,
+            },
+          },
+        }),
+      );
+      final layouts = container(t).read(paneLayoutsProvider.notifier);
+      expect(layouts.of('chats').list, 333);
+      expect(layouts.of('chats').inspectorOpen, isTrue);
+      expect(layouts.of('news').inspectorOpen, isFalse);
+      await _ctrl(t, LogicalKeyboardKey.digit2);
+      expect(_width(t, 'pane.list'), 333);
+    });
+
+    testWidgets('Open the inspector by default: every area follows', (t) async {
+      final env = await settings(t);
+      final layouts = container(t).read(paneLayoutsProvider.notifier);
+      layouts.setList('chats', 300);
+      await t.tap(find.byKey(const Key('settings.nav.desktopTools')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('settings.inspectorDefault')));
+      await t.pumpAndSettle();
+      expect(layouts.of('chats').inspectorOpen, isFalse);
+      expect(layouts.of('watches').inspectorOpen, isFalse);
+      expect(stored(env)['inspector_by_default'], isFalse);
+    });
+
+    testWidgets('Text size 130 %: the text grows, the panes keep their '
+        'width', (t) async {
+      final env = await settings(t);
+      await t.tap(find.byKey(const Key('settings.nav.desktopTools')));
+      await t.pumpAndSettle();
+      expect(
+        MediaQuery.textScalerOf(t.element(find.byType(DesktopShell))).scale(10),
+        10,
+      );
+      await t.tap(find.byKey(const Key('settings.textSize.larger')));
+      await t.pumpAndSettle();
+      expect(
+        MediaQuery.textScalerOf(t.element(find.byType(DesktopShell))).scale(10),
+        closeTo(13, 0.001),
+      );
+      expect(stored(env)['text_scale'], 'larger');
+      expect(_width(t, 'pane.list'), DelveDesktop.listDefault);
+      expect(t.takeException(), isNull);
+    });
+
+    testWidgets('the phone layout of the Linux app: the sections in one '
+        'page, no desktop prefs', (t) async {
+      await pumpDelve(t, caps: _linux);
+      await t.tap(find.text('More'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Settings'));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('settings.nav')), findsNothing);
+      expect(find.byKey(const Key('settings.rememberPanes')), findsNothing);
+      expect(find.text('SERVER'), findsOneWidget);
     });
   });
 

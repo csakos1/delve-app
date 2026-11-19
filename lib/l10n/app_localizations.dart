@@ -8870,6 +8870,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This server lists only the last run; the rest needs a backend with API 22.'**
   String get desktopScheduleRunsOld;
+
+  /// No description provided for @settingsRememberPanes.
+  ///
+  /// In en, this message translates to:
+  /// **'Remember pane widths'**
+  String get settingsRememberPanes;
+
+  /// No description provided for @settingsRememberPanesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Each area\'s list and inspector widths, and whether they are open, across starts'**
+  String get settingsRememberPanesSub;
+
+  /// No description provided for @settingsInspectorDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the inspector by default'**
+  String get settingsInspectorDefault;
+
+  /// No description provided for @settingsInspectorDefaultSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Where a page has one: a chat\'s run, a story\'s sources, a watch\'s listing'**
+  String get settingsInspectorDefaultSub;
+
+  /// No description provided for @settingsTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get settingsTextSize;
+
+  /// No description provided for @settingsTextSizeSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the text grows; panes and icons keep their size'**
+  String get settingsTextSizeSub;
+
+  /// No description provided for @settingsTextSizeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsTextSizeSystem;
 }
 
 class _AppLocalizationsDelegate

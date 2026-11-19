@@ -12,6 +12,7 @@ import '../push/push_host.dart';
 import '../share/share_host.dart';
 import '../sync/sync_lifecycle.dart';
 import '../theme/delve_theme.dart';
+import '../ui/desktop/desktop_prefs.dart';
 import 'desktop_router.dart';
 import 'layout.dart';
 import 'router.dart';
@@ -83,13 +84,18 @@ class _DelveAppState extends ConsumerState<DelveApp>
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(routerProvider),
       onNavigationNotification: delveHandlesBack,
-      builder: (context, child) => SyncLifecycle(
-        child: PushHost(
-          child: ShareHost(
-            child: TransfersHost(child: child ?? const SizedBox()),
+      builder: (context, child) {
+        final app = SyncLifecycle(
+          child: PushHost(
+            child: ShareHost(
+              child: TransfersHost(child: child ?? const SizedBox()),
+            ),
           ),
-        ),
-      ),
+        );
+        // the desktop's text size (Settings → Desktop tools); the phone
+        // follows the system
+        return desktop ? DesktopTextScaleScope(child: app) : app;
+      },
     );
   }
 }
