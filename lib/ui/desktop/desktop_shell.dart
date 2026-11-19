@@ -8,6 +8,7 @@ import '../../app/platform.dart';
 import '../../app/router.dart';
 import '../../theme/delve_theme.dart';
 import 'areas.dart';
+import 'chat_inspector.dart';
 import 'panes.dart';
 import 'rail.dart';
 import 'status_bar.dart';
@@ -38,11 +39,24 @@ class _CloseOverlayIntent extends Intent {
   const _CloseOverlayIntent();
 }
 
+class _FindIntent extends Intent {
+  const _FindIntent();
+}
+
+class _UsageIntent extends Intent {
+  const _UsageIntent();
+}
+
+class _NextTabIntent extends Intent {
+  const _NextTabIntent();
+}
+
 /// The desktop layout (design 27 Workbench, L2a): the rail, the current
 /// area's page and the status bar under both. The window keys live here:
 /// Ctrl+2…0 the areas, Ctrl+N / Ctrl+Shift+N a new Agent / General chat,
 /// Ctrl+, Settings, Ctrl+B the list column, Ctrl+I the inspector, Esc an
-/// open overlay pane. No title bar: the compositor draws the window.
+/// open overlay pane; Ctrl+F the list's search, Ctrl+U a chat's Usage,
+/// Ctrl+] the inspector's next tab. No title bar: the compositor draws the window.
 class DesktopShell extends ConsumerWidget {
   const DesktopShell({super.key, required this.location, required this.child});
 
@@ -68,6 +82,12 @@ class DesktopShell extends ConsumerWidget {
         const _ToggleInspectorIntent(),
     const SingleActivator(LogicalKeyboardKey.escape):
         const _CloseOverlayIntent(),
+    const SingleActivator(LogicalKeyboardKey.keyF, control: true):
+        const _FindIntent(),
+    const SingleActivator(LogicalKeyboardKey.keyU, control: true):
+        const _UsageIntent(),
+    const SingleActivator(LogicalKeyboardKey.bracketRight, control: true):
+        const _NextTabIntent(),
   };
 
   @override
@@ -116,6 +136,32 @@ class DesktopShell extends ConsumerWidget {
                     overlay: width() < DelveDesktop.inspectorOverlayBelow,
                   );
                 }
+                return null;
+              },
+            ),
+            _FindIntent: CallbackAction<_FindIntent>(
+              onInvoke: (_) {
+                ref.read(desktopFindProvider.notifier).request();
+                return null;
+              },
+            ),
+            _UsageIntent: CallbackAction<_UsageIntent>(
+              onInvoke: (_) {
+                if (area == DesktopArea.chats.name &&
+                    Uri.parse(location).path.startsWith('${Routes.chats}/c/')) {
+                  showChatInspectorTab(
+                    ref,
+                    context,
+                    area!,
+                    ChatInspectorTab.usage,
+                  );
+                }
+                return null;
+              },
+            ),
+            _NextTabIntent: CallbackAction<_NextTabIntent>(
+              onInvoke: (_) {
+                ref.read(chatInspectorTabProvider.notifier).next();
                 return null;
               },
             ),

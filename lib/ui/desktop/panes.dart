@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/layout.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
@@ -548,6 +550,35 @@ class InspectorOverlayClose extends ConsumerWidget {
       icon: const SymbolIcon(
         DelveIcons.close,
         size: DelveDesktop.iconButtonIcon,
+      ),
+    );
+  }
+}
+
+/// The content's reading column (design 27): in the desktop layout at most
+/// 720 wide (760 from a 1920 window) plus the list's 16 dp gutters, centred
+/// in the pane; on the phone the child as it is.
+class ReadingColumn extends StatelessWidget {
+  const ReadingColumn({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!DesktopLayout.of(context)) return child;
+    final column =
+        (MediaQuery.sizeOf(context).width >= DelveDesktop.wide
+            ? DelveDesktop.readingColumnWide
+            : DelveDesktop.readingColumn) +
+        2 * DelveTokens.space4;
+    return LayoutBuilder(
+      builder: (context, box) => Center(
+        child: SizedBox(
+          key: const Key('readingColumn'),
+          width: math.min(box.maxWidth, column),
+          height: box.maxHeight,
+          child: child,
+        ),
       ),
     );
   }

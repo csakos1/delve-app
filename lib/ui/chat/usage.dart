@@ -291,10 +291,15 @@ class UsageSheet extends ConsumerWidget {
     super.key,
     required this.conversationId,
     required this.title,
+    this.embedded = false,
   });
 
   final String conversationId;
   final String title;
+
+  /// The desktop chat inspector's Usage tab (L2b): no heading, no close
+  /// button, the inspector's padding and height.
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -304,26 +309,31 @@ class UsageSheet extends ConsumerWidget {
     final data = usage.value;
 
     final children = <Widget>[
-      Row(
-        children: [
-          Expanded(
-            child: Text(l.usageTitle, style: context.text.headlineSmall),
-          ),
-          IconButton(
-            key: const Key('usage.close'),
-            tooltip: l.close,
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const SymbolIcon(DelveIcons.close),
-          ),
-        ],
-      ),
-      Text(
-        data == null ? title : '$title · ${l.usageRunCount(data.runs.length)}',
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: context.text.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
-      ),
-      const SizedBox(height: DelveTokens.space4),
+      if (!embedded) ...[
+        Row(
+          children: [
+            Expanded(
+              child: Text(l.usageTitle, style: context.text.headlineSmall),
+            ),
+            IconButton(
+              key: const Key('usage.close'),
+              tooltip: l.close,
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const SymbolIcon(DelveIcons.close),
+            ),
+          ],
+        ),
+        Text(
+          data == null
+              ? title
+              : '$title · ${l.usageRunCount(data.runs.length)}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: context.text.bodyMedium!.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DelveTokens.space4),
+      ] else
+        const SizedBox(height: DelveTokens.space3),
     ];
 
     if (data == null) {
@@ -353,6 +363,13 @@ class UsageSheet extends ConsumerWidget {
       children.addAll(_content(context, l, data));
     }
 
+    if (embedded) {
+      return ListView(
+        key: const Key('usage.inspector'),
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        children: children,
+      );
+    }
     return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.85,

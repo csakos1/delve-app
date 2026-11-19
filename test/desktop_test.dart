@@ -8,6 +8,7 @@ import 'package:delve/app/router.dart';
 import 'package:delve/l10n/app_localizations.dart';
 import 'package:delve/theme/delve_theme.dart';
 import 'package:delve/ui/desktop/areas.dart';
+import 'package:delve/ui/desktop/chat_inspector.dart';
 import 'package:delve/ui/desktop/chats_area.dart';
 import 'package:delve/ui/desktop/desktop_shell.dart';
 import 'package:delve/ui/desktop/panes.dart';
@@ -17,11 +18,13 @@ import 'package:delve/ui/screens/chat_screen.dart';
 import 'package:delve/ui/screens/chats_screen.dart';
 import 'package:delve/ui/screens/dashboard_screen.dart';
 import 'package:delve/ui/screens/system_screen.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'chat_screen_test.dart' show seedFinished;
 import 'support/harness.dart';
 
 final _linux = PlatformCaps.linux(host: 'archlinux');
@@ -421,6 +424,95 @@ void main() {
       await pumpDelve(t, caps: _linux);
       expect(find.byType(DesktopShell), findsNothing);
       expect(find.byType(NavigationBar), findsOneWidget);
+    });
+  });
+
+  group('Chats on the desktop (L2b)', () {
+    testWidgets('desktop rows; a chat opens with its inspector: Run, then '
+        'Usage from the tab and from Ctrl+U', (t) async {
+      await pumpDelve(t, caps: _linux, window: _frame, before: seedFinished);
+      final row = find.byKey(const Key('chats.row'));
+      expect(row, findsOneWidget);
+      expect(t.getSize(row).height, greaterThanOrEqualTo(52));
+
+      // hover: Archive and the menu at the row's top right
+      final mouse = await t.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: Offset.zero);
+      addTearDown(mouse.removePointer);
+      await mouse.moveTo(t.getCenter(row));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('chats.row.archive')), findsOneWidget);
+      expect(find.byKey(const Key('row.more')), findsOneWidget);
+      await mouse.moveTo(const Offset(1400, 880));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('chats.row.archive')), findsNothing);
+
+      // right click: the context menu
+      await t.tap(
+        row,
+        buttons: kSecondaryButton,
+        kind: PointerDeviceKind.mouse,
+      );
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('chats.menu.archive')), findsOneWidget);
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await t.pumpAndSettle();
+
+      await t.tap(row);
+      await t.pumpAndSettle();
+      expect(find.byType(ChatScreen), findsOneWidget);
+      expect(find.byKey(const Key('readingColumn')), findsOneWidget);
+      expect(
+        t.getSize(find.byKey(const Key('chat.topBar'))).height,
+        DelveDesktop.paneHeader,
+      );
+      expect(find.byKey(const Key('inspector.chat')), findsOneWidget);
+      expect(find.byKey(const Key('inspector.run.line')), findsOneWidget);
+      expect(find.byKey(const Key('pane.inspector.toggle')), findsOneWidget);
+      // docked: no close button of its own
+      expect(find.byKey(const Key('pane.inspector.close')), findsNothing);
+
+      await t.tap(find.byKey(const Key('inspector.tab.usage')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('usage.inspector')), findsOneWidget);
+
+      await _ctrl(t, LogicalKeyboardKey.bracketRight);
+      expect(find.byKey(const Key('inspector.run')), findsOneWidget);
+      await _ctrl(t, LogicalKeyboardKey.keyU);
+      expect(find.byKey(const Key('usage.inspector')), findsOneWidget);
+
+      // Ctrl+I closes it, the toggle opens it again
+      await _ctrl(t, LogicalKeyboardKey.keyI);
+      expect(find.byKey(const Key('inspector.chat')), findsNothing);
+      await t.tap(find.byKey(const Key('pane.inspector.toggle')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('inspector.chat')), findsOneWidget);
+    });
+
+    testWidgets('Ctrl+F opens the list search', (t) async {
+      await pumpDelve(t, caps: _linux, window: _frame, before: seedFinished);
+      expect(find.byKey(const Key('chats.searchField')), findsNothing);
+      await _ctrl(t, LogicalKeyboardKey.keyF);
+      expect(find.byKey(const Key('chats.searchField')), findsOneWidget);
+    });
+
+    testWidgets('the pane header is 48 on the desktop', (t) async {
+      await pumpDelve(t, caps: _linux, window: _frame);
+      await _ctrl(t, LogicalKeyboardKey.digit4);
+      expect(
+        t.getSize(find.byKey(const Key('page.header'))).height,
+        DelveDesktop.paneHeader,
+      );
+    });
+
+    test('the inspector\'s tabs cycle', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      expect(c.read(chatInspectorTabProvider), ChatInspectorTab.run);
+      c.read(chatInspectorTabProvider.notifier).next();
+      expect(c.read(chatInspectorTabProvider), ChatInspectorTab.usage);
+      c.read(chatInspectorTabProvider.notifier).next();
+      expect(c.read(chatInspectorTabProvider), ChatInspectorTab.run);
     });
   });
 }

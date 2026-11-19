@@ -4157,5 +4157,12 @@
   },
   "desktopStatusLlamaStopped": "llama-server stopped",
   "desktopStatusSlotBusy": "slot busy",
-  "desktopStatusSlotIdle": "slot idle"
+  "desktopStatusSlotIdle": "slot idle",
+  "desktopRowMore": "More actions",
+  "desktopRowOpen": "Open",
+  "desktopInspectorRun": "Run",
+  "desktopInspectorNoRun": "No run in this chat yet",
+  "desktopInspectorNoSteps": "No tool steps in this run",
+  "desktopInspectorNoOutput": "No output",
+  "desktopInspectorContext": "Context"
 }

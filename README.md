@@ -439,7 +439,11 @@ of its own (`lib/app/desktop_router.dart`) with the phone's paths (`Routes`); `r
 is the one in use and a resize across 720 swaps them, keeping the place. Shared screens ask
 `DesktopLayout.of(context)`; `context.open(…)` pushes on the phone and goes on the desktop.
 Keys: Ctrl+2…0 areas, Ctrl+N / Ctrl+Shift+N new Agent / General chat, Ctrl+, Settings,
-Ctrl+B list, Ctrl+I inspector, Esc an overlay pane.
+Ctrl+B list, Ctrl+I inspector, Ctrl+] its next tab, Ctrl+U a chat's Usage, Ctrl+F the list's
+search, Esc an overlay pane. Chats: desktop rows (hover Archive and menu, right-click menu), the
+chat in a 720 reading column under a 48 pane header, an agent chat's inspector (Run: steps,
+the selected step's output, a waiting approval, context; Usage), Enter sends and Shift+Enter
+is a new line.
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.

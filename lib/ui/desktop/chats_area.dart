@@ -7,6 +7,7 @@ import '../../theme/delve_theme.dart';
 import '../screens/chats_screen.dart';
 import '../widgets/page_scaffolds.dart';
 import 'areas.dart';
+import 'chat_inspector.dart';
 import 'panes.dart';
 
 /// The chat a Chats [location] shows: `c:<id>` (agent), `g:<id>` (General),
@@ -26,8 +27,9 @@ String? selectedChat(String location) {
   return null;
 }
 
-/// Chats in the desktop layout (L2a): the chat list in the list column, the
-/// chat in the content. Below 900 the list is an overlay: open while no
+/// Chats in the desktop layout (L2a, L2b): the chat list in the list
+/// column, the chat in the content, an agent chat's run and Usage in the
+/// inspector. Below 900 the list is an overlay: open while no
 /// chat is selected, closed once one is.
 class ChatsArea extends ConsumerStatefulWidget {
   const ChatsArea({super.key, required this.location, required this.content});
@@ -60,11 +62,25 @@ class _ChatsAreaState extends ConsumerState<ChatsArea> {
   }
 
   @override
-  Widget build(BuildContext context) => DesktopPanes(
-    area: _area,
-    list: ChatsScreen(selected: selectedChat(widget.location)),
-    content: widget.content,
-  );
+  Widget build(BuildContext context) {
+    final selected = selectedChat(widget.location);
+    // an agent chat has an inspector (its run and Usage); General chats,
+    // a new chat and the empty pane have none
+    final agentChat = selected != null && selected.startsWith('c:')
+        ? selected.substring(2)
+        : null;
+    return DesktopPanes(
+      area: _area,
+      list: ChatsScreen(selected: selected),
+      content: widget.content,
+      inspector: agentChat == null
+          ? null
+          : ChatInspector(
+              key: ValueKey('inspector.$agentChat'),
+              conversationId: agentChat,
+            ),
+    );
+  }
 }
 
 /// The content while no chat is selected.

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/layout.dart';
 import '../../general/general_database.dart';
 import '../../general/general_providers.dart';
 import '../../l10n/app_localizations.dart';
@@ -12,6 +13,7 @@ import '../chat/chat_items.dart';
 import '../chat/markdown.dart';
 import '../chat/thinking_block.dart';
 import '../chat/usage.dart' show DashedRing, contextWarnPct;
+import '../desktop/desktop_row.dart';
 import '../format.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
@@ -1032,11 +1034,19 @@ class GeneralListRow extends StatelessWidget {
     required this.modelName,
     required this.onTap,
     this.background,
+    this.selected = false,
+    this.onArchive,
   });
 
   final GeneralChatRow chat;
   final String modelName;
   final VoidCallback onTap;
+
+  /// The desktop list column (L2b): the open chat's row.
+  final bool selected;
+
+  /// The desktop's hover action and menu entry; null: none.
+  final VoidCallback? onArchive;
 
   /// The row's surface (the desktop's list column and its selected row);
   /// null: the page colour.
@@ -1048,6 +1058,9 @@ class GeneralListRow extends StatelessWidget {
     final cs = context.colors;
     final d = context.delve;
     final title = chat.title?.trim();
+    if (DesktopLayout.of(context)) {
+      return _desktop(context, l, d, title);
+    }
     return Material(
       color: background ?? cs.surface,
       child: InkWell(
@@ -1122,6 +1135,93 @@ class GeneralListRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// The desktop list column's row (design 27): title and time, then the
+  /// General marker and the cost; hover: Archive and the menu.
+  Widget _desktop(
+    BuildContext context,
+    AppLocalizations l,
+    DelveColors d,
+    String? title,
+  ) {
+    final archive = onArchive;
+    return DesktopRowFrame(
+      key: const Key('chats.row.general'),
+      selected: selected,
+      onTap: onTap,
+      moreTooltip: l.desktopRowMore,
+      actions: [
+        if (archive != null)
+          DesktopRowAction(
+            key: const Key('chats.row.archive'),
+            icon: DelveIcons.archive,
+            tooltip: l.chatsArchive,
+            onPressed: archive,
+          ),
+      ],
+      menu: [
+        DesktopMenuItem(
+          icon: DelveIcons.openLink,
+          label: l.desktopRowOpen,
+          onSelected: onTap,
+        ),
+        if (archive != null)
+          DesktopMenuItem(
+            icon: DelveIcons.archive,
+            label: l.chatsArchive,
+            onSelected: archive,
+          ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title == null || title.isEmpty ? l.newChat : title,
+                  key: const Key('chats.title'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: DelveDesktopText.rowTitle.copyWith(
+                    color: context.colors.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(width: DelveTokens.space2),
+              Text(
+                listTime(chat.updatedAt, DateTime.now()),
+                key: const Key('chats.time'),
+                style: DelveDesktopText.meta.copyWith(color: d.textMuted),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            key: const Key('chats.marker.general'),
+            children: [
+              SymbolIcon(DelveIcons.cloud, size: 13, color: d.infoFg),
+              const SizedBox(width: DelveTokens.space1),
+              Flexible(
+                child: Text(
+                  l.generalMarker(modelName),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: DelveDesktopText.meta.copyWith(color: d.infoFg),
+                ),
+              ),
+              if (chat.costUsd >= kCostHiddenBelow)
+                Text(
+                  ' · ${usdText(chat.costUsd)}',
+                  key: const Key('chats.cost'),
+                  style: DelveText.monoSmall.copyWith(color: d.textMuted),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

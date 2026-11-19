@@ -18,6 +18,7 @@ import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../chat/attachments.dart' show AttachSource;
 import '../chat/composer.dart';
+import '../desktop/panes.dart';
 import '../general/general_format.dart';
 import '../general/general_usage.dart';
 import '../general/general_widgets.dart';
@@ -461,19 +462,27 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
         ? images.length
         : 0;
 
+    final desktop = DesktopLayout.of(context);
     return Scaffold(
       appBar: AppBar(
         key: const Key('general.topBar'),
         // the page colour, as the agent chat's bar
         backgroundColor: context.colors.surface,
         notificationPredicate: (_) => false,
+        // the desktop's 48 dp pane header (L2b)
+        toolbarHeight: desktop ? DelveDesktop.paneHeader : null,
         leading: pageBackButton(context),
+        titleSpacing: desktop ? DelveTokens.space4 : null,
         title: Text(
           shownTitle,
           key: const Key('general.title'),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: context.text.titleMedium,
+          style: desktop
+              ? DelveDesktopText.paneTitle.copyWith(
+                  color: context.colors.onSurface,
+                )
+              : context.text.titleMedium,
         ),
         actions: [
           ModelChip(
@@ -536,72 +545,74 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
             const SizedBox(width: DelveTokens.space3),
         ],
       ),
-      body: Column(
-        children: [
-          if (chatId == null && widget.kindSwitch != null) widget.kindSwitch!,
-          Expanded(
-            child: UnderBarFade(
-              fadeKey: const Key('general.fade'),
-              child: items.isEmpty
-                  ? (noKey ? const SizedBox.shrink() : _Intro(model: name))
-                  : ListView.separated(
-                      key: const Key('general.list'),
-                      reverse: true,
-                      padding: const EdgeInsets.fromLTRB(
-                        DelveTokens.space4,
-                        UnderBarFade.height,
-                        DelveTokens.space4,
-                        DelveTokens.space4,
+      body: ReadingColumn(
+        child: Column(
+          children: [
+            if (chatId == null && widget.kindSwitch != null) widget.kindSwitch!,
+            Expanded(
+              child: UnderBarFade(
+                fadeKey: const Key('general.fade'),
+                child: items.isEmpty
+                    ? (noKey ? const SizedBox.shrink() : _Intro(model: name))
+                    : ListView.separated(
+                        key: const Key('general.list'),
+                        reverse: true,
+                        padding: const EdgeInsets.fromLTRB(
+                          DelveTokens.space4,
+                          UnderBarFade.height,
+                          DelveTokens.space4,
+                          DelveTokens.space4,
+                        ),
+                        itemCount: items.length,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: DelveTokens.space4),
+                        itemBuilder: (_, i) => items[items.length - 1 - i],
                       ),
-                      itemCount: items.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: DelveTokens.space4),
-                      itemBuilder: (_, i) => items[items.length - 1 - i],
-                    ),
+              ),
             ),
-          ),
-          if (warning != null)
-            _Banner(
-              child: StatusBanner(
-                key: const Key('general.providerWarning'),
-                kind: StatusKind.warn,
-                icon: DelveIcons.shield,
-                text: l.generalProviderWarning(warning.provider ?? '?'),
-                actionLabel: l.generalAcknowledge,
-                onAction: () => unawaited(
-                  ref
-                      .read(generalChatServiceProvider)
-                      .acknowledgeWarning(warning.id),
+            if (warning != null)
+              _Banner(
+                child: StatusBanner(
+                  key: const Key('general.providerWarning'),
+                  kind: StatusKind.warn,
+                  icon: DelveIcons.shield,
+                  text: l.generalProviderWarning(warning.provider ?? '?'),
+                  actionLabel: l.generalAcknowledge,
+                  onAction: () => unawaited(
+                    ref
+                        .read(generalChatServiceProvider)
+                        .acknowledgeWarning(warning.id),
+                  ),
                 ),
               ),
-            ),
-          if (unreadImages > 0 && warning == null)
-            _Banner(
-              child: StatusBanner(
-                key: const Key('general.noImages'),
-                kind: StatusKind.info,
-                icon: DelveIcons.imageGone,
-                text: l.generalNoImages(name, unreadImages),
+            if (unreadImages > 0 && warning == null)
+              _Banner(
+                child: StatusBanner(
+                  key: const Key('general.noImages'),
+                  kind: StatusKind.info,
+                  icon: DelveIcons.imageGone,
+                  text: l.generalNoImages(name, unreadImages),
+                ),
               ),
-            ),
-          if (noKey)
-            _NoKey(onAdd: () => context.open(Routes.generalSettings))
-          else
-            Composer(
-              controller: _text,
-              onSend: (text) => _send(text, modelId),
-              onStop: streaming && chatId != null
-                  ? () => ref.read(generalChatServiceProvider).stop(chatId)
-                  : null,
-              leading: [?pill],
-              attachments: _attachments,
-              onAdd: hasKey
-                  ? () => unawaited(_addImages(model, modelId))
-                  : null,
-              hintText: l.generalComposerHint(name),
-              sendBlocked: streaming || warning != null || !usable || !hasKey,
-            ),
-        ],
+            if (noKey)
+              _NoKey(onAdd: () => context.open(Routes.generalSettings))
+            else
+              Composer(
+                controller: _text,
+                onSend: (text) => _send(text, modelId),
+                onStop: streaming && chatId != null
+                    ? () => ref.read(generalChatServiceProvider).stop(chatId)
+                    : null,
+                leading: [?pill],
+                attachments: _attachments,
+                onAdd: hasKey
+                    ? () => unawaited(_addImages(model, modelId))
+                    : null,
+                hintText: l.generalComposerHint(name),
+                sendBlocked: streaming || warning != null || !usable || !hasKey,
+              ),
+          ],
+        ),
       ),
     );
   }

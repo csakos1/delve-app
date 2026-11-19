@@ -21,7 +21,6 @@ import '../widgets/page_scaffolds.dart';
 const Duration kStatusBarPoll = Duration(seconds: 15);
 
 /// "4:05": minutes and seconds of [d] (never negative).
-@visibleForTesting
 String clockText(Duration d) {
   final s = d.isNegative ? 0 : d.inSeconds;
   return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';

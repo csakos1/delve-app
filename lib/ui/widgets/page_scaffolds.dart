@@ -53,6 +53,7 @@ class _TopLevelPageState extends State<TopLevelPage> {
   @override
   Widget build(BuildContext context) {
     final cs = context.colors;
+    final desktop = DesktopLayout.of(context);
     Widget body = MediaQuery.removePadding(
       context: context,
       removeTop: true,
@@ -83,28 +84,51 @@ class _TopLevelPageState extends State<TopLevelPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 widget.bar ??
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        DelveTokens.space4,
-                        DelveTokens.space4,
-                        DelveTokens.space2,
-                        DelveTokens.space2,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Semantics(
-                              header: true,
-                              child: Text(
-                                widget.title,
-                                style: context.text.headlineMedium,
-                              ),
+                    (desktop
+                        // the desktop's 48 dp pane header (L2b)
+                        ? Container(
+                            height: DelveDesktop.paneHeader,
+                            padding: const EdgeInsets.only(left: 16, right: 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Semantics(
+                                    header: true,
+                                    child: Text(
+                                      widget.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: DelveDesktopText.paneTitle
+                                          .copyWith(color: cs.onSurface),
+                                    ),
+                                  ),
+                                ),
+                                ...widget.actions,
+                              ],
                             ),
-                          ),
-                          ...widget.actions,
-                        ],
-                      ),
-                    ),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              DelveTokens.space4,
+                              DelveTokens.space4,
+                              DelveTokens.space2,
+                              DelveTokens.space2,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Semantics(
+                                    header: true,
+                                    child: Text(
+                                      widget.title,
+                                      style: context.text.headlineMedium,
+                                    ),
+                                  ),
+                                ),
+                                ...widget.actions,
+                              ],
+                            ),
+                          )),
                 ?widget.below,
               ],
             ),

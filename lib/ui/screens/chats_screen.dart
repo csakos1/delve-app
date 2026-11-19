@@ -149,11 +149,12 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     final l = AppLocalizations.of(context);
     final cs = context.colors;
     final desktop = DesktopLayout.of(context);
-    Color? rowColour(String key) => !desktop
-        ? null
-        : widget.selected == key
-        ? cs.surfaceContainerHigh
-        : cs.surfaceContainerLow;
+    if (desktop) {
+      // Ctrl+F (L2b): the search field opens
+      ref.listen(desktopFindProvider, (_, _) {
+        if (!_searching) _toggleSearch();
+      });
+    }
     final items = ref.watch(chatListProvider(false)).value;
     final status =
         ref.watch(connectionStatusProvider).value ?? ConnectionStatus.initial;
@@ -270,7 +271,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
             if (g != null) {
               return Dismissible(
                 key: ValueKey('general.${g.id}'),
-                direction: DismissDirection.endToStart,
+                // a mouse archives with the hover action instead
+                direction: desktop
+                    ? DismissDirection.none
+                    : DismissDirection.endToStart,
                 confirmDismiss: (_) => _archiveGeneral(g.id),
                 background: SwipeBackground(
                   icon: DelveIcons.archive,
@@ -279,7 +283,10 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                 child: GeneralListRow(
                   chat: g,
                   modelName: modelShortName(g.modelId, models[g.modelId]),
-                  background: rowColour('g:${g.id}'),
+                  selected: widget.selected == 'g:${g.id}',
+                  onArchive: desktop
+                      ? () => unawaited(_archiveGeneral(g.id))
+                      : null,
                   onTap: () => context.open(Routes.generalChat(g.id)),
                 ),
               );
@@ -288,7 +295,9 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
             final id = item.conversation.id;
             return Dismissible(
               key: ValueKey('chat.$id'),
-              direction: DismissDirection.endToStart,
+              direction: desktop
+                  ? DismissDirection.none
+                  : DismissDirection.endToStart,
               confirmDismiss: (_) => _archive(id),
               background: SwipeBackground(
                 icon: DelveIcons.archive,
@@ -296,7 +305,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
               ),
               child: ChatRow(
                 item: item,
-                background: rowColour('c:$id'),
+                selected: widget.selected == 'c:$id',
+                onArchive: desktop ? () => unawaited(_archive(id)) : null,
                 onTap: () => context.open(Routes.chat(id)),
               ),
             );

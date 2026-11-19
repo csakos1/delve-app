@@ -8480,6 +8480,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'slot idle'**
   String get desktopStatusSlotIdle;
+
+  /// No description provided for @desktopRowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get desktopRowMore;
+
+  /// No description provided for @desktopRowOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get desktopRowOpen;
+
+  /// No description provided for @desktopInspectorRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Run'**
+  String get desktopInspectorRun;
+
+  /// No description provided for @desktopInspectorNoRun.
+  ///
+  /// In en, this message translates to:
+  /// **'No run in this chat yet'**
+  String get desktopInspectorNoRun;
+
+  /// No description provided for @desktopInspectorNoSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'No tool steps in this run'**
+  String get desktopInspectorNoSteps;
+
+  /// No description provided for @desktopInspectorNoOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'No output'**
+  String get desktopInspectorNoOutput;
+
+  /// No description provided for @desktopInspectorContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Context'**
+  String get desktopInspectorContext;
 }
 
 class _AppLocalizationsDelegate

@@ -41,6 +41,17 @@ final desktopLayoutProvider = NotifierProvider<DesktopLayoutMode, bool>(
   DesktopLayoutMode.new,
 );
 
+/// Ctrl+F in the desktop layout: each press counts up; the open list's
+/// search (Chats) listens and opens its field.
+class DesktopFind extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void request() => state++;
+}
+
+final desktopFindProvider = NotifierProvider<DesktopFind, int>(DesktopFind.new);
+
 /// Marks everything under the desktop shell: screens shared with the phone
 /// ask [DesktopLayout.of] where they run (no back arrow where nothing is
 /// pushed; [DelveNav.open] goes instead of pushing).

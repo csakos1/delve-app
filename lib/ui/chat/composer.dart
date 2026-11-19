@@ -1,5 +1,9 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../app/layout.dart';
 import '../../attachments/composer_attachments.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
@@ -134,6 +138,20 @@ class _ComposerState extends State<Composer> {
     }
   }
 
+  /// The desktop (L2b): Enter sends, Shift+Enter is a new line (the phone's
+  /// Enter stays a new line; Send is the button).
+  Widget _desktopKeys(BuildContext context, Widget field) {
+    if (!DesktopLayout.of(context)) return field;
+    void send() => unawaited(_send());
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.enter): send,
+        const SingleActivator(LogicalKeyboardKey.numpadEnter): send,
+      },
+      child: field,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -229,25 +247,28 @@ class _ComposerState extends State<Composer> {
               children: [
                 if (attachments != null)
                   DraftAttachmentStrip(controller: attachments),
-                TextField(
-                  key: const Key('composer.field'),
-                  controller: _controller,
-                  minLines: 1,
-                  maxLines: 6,
-                  keyboardType: TextInputType.multiline,
-                  textCapitalization: TextCapitalization.sentences,
-                  style: context.text.bodyLarge,
-                  decoration: InputDecoration(
-                    hintText: widget.hintText ?? l.composerHint,
-                    hintStyle: context.text.bodyLarge!.copyWith(
-                      color: d.textMuted,
+                _desktopKeys(
+                  context,
+                  TextField(
+                    key: const Key('composer.field'),
+                    controller: _controller,
+                    minLines: 1,
+                    maxLines: 6,
+                    keyboardType: TextInputType.multiline,
+                    textCapitalization: TextCapitalization.sentences,
+                    style: context.text.bodyLarge,
+                    decoration: InputDecoration(
+                      hintText: widget.hintText ?? l.composerHint,
+                      hintStyle: context.text.bodyLarge!.copyWith(
+                        color: d.textMuted,
+                      ),
+                      filled: false,
+                      isDense: true,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
                     ),
-                    filled: false,
-                    isDense: true,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
                   ),
                 ),
                 Row(

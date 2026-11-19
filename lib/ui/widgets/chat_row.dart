@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../app/layout.dart';
 import '../../data/db/database.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_row.dart';
 import '../format.dart';
 import 'page_scaffolds.dart';
 
@@ -17,10 +19,18 @@ class ChatRow extends StatelessWidget {
     required this.item,
     required this.onTap,
     this.background,
+    this.selected = false,
+    this.onArchive,
   });
 
   final ChatListItem item;
   final VoidCallback onTap;
+
+  /// The desktop list column (L2b): the open chat's row.
+  final bool selected;
+
+  /// The desktop's hover action and menu entry; null: none.
+  final VoidCallback? onArchive;
 
   /// The row's surface (the desktop's list column and its selected row);
   /// null: the page colour.
@@ -44,6 +54,10 @@ class ChatRow extends StatelessWidget {
 
     final marker = _marker(context, l);
     final pct = c.contextPct;
+
+    if (DesktopLayout.of(context)) {
+      return _desktop(context, l, marker, pct);
+    }
 
     return Material(
       color: background ?? cs.surface,
@@ -128,6 +142,102 @@ class ChatRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// The desktop list column's row (design 27): two lines in 52 px – the
+  /// title (13 / 18) and the time, then the context fill and the marker;
+  /// hover: Archive and the menu.
+  Widget _desktop(
+    BuildContext context,
+    AppLocalizations l,
+    Widget? marker,
+    double? pct,
+  ) {
+    final d = context.delve;
+    final c = item.conversation;
+    final archive = onArchive;
+    return DesktopRowFrame(
+      key: const Key('chats.row'),
+      selected: selected,
+      onTap: onTap,
+      moreTooltip: l.desktopRowMore,
+      actions: [
+        if (archive != null)
+          DesktopRowAction(
+            key: const Key('chats.row.archive'),
+            icon: DelveIcons.archive,
+            tooltip: l.chatsArchive,
+            onPressed: archive,
+          ),
+      ],
+      menu: [
+        DesktopMenuItem(
+          icon: DelveIcons.openLink,
+          label: l.desktopRowOpen,
+          onSelected: onTap,
+        ),
+        if (archive != null)
+          DesktopMenuItem(
+            key: const Key('chats.menu.archive'),
+            icon: DelveIcons.archive,
+            label: l.chatsArchive,
+            onSelected: archive,
+          ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        titleOf(item, l.newChat),
+                        key: const Key('chats.title'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: DelveDesktopText.rowTitle.copyWith(
+                          color: context.colors.onSurface,
+                        ),
+                      ),
+                    ),
+                    if (c.thinking) ...[
+                      const SizedBox(width: DelveTokens.space1),
+                      SymbolIcon(
+                        DelveIcons.thinking,
+                        key: const Key('chats.thinking'),
+                        size: 14,
+                        color: d.textMuted,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: DelveTokens.space2),
+              Text(
+                listTime(c.updatedAt, DateTime.now()),
+                key: const Key('chats.time'),
+                style: DelveDesktopText.meta.copyWith(color: d.textMuted),
+              ),
+            ],
+          ),
+          if (pct != null || marker != null) ...[
+            const SizedBox(height: 6),
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: DelveTokens.space3,
+              runSpacing: DelveTokens.space1,
+              children: [
+                if (pct != null) ContextFill(pct: pct, warn: c.contextWarn),
+                ?marker,
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }

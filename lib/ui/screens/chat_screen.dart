@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../api/models/models.dart';
 import '../../api/protocol.dart';
 import '../../app/chat.dart';
+import '../../app/layout.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../app/session.dart';
@@ -28,6 +29,9 @@ import '../chat/attachments.dart';
 import '../chat/chat_items.dart';
 import '../chat/composer.dart';
 import '../chat/usage.dart';
+import '../desktop/areas.dart';
+import '../desktop/chat_inspector.dart';
+import '../desktop/panes.dart';
 import '../format.dart';
 import '../general/general_widgets.dart'
     show ChatKind, ChatKindSwitch, GeneralThinkingPill, chatKindOf;
@@ -442,7 +446,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (kind == null) {
         // one frame, while the remembered choice is read
         return Scaffold(
-          appBar: _ChatAppBar(title: AppLocalizations.of(context).newChat),
+          appBar: _ChatAppBar(
+            title: AppLocalizations.of(context).newChat,
+            desktop: DesktopLayout.of(context),
+          ),
         );
       }
       if (kind == ChatKind.general) {
@@ -512,32 +519,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         : null;
 
     return Scaffold(
-      appBar: _ChatAppBar(title: l.newChat),
-      body: Column(
-        children: [
-          if (_offersKinds && sent == null) _kindSwitch(ChatKind.agent),
-          Expanded(
-            child: UnderBarFade(
-              fadeKey: const Key('chat.fade'),
-              child: sent == null
-                  ? _NewChatIntro(host: host.split('.').first)
-                  : ListView(
-                      reverse: true,
-                      padding: _listPadding,
-                      children: [sent],
-                    ),
+      appBar: _ChatAppBar(title: l.newChat, desktop: DesktopLayout.of(context)),
+      body: ReadingColumn(
+        child: Column(
+          children: [
+            if (_offersKinds && sent == null) _kindSwitch(ChatKind.agent),
+            Expanded(
+              child: UnderBarFade(
+                fadeKey: const Key('chat.fade'),
+                child: sent == null
+                    ? _NewChatIntro(host: host.split('.').first)
+                    : ListView(
+                        reverse: true,
+                        padding: _listPadding,
+                        children: [sent],
+                      ),
+              ),
             ),
-          ),
-          if (widget.draft?.watchHint ?? false)
-            ValueListenableBuilder<TextEditingValue>(
-              valueListenable: _text,
-              // gone once something is typed or sent
-              builder: (_, value, _) => value.text.isEmpty && sent == null
-                  ? _WatchHint(onPick: _fillExample)
-                  : const SizedBox.shrink(),
-            ),
-          _composer(connected: connected, thinking: _newThinking),
-        ],
+            if (widget.draft?.watchHint ?? false)
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _text,
+                // gone once something is typed or sent
+                builder: (_, value, _) => value.text.isEmpty && sent == null
+                    ? _WatchHint(onPick: _fillExample)
+                    : const SizedBox.shrink(),
+              ),
+            _composer(connected: connected, thinking: _newThinking),
+          ],
+        ),
       ),
     );
   }
@@ -558,6 +567,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Widget _buildChat(BuildContext context, String id) {
     final l = AppLocalizations.of(context);
+    final desktop = DesktopLayout.of(context);
     final data = ref.watch(chatProvider(id)).value;
     final live = ref.watch(liveRunsProvider.select((m) => m[id]));
     final connected = ref.watch(
@@ -594,62 +604,78 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return Scaffold(
       appBar: _ChatAppBar(
         title: title,
+        desktop: desktop,
         actions: [
           if (conversation != null)
             Padding(
-              // the chip ends on the page's 16 dp gutter
-              padding: const EdgeInsets.only(right: DelveTokens.space4),
+              // the chip ends on the page's 16 dp gutter (the desktop: the
+              // inspector toggle follows)
+              padding: EdgeInsets.only(
+                right: desktop ? DelveTokens.space1 : DelveTokens.space4,
+              ),
               child: ContextChip(
                 numbers: UsageNumbers.of(conversation, live?.context),
-                onTap: () => unawaited(_openUsage(id, title)),
+                // the desktop: Usage is the inspector's second tab
+                onTap: desktop
+                    ? () => showChatInspectorTab(
+                        ref,
+                        context,
+                        DesktopArea.chats.name,
+                        ChatInspectorTab.usage,
+                      )
+                    : () => unawaited(_openUsage(id, title)),
               ),
             ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: UnderBarFade(
-              fadeKey: const Key('chat.fade'),
-              child: ListView.separated(
-                key: const Key('chat.list'),
-                reverse: true,
-                padding: _listPadding,
-                itemCount: items.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(height: DelveTokens.space3),
-                // reversed: the newest item sits at the bottom, next to the
-                // composer, and stays there while text streams in
-                itemBuilder: (_, i) => items[items.length - 1 - i],
+      body: ReadingColumn(
+        child: Column(
+          children: [
+            Expanded(
+              child: UnderBarFade(
+                fadeKey: const Key('chat.fade'),
+                child: ListView.separated(
+                  key: const Key('chat.list'),
+                  reverse: true,
+                  padding: _listPadding,
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: DelveTokens.space3),
+                  // reversed: the newest item sits at the bottom, next to the
+                  // composer, and stays there while text streams in
+                  itemBuilder: (_, i) => items[items.length - 1 - i],
+                ),
               ),
             ),
-          ),
-          if (conversation != null && conversation.contextWarn)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DelveTokens.space3,
-                0,
-                DelveTokens.space3,
-                DelveTokens.space2,
+            if (conversation != null && conversation.contextWarn)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DelveTokens.space3,
+                  0,
+                  DelveTokens.space3,
+                  DelveTokens.space2,
+                ),
+                child: StatusBanner(
+                  key: const Key('chat.contextWarn'),
+                  kind: StatusKind.warn,
+                  icon: DelveIcons.warning,
+                  text: l.chatContextWarn(
+                    (conversation.contextPct ?? 0).round(),
+                  ),
+                  actionLabel: l.newChat,
+                  onAction: () => context.pushReplacement(Routes.newChat),
+                ),
               ),
-              child: StatusBanner(
-                key: const Key('chat.contextWarn'),
-                kind: StatusKind.warn,
-                icon: DelveIcons.warning,
-                text: l.chatContextWarn((conversation.contextPct ?? 0).round()),
-                actionLabel: l.newChat,
-                onAction: () => context.pushReplacement(Routes.newChat),
-              ),
+            _composer(
+              connected: connected,
+              onStop: stopTarget == null
+                  ? null
+                  : () => unawaited(_stop(stopTarget.runId)),
+              queued: data?.queuedCount ?? 0,
+              thinking: _thinkingPending ?? conversation?.thinking ?? false,
             ),
-          _composer(
-            connected: connected,
-            onStop: stopTarget == null
-                ? null
-                : () => unawaited(_stop(stopTarget.runId)),
-            queued: data?.queuedCount ?? 0,
-            thinking: _thinkingPending ?? conversation?.thinking ?? false,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -738,28 +764,44 @@ const _listPadding = EdgeInsets.fromLTRB(
 /// it), back, title (titleMedium, one line) and the context chip on the
 /// right (an existing chat).
 class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const _ChatAppBar({required this.title, this.actions = const []});
+  const _ChatAppBar({
+    required this.title,
+    this.actions = const [],
+    this.desktop = false,
+  });
 
   final String title;
   final List<Widget> actions;
 
+  /// The desktop's 48 dp pane header (L2b): Jost 16, the inspector toggle
+  /// last.
+  final bool desktop;
+
   @override
-  Size get preferredSize => const Size.fromHeight(DelveTokens.topBar);
+  Size get preferredSize =>
+      Size.fromHeight(desktop ? DelveDesktop.paneHeader : DelveTokens.topBar);
 
   @override
   Widget build(BuildContext context) => AppBar(
     key: const Key('chat.topBar'),
     backgroundColor: context.colors.surface,
     notificationPredicate: (_) => false,
+    toolbarHeight: desktop ? DelveDesktop.paneHeader : null,
     leading: pageBackButton(context),
+    titleSpacing: desktop ? DelveTokens.space4 : null,
     title: Text(
       title,
       key: const Key('chat.title'),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: context.text.titleMedium,
+      style: desktop
+          ? DelveDesktopText.paneTitle.copyWith(color: context.colors.onSurface)
+          : context.text.titleMedium,
     ),
-    actions: actions,
+    actions: [
+      ...actions,
+      if (desktop) ...[const InspectorToggle(), const SizedBox(width: 10)],
+    ],
   );
 }
 

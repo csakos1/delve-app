@@ -5458,4 +5458,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopStatusSlotIdle => 'slot idle';
+
+  @override
+  String get desktopRowMore => 'More actions';
+
+  @override
+  String get desktopRowOpen => 'Open';
+
+  @override
+  String get desktopInspectorRun => 'Run';
+
+  @override
+  String get desktopInspectorNoRun => 'No run in this chat yet';
+
+  @override
+  String get desktopInspectorNoSteps => 'No tool steps in this run';
+
+  @override
+  String get desktopInspectorNoOutput => 'No output';
+
+  @override
+  String get desktopInspectorContext => 'Context';
 }
