@@ -14,14 +14,17 @@ import 'package:delve/ui/desktop/areas.dart';
 import 'package:delve/ui/desktop/chat_find.dart';
 import 'package:delve/ui/desktop/chat_inspector.dart';
 import 'package:delve/ui/desktop/chats_area.dart';
+import 'package:delve/ui/desktop/desktop_page.dart';
 import 'package:delve/ui/desktop/desktop_shell.dart';
 import 'package:delve/ui/desktop/intake.dart';
 import 'package:delve/ui/desktop/panes.dart';
 import 'package:delve/ui/desktop/status_bar.dart';
+import 'package:delve/ui/screens/approvals_screen.dart';
 import 'package:delve/ui/screens/archived_chats_screen.dart';
 import 'package:delve/ui/screens/chat_screen.dart';
 import 'package:delve/ui/screens/chats_screen.dart';
 import 'package:delve/ui/screens/dashboard_screen.dart';
+import 'package:delve/ui/screens/observability_screen.dart';
 import 'package:delve/ui/screens/system_screen.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/gestures.dart';
@@ -30,12 +33,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'approvals_screen_test.dart' show approval, cleanup, seedChats;
 import 'attachments_test.dart'
     show FakeAttachmentApi, FakePicker, FakePrep, file, photo, png;
 import 'chat_screen_test.dart'
     show FakeChatActions, conversation, liveStatus, seedFinished, seedRunning;
 import 'support/fake_openrouter.dart' show testOpenRouterKey;
-import 'support/fake_server.dart' show FakeReply;
+import 'support/fake_server.dart' show FakeReply, FakeServer;
 import 'support/harness.dart';
 
 final _linux = PlatformCaps.linux(host: 'archlinux');
@@ -531,10 +535,11 @@ void main() {
     });
 
     testWidgets('the pane header is 48 on the desktop', (t) async {
+      // the Chats list's (the Dashboard has its own 66 px one – L2c1)
       await pumpDelve(t, caps: _linux, window: _frame);
-      await _ctrl(t, LogicalKeyboardKey.digit4);
+      await _ctrl(t, LogicalKeyboardKey.digit2);
       expect(
-        t.getSize(find.byKey(const Key('page.header'))).height,
+        t.getSize(find.byKey(const Key('page.header.bar'))).height,
         DelveDesktop.paneHeader,
       );
     });
@@ -1097,6 +1102,324 @@ void main() {
         find.byKey(const Key('composer.field')),
       );
       expect(field.focusNode!.hasFocus, isTrue);
+    });
+  });
+
+  group('Dashboard, System and Observability on the desktop (L2c1)', () {
+    Future<void> frames(WidgetTester t, [int n = 10]) async {
+      for (var i = 0; i < n; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+    }
+
+    /// The desktop at [window] with [approvals] stored; the Dashboard open.
+    Future<TestEnv> dashboard(
+      WidgetTester t, {
+      List<Approval> approvals = const [],
+      Size window = _frame,
+    }) async {
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: window,
+        status: liveStatus,
+        settle: false,
+        before: (env) async {
+          await seedChats(env);
+          for (final a in approvals) {
+            await env.db.putApproval(a);
+          }
+        },
+      );
+      await _ctrlNow(t, LogicalKeyboardKey.digit4);
+      await frames(t);
+      return env;
+    }
+
+    Finder row(String id) => find.byKey(ValueKey('dashboard.approval.$id'));
+    Finder inRow(String id, Finder f) =>
+        find.descendant(of: row(id), matching: f);
+
+    void answers(TestEnv env, String id, String status, String choice) =>
+        env.server.on(
+          'POST',
+          '/api/v1/approvals/$id',
+          (r) => FakeReply(
+            200,
+            approval(
+              id,
+              status,
+              decidedBy: 'pixel',
+              choice: choice,
+              answeredAgo: Duration.zero,
+            ).toJson(),
+          ),
+        );
+
+    test('columns: 1 below 820, 2 below 1100, 3 below 1920, then 4', () {
+      expect(dashboardColumns(800), 1);
+      expect(dashboardColumns(960), 2);
+      expect(dashboardColumns(1270), 3);
+      expect(dashboardColumns(1440), 3);
+      expect(dashboardColumns(2560), 4);
+      expect(gridColumns(1000), 2);
+      expect(gridColumns(1440), 3);
+      final cells = [for (var i = 0; i < 5; i++) Text('$i')];
+      expect(
+        [
+          for (final c in dealColumns(cells, 3))
+            [for (final w in c) (w as Text).data],
+        ],
+        [
+          ['0', '3'],
+          ['1', '4'],
+          ['2'],
+        ],
+      );
+    });
+
+    testWidgets('the 66 px header with the date; “Needs approval” over the '
+        'cards, newest first, a late one in info', (t) async {
+      await dashboard(
+        t,
+        approvals: [
+          approval('apr_1', 'pending'),
+          approval(
+            'apr_2',
+            'expired_in_hermes',
+            conv: 'c_2',
+            command: cleanup,
+            actionClass: 'delete_kill',
+            left: const Duration(seconds: 100),
+          ),
+        ],
+      );
+      expect(find.byType(DashboardScreen), findsOneWidget);
+      expect(t.getSize(find.byKey(const Key('dashboard.header'))).height, 66);
+      expect(find.byKey(const Key('dashboard.date')), findsOneWidget);
+      expect(find.byKey(const Key('dashboard.approvals')), findsOneWidget);
+      expect(find.text('Needs approval'), findsOneWidget);
+      expect(find.text('2 waiting'), findsOneWidget);
+      expect(
+        t.getTopLeft(row('apr_1')).dy,
+        lessThan(t.getTopLeft(row('apr_2')).dy),
+      );
+      expect(inRow('apr_1', find.text('llama-server memory')), findsOneWidget);
+      expect(
+        inRow('apr_1', find.byKey(const Key('dashboard.approval.countdown'))),
+        findsOneWidget,
+      );
+      expect(inRow('apr_2', find.text(cleanup)), findsOneWidget);
+      expect(inRow('apr_2', find.text('delete / kill')), findsOneWidget);
+      expect(
+        inRow('apr_2', find.byKey(const Key('dashboard.approval.late'))),
+        findsOneWidget,
+      );
+      // no pull-to-refresh, no connection pill; the cards are below the card
+      expect(find.byType(RefreshIndicator), findsNothing);
+      expect(
+        t.getTopLeft(find.byKey(const Key('dashboard.system'))).dy,
+        greaterThan(
+          t.getBottomLeft(find.byKey(const Key('dashboard.approvals'))).dy,
+        ),
+      );
+    });
+
+    testWidgets('Allow once: the outcome for 1.5 s, then the row goes; the '
+        'last one takes the card with it', (t) async {
+      final env = await dashboard(
+        t,
+        approvals: [
+          approval('apr_1', 'pending'),
+          approval('apr_2', 'pending', left: const Duration(seconds: 100)),
+        ],
+      );
+      answers(env, 'apr_1', 'approved_once', 'once');
+      await t.tap(
+        inRow('apr_1', find.byKey(const Key('dashboard.approval.once'))),
+      );
+      await frames(t, 5);
+      expect(env.server.requests.last.data, {'choice': 'once'});
+      expect(
+        inRow('apr_1', find.byKey(const Key('dashboard.approval.outcome'))),
+        findsOneWidget,
+      );
+      expect(inRow('apr_1', find.text('Approved')), findsOneWidget);
+      expect(
+        inRow('apr_1', find.textContaining('You · this device')),
+        findsOneWidget,
+      );
+      expect(find.text('1 waiting'), findsOneWidget);
+      await frames(t, 40);
+      expect(row('apr_1'), findsNothing);
+      expect(row('apr_2'), findsOneWidget);
+
+      answers(env, 'apr_2', 'denied', 'deny');
+      await t.tap(
+        inRow('apr_2', find.byKey(const Key('dashboard.approval.deny'))),
+      );
+      await frames(t, 5);
+      expect(env.server.requests.last.data, {'choice': 'deny'});
+      expect(inRow('apr_2', find.text('Denied')), findsOneWidget);
+      await frames(t, 40);
+      expect(find.byKey(const Key('dashboard.approvals')), findsNothing);
+    });
+
+    testWidgets('a failed answer stays with Retry; Retry sends it again', (
+      t,
+    ) async {
+      final env = await dashboard(t, approvals: [approval('apr_1', 'pending')]);
+      env.server.on(
+        'POST',
+        '/api/v1/approvals/apr_1',
+        (r) => FakeReply(500, FakeServer.detail('internal')),
+      );
+      await t.tap(
+        inRow('apr_1', find.byKey(const Key('dashboard.approval.once'))),
+      );
+      await frames(t, 5);
+      expect(
+        inRow('apr_1', find.byKey(const Key('dashboard.approval.failed'))),
+        findsOneWidget,
+      );
+      expect(
+        inRow('apr_1', find.byKey(const Key('dashboard.approval.once'))),
+        findsNothing,
+      );
+      answers(env, 'apr_1', 'approved_once', 'once');
+      await t.tap(
+        inRow('apr_1', find.byKey(const Key('dashboard.approval.retry'))),
+      );
+      await frames(t, 5);
+      expect(env.server.requests.last.data, {'choice': 'once'});
+      expect(inRow('apr_1', find.text('Approved')), findsOneWidget);
+    });
+
+    testWidgets('a focused row shows the keys; Ctrl+Enter allows once', (
+      t,
+    ) async {
+      final env = await dashboard(t, approvals: [approval('apr_1', 'pending')]);
+      answers(env, 'apr_1', 'approved_once', 'once');
+      expect(find.text('Ctrl+Enter'), findsNothing);
+      await t.tap(
+        inRow('apr_1', find.byKey(const Key('dashboard.approval.command'))),
+      );
+      await frames(t, 3);
+      expect(inRow('apr_1', find.text('Ctrl+Enter')), findsOneWidget);
+      expect(inRow('apr_1', find.text('Ctrl+⌫')), findsOneWidget);
+      await _ctrlNow(t, LogicalKeyboardKey.enter);
+      await frames(t, 5);
+      expect(env.server.requests.last.data, {'choice': 'once'});
+    });
+
+    testWidgets('more than three: three rows and “Show all 4” → Approvals', (
+      t,
+    ) async {
+      await dashboard(
+        t,
+        approvals: [
+          for (var i = 1; i <= 4; i++)
+            approval('apr_$i', 'pending', left: Duration(seconds: 250 - i)),
+        ],
+      );
+      expect(row('apr_1'), findsOneWidget);
+      expect(row('apr_3'), findsOneWidget);
+      expect(row('apr_4'), findsNothing);
+      await t.tap(find.byKey(const Key('dashboard.approvals.all')));
+      await frames(t);
+      expect(find.byType(ApprovalsScreen), findsOneWidget);
+    });
+
+    testWidgets('the phone: no approvals card on the Dashboard', (t) async {
+      await pumpDelve(
+        t,
+        settle: false,
+        before: (env) async {
+          await seedChats(env);
+          await env.db.putApproval(approval('apr_1', 'pending'));
+        },
+      );
+      await t.tap(find.text('Dashboard').last);
+      await frames(t);
+      expect(find.byType(DashboardScreen), findsOneWidget);
+      expect(find.byKey(const Key('dashboard.approvals')), findsNothing);
+      expect(find.byKey(const Key('dashboard.header')), findsNothing);
+    });
+
+    testWidgets('Ctrl+R refreshes the open page', (t) async {
+      final env = await dashboard(t);
+      int systemCalls() =>
+          env.server.calls.where((c) => c == 'GET /api/v1/system').length;
+      final before = systemCalls();
+      await _ctrlNow(t, LogicalKeyboardKey.keyR);
+      await frames(t);
+      expect(systemCalls(), greaterThan(before));
+    });
+
+    testWidgets('System is one page with a pane header; the Model row opens '
+        'the picker as a popover', (t) async {
+      await pumpDelve(t, caps: _linux, window: _frame, status: liveStatus);
+      await _ctrl(t, LogicalKeyboardKey.digit8);
+      expect(find.byType(SystemScreen), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(SystemScreen),
+          matching: find.byType(AppBar),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(PaneHeader),
+          matching: find.text('System'),
+        ),
+        findsOneWidget,
+      );
+      // Hermes and llama-server on the left, the GPUs on the right
+      expect(
+        t.getTopLeft(find.text('GPUs')).dx,
+        greaterThan(t.getTopLeft(find.text('Hermes Agent')).dx),
+      );
+      await t.tap(find.byKey(const Key('system.model')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('desktop.popover')), findsOneWidget);
+      expect(find.text('Local models'), findsOneWidget);
+      expect(find.byKey(const Key('model.picker.close')), findsNothing);
+      expect(find.byType(BottomSheet), findsNothing);
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('desktop.popover')), findsNothing);
+    });
+
+    testWidgets('the status bar\'s model opens the same popover', (t) async {
+      await pumpDelve(t, caps: _linux, window: _frame, status: liveStatus);
+      await t.tap(find.byKey(const Key('status.model')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('desktop.popover')), findsOneWidget);
+      expect(find.text('Local models'), findsOneWidget);
+    });
+
+    testWidgets('Observability: the ranges in the header, the charts in '
+        'three columns', (t) async {
+      await pumpDelve(t, caps: _linux, window: _frame);
+      await t.tap(find.byKey(const Key('rail.observability')));
+      await t.pumpAndSettle();
+      expect(find.byType(ObservabilityScreen), findsOneWidget);
+      final header = find.byType(PaneHeader);
+      expect(
+        find.descendant(
+          of: header,
+          matching: find.byKey(const Key('obs.range.24h')),
+        ),
+        findsOneWidget,
+      );
+      final gen = t.getTopLeft(find.byKey(const Key('obs.generation')));
+      final prefill = t.getTopLeft(find.byKey(const Key('obs.prefill')));
+      final queue = t.getTopLeft(find.byKey(const Key('obs.queue')));
+      expect(prefill.dy, gen.dy);
+      expect(queue.dy, gen.dy);
+      expect(prefill.dx, greaterThan(gen.dx));
+      expect(queue.dx, greaterThan(prefill.dx));
     });
   });
 }

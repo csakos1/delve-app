@@ -11,17 +11,18 @@ import '../format.dart';
 import 'page_scaffolds.dart';
 import 'status_ui.dart';
 
-/// Surface-1 card (radius 16, 16 dp padding), as on the dashboard.
+/// Surface-1 card (radius 16, 16 dp padding), as on the dashboard; in the
+/// desktop layout radius 14, padding 14 / 16 / 16.
 class SurfaceCard extends StatelessWidget {
   const SurfaceCard({super.key, required this.child});
   final Widget child;
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(DelveTokens.space4),
+    padding: cardPaddingOf(context),
     decoration: BoxDecoration(
       color: context.colors.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(DelveTokens.rlg),
+      borderRadius: BorderRadius.circular(cardRadiusOf(context)),
     ),
     child: child,
   );

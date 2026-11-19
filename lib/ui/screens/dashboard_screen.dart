@@ -15,6 +15,8 @@ import '../../l10n/app_localizations.dart';
 import '../../sync/connection_status.dart';
 import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/approvals_card.dart';
+import '../desktop/desktop_page.dart';
 import '../format.dart';
 import '../links.dart';
 import '../schedule_text.dart';
@@ -41,11 +43,19 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   DateTime? _updated;
+  late final PageCommandSlot _keys;
 
   @override
   void initState() {
     super.initState();
+    _keys = ref.read(pageCommandSlotProvider);
     unawaited(_refresh(quiet: true)); // the stored cards show meanwhile
+  }
+
+  @override
+  void dispose() {
+    _keys.unregister(this);
+    super.dispose();
   }
 
   Future<void> _refresh({bool quiet = false}) async {
@@ -104,6 +114,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // it down by the brief's height - the page jumped.
     ref.listen(latestBriefProvider, (_, _) {});
     final updated = _updated;
+    final water = switch (readings) {
+      AsyncData(:final value) when value.isNotEmpty => WaterCard(
+        readings: value,
+        now: DateTime.now(),
+      ),
+      AsyncData() || AsyncError() => const _WaterEmpty(),
+      _ => const SizedBox(height: 320),
+    };
+    if (DesktopLayout.of(context)) return _desktop(context, l, water);
     return TopLevelPage(
       title: l.navDashboard,
       tintOnScroll: true,
@@ -136,14 +155,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
             const SizedBox(height: DelveTokens.space4),
             const ClipboardQuickRow(),
-            switch (readings) {
-              AsyncData(:final value) when value.isNotEmpty => WaterCard(
-                readings: value,
-                now: DateTime.now(),
-              ),
-              AsyncData() || AsyncError() => const _WaterEmpty(),
-              _ => const SizedBox(height: 320),
-            },
+            water,
             const BriefCard(),
             const NewsCard(),
             const WatchesCard(),
@@ -151,6 +163,119 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             const SystemCard(),
           ],
         ),
+      ),
+    );
+  }
+
+  /// The desktop's Dashboard (design 27W-4a): the 66 px header with the
+  /// date, “Needs approval” over the cards, the cards in 1 – 4 columns in a
+  /// page of at most 1840. Ctrl+R and the header's button refresh it; no
+  /// pull-to-refresh, no connection pill (the status bar has it).
+  Widget _desktop(BuildContext context, AppLocalizations l, Widget water) {
+    _keys.register(this, PageCommands(refresh: () => unawaited(_refresh())));
+    final cs = context.colors;
+    final muted = context.delve.textMuted;
+    final updated = _updated;
+    const brief = BriefCard();
+    const news = NewsCard();
+    const watches = WatchesCard();
+    const system = SystemCard();
+    // the Inbox block joins under the brief with L2e
+    final List<List<Widget>> columns = switch (dashboardColumns(
+      MediaQuery.sizeOf(context).width,
+    )) {
+      1 => [
+        [water, brief, news, watches, system],
+      ],
+      2 => [
+        [water, system],
+        [brief, news, watches],
+      ],
+      3 => [
+        [water, system],
+        [brief, watches],
+        [news],
+      ],
+      _ => [
+        [water],
+        [brief, watches],
+        [news],
+        [system],
+      ],
+    };
+    return Material(
+      color: cs.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            key: const Key('dashboard.header'),
+            height: DelveDesktop.pageHeader,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: DelveDesktop.contentGutter,
+                right: 10,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Semantics(
+                          header: true,
+                          child: Text(
+                            l.navDashboard,
+                            style: DelveDesktopText.pageTitle.copyWith(
+                              color: cs.onSurface,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: DelveTokens.space3),
+                        Flexible(
+                          child: Text(
+                            DateFormat('EEEE d MMMM').format(DateTime.now()),
+                            key: const Key('dashboard.date'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.text.bodyMedium!.copyWith(
+                              color: muted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (updated != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: DelveTokens.space2),
+                      child: Text(
+                        l.dashUpdated(DateFormat('HH:mm').format(updated)),
+                        key: const Key('dashboard.updated'),
+                        style: context.text.bodySmall!.copyWith(color: muted),
+                      ),
+                    ),
+                  DesktopRefreshButton(
+                    buttonKey: const Key('dashboard.refresh'),
+                    onPressed: () => unawaited(_refresh()),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: DesktopPageBody(
+              top: 0,
+              children: [
+                const ClipboardQuickRow(),
+                const NeedsApprovalCard(),
+                DesktopColumns(columns: columns, selfSpaced: true),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -206,13 +331,16 @@ class _DashCard extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(DelveTokens.space4),
-    decoration: BoxDecoration(
-      color: context.colors.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(DelveTokens.rlg),
+  Widget build(BuildContext context) => dashSpaced(
+    context,
+    Container(
+      padding: cardPaddingOf(context),
+      decoration: BoxDecoration(
+        color: context.colors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(cardRadiusOf(context)),
+      ),
+      child: child,
     ),
-    child: child,
   );
 }
 
@@ -403,6 +531,12 @@ class SystemCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final card = _card(context, ref);
+    // nothing to show yet: no gap above it in the desktop's columns
+    return card is SizedBox ? card : dashSpaced(context, card);
+  }
+
+  Widget _card(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final view = ref.watch(systemProvider);
     final info = view.info;
@@ -521,7 +655,9 @@ class BriefCard extends ConsumerWidget {
     final booted = b.bootedAt;
     final firstIncident = b.incidents.isEmpty ? null : b.incidents.first;
     return Padding(
-      padding: const EdgeInsets.only(top: DelveTokens.space3),
+      padding: EdgeInsets.only(
+        top: DashSpacing.maybeOf(context) ?? DelveTokens.space3,
+      ),
       child: SurfaceCard(
         key: const Key('dashboard.brief'),
         child: Column(
@@ -717,7 +853,9 @@ class WatchesCard extends ConsumerWidget {
         if (!w.paused) ?w.nextRunAt,
     ]..sort();
     return Padding(
-      padding: const EdgeInsets.only(top: DelveTokens.space3),
+      padding: EdgeInsets.only(
+        top: DashSpacing.maybeOf(context) ?? DelveTokens.space3,
+      ),
       child: Container(
         key: const Key('dashboard.watches'),
         padding: const EdgeInsets.fromLTRB(
@@ -728,7 +866,7 @@ class WatchesCard extends ConsumerWidget {
         ),
         decoration: BoxDecoration(
           color: context.colors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(DelveTokens.rlg),
+          borderRadius: BorderRadius.circular(cardRadiusOf(context)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

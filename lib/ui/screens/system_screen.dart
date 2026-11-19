@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models/models.dart';
+import '../../app/layout.dart';
 import '../../app/system.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_page.dart';
 import '../format.dart';
 import '../widgets/model_ui.dart';
 import '../widgets/page_scaffolds.dart';
@@ -24,10 +26,12 @@ class SystemScreen extends ConsumerStatefulWidget {
 
 class _SystemScreenState extends ConsumerState<SystemScreen> {
   Timer? _poll;
+  late final PageCommandSlot _keys;
 
   @override
   void initState() {
     super.initState();
+    _keys = ref.read(pageCommandSlotProvider);
     unawaited(_refresh(quiet: true));
     _poll = Timer.periodic(
       kSystemPoll,
@@ -38,6 +42,7 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
   @override
   void dispose() {
     _poll?.cancel();
+    _keys.unregister(this);
     super.dispose();
   }
 
@@ -59,6 +64,63 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
     final view = ref.watch(systemProvider);
     final info = view.info;
     final error = view.error;
+    final desktop = DesktopLayout.of(context);
+    if (desktop) {
+      _keys.register(this, PageCommands(refresh: () => unawaited(_refresh())));
+    }
+    final Widget body = switch (info) {
+      null when error != null => Padding(
+        padding: const EdgeInsets.all(DelveTokens.space4),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: StatusBanner(
+            kind: StatusKind.alert,
+            icon: DelveIcons.error,
+            text: l.systemLoadFailed(apiErrorText(l, error)),
+            actionLabel: l.retry,
+            onAction: _refresh,
+          ),
+        ),
+      ),
+      null => const Center(child: CircularProgressIndicator()),
+      final SystemInfo data when desktop => _desktopBody(context, l, data),
+      final SystemInfo data => RefreshIndicator(
+        onRefresh: _refresh,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            DelveTokens.space4,
+            DelveTokens.space2,
+            DelveTokens.space4,
+            DelveTokens.space6,
+          ),
+          children: [
+            for (final b in _banners(l, data)) ...[
+              b,
+              const SizedBox(height: DelveTokens.space3),
+            ],
+            HermesCard(info: data, now: DateTime.now()),
+            const SizedBox(height: DelveTokens.space3),
+            LlamaCard(info: data),
+            if (data.gpus case final gpus? when gpus.isNotEmpty) ...[
+              const SizedBox(height: DelveTokens.space3),
+              GpuCard(gpus: gpus, checkedAt: data.checkedAt),
+            ],
+          ],
+        ),
+      ),
+    };
+    if (desktop) {
+      return DesktopPage(
+        title: l.moreSystem,
+        actions: [
+          DesktopRefreshButton(
+            buttonKey: const Key('system.refresh'),
+            onPressed: () => unawaited(_refresh()),
+          ),
+        ],
+        child: body,
+      );
+    }
     return SubPage(
       title: l.moreSystem,
       actions: [
@@ -69,71 +131,73 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
           icon: const SymbolIcon(DelveIcons.refresh),
         ),
       ],
-      child: switch (info) {
-        null when error != null => Padding(
-          padding: const EdgeInsets.all(DelveTokens.space4),
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: StatusBanner(
-              kind: StatusKind.alert,
-              icon: DelveIcons.error,
-              text: l.systemLoadFailed(apiErrorText(l, error)),
-              actionLabel: l.retry,
-              onAction: _refresh,
-            ),
-          ),
+      child: body,
+    );
+  }
+
+  /// What stands above the cards: the helper's trouble, a failed reload, a
+  /// failed switch or the queue during one.
+  List<Widget> _banners(AppLocalizations l, SystemInfo data) {
+    final error = ref.read(systemProvider).error;
+    return [
+      if (!data.helper.ok)
+        StatusBanner(
+          key: const Key('system.helper'),
+          kind: StatusKind.warn,
+          icon: DelveIcons.warning,
+          text: data.helper.error == 'helper_unavailable'
+              ? l.systemHelperMissing
+              : l.systemHelperProblem(data.helper.error ?? ''),
         ),
-        null => const Center(child: CircularProgressIndicator()),
-        final SystemInfo data => RefreshIndicator(
-          onRefresh: _refresh,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              DelveTokens.space4,
-              DelveTokens.space2,
-              DelveTokens.space4,
-              DelveTokens.space6,
-            ),
-            children: [
-              if (!data.helper.ok) ...[
-                StatusBanner(
-                  key: const Key('system.helper'),
-                  kind: StatusKind.warn,
-                  icon: DelveIcons.warning,
-                  text: data.helper.error == 'helper_unavailable'
-                      ? l.systemHelperMissing
-                      : l.systemHelperProblem(data.helper.error ?? ''),
-                ),
-                const SizedBox(height: DelveTokens.space3),
-              ],
-              if (error != null) ...[
-                StatusBanner(
-                  kind: StatusKind.warn,
-                  icon: DelveIcons.syncProblem,
-                  text: l.systemLoadFailed(apiErrorText(l, error)),
-                  actionLabel: l.retry,
-                  onAction: _refresh,
-                ),
-                const SizedBox(height: DelveTokens.space3),
-              ],
-              if (data.llama.switchState case final sw?) ...[
-                if (sw.state != 'switching')
-                  SwitchFailedBanner(info: data)
-                else if (data.queue.queued > 0)
-                  SwitchQueueBanner(info: data),
-                if (sw.state != 'switching' || data.queue.queued > 0)
-                  const SizedBox(height: DelveTokens.space3),
-              ],
-              HermesCard(info: data, now: DateTime.now()),
-              const SizedBox(height: DelveTokens.space3),
-              LlamaCard(info: data),
-              if (data.gpus case final gpus? when gpus.isNotEmpty) ...[
-                const SizedBox(height: DelveTokens.space3),
-                GpuCard(gpus: gpus, checkedAt: data.checkedAt),
-              ],
-            ],
-          ),
+      if (error != null)
+        StatusBanner(
+          kind: StatusKind.warn,
+          icon: DelveIcons.syncProblem,
+          text: l.systemLoadFailed(apiErrorText(l, error)),
+          actionLabel: l.retry,
+          onAction: _refresh,
         ),
-      },
+      if (data.llama.switchState case final sw?)
+        if (sw.state != 'switching')
+          SwitchFailedBanner(info: data)
+        else if (data.queue.queued > 0)
+          SwitchQueueBanner(info: data),
+    ];
+  }
+
+  /// The desktop's System (27W-6a): one page, the banners full width above
+  /// the cards; from a 1100 window Hermes and llama-server on the left, the
+  /// GPUs on the right, else one column of at most 680.
+  Widget _desktopBody(BuildContext context, AppLocalizations l, SystemInfo d) {
+    final two =
+        MediaQuery.sizeOf(context).width >=
+        DelveDesktop.dashboardTwoColumnsBelow;
+    final gpus = d.gpus;
+    final hermes = HermesCard(info: d, now: DateTime.now());
+    final llama = LlamaCard(info: d);
+    final gpu = gpus == null || gpus.isEmpty
+        ? null
+        : GpuCard(gpus: gpus, checkedAt: d.checkedAt);
+    return DesktopPageBody(
+      maxWidth: two
+          ? DelveDesktop.dashboardMaxWidth
+          : DelveDesktop.detailColumn,
+      children: [
+        for (final b in _banners(l, d)) ...[
+          b,
+          const SizedBox(height: DelveDesktop.dashboardGap),
+        ],
+        DesktopColumns(
+          columns: two
+              ? [
+                  [hermes, llama],
+                  [?gpu],
+                ]
+              : [
+                  [hermes, llama, ?gpu],
+                ],
+        ),
+      ],
     );
   }
 }

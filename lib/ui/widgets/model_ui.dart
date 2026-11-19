@@ -8,9 +8,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../api/api_error.dart';
 import '../../api/models/models.dart';
 import '../../app/chat_list.dart';
+import '../../app/layout.dart';
 import '../../app/system.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/layers.dart';
 import '../format.dart';
 import 'page_scaffolds.dart';
 import 'status_ui.dart';
@@ -389,29 +391,50 @@ class _Consequence extends StatelessWidget {
 }
 
 /// 25c: the sheet "Local models". Returns the picked preset's id; null when
-/// it was closed or the loaded one was tapped.
-Future<String?> showLocalModels(BuildContext context, SystemInfo info) =>
-    showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      backgroundColor: context.colors.surfaceContainerHigh,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(DelveTokens.rxl),
-        ),
+/// it was closed or the loaded one was tapped. In the desktop layout a
+/// popover under (or over) [context]'s widget – the Model row, the status
+/// bar's model (27W-6b).
+Future<String?> showLocalModels(BuildContext context, SystemInfo info) {
+  if (DesktopLayout.of(context)) {
+    return showDesktopPopover<String>(
+      context,
+      size: const Size(
+        DelveDesktop.localModelsWidth,
+        DelveDesktop.localModelsHeight,
       ),
-      builder: (_) => LocalModelsSheet(info: info),
+      builder: (_) => LocalModelsSheet(info: info, embedded: true),
     );
+  }
+  return showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    backgroundColor: context.colors.surfaceContainerHigh,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(DelveTokens.rxl),
+      ),
+    ),
+    builder: (_) => LocalModelsSheet(info: info),
+  );
+}
 
 /// The presets in the desktop's order, those that cannot be loaded last. It
 /// follows the system view while it is open.
 class LocalModelsSheet extends ConsumerWidget {
-  const LocalModelsSheet({super.key, required this.info});
+  const LocalModelsSheet({
+    super.key,
+    required this.info,
+    this.embedded = false,
+  });
 
   /// What the sheet was opened with (shown until a newer view arrives).
   final SystemInfo info;
+
+  /// In the desktop's popover: no close button (Esc or a click outside),
+  /// the title at the popover's top padding.
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -436,9 +459,9 @@ class LocalModelsSheet extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DelveTokens.space5,
-              0,
+            padding: EdgeInsets.fromLTRB(
+              embedded ? DelveTokens.space4 : DelveTokens.space5,
+              embedded ? DelveTokens.space3 : 0,
               DelveTokens.space2,
               DelveTokens.space2,
             ),
@@ -449,7 +472,12 @@ class LocalModelsSheet extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(l.modelPickerTitle, style: context.text.titleLarge),
+                      Text(
+                        l.modelPickerTitle,
+                        style: embedded
+                            ? context.text.titleMedium
+                            : context.text.titleLarge,
+                      ),
                       const SizedBox(height: 2),
                       Text(
                         live.canStart
@@ -461,12 +489,13 @@ class LocalModelsSheet extends ConsumerWidget {
                     ],
                   ),
                 ),
-                IconButton(
-                  key: const Key('model.picker.close'),
-                  tooltip: l.close,
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const SymbolIcon(DelveIcons.close),
-                ),
+                if (!embedded)
+                  IconButton(
+                    key: const Key('model.picker.close'),
+                    tooltip: l.close,
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const SymbolIcon(DelveIcons.close),
+                  ),
               ],
             ),
           ),

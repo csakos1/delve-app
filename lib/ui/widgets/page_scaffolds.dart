@@ -87,6 +87,7 @@ class _TopLevelPageState extends State<TopLevelPage> {
                     (desktop
                         // the desktop's 48 dp pane header (L2b)
                         ? Container(
+                            key: const Key('page.header.bar'),
                             height: DelveDesktop.paneHeader,
                             padding: const EdgeInsets.only(left: 16, right: 10),
                             child: Row(
@@ -245,6 +246,41 @@ Widget? pageBackButton(BuildContext context) {
   return BackButton(onPressed: () => Navigator.of(context).maybePop());
 }
 
+/// The space above a Dashboard card in the desktop's columns (L2c): 0 for a
+/// column's first card, 16 for the rest. The cards put it above themselves,
+/// so one with nothing to show leaves no gap; outside the columns (the
+/// phone) they keep their own.
+class DashSpacing extends InheritedWidget {
+  const DashSpacing({super.key, required this.top, required super.child});
+
+  final double top;
+
+  static double? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<DashSpacing>()?.top;
+
+  @override
+  bool updateShouldNotify(DashSpacing oldWidget) => oldWidget.top != top;
+}
+
+/// [card] with the [DashSpacing] above it (as it is without one).
+Widget dashSpaced(BuildContext context, Widget card) {
+  final top = DashSpacing.maybeOf(context);
+  if (top == null || top == 0) return card;
+  return Padding(
+    padding: EdgeInsets.only(top: top),
+    child: card,
+  );
+}
+
+/// A card's radius: 16 on the phone, 14 in the desktop layout.
+double cardRadiusOf(BuildContext context) =>
+    DesktopLayout.of(context) ? DelveDesktop.cardRadius : DelveTokens.rlg;
+
+/// A card's padding: 16 on the phone, 14 / 16 / 16 in the desktop layout.
+EdgeInsets cardPaddingOf(BuildContext context) => DesktopLayout.of(context)
+    ? const EdgeInsets.fromLTRB(16, 14, 16, 16)
+    : const EdgeInsets.all(DelveTokens.space4);
+
 /// Rounded Material Symbol with the design's fill rule (1 = active/status).
 class SymbolIcon extends StatelessWidget {
   const SymbolIcon(
@@ -390,4 +426,7 @@ abstract final class DelveIcons {
 
   /// Files dragged over a chat (desktop, L2b2).
   static const IconData dropToAttach = Symbols.upload_file_rounded;
+
+  /// A link that leaves the card (the approval's chat, desktop, L2c).
+  static const IconData arrowOutward = Symbols.arrow_outward_rounded;
 }

@@ -630,7 +630,9 @@ class NewsCard extends ConsumerWidget {
     final rule = BorderSide(color: context.colors.outlineVariant);
     final updated = digest.updatedAt;
     return Padding(
-      padding: const EdgeInsets.only(top: DelveTokens.space3),
+      padding: EdgeInsets.only(
+        top: DashSpacing.maybeOf(context) ?? DelveTokens.space3,
+      ),
       child: Container(
         key: const Key('dashboard.news'),
         padding: const EdgeInsets.fromLTRB(
@@ -641,7 +643,7 @@ class NewsCard extends ConsumerWidget {
         ),
         decoration: BoxDecoration(
           color: context.colors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(DelveTokens.rlg),
+          borderRadius: BorderRadius.circular(cardRadiusOf(context)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

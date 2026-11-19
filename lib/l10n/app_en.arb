@@ -4202,5 +4202,56 @@
   "desktopFindNewer": "Newer match (Shift+Enter)",
   "desktopFindOlder": "Older match (Enter)",
   "desktopFindClose": "Close (Esc)",
-  "desktopArchivedEmpty": "No archived chats. Archive one with E or from its row."
+  "desktopArchivedEmpty": "No archived chats. Archive one with E or from its row.",
+  "desktopRefresh": "Refresh (Ctrl+R)",
+  "desktopKeyAllow": "Ctrl+Enter",
+  "desktopKeyDeny": "Ctrl+⌫",
+  "desktopApprovalsTitle": "Needs approval",
+  "desktopApprovalsWaiting": "{count} waiting",
+  "@desktopApprovalsWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "desktopApprovalsShowAll": "Show all {count}",
+  "@desktopApprovalsShowAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "desktopApprovalsDeadlines": "expires in the agent {agent} · approvable until {until}",
+  "@desktopApprovalsDeadlines": {
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      },
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopApprovalsLate": "Agent stopped waiting at {at} · approvable until {until}",
+  "@desktopApprovalsLate": {
+    "placeholders": {
+      "at": {
+        "type": "String"
+      },
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopApprovalsFailed": "Couldn't send the answer: {reason}",
+  "@desktopApprovalsFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopApprovalsYou": "You · this device"
 }

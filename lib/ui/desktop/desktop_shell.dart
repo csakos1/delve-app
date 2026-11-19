@@ -11,6 +11,7 @@ import '../../app/router.dart';
 import '../../theme/delve_theme.dart';
 import 'areas.dart';
 import 'chat_inspector.dart';
+import 'desktop_page.dart';
 import 'intake.dart';
 import 'panes.dart';
 import 'rail.dart';
@@ -52,6 +53,26 @@ class _UsageIntent extends Intent {
 
 class _NextTabIntent extends Intent {
   const _NextTabIntent();
+}
+
+class _RefreshIntent extends Intent {
+  const _RefreshIntent();
+}
+
+/// Ctrl+R: the open page's refresh (L2c), where it has one.
+class _RefreshAction extends Action<_RefreshIntent> {
+  _RefreshAction(this._slot);
+
+  final PageCommandSlot _slot;
+
+  @override
+  bool isEnabled(_RefreshIntent intent) => _slot.current != null;
+
+  @override
+  Object? invoke(_RefreshIntent intent) {
+    _slot.current?.refresh();
+    return null;
+  }
 }
 
 /// A key of the open list (J / K / ↓ / ↑, E, Ctrl+Z – L2b2).
@@ -134,7 +155,8 @@ class _ChatKeyAction extends Action<_ChatKeyIntent> {
 /// Ctrl+2…0 the areas, Ctrl+N / Ctrl+Shift+N a new Agent / General chat,
 /// Ctrl+, Settings, Ctrl+B the list column, Ctrl+I the inspector, Esc an
 /// open overlay pane; Ctrl+F the list's search, Ctrl+U a chat's Usage,
-/// Ctrl+] the inspector's next tab; in an open chat Ctrl+O attaches a file,
+/// Ctrl+] the inspector's next tab, Ctrl+R the open page's refresh; in an
+/// open chat Ctrl+O attaches a file,
 /// Ctrl+V an image, Ctrl+. stops the run, Ctrl+T switches Thinking. No title
 /// bar: the compositor draws the window.
 class DesktopShell extends ConsumerWidget {
@@ -168,6 +190,8 @@ class DesktopShell extends ConsumerWidget {
         const _UsageIntent(),
     const SingleActivator(LogicalKeyboardKey.bracketRight, control: true):
         const _NextTabIntent(),
+    const SingleActivator(LogicalKeyboardKey.keyR, control: true):
+        const _RefreshIntent(),
     const SingleActivator(LogicalKeyboardKey.keyO, control: true):
         const _ChatKeyIntent(_ChatKey.attach),
     const SingleActivator(LogicalKeyboardKey.keyV, control: true):
@@ -281,6 +305,7 @@ class DesktopShell extends ConsumerWidget {
               },
             ),
             _ChatKeyIntent: _ChatKeyAction(ref.read(chatCommandSlotProvider)),
+            _RefreshIntent: _RefreshAction(ref.read(pageCommandSlotProvider)),
             _ListKeyIntent: _ListKeyAction(ref.read(listCommandSlotProvider)),
             _CloseOverlayIntent: _CloseOverlayAction(
               () => area != null && layouts.closeOverlays(area),

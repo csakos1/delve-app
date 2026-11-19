@@ -456,6 +456,13 @@ open one, Ctrl+Z undoes it (`ListCommands`, outside text fields). Ctrl+F in an o
 it (`lib/ui/desktop/chat_find.dart`); a General chat has a Usage inspector and its model picker
 is a popover (`lib/ui/desktop/layers.dart`, with the confirmation dialog). Each area opens again
 where it was left (`DesktopPlaces`).
+The Dashboard has a 66 px header with the date, the “Needs approval” card above the cards
+(`lib/ui/desktop/approvals_card.dart`, desktop only: the answerable approvals, Allow once /
+Deny, Ctrl+Enter / Ctrl+Backspace on a focused row, the outcome for 1.5 s) and the cards in
+1 – 4 columns (`lib/ui/desktop/desktop_page.dart`); System is one page with its cards side by
+side, Observability a grid with the ranges in the header; the local models picker is a popover
+there, on the Dashboard and on the status bar's model. Ctrl+R refreshes the open page
+(`PageCommands`).
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.

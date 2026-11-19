@@ -14,6 +14,7 @@ import '../../sync/connection_status.dart';
 import '../../sync/live_runs.dart';
 import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
+import '../widgets/model_ui.dart';
 import '../widgets/page_scaffolds.dart';
 
 /// How often the status bar asks for the machine's state (the socket's
@@ -183,10 +184,13 @@ class _DesktopStatusBarState extends ConsumerState<DesktopStatusBar> {
               onTap: () => context.go(Routes.system),
             )
           else if (llama.modelLine case final model?) ...[
-            _Segment(
-              key: const Key('status.model'),
-              text: model,
-              onTap: () => context.go(Routes.system),
+            // the model picker as a popover over the segment (27W-6b)
+            Builder(
+              builder: (anchor) => _Segment(
+                key: const Key('status.model'),
+                text: model,
+                onTap: () => unawaited(changeModel(anchor, ref)),
+              ),
             ),
             if (llama.slots != null)
               _Segment(

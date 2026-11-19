@@ -55,6 +55,7 @@ dependencies:
   # the desktop (L2b2): files dropped on a chat. 0.8.4 is the last release
   # for Flutter 3.41 (0.9 wants 3.47)
   desktop_drop: 0.8.4
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:

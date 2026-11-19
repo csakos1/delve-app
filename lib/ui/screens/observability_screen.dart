@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../api/models/models.dart';
+import '../../app/layout.dart';
 import '../../app/observability.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_page.dart';
 import '../format.dart';
 import '../widgets/chart_paint.dart';
 import '../widgets/page_scaffolds.dart';
@@ -27,14 +29,23 @@ class ObservabilityScreen extends ConsumerStatefulWidget {
 }
 
 class _ObservabilityScreenState extends ConsumerState<ObservabilityScreen> {
+  late final PageCommandSlot _keys;
+
   @override
   void initState() {
     super.initState();
+    _keys = ref.read(pageCommandSlotProvider);
     // After the first frame: refresh() marks the view as loading, and a
     // provider may not change while the widget tree is building.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) unawaited(_refresh(quiet: true));
     });
+  }
+
+  @override
+  void dispose() {
+    _keys.unregister(this);
+    super.dispose();
   }
 
   Future<void> _refresh({bool quiet = false}) async {
@@ -67,6 +78,7 @@ class _ObservabilityScreenState extends ConsumerState<ObservabilityScreen> {
     final view = ref.watch(observabilityProvider);
     final stats = view.stats;
     final error = view.error;
+    if (DesktopLayout.of(context)) return _desktop(context, l, view);
     return SubPage(
       title: l.moreObservability,
       actions: [
@@ -154,6 +166,108 @@ class _ObservabilityScreenState extends ConsumerState<ObservabilityScreen> {
               ),
             },
           ),
+        ],
+      ),
+    );
+  }
+
+  /// The desktop's Observability (27W-8): the range chips in the header,
+  /// the charts in a 3-column grid (2 below a 1100 window); a banner (a
+  /// failed reload, sampling off) full width above.
+  Widget _desktop(
+    BuildContext context,
+    AppLocalizations l,
+    ObservabilityView view,
+  ) {
+    _keys.register(this, PageCommands(refresh: () => unawaited(_refresh())));
+    final stats = view.stats;
+    final error = view.error;
+    final Widget body;
+    if (stats == null) {
+      body = error != null
+          ? Padding(
+              padding: const EdgeInsets.all(DelveDesktop.contentGutter),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: StatusBanner(
+                  key: const Key('obs.error'),
+                  kind: StatusKind.alert,
+                  icon: DelveIcons.error,
+                  text: l.obsLoadFailed(apiErrorText(l, error)),
+                  actionLabel: l.retry,
+                  onAction: _refresh,
+                ),
+              ),
+            )
+          : const Center(child: CircularProgressIndicator());
+    } else {
+      // the phone's list without its spacers: banners above, cards in the grid
+      final items = [
+        for (final w in _cards(context, l, stats))
+          if (w is! SizedBox) w,
+      ];
+      final banners = [
+        if (error != null)
+          StatusBanner(
+            key: const Key('obs.error'),
+            kind: StatusKind.warn,
+            icon: DelveIcons.syncProblem,
+            text: l.obsLoadFailed(apiErrorText(l, error)),
+            actionLabel: l.retry,
+            onAction: _refresh,
+          ),
+        ...items.whereType<StatusBanner>(),
+      ];
+      final cards = [
+        for (final w in items)
+          if (w is! StatusBanner) w,
+      ];
+      body = DesktopPageBody(
+        key: const Key('obs.list'),
+        children: [
+          for (final b in banners) ...[
+            b,
+            const SizedBox(height: DelveDesktop.dashboardGap),
+          ],
+          DesktopColumns(
+            columns: dealColumns(
+              cards,
+              gridColumns(MediaQuery.sizeOf(context).width),
+            ),
+          ),
+        ],
+      );
+    }
+    return DesktopPage(
+      title: l.moreObservability,
+      actions: [
+        for (final r in StatsRange.values)
+          Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: _RangeChip(
+              range: r,
+              selected: r == view.range,
+              onSelected: () => unawaited(_select(r)),
+            ),
+          ),
+        DesktopRefreshButton(
+          buttonKey: const Key('obs.refresh'),
+          onPressed: () => unawaited(_refresh()),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 2,
+            child: view.loading
+                ? const LinearProgressIndicator(
+                    key: Key('obs.loading'),
+                    minHeight: 2,
+                  )
+                : null,
+          ),
+          Expanded(child: body),
         ],
       ),
     );
@@ -500,15 +614,22 @@ class _RangeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final desktop = DesktopLayout.of(context);
     return ChoiceChip(
       key: Key('obs.range.${range.query}'),
+      // the desktop's 26 px chip in the pane header
+      visualDensity: desktop
+          ? const VisualDensity(horizontal: -2, vertical: -4)
+          : null,
+      materialTapTargetSize: desktop ? MaterialTapTargetSize.shrinkWrap : null,
+      labelStyle: desktop ? DelveDesktopText.control : null,
       label: Text(switch (range) {
         StatsRange.day => l.obsRange24h,
         StatsRange.week => l.obsRange7d,
         StatsRange.month => l.obsRange30d,
       }),
       selected: selected,
-      showCheckmark: true,
+      showCheckmark: !desktop,
       side: selected
           ? BorderSide.none
           : BorderSide(color: context.colors.outline),

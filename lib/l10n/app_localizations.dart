@@ -8648,6 +8648,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No archived chats. Archive one with E or from its row.'**
   String get desktopArchivedEmpty;
+
+  /// No description provided for @desktopRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh (Ctrl+R)'**
+  String get desktopRefresh;
+
+  /// No description provided for @desktopKeyAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Ctrl+Enter'**
+  String get desktopKeyAllow;
+
+  /// No description provided for @desktopKeyDeny.
+  ///
+  /// In en, this message translates to:
+  /// **'Ctrl+⌫'**
+  String get desktopKeyDeny;
+
+  /// No description provided for @desktopApprovalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs approval'**
+  String get desktopApprovalsTitle;
+
+  /// No description provided for @desktopApprovalsWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} waiting'**
+  String desktopApprovalsWaiting(int count);
+
+  /// No description provided for @desktopApprovalsShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {count}'**
+  String desktopApprovalsShowAll(int count);
+
+  /// No description provided for @desktopApprovalsDeadlines.
+  ///
+  /// In en, this message translates to:
+  /// **'expires in the agent {agent} · approvable until {until}'**
+  String desktopApprovalsDeadlines(String agent, String until);
+
+  /// No description provided for @desktopApprovalsLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent stopped waiting at {at} · approvable until {until}'**
+  String desktopApprovalsLate(String at, String until);
+
+  /// No description provided for @desktopApprovalsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the answer: {reason}'**
+  String desktopApprovalsFailed(String reason);
+
+  /// No description provided for @desktopApprovalsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You · this device'**
+  String get desktopApprovalsYou;
 }
 
 class _AppLocalizationsDelegate

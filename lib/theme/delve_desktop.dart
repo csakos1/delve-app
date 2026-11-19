@@ -61,6 +61,12 @@ abstract final class DelveDesktop {
   static const double inspectorDefault = 340;
   static const double inspectorMax = 480;
   static const double paneHeader = 48;
+
+  /// The Dashboard's page header (title 24 / 30 and the date).
+  static const double pageHeader = 66;
+  static const double contentGutter = 20;
+  static const double dashboardMaxWidth = 1840;
+  static const double dashboardGap = 16;
   static const double statusBarHeight = 24;
   static const double dividerGrab = 6;
   static const double dividerLine = 2;
@@ -111,6 +117,26 @@ abstract final class DelveDesktop {
   static const double keyCapHeight = 18;
   static const double keyCapRadius = 4;
   static const double tooltipRadius = 6;
+
+  /// The local models picker as a popover (System, Dashboard, status bar).
+  static const double localModelsWidth = 400;
+  static const double localModelsHeight = 520;
+
+  // the Dashboard's “Needs approval” card (`approvalsCard`)
+  static const double approvalsHeader = 28;
+  static const double approvalsRowPadding = 12;
+  static const double approvalsColumnGap = 20;
+  static const double approvalsRight = 372;
+  static const double approvalsRightCompact = 300;
+  static const int approvalsMaxRows = 3;
+  static const double approvalsShowAll = 36;
+  static const double approvalsWellRadius = 8;
+
+  /// Below this card width the row is one column (as on the phone).
+  static const double approvalsTwoColumnsFrom = 640;
+  static const Duration outcomeHold = Duration(milliseconds: 1500);
+  static const Duration rowCollapse = Duration(milliseconds: 250);
+  static const double buttonSmall = 28;
 
   // composer (Components “Density”)
   static const double composerRadius = 20;
@@ -200,6 +226,15 @@ abstract final class DelveDesktopText {
     height: 18 / 13,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.1,
+  );
+
+  /// The Dashboard's title (Jost 24 / 30).
+  static const TextStyle pageTitle = TextStyle(
+    fontFamily: DelveFonts.display,
+    fontFamilyFallback: DelveFonts.displayFallback,
+    fontSize: 24,
+    height: 30 / 24,
+    fontWeight: FontWeight.w400,
   );
   static const TextStyle keyCap = TextStyle(
     fontFamily: DelveFonts.mono,

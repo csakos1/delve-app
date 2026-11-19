@@ -5548,4 +5548,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get desktopArchivedEmpty =>
       'No archived chats. Archive one with E or from its row.';
+
+  @override
+  String get desktopRefresh => 'Refresh (Ctrl+R)';
+
+  @override
+  String get desktopKeyAllow => 'Ctrl+Enter';
+
+  @override
+  String get desktopKeyDeny => 'Ctrl+⌫';
+
+  @override
+  String get desktopApprovalsTitle => 'Needs approval';
+
+  @override
+  String desktopApprovalsWaiting(int count) {
+    return '$count waiting';
+  }
+
+  @override
+  String desktopApprovalsShowAll(int count) {
+    return 'Show all $count';
+  }
+
+  @override
+  String desktopApprovalsDeadlines(String agent, String until) {
+    return 'expires in the agent $agent · approvable until $until';
+  }
+
+  @override
+  String desktopApprovalsLate(String at, String until) {
+    return 'Agent stopped waiting at $at · approvable until $until';
+  }
+
+  @override
+  String desktopApprovalsFailed(String reason) {
+    return 'Couldn\'t send the answer: $reason';
+  }
+
+  @override
+  String get desktopApprovalsYou => 'You · this device';
 }
