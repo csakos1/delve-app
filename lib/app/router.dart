@@ -128,6 +128,13 @@ abstract final class Routes {
   /// What the agent knows about its user (P1): from More.
   static const about = '/more/about';
 
+  /// The desktop's About me with one [item] in the content (L2c3b): `s3`,
+  /// `t:<name>`, `new-section`, `new-topic`, `agent`, `general`; null the
+  /// overview.
+  static String aboutAt(String? item) => item == null
+      ? about
+      : Uri(path: about, queryParameters: {'item': item}).toString();
+
   /// Share to Delve (design 17), on the root navigator.
   static const share = '/share';
 

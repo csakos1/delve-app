@@ -4322,5 +4322,7 @@
   "settingsInspectorDefaultSub": "Where a page has one: a chat's run, a story's sources, a watch's listing",
   "settingsTextSize": "Text size",
   "settingsTextSizeSub": "Only the text grows; panes and icons keep their size",
-  "settingsTextSizeSystem": "System"
+  "settingsTextSizeSystem": "System",
+  "desktopPersonaOverview": "Overview",
+  "desktopPersonaSaved": "Saved"
 }

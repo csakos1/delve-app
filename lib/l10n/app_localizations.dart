@@ -8912,6 +8912,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'System'**
   String get settingsTextSizeSystem;
+
+  /// No description provided for @desktopPersonaOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get desktopPersonaOverview;
+
+  /// No description provided for @desktopPersonaSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get desktopPersonaSaved;
 }
 
 class _AppLocalizationsDelegate

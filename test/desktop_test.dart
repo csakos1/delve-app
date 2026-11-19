@@ -10,6 +10,7 @@ import 'package:delve/general/general_database.dart';
 import 'package:delve/l10n/app_localizations.dart';
 import 'package:delve/theme/delve_theme.dart';
 import 'package:delve/ui/chat/chat_items.dart' show UserBubble;
+import 'package:delve/ui/desktop/about_area.dart';
 import 'package:delve/ui/desktop/areas.dart';
 import 'package:delve/ui/desktop/chat_find.dart';
 import 'package:delve/ui/desktop/chat_inspector.dart';
@@ -34,6 +35,7 @@ import 'package:delve/ui/screens/dashboard_screen.dart';
 import 'package:delve/ui/screens/news_screen.dart';
 import 'package:delve/ui/screens/news_story_screen.dart';
 import 'package:delve/ui/screens/observability_screen.dart';
+import 'package:delve/ui/screens/persona_screen.dart';
 import 'package:delve/ui/screens/schedule_editor_screen.dart';
 import 'package:delve/ui/screens/schedules_screen.dart';
 import 'package:delve/ui/screens/settings_screen.dart';
@@ -2040,6 +2042,83 @@ void main() {
       expect(find.byKey(const Key('settings.nav')), findsNothing);
       expect(find.byKey(const Key('settings.rememberPanes')), findsNothing);
       expect(find.text('SERVER'), findsOneWidget);
+    });
+  });
+
+  group('About me on the desktop (L2c3b)', () {
+    Future<TestEnv> about(WidgetTester t) async {
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        before: (env) async => env.server
+          ..json('PUT', '/api/v1/persona/profile', FakeServer.sample('persona'))
+          ..json(
+            'PUT',
+            '/api/v1/persona/topics/gepek',
+            FakeServer.sample('persona'),
+          ),
+      );
+      await t.tap(find.byKey(const Key('rail.about')));
+      await t.pumpAndSettle();
+      return env;
+    }
+
+    test('the items of a location', () {
+      expect(selectedPersonaItem(Routes.about), isNull);
+      expect(selectedPersonaItem(Routes.aboutAt('s1')), 's1');
+      expect(PersonaItem.of('s1'), isA<PersonaSectionItem>());
+      expect((PersonaItem.of('t:books')! as PersonaTopicItem).name, 'books');
+      expect(PersonaItem.of('agent'), isA<PersonaSent>());
+      expect(PersonaItem.of('sx'), isNull);
+    });
+
+    testWidgets('the sections and files in the list column; the overview in '
+        'the content', (t) async {
+      await about(t);
+      expect(find.byType(AboutArea), findsOneWidget);
+      expect(find.byKey(const Key('persona.nav')), findsOneWidget);
+      expect(find.byKey(const Key('persona.overview')), findsOneWidget);
+      expect(find.byKey(const Key('persona.nav.s0')), findsOneWidget);
+      expect(find.byKey(const Key('persona.nav.t.gepek')), findsOneWidget);
+      // the ones that also go to the cloud say so
+      expect(
+        t.widget<SectionRow>(find.byKey(const Key('persona.nav.s1'))).trailing,
+        'Cloud',
+      );
+      expect(
+        t.widget<SectionRow>(find.byKey(const Key('persona.nav.s0'))).trailing,
+        isNull,
+      );
+    });
+
+    testWidgets('a section opens in its editor in the content; Ctrl+S saves '
+        'and the page stays', (t) async {
+      final env = await about(t);
+      await t.tap(find.byKey(const Key('persona.nav.s0')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('persona.editor')), findsOneWidget);
+      expect(find.byType(BottomSheet), findsNothing);
+      await t.enterText(
+        find.byKey(const Key('persona.field.title')),
+        'Basics 2',
+      );
+      await _ctrl(t, LogicalKeyboardKey.keyS);
+      expect(env.server.calls, contains('PUT /api/v1/persona/profile'));
+      expect(find.byKey(const Key('persona.editor')), findsOneWidget);
+      expect(find.text('Saved'), findsOneWidget);
+    });
+
+    testWidgets('a topic file in its editor; what is sent as a page', (
+      t,
+    ) async {
+      await about(t);
+      await t.tap(find.byKey(const Key('persona.nav.t.gepek')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('persona.field.summary')), findsOneWidget);
+      await t.tap(find.byKey(const Key('persona.nav.agent')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('persona.sent.agent')), findsOneWidget);
     });
   });
 

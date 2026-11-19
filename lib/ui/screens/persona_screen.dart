@@ -1,12 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models/models.dart';
+import '../../app/layout.dart';
+import '../../app/router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../persona/persona_controller.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_page.dart' show DesktopPage, DesktopPageBody;
+import '../desktop/layers.dart' show showDesktopConfirm;
+import '../desktop/list_area.dart' show SectionRow;
+import '../desktop/panes.dart' show KeyCap, PaneHeader;
 import '../format.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
@@ -25,8 +32,14 @@ const int kPersonaTopicTextMax = 32000;
 /// when a question needs it, and a switch per item says whether it may also
 /// go to the General chats (a cloud model). A change applies to the chats
 /// started after it.
+///
+/// On the desktop (27W-10) the content of the About me area: one [item] –
+/// a section or topic file in its editor, what is sent, or the overview.
 class PersonaScreen extends ConsumerStatefulWidget {
-  const PersonaScreen({super.key});
+  const PersonaScreen({super.key, this.item});
+
+  /// The desktop's item ([PersonaItem]); null: the overview.
+  final String? item;
 
   @override
   ConsumerState<PersonaScreen> createState() => _PersonaScreenState();
@@ -36,10 +49,16 @@ class _PersonaScreenState extends ConsumerState<PersonaScreen> {
   @override
   void initState() {
     super.initState();
-    unawaited(ref.read(personaProvider.notifier).refresh());
+    // the desktop: an item opened from the list column needs no reload
+    if (widget.item == null || ref.read(personaProvider).persona == null) {
+      unawaited(ref.read(personaProvider.notifier).refresh());
+    }
   }
 
   PersonaController get _controller => ref.read(personaProvider.notifier);
+
+  /// The desktop: a new topic's name, for the page after its save.
+  String? _savedTopic;
 
   void _snack(String text) {
     if (!mounted) return;
@@ -146,6 +165,7 @@ class _PersonaScreenState extends ConsumerState<PersonaScreen> {
     final view = ref.watch(personaProvider);
     final persona = view.persona;
     final error = view.error;
+    if (DesktopLayout.of(context)) return _desktop(context, l, view);
     return SubPage(
       title: l.personaTitle,
       actions: [
@@ -174,6 +194,176 @@ class _PersonaScreenState extends ConsumerState<PersonaScreen> {
         null => const Center(child: CircularProgressIndicator()),
         final Persona p => _list(context, l, p, error),
       },
+    );
+  }
+
+  /// The desktop's content (27W-10): the item of the list column – a
+  /// section's or a topic file's editor in place (Save: Ctrl+S), what is
+  /// sent, or the overview with the rules.
+  Widget _desktop(BuildContext context, AppLocalizations l, PersonaView view) {
+    final p = view.persona;
+    final error = view.error;
+    if (p == null) {
+      return DesktopPage(
+        title: l.personaTitle,
+        child: error == null
+            ? const Center(child: CircularProgressIndicator())
+            : Padding(
+                padding: const EdgeInsets.all(20),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: StatusBanner(
+                    key: const Key('persona.loadFailed'),
+                    kind: StatusKind.alert,
+                    icon: DelveIcons.error,
+                    text: l.personaLoadFailed(apiErrorText(l, error)),
+                    actionLabel: l.retry,
+                    onAction: () => unawaited(_controller.refresh()),
+                  ),
+                ),
+              ),
+      );
+    }
+    void open(String? item) => context.open(Routes.aboutAt(item));
+    final item = p.available ? PersonaItem.of(widget.item) : null;
+    switch (item) {
+      case PersonaSectionItem(:final index) when index < p.sections.length:
+        return PersonaSectionEditor(
+          key: ValueKey('persona.edit.s$index'),
+          original: p.sections[index],
+          onSave: (section) => _controller.saveProfile([
+            for (final (i, s) in p.sections.indexed) i == index ? section : s,
+          ]),
+          onDelete: () => _controller.saveProfile([
+            for (final (i, s) in p.sections.indexed)
+              if (i != index) s,
+          ]),
+          onDone: ({required bool deleted}) {
+            if (deleted) open(null);
+          },
+        );
+      case PersonaNewSection():
+        return PersonaSectionEditor(
+          key: const ValueKey('persona.edit.newSection'),
+          original: null,
+          onSave: (section) =>
+              _controller.saveProfile([...p.sections, section]),
+          onDone: ({required bool deleted}) {
+            open('s${p.sections.length}');
+          },
+        );
+      case PersonaTopicItem(:final name):
+        final topic = p.topics.where((t) => t.name == name).firstOrNull;
+        if (topic == null) break;
+        return PersonaTopicEditor(
+          key: ValueKey('persona.edit.t.$name'),
+          original: topic,
+          taken: {for (final t in p.topics) t.name},
+          onSave: _controller.saveTopic,
+          onDelete: () => _controller.deleteTopic(name),
+          onDone: ({required bool deleted}) {
+            if (deleted) open(null);
+          },
+        );
+      case PersonaNewTopic():
+        return PersonaTopicEditor(
+          key: const ValueKey('persona.edit.newTopic'),
+          original: null,
+          taken: {for (final t in p.topics) t.name},
+          onSave: (topic) async {
+            await _controller.saveTopic(topic);
+            _savedTopic = topic.name;
+          },
+          onDone: ({required bool deleted}) {
+            open(_savedTopic == null ? null : 't:$_savedTopic');
+          },
+        );
+      case PersonaSent(:final general):
+        final text = general ? p.generalText : p.block;
+        return DesktopPage(
+          key: Key('persona.sent.${general ? 'general' : 'agent'}'),
+          title: general ? l.personaPreviewGeneral : l.personaPreviewAgent,
+          child: DesktopPageBody(
+            maxWidth: DelveDesktop.detailColumn,
+            top: DelveTokens.space3,
+            children: [
+              Text(
+                text.isEmpty
+                    ? l.personaNothing
+                    : l.personaChars(general ? text.length : p.blockChars),
+                style: context.text.bodySmall!.copyWith(
+                  color: context.delve.textMuted,
+                ),
+              ),
+              const SizedBox(height: DelveTokens.space3),
+              Container(
+                padding: const EdgeInsets.all(DelveTokens.space3),
+                decoration: BoxDecoration(
+                  color: context.colors.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(DelveDesktop.rowRadius),
+                ),
+                child: SelectableText(
+                  text.isEmpty ? l.personaPreviewEmpty : text,
+                  style: DelveText.monoSmall.copyWith(
+                    color: context.colors.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      case _:
+        break;
+    }
+    // the overview: what the page is for and its rules
+    final muted = context.text.bodyMedium!.copyWith(
+      color: context.delve.textMuted,
+    );
+    return DesktopPage(
+      key: const Key('persona.overview'),
+      title: l.personaTitle,
+      child: DesktopPageBody(
+        maxWidth: DelveDesktop.detailColumn,
+        top: DelveTokens.space3,
+        children: [
+          Text(l.personaHint, style: muted),
+          if (!p.available) ...[
+            const SizedBox(height: DelveTokens.space4),
+            StatusBanner(
+              key: const Key('persona.noStore'),
+              kind: StatusKind.warn,
+              icon: DelveIcons.warning,
+              text: l.personaNoStore,
+            ),
+          ],
+          if (error != null) ...[
+            const SizedBox(height: DelveTokens.space4),
+            StatusBanner(
+              key: const Key('persona.stale'),
+              kind: StatusKind.alert,
+              icon: DelveIcons.error,
+              text: l.personaLoadFailed(apiErrorText(l, error)),
+            ),
+          ],
+          const SizedBox(height: DelveTokens.space4),
+          StatusBanner(
+            key: const Key('persona.cloudRule'),
+            kind: StatusKind.info,
+            icon: DelveIcons.cloud,
+            text: l.personaCloudRule,
+          ),
+          const SizedBox(height: DelveTokens.space5),
+          Text(l.personaCore, style: context.text.titleSmall),
+          const SizedBox(height: DelveTokens.space1),
+          Text(l.personaCoreNote, style: muted),
+          const SizedBox(height: DelveTokens.space4),
+          Text(l.personaTopics, style: context.text.titleSmall),
+          const SizedBox(height: DelveTokens.space1),
+          Text(l.personaTopicsNote, style: muted),
+          const SizedBox(height: DelveTokens.space4),
+          Text(l.personaNewChats, style: muted),
+        ],
+      ),
     );
   }
 
@@ -378,6 +568,165 @@ class _PersonaScreenState extends ConsumerState<PersonaScreen> {
   }
 }
 
+/// What follows a desktop editor's save or delete.
+typedef PersonaEditorDone = void Function({required bool deleted});
+
+/// An item of the desktop's About me list column (`?item=`): `s3` a core
+/// section, `t:<name>` a topic file, `new-section`, `new-topic`, `agent` /
+/// `general` what is sent; null the overview.
+sealed class PersonaItem {
+  const PersonaItem();
+
+  static PersonaItem? of(String? item) => switch (item) {
+    null => null,
+    'new-section' => const PersonaNewSection(),
+    'new-topic' => const PersonaNewTopic(),
+    'agent' => const PersonaSent(general: false),
+    'general' => const PersonaSent(general: true),
+    final String t when t.startsWith('t:') => PersonaTopicItem(t.substring(2)),
+    final String s when s.startsWith('s') => switch (int.tryParse(
+      s.substring(1),
+    )) {
+      final i? when i >= 0 => PersonaSectionItem(i),
+      _ => null,
+    },
+    _ => null,
+  };
+}
+
+class PersonaSectionItem extends PersonaItem {
+  const PersonaSectionItem(this.index);
+  final int index;
+}
+
+class PersonaNewSection extends PersonaItem {
+  const PersonaNewSection();
+}
+
+class PersonaTopicItem extends PersonaItem {
+  const PersonaTopicItem(this.name);
+  final String name;
+}
+
+class PersonaNewTopic extends PersonaItem {
+  const PersonaNewTopic();
+}
+
+class PersonaSent extends PersonaItem {
+  const PersonaSent({required this.general});
+  final bool general;
+}
+
+/// The desktop's list column of About me (27W-10): the core's sections and
+/// the topic files (Cloud where they also go to the General chats), Add,
+/// and what is sent; the open item selected.
+class PersonaNav extends ConsumerWidget {
+  const PersonaNav({super.key, this.item});
+
+  final String? item;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final p = ref.watch(personaProvider).persona;
+    void open(String? to) => context.open(Routes.aboutAt(to));
+    Widget eyebrow(String text) => Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+      child: Text(
+        text.toUpperCase(),
+        style: context.text.labelSmall!.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.7,
+          color: context.delve.textMuted,
+        ),
+      ),
+    );
+    final editable = p?.available ?? false;
+    return TopLevelPage(
+      key: const Key('persona.nav'),
+      title: l.personaTitle,
+      background: context.colors.surfaceContainerLow,
+      actions: [
+        IconButton(
+          key: const Key('persona.refresh'),
+          tooltip: l.personaRefresh,
+          onPressed: () =>
+              unawaited(ref.read(personaProvider.notifier).refresh()),
+          icon: const SymbolIcon(
+            DelveIcons.refresh,
+            size: DelveDesktop.iconButtonIcon,
+          ),
+        ),
+      ],
+      child: ListView(
+        padding: const EdgeInsets.only(top: 2, bottom: DelveTokens.space4),
+        children: [
+          SectionRow(
+            key: const Key('persona.nav.overview'),
+            label: l.desktopPersonaOverview,
+            icon: DelveIcons.person,
+            selected: item == null,
+            onTap: () => open(null),
+          ),
+          if (p != null) ...[
+            eyebrow(l.personaCore),
+            for (final (i, s) in p.sections.indexed)
+              SectionRow(
+                key: Key('persona.nav.s$i'),
+                label: s.title,
+                icon: DelveIcons.note,
+                trailing: s.general ? l.personaCloud : null,
+                selected: item == 's$i',
+                onTap: () => open('s$i'),
+              ),
+            if (editable && p.sections.length < kPersonaSectionsMax)
+              SectionRow(
+                key: const Key('persona.nav.newSection'),
+                label: l.personaAddSection,
+                icon: DelveIcons.add,
+                selected: item == 'new-section',
+                onTap: () => open('new-section'),
+              ),
+            eyebrow(l.personaTopics),
+            for (final t in p.topics)
+              SectionRow(
+                key: Key('persona.nav.t.${t.name}'),
+                label: t.title,
+                icon: DelveIcons.file,
+                trailing: t.general ? l.personaCloud : null,
+                selected: item == 't:${t.name}',
+                onTap: () => open('t:${t.name}'),
+              ),
+            if (editable && p.topics.length < kPersonaTopicsMax)
+              SectionRow(
+                key: const Key('persona.nav.newTopic'),
+                label: l.personaAddTopic,
+                icon: DelveIcons.add,
+                selected: item == 'new-topic',
+                onTap: () => open('new-topic'),
+              ),
+            eyebrow(l.personaSent),
+            SectionRow(
+              key: const Key('persona.nav.agent'),
+              label: l.personaToAgent,
+              icon: DelveIcons.agent,
+              selected: item == 'agent',
+              onTap: () => open('agent'),
+            ),
+            SectionRow(
+              key: const Key('persona.nav.general'),
+              label: l.personaToGeneral,
+              icon: DelveIcons.cloud,
+              selected: item == 'general',
+              onTap: () => open('general'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 /// The first line of a section without its list marker.
 String _firstLine(String text) {
   final line = text.split('\n').first.trim();
@@ -452,10 +801,15 @@ class _EditorPage extends StatefulWidget {
     required this.onSave,
     this.onDelete,
     this.deleteName,
+    this.onDone,
   });
 
   final String title;
   final List<Widget> children;
+
+  /// The desktop: what follows a save or a delete (the page stays in the
+  /// content); null: the page closes.
+  final PersonaEditorDone? onDone;
 
   /// null: what is typed cannot be saved yet (the fields say why).
   final Future<void> Function()? Function() onSave;
@@ -469,6 +823,24 @@ class _EditorPage extends StatefulWidget {
 class _EditorPageState extends State<_EditorPage> {
   bool _busy = false;
 
+  /// The desktop: holds the focus for Ctrl+S while no field has it.
+  final _keys = FocusNode(debugLabel: 'persona.editor');
+
+  @override
+  void initState() {
+    super.initState();
+    // the shell keeps the focus otherwise (autofocus does not reach here)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && DesktopLayout.of(context)) _keys.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _keys.dispose();
+    super.dispose();
+  }
+
   void _snack(String text) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -476,12 +848,19 @@ class _EditorPageState extends State<_EditorPage> {
       ..showSnackBar(SnackBar(content: Text(text)));
   }
 
-  Future<void> _run(Future<void> Function() work) async {
+  Future<void> _run(Future<void> Function() work, {bool delete = false}) async {
     final l = AppLocalizations.of(context);
     setState(() => _busy = true);
     try {
       await work();
-      if (mounted) unawaited(Navigator.of(context).maybePop());
+      if (!mounted) return;
+      final done = widget.onDone;
+      if (done == null) {
+        unawaited(Navigator.of(context).maybePop());
+      } else {
+        if (!delete) _snack(l.desktopPersonaSaved);
+        done(deleted: delete);
+      }
     } on Object catch (e) {
       _snack(l.personaSaveFailed(apiErrorText(l, e)));
     } finally {
@@ -498,6 +877,17 @@ class _EditorPageState extends State<_EditorPage> {
     final l = AppLocalizations.of(context);
     final work = widget.onDelete;
     if (work == null) return;
+    if (DesktopLayout.of(context)) {
+      final ok = await showDesktopConfirm(
+        context,
+        title: l.personaDeleteTitle(widget.deleteName ?? ''),
+        body: l.personaDeleteBody,
+        action: l.personaDelete,
+        destructive: true,
+      );
+      if (ok && mounted) await _run(work, delete: true);
+      return;
+    }
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -517,12 +907,77 @@ class _EditorPageState extends State<_EditorPage> {
       ),
     );
     if (ok != true || !mounted) return;
-    await _run(work);
+    await _run(work, delete: true);
   }
+
+  List<Widget> get _deleteButton => [
+    if (widget.onDelete != null)
+      Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          key: const Key('persona.delete'),
+          onPressed: _busy ? null : () => unawaited(_delete()),
+          icon: SymbolIcon(DelveIcons.delete, color: context.delve.alertFg),
+          label: Text(
+            AppLocalizations.of(context).personaDelete,
+            style: TextStyle(color: context.delve.alertFg),
+          ),
+        ),
+      ),
+  ];
+
+  /// The desktop (27W-10): a 48 px header with Save (Ctrl+S), the fields
+  /// in a 680 column.
+  Widget _desktop(AppLocalizations l) => Scaffold(
+    backgroundColor: context.colors.surface,
+    body: CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
+          if (!_busy) unawaited(_save());
+        },
+      },
+      child: Focus(
+        focusNode: _keys,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PaneHeader(
+              title: widget.title,
+              actions: [
+                FilledButton(
+                  key: const Key('persona.save'),
+                  onPressed: _busy ? null : () => unawaited(_save()),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(l.personaSave),
+                      const SizedBox(width: 6),
+                      const KeyCap('Ctrl+S'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            Expanded(
+              child: DesktopPageBody(
+                key: const Key('persona.editor'),
+                maxWidth: DelveDesktop.detailColumn,
+                top: DelveTokens.space4,
+                children: [...widget.children, ..._deleteButton],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    if (widget.onDone != null && DesktopLayout.of(context)) {
+      return _desktop(l);
+    }
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -546,25 +1001,7 @@ class _EditorPageState extends State<_EditorPage> {
           DelveTokens.space4,
           DelveTokens.space8,
         ),
-        children: [
-          ...widget.children,
-          if (widget.onDelete != null)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                key: const Key('persona.delete'),
-                onPressed: _busy ? null : () => unawaited(_delete()),
-                icon: SymbolIcon(
-                  DelveIcons.delete,
-                  color: context.delve.alertFg,
-                ),
-                label: Text(
-                  l.personaDelete,
-                  style: TextStyle(color: context.delve.alertFg),
-                ),
-              ),
-            ),
-        ],
+        children: [...widget.children, ..._deleteButton],
       ),
     );
   }
@@ -578,12 +1015,16 @@ class PersonaSectionEditor extends StatefulWidget {
     required this.original,
     required this.onSave,
     this.onDelete,
+    this.onDone,
   });
 
   /// null: a new section.
   final PersonaSection? original;
   final Future<void> Function(PersonaSection section) onSave;
   final Future<void> Function()? onDelete;
+
+  /// The desktop: the editor is a page of the content (see [_EditorPage]).
+  final PersonaEditorDone? onDone;
 
   @override
   State<PersonaSectionEditor> createState() => _PersonaSectionEditorState();
@@ -626,6 +1067,7 @@ class _PersonaSectionEditorState extends State<PersonaSectionEditor> {
       onSave: _save,
       onDelete: widget.onDelete,
       deleteName: widget.original?.title,
+      onDone: widget.onDone,
       children: [
         TextField(
           key: const Key('persona.field.title'),
@@ -681,10 +1123,14 @@ class PersonaTopicEditor extends StatefulWidget {
     required this.taken,
     required this.onSave,
     this.onDelete,
+    this.onDone,
   });
 
   /// null: a new file.
   final PersonaTopic? original;
+
+  /// The desktop: the editor is a page of the content (see [_EditorPage]).
+  final PersonaEditorDone? onDone;
 
   /// The names of the files there are.
   final Set<String> taken;
@@ -751,6 +1197,7 @@ class _PersonaTopicEditorState extends State<PersonaTopicEditor> {
       onSave: _save,
       onDelete: widget.onDelete,
       deleteName: widget.original?.title,
+      onDone: widget.onDone,
       children: [
         TextField(
           key: const Key('persona.field.title'),

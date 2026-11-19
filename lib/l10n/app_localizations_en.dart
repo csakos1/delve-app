@@ -5723,4 +5723,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTextSizeSystem => 'System';
+
+  @override
+  String get desktopPersonaOverview => 'Overview';
+
+  @override
+  String get desktopPersonaSaved => 'Saved';
 }

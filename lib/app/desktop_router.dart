@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../ui/desktop/about_area.dart';
 import '../ui/desktop/chats_area.dart';
 import '../ui/desktop/desktop_shell.dart';
 import '../ui/desktop/news_area.dart';
@@ -66,6 +67,7 @@ GoRouter buildDesktopRouter({
     debugLabel: 'desktop.schedules',
   );
   final settingsKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.settings');
+  final aboutKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.about');
 
   Widget morePage(MorePage page, GoRouterState state) => switch (page) {
     MorePage.settings => const SettingsScreen(),
@@ -361,13 +363,34 @@ GoRouter buildDesktopRouter({
               ),
             ],
           ),
+          // About me: the sections and files stay; one in the content
+          ShellRoute(
+            navigatorKey: aboutKey,
+            pageBuilder: (context, state, child) => NoTransitionPage<void>(
+              key: state.pageKey,
+              child: AboutArea(location: state.uri.toString(), content: child),
+            ),
+            routes: [
+              GoRoute(
+                path: Routes.about,
+                pageBuilder: (_, state) {
+                  final item = state.uri.queryParameters['item'];
+                  return _flat(
+                    state,
+                    PersonaScreen(key: ValueKey('persona.$item'), item: item),
+                  );
+                },
+              ),
+            ],
+          ),
           for (final page in MorePage.values)
             if (page == MorePage.mirroring)
               GoRoute(path: page.route, redirect: (_, _) => Routes.dashboard)
             else if (page == MorePage.news ||
                 page == MorePage.watches ||
                 page == MorePage.schedules ||
-                page == MorePage.settings)
+                page == MorePage.settings ||
+                page == MorePage.about)
               ...const <RouteBase>[]
             else
               GoRoute(

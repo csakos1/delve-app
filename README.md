@@ -486,6 +486,10 @@ Settings → Desktop tools adds, in the desktop layout, Remember pane widths, Op
 by default and the text size (System · 100 · 115 · 130 %, text only); they live in
 `desktop.json` in the app's data folder (`path_provider`; `lib/ui/desktop/desktop_prefs.dart`),
 with each area's list and inspector widths and whether they are open.
+About me (`about_area.dart`): the core's sections and the topic files (marked Cloud where they also
+go to the General chats), Add, and what is sent are the list column (`?item=`); a section or a
+file opens in its editor in the content (Save: Ctrl+S, Delete with the desktop dialog), what is
+sent as a page.
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.
