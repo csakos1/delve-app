@@ -8738,6 +8738,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick one from the list'**
   String get desktopNewsEmptySub;
+
+  /// No description provided for @desktopWatchesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No watch open'**
+  String get desktopWatchesEmpty;
+
+  /// No description provided for @desktopWatchesEmptySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one from the list'**
+  String get desktopWatchesEmptySub;
+
+  /// No description provided for @desktopWatchNext.
+  ///
+  /// In en, this message translates to:
+  /// **'next {when}'**
+  String desktopWatchNext(String when);
+
+  /// No description provided for @watchTabHits.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Hits} other{Hits · {count}}}'**
+  String watchTabHits(int count);
+
+  /// No description provided for @watchTabRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Rejected} other{Rejected · {count}}}'**
+  String watchTabRejected(int count);
+
+  /// No description provided for @watchTabWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Waiting} other{Waiting · {count}}}'**
+  String watchTabWaiting(int count);
+
+  /// No description provided for @desktopWatchNoRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing rejected yet.'**
+  String get desktopWatchNoRejected;
+
+  /// No description provided for @desktopWatchNoWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing waits for the judge.'**
+  String get desktopWatchNoWaiting;
+
+  /// No description provided for @watchHitTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit'**
+  String get watchHitTab;
+
+  /// No description provided for @desktopWatchHitGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This listing is not loaded any more.'**
+  String get desktopWatchHitGone;
+
+  /// No description provided for @desktopWatchSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'seen {when}'**
+  String desktopWatchSeen(String when);
+
+  /// No description provided for @desktopWatchJudge.
+  ///
+  /// In en, this message translates to:
+  /// **'Judge'**
+  String get desktopWatchJudge;
+
+  /// No description provided for @desktopWatchListing.
+  ///
+  /// In en, this message translates to:
+  /// **'Listing'**
+  String get desktopWatchListing;
 }
 
 class _AppLocalizationsDelegate

@@ -98,6 +98,9 @@ abstract final class Routes {
   ).toString();
   static String watch(String slug) =>
       '/more/watches/${Uri.encodeComponent(slug)}';
+
+  /// The desktop's watch with one listing selected (the Hit inspector).
+  static String watchHit(String slug, int id) => '${watch(slug)}?hit=$id';
   static const settings = '/more/settings';
   static const connectionLog = '/more/settings/log';
 

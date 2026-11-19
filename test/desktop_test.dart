@@ -20,6 +20,7 @@ import 'package:delve/ui/desktop/intake.dart';
 import 'package:delve/ui/desktop/news_area.dart';
 import 'package:delve/ui/desktop/panes.dart';
 import 'package:delve/ui/desktop/status_bar.dart';
+import 'package:delve/ui/desktop/watches_area.dart';
 import 'package:delve/ui/general/general_widgets.dart' show DelveFilterChip;
 import 'package:delve/ui/screens/approvals_screen.dart';
 import 'package:delve/ui/screens/archived_chats_screen.dart';
@@ -30,6 +31,8 @@ import 'package:delve/ui/screens/news_screen.dart';
 import 'package:delve/ui/screens/news_story_screen.dart';
 import 'package:delve/ui/screens/observability_screen.dart';
 import 'package:delve/ui/screens/system_screen.dart';
+import 'package:delve/ui/screens/watch_detail_screen.dart';
+import 'package:delve/ui/screens/watches_screen.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -46,6 +49,7 @@ import 'news_test.dart' show newsJson, storyJson;
 import 'support/fake_openrouter.dart' show testOpenRouterKey;
 import 'support/fake_server.dart' show FakeReply, FakeServer;
 import 'support/harness.dart';
+import 'watches_test.dart' show fourWatches, itemJson;
 
 final _linux = PlatformCaps.linux(host: 'archlinux');
 const _frame = Size(1440, 900);
@@ -1634,6 +1638,228 @@ void main() {
       await t.pumpAndSettle();
       expect(find.byKey(const Key('inspector.story')), findsNothing);
       expect(find.byKey(const Key('news.story.original')), findsOneWidget);
+    });
+  });
+
+  group('Watches on the desktop (L2c2b1)', () {
+    const slug = 'rtx-4070-super-180k';
+
+    /// The four watches of 21a; the first has hits 17, 16, a reject 14 and
+    /// a listing waiting for the judge (20).
+    void serveWatches(FakeServer server) {
+      server.json('GET', '/api/v1/watches', {'data': fourWatches()});
+      for (final w in fourWatches()) {
+        final s = w['slug']! as String;
+        server.on('GET', '/api/v1/watches/$s/items', (r) {
+          final v = r.uri.queryParameters['verdict'];
+          return FakeReply(200, {
+            'data': s != slug
+                ? <Object?>[]
+                : switch (v) {
+                    'hits' => [
+                      itemJson(17),
+                      itemJson(16, {'title': 'MSI RTX 4070 Super Ventus 2X'}),
+                    ],
+                    'pending' => [
+                      itemJson(20, {
+                        'title': 'Palit RTX 4070 Super JetStream',
+                        'verdict': 'pending',
+                        'reason': null,
+                      }),
+                    ],
+                    _ => [
+                      itemJson(14, {
+                        'title': 'Zotac RTX 4070 Super – bányából',
+                        'verdict': 'reject',
+                        'reason': 'A hirdetés szerint bányában futott.',
+                      }),
+                    ],
+                  },
+            'next_before': null,
+          });
+        });
+      }
+    }
+
+    Future<TestEnv> watches(WidgetTester t, {Size window = _frame}) async {
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: window,
+        before: (env) async => serveWatches(env.server),
+      );
+      await _ctrl(t, LogicalKeyboardKey.digit6);
+      return env;
+    }
+
+    Future<void> open(WidgetTester t, String name) async {
+      await t.tap(
+        find.descendant(
+          of: find.byKey(const Key('pane.list')),
+          matching: find.text(name),
+        ),
+      );
+      await t.pumpAndSettle();
+    }
+
+    Finder inside(String key, Finder f) =>
+        find.descendant(of: find.byKey(Key(key)), matching: f);
+
+    test('the watch and the listing of a location', () {
+      expect(selectedWatch(Routes.watches), isNull);
+      expect(selectedWatch(Routes.watch(slug)), slug);
+      expect(selectedWatch(Routes.watchHit(slug, 17)), slug);
+      expect(selectedHit(Routes.watch(slug)), isNull);
+      expect(selectedHit(Routes.watchHit(slug, 17)), 17);
+    });
+
+    testWidgets('the watches in the list column, a watch with its tabs in '
+        'the content, a listing in the Hit inspector', (t) async {
+      final env = await watches(t);
+      expect(find.byType(WatchesArea), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('pane.list')),
+          matching: find.byType(WatchesScreen),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('watches.placeholder')), findsOneWidget);
+      // no FAB on the desktop: New watch is in the list's header
+      expect(find.byType(FloatingActionButton), findsNothing);
+      expect(find.byKey(const Key('watches.new')), findsOneWidget);
+      expect(_width(t, 'pane.list'), DelveDesktop.listDefault);
+
+      await open(t, 'RTX 4070 Super ≤180k');
+      expect(find.byType(WatchDetailScreen), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(PaneHeader),
+          matching: find.text('RTX 4070 Super ≤180k'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Hits · 3'), findsOneWidget);
+      expect(find.text('Rejected · 2'), findsOneWidget);
+      expect(find.text('Waiting · 1'), findsOneWidget);
+      expect(find.byKey(const Key('watch.item.17')), findsOneWidget);
+      // no listing selected: no inspector, no toggle
+      expect(find.byKey(const Key('inspector.hit')), findsNothing);
+      expect(find.byKey(const Key('pane.inspector.toggle')), findsNothing);
+      // the phone's two lists only, until Waiting is opened
+      expect(
+        {
+          for (final r in env.server.requests)
+            if (r.uri.path.endsWith('/$slug/items'))
+              r.uri.queryParameters['verdict'],
+        },
+        {'hits', 'reject,error'},
+      );
+
+      await t.tap(
+        find.text('Gigabyte RTX 4070 Super Gaming OC 12G – garanciális'),
+      );
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('inspector.hit')), findsOneWidget);
+      expect(inside('inspector.hit', find.text('165 000 Ft')), findsOneWidget);
+      expect(
+        inside(
+          'inspector.hit',
+          find.text('Nem említ bányászást; garanciális, számlával.'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('pane.inspector.toggle')), findsOneWidget);
+      expect(env.links.opened, isEmpty);
+      await t.tap(find.byKey(const Key('inspector.hit.open')));
+      await t.pumpAndSettle();
+      expect(env.links.opened.single.path, '/apro/x17/friss.html');
+    });
+
+    testWidgets('Rejected and Waiting: their own listings; the tab stays '
+        'while a listing is selected', (t) async {
+      final env = await watches(t);
+      await open(t, 'RTX 4070 Super ≤180k');
+      await t.tap(find.byKey(const Key('watch.tab.rejected')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('watch.item.14')), findsOneWidget);
+      expect(find.byKey(const Key('watch.item.17')), findsNothing);
+      await t.tap(find.text('Zotac RTX 4070 Super – bányából'));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('inspector.hit')), findsOneWidget);
+      // still on Rejected
+      expect(find.byKey(const Key('watch.item.14')), findsOneWidget);
+
+      await t.tap(find.byKey(const Key('watch.tab.waiting')));
+      await t.pumpAndSettle();
+      expect(
+        env.server.requests.where(
+          (r) =>
+              r.uri.path.endsWith('/$slug/items') &&
+              r.uri.queryParameters['verdict'] == 'pending',
+        ),
+        hasLength(1),
+      );
+      expect(find.byKey(const Key('watch.item.20')), findsOneWidget);
+      expect(find.text('Waiting for judge'), findsWidgets);
+    });
+
+    testWidgets('a double click opens the link; right click has Open link '
+        'and Copy link', (t) async {
+      final env = await watches(t);
+      await open(t, 'RTX 4070 Super ≤180k');
+      final row = find.byKey(const Key('watch.item.16'));
+      await t.tap(row);
+      await t.pump(const Duration(milliseconds: 50));
+      await t.tap(row);
+      await t.pumpAndSettle();
+      expect(env.links.opened.single.path, '/apro/x16/friss.html');
+
+      await t.tap(row, buttons: kSecondaryMouseButton);
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('watch.item.menu.open')), findsOneWidget);
+      expect(find.byKey(const Key('watch.item.menu.copy')), findsOneWidget);
+    });
+
+    testWidgets('a failing watch: the reason in a banner with Fix in chat, '
+        'no inspector', (t) async {
+      await watches(t);
+      await open(t, 'Bambu Lab P1S ár');
+      expect(find.byKey(const Key('watch.errorBanner')), findsOneWidget);
+      expect(
+        inside('watch.errorBanner', find.text('Fix in chat')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('pane.inspector.toggle')), findsNothing);
+      expect(find.byKey(const Key('watch.tab.empty')), findsOneWidget);
+    });
+
+    testWidgets('J / K step through the watches', (t) async {
+      await watches(t);
+      // by name: Bambu, Dr. Doom, RTX, Steam Deck
+      await t.sendKeyEvent(LogicalKeyboardKey.keyJ);
+      await t.pumpAndSettle();
+      expect(find.byKey(const ValueKey('watch.bambu')), findsOneWidget);
+      await t.sendKeyEvent(LogicalKeyboardKey.keyJ);
+      await t.pumpAndSettle();
+      expect(find.byKey(const ValueKey('watch.doom')), findsOneWidget);
+      await t.sendKeyEvent(LogicalKeyboardKey.keyK);
+      await t.pumpAndSettle();
+      expect(find.byKey(const ValueKey('watch.bambu')), findsOneWidget);
+    });
+
+    testWidgets('the phone: the watch is a page of its own, no tabs', (
+      t,
+    ) async {
+      await pumpDelve(t, before: (env) async => serveWatches(env.server));
+      await t.tap(find.text('More'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Watches'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('RTX 4070 Super ≤180k'));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('watch.tab.hits')), findsNothing);
+      expect(find.text('HITS · 3'), findsOneWidget);
     });
   });
 }

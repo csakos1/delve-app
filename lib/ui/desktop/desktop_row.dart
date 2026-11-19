@@ -103,7 +103,9 @@ GestureTapUpCallback? desktopMenuOn(
 /// A row of a desktop list column (design 27): radius 8, padding 8 / 10,
 /// min height 52 (two lines), 1 px apart; hover one surface step up
 /// (`surface-2` on the list's `surface-1`), selected `surface-3`. On hover
-/// [actions] cover the row's top right; right-click opens [menu].
+/// [actions] cover the row's top right; right-click opens [menu]. In the
+/// content pane ([onContent]: a watch's hits) the rest is `background` and
+/// the hover `surface-1`.
 class DesktopRowFrame extends StatefulWidget {
   const DesktopRowFrame({
     super.key,
@@ -114,6 +116,7 @@ class DesktopRowFrame extends StatefulWidget {
     this.menu = const [],
     this.minHeight = DelveDesktop.rowTwoLine,
     this.moreTooltip,
+    this.onContent = false,
   });
 
   final Widget child;
@@ -125,6 +128,9 @@ class DesktopRowFrame extends StatefulWidget {
 
   /// The hover `more_horiz` button's tooltip (it opens [menu]).
   final String? moreTooltip;
+
+  /// The row sits in the content pane, not in the list column.
+  final bool onContent;
 
   @override
   State<DesktopRowFrame> createState() => _DesktopRowFrameState();
@@ -139,8 +145,8 @@ class _DesktopRowFrameState extends State<DesktopRowFrame> {
     final background = widget.selected
         ? cs.surfaceContainerHigh
         : _hover
-        ? cs.surfaceContainer
-        : cs.surfaceContainerLow;
+        ? (widget.onContent ? cs.surfaceContainerLow : cs.surfaceContainer)
+        : (widget.onContent ? cs.surface : cs.surfaceContainerLow);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0.5),
       child: MouseRegion(

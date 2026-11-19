@@ -6,10 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models/models.dart';
 import '../../api/protocol.dart';
+import '../../app/layout.dart';
+import '../../app/router.dart';
 import '../../app/watches.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_page.dart';
+import '../desktop/panes.dart' show InspectorFrame, InspectorTab;
 import '../format.dart';
+import '../links.dart';
 import '../watch_text.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
@@ -18,10 +23,16 @@ import 'watches_screen.dart' show startWatchChat;
 
 /// 21b Watch: its condition and filters, pause / resume / run now, change it
 /// in a chat; the hits (newest first) and the rejected listings, collapsed.
+/// On the desktop (27W-9a) the content of the Watches area: the same top,
+/// then the listings in three tabs (Hits · Rejected · Waiting).
 class WatchDetailScreen extends ConsumerStatefulWidget {
-  const WatchDetailScreen({super.key, required this.slug});
+  const WatchDetailScreen({super.key, required this.slug, this.hit});
 
   final String slug;
+
+  /// The desktop: the listing selected in the tabs (the Hit inspector
+  /// shows it).
+  final int? hit;
 
   @override
   ConsumerState<WatchDetailScreen> createState() => _WatchDetailScreenState();
@@ -31,6 +42,9 @@ class _WatchDetailScreenState extends ConsumerState<WatchDetailScreen> {
   bool _rejectedOpen = false;
   WatchAction? _busy;
   bool _loadingMore = false;
+
+  /// The desktop's tab.
+  WatchItemList _tab = WatchItemList.hits;
 
   @override
   void initState() {
@@ -73,13 +87,13 @@ class _WatchDetailScreenState extends ConsumerState<WatchDetailScreen> {
     }
   }
 
-  Future<void> _more({bool rejected = false}) async {
+  Future<void> _more({bool rejected = false, WatchItemList? list}) async {
     final l = AppLocalizations.of(context);
     setState(() => _loadingMore = true);
     try {
       await ref
           .read(watchItemsProvider(widget.slug).notifier)
-          .loadMore(rejected: rejected);
+          .loadMore(rejected: rejected, list: list);
     } on Object catch (e) {
       _snack(l.watchesLoadFailed(apiErrorText(l, e)));
     } finally {
@@ -94,6 +108,9 @@ class _WatchDetailScreenState extends ConsumerState<WatchDetailScreen> {
     final w = view.bySlug(widget.slug);
     final items = ref.watch(watchItemsProvider(widget.slug));
     final now = DateTime.now();
+    if (DesktopLayout.of(context)) {
+      return _desktop(context, l, view, w, items, now);
+    }
     final Widget body;
     if (w == null) {
       final error = view.error;
@@ -140,6 +157,202 @@ class _WatchDetailScreenState extends ConsumerState<WatchDetailScreen> {
       appBar: PageColourBar(title: w?.name ?? l.moreWatches),
       body: UnderBarFade(child: body),
     );
+  }
+
+  Future<void> _loadWaiting() async {
+    final l = AppLocalizations.of(context);
+    try {
+      await ref.read(watchItemsProvider(widget.slug).notifier).loadWaiting();
+    } on Object catch (e) {
+      _snack(l.watchesLoadFailed(apiErrorText(l, e)));
+    }
+  }
+
+  void _selectTab(WatchItemList tab, WatchItemsView items) {
+    if (tab == _tab) return;
+    setState(() => _tab = tab);
+    if (tab == WatchItemList.waiting && items.waiting == null) {
+      unawaited(_loadWaiting());
+    }
+  }
+
+  /// The desktop's content (27W-9a / 9b): a 48 px header with the name, then
+  /// a 680 column – the banners (a failing watch: the reason, Fix in chat),
+  /// the condition and facts, the actions – and the listings in tabs. A
+  /// click on a listing shows it in the Hit inspector.
+  Widget _desktop(
+    BuildContext context,
+    AppLocalizations l,
+    WatchesView view,
+    Watch? w,
+    WatchItemsView items,
+    DateTime now,
+  ) {
+    final Widget body;
+    if (w == null) {
+      final error = view.error;
+      body = view.items == null && error == null
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(DelveDesktop.contentGutter),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: StatusBanner(
+                  kind: error == null ? StatusKind.info : StatusKind.alert,
+                  icon: error == null ? DelveIcons.info : DelveIcons.error,
+                  text: error == null
+                      ? l.watchGone
+                      : l.watchesLoadFailed(apiErrorText(l, error)),
+                  actionLabel: error == null ? null : l.retry,
+                  onAction: error == null ? null : _refresh,
+                ),
+              ),
+            );
+    } else {
+      body = DesktopPageBody(
+        key: const Key('watch.detail'),
+        maxWidth: DelveDesktop.detailColumn + 2 * DelveTokens.space4,
+        top: DelveTokens.space3,
+        children: [
+          ..._header(l, w, now),
+          _tabs(l, w, items),
+          ..._tabItems(l, items, now),
+        ],
+      );
+    }
+    return DesktopPage(
+      title: w?.name ?? l.moreWatches,
+      inspectorToggle: true,
+      actions: [
+        DesktopRefreshButton(
+          buttonKey: const Key('watch.refresh'),
+          onPressed: () => unawaited(_refresh()),
+        ),
+      ],
+      child: body,
+    );
+  }
+
+  /// Hits · Rejected · Waiting, with their counts.
+  Widget _tabs(AppLocalizations l, Watch w, WatchItemsView items) {
+    Widget tab(WatchItemList t, String label) => InspectorTab(
+      key: Key('watch.tab.${t.name}'),
+      label: label,
+      selected: _tab == t,
+      onTap: () => _selectTab(t, items),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: DelveTokens.space5),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: context.colors.outlineVariant),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Row(
+            children: [
+              tab(WatchItemList.hits, l.watchTabHits(w.hits)),
+              tab(WatchItemList.rejected, l.watchTabRejected(w.rejected)),
+              tab(WatchItemList.waiting, l.watchTabWaiting(w.pending)),
+              const Spacer(),
+              if (_tab == WatchItemList.hits && w.hits24h > 0)
+                Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: Text(
+                    l.watchHits24h(w.hits24h),
+                    style: DelveDesktopText.meta.copyWith(
+                      color: context.delve.textMuted,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// The open tab's listings, the selected one marked.
+  List<Widget> _tabItems(
+    AppLocalizations l,
+    WatchItemsView items,
+    DateTime now,
+  ) {
+    final (list, next, empty) = switch (_tab) {
+      WatchItemList.hits => (items.hits, items.hitsNext, l.watchNoHits),
+      WatchItemList.rejected => (
+        items.rejects,
+        items.rejectsNext,
+        l.desktopWatchNoRejected,
+      ),
+      WatchItemList.waiting => (
+        items.waiting,
+        items.waitingNext,
+        l.desktopWatchNoWaiting,
+      ),
+    };
+    final error = items.error;
+    if (list == null) {
+      return [
+        if (error != null)
+          Padding(
+            padding: _side.copyWith(top: DelveTokens.space4),
+            child: StatusBanner(
+              kind: StatusKind.alert,
+              icon: DelveIcons.error,
+              text: l.watchesLoadFailed(apiErrorText(l, error)),
+              actionLabel: l.retry,
+              onAction: _tab == WatchItemList.waiting ? _loadWaiting : _refresh,
+            ),
+          )
+        else
+          const Padding(
+            padding: EdgeInsets.all(DelveTokens.space6),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+      ];
+    }
+    if (list.isEmpty) {
+      return [
+        Padding(
+          padding: _side.copyWith(top: DelveTokens.space4),
+          child: Text(
+            empty,
+            key: const Key('watch.tab.empty'),
+            style: context.text.bodyMedium!.copyWith(
+              color: context.colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ];
+    }
+    return [
+      const SizedBox(height: 6),
+      for (final i in list)
+        DesktopHitRow(
+          key: ValueKey('watch.hit.${i.id}'),
+          item: i,
+          now: now,
+          selected: i.id == widget.hit,
+          onSelect: () => context.open(Routes.watchHit(widget.slug, i.id)),
+        ),
+      if (next != null)
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 6, top: DelveTokens.space1),
+            child: TextButton(
+              key: const Key('watch.moreItems'),
+              onPressed: _loadingMore
+                  ? null
+                  : () => unawaited(_more(list: _tab)),
+              child: Text(l.watchLoadMore),
+            ),
+          ),
+        ),
+    ];
   }
 
   static const _side = EdgeInsets.symmetric(horizontal: DelveTokens.space4);
@@ -571,5 +784,124 @@ class _DetailRow extends StatelessWidget {
       ),
     );
     return onTap == null ? row : InkWell(onTap: onTap, child: row);
+  }
+}
+
+/// The desktop's Hit inspector (27W-9a): the selected listing – title, the
+/// price large, place and posting, the judge's note, the listing's text –
+/// with Open link and Copy link.
+class WatchHitInspector extends ConsumerWidget {
+  const WatchHitInspector({super.key, required this.slug, required this.id});
+
+  final String slug;
+  final int id;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final item = ref.watch(watchItemsProvider(slug)).byId(id);
+    final cs = context.colors;
+    final muted = context.delve.textMuted;
+    Widget eyebrow(String text) => Padding(
+      padding: const EdgeInsets.only(top: 16, bottom: 6),
+      child: Text(
+        text.toUpperCase(),
+        style: context.text.labelSmall!.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.7,
+          color: muted,
+        ),
+      ),
+    );
+    return InspectorFrame(
+      key: const Key('inspector.hit'),
+      label: l.watchHitTab,
+      child: switch (item) {
+        null => Padding(
+          padding: const EdgeInsets.all(12),
+          child: Text(
+            l.desktopWatchHitGone,
+            style: context.text.bodyMedium!.copyWith(color: muted),
+          ),
+        ),
+        final WatchItem i => ListView(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+          children: [
+            SelectableText(
+              i.title,
+              key: const Key('inspector.hit.title'),
+              style: context.text.titleMedium,
+            ),
+            if (i.price case final price? when price.isNotEmpty) ...[
+              const SizedBox(height: DelveTokens.space2),
+              Text(
+                price,
+                key: const Key('inspector.hit.price'),
+                style: context.text.displaySmall!.copyWith(
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+            const SizedBox(height: DelveTokens.space2),
+            Text(
+              [
+                ?i.location,
+                ?i.posted,
+                l.desktopWatchSeen(listTime(i.seenAt, DateTime.now())),
+              ].where((s) => s.isNotEmpty).join(' · '),
+              style: context.text.bodySmall!.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+            if (itemMarker(l, i) case final marker?) ...[
+              const SizedBox(height: DelveTokens.space2),
+              Align(alignment: Alignment.centerLeft, child: marker),
+            ],
+            eyebrow(l.desktopWatchJudge),
+            Text(
+              switch (i) {
+                WatchItem(verdict: 'mechanical') => l.watchItemByFilters,
+                WatchItem(verdict: 'pending') => l.watchItemWaiting,
+                WatchItem(verdict: 'error', :final reason) =>
+                  reason ?? l.watchItemCouldntJudge,
+                WatchItem(:final reason) => reason ?? '—',
+              },
+              key: const Key('inspector.hit.judge'),
+              style: context.text.bodyMedium!.copyWith(
+                fontStyle: i.reason != null ? FontStyle.italic : null,
+              ),
+            ),
+            if (i.excerpt case final excerpt? when excerpt.isNotEmpty) ...[
+              eyebrow(l.desktopWatchListing),
+              SelectableText(
+                excerpt,
+                style: context.text.bodyMedium!.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ],
+            const SizedBox(height: DelveTokens.space5),
+            Wrap(
+              spacing: DelveTokens.space2,
+              runSpacing: DelveTokens.space2,
+              children: [
+                FilledButton.icon(
+                  key: const Key('inspector.hit.open'),
+                  onPressed: () => unawaited(openLink(context, ref, i.url)),
+                  icon: const SymbolIcon(DelveIcons.openLink, size: 16),
+                  label: Text(l.watchOpenLink),
+                ),
+                TextButton.icon(
+                  key: const Key('inspector.hit.copy'),
+                  onPressed: () => unawaited(copyLink(context, i.url)),
+                  icon: const SymbolIcon(DelveIcons.copy, size: 16),
+                  label: Text(l.watchCopyLink),
+                ),
+              ],
+            ),
+          ],
+        ),
+      },
+    );
   }
 }

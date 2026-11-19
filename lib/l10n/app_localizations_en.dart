@@ -5603,4 +5603,71 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopNewsEmptySub => 'Pick one from the list';
+
+  @override
+  String get desktopWatchesEmpty => 'No watch open';
+
+  @override
+  String get desktopWatchesEmptySub => 'Pick one from the list';
+
+  @override
+  String desktopWatchNext(String when) {
+    return 'next $when';
+  }
+
+  @override
+  String watchTabHits(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hits · $count',
+      zero: 'Hits',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String watchTabRejected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Rejected · $count',
+      zero: 'Rejected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String watchTabWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Waiting · $count',
+      zero: 'Waiting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get desktopWatchNoRejected => 'Nothing rejected yet.';
+
+  @override
+  String get desktopWatchNoWaiting => 'Nothing waits for the judge.';
+
+  @override
+  String get watchHitTab => 'Hit';
+
+  @override
+  String get desktopWatchHitGone => 'This listing is not loaded any more.';
+
+  @override
+  String desktopWatchSeen(String when) {
+    return 'seen $when';
+  }
+
+  @override
+  String get desktopWatchJudge => 'Judge';
+
+  @override
+  String get desktopWatchListing => 'Listing';
 }

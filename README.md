@@ -468,6 +468,12 @@ sections, the open story selected; J / K step through it) in a 360 list column, 
 view in the content and the Story inspector (topic with Open topic, sources, Open original,
 feedback – back at the end of the column while the inspector is closed); News settings has its
 sections in the list column and a topic's description editor in the inspector.
+Watches is one too (`watches_area.dart`): the watches as 52 px rows in the list column (New
+watch in its header; J / K), the open watch in the content with its listings in tabs – Hits ·
+Rejected · Waiting (the listings waiting for the judge load when the tab opens) – and the
+selected listing in the Hit inspector (`?hit=`; price, the judge's note, Open link). A double
+click on a listing opens its link, right-click has Open link · Copy link; a failing watch
+shows the reason with Fix in chat.
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.

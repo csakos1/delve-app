@@ -4258,5 +4258,53 @@
   "newsOpenTopic": "Open topic",
   "newsTopicTab": "Topic",
   "desktopNewsEmpty": "No story open",
-  "desktopNewsEmptySub": "Pick one from the list"
+  "desktopNewsEmptySub": "Pick one from the list",
+  "desktopWatchesEmpty": "No watch open",
+  "desktopWatchesEmptySub": "Pick one from the list",
+  "desktopWatchNext": "next {when}",
+  "@desktopWatchNext": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "watchTabHits": "{count, plural, =0{Hits} other{Hits · {count}}}",
+  "@watchTabHits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "watchTabRejected": "{count, plural, =0{Rejected} other{Rejected · {count}}}",
+  "@watchTabRejected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "watchTabWaiting": "{count, plural, =0{Waiting} other{Waiting · {count}}}",
+  "@watchTabWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "desktopWatchNoRejected": "Nothing rejected yet.",
+  "desktopWatchNoWaiting": "Nothing waits for the judge.",
+  "watchHitTab": "Hit",
+  "desktopWatchHitGone": "This listing is not loaded any more.",
+  "desktopWatchSeen": "seen {when}",
+  "@desktopWatchSeen": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopWatchJudge": "Judge",
+  "desktopWatchListing": "Listing"
 }

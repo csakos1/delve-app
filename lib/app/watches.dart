@@ -153,7 +153,8 @@ final watchesProvider = NotifierProvider<WatchesController, WatchesView>(
 );
 
 /// One watch's items (design 21b): hits and the rejected ones (with the
-/// listings the judge could not decide), newest first, paged.
+/// listings the judge could not decide), newest first, paged; on the
+/// desktop also the ones waiting for the judge (27W-9a's Waiting tab).
 @immutable
 class WatchItemsView {
   const WatchItemsView({
@@ -161,6 +162,8 @@ class WatchItemsView {
     this.hitsNext,
     this.rejects,
     this.rejectsNext,
+    this.waiting,
+    this.waitingNext,
     this.error,
   });
 
@@ -170,11 +173,32 @@ class WatchItemsView {
   final int? hitsNext;
   final List<WatchItem>? rejects;
   final int? rejectsNext;
+
+  /// The listings waiting for the judge: null until the desktop's Waiting
+  /// tab asks for them (the phone only counts them).
+  final List<WatchItem>? waiting;
+  final int? waitingNext;
   final Object? error;
+
+  /// The item [id] in any of the lists (the desktop's Hit inspector).
+  WatchItem? byId(int id) {
+    for (final list in [hits, rejects, waiting]) {
+      for (final i in list ?? const <WatchItem>[]) {
+        if (i.id == id) return i;
+      }
+    }
+    return null;
+  }
 }
 
 /// Verdicts of the Rejected section: rejects and judge failures.
 const List<String> kRejectVerdicts = ['reject', 'error'];
+
+/// The verdict of the desktop's Waiting tab.
+const List<String> kWaitingVerdicts = ['pending'];
+
+/// The lists of a watch's items (the desktop's tabs).
+enum WatchItemList { hits, rejected, waiting }
 
 class WatchItemsController extends Notifier<WatchItemsView> {
   WatchItemsController(this.slug);
@@ -216,13 +240,16 @@ class WatchItemsController extends Notifier<WatchItemsView> {
   );
 
   /// An item moves between the lists as it is judged (pending → match), and
-  /// is upserted where it belongs; pending ones are only counted (the watch).
+  /// is upserted where it belongs; pending ones are only counted (the watch)
+  /// unless the Waiting list was loaded.
   void _seen(WatchItem item) {
     final hits = state.hits;
     final rejects = state.rejects;
     if (hits == null || rejects == null) return;
-    final h = hits.where((i) => i.id != item.id);
-    final r = rejects.where((i) => i.id != item.id);
+    bool other(WatchItem i) => i.id != item.id;
+    final h = hits.where(other);
+    final r = rejects.where(other);
+    final waiting = state.waiting;
     state = WatchItemsView(
       hits: _byNewest(item.isHit ? [...h, item] : h),
       hitsNext: state.hitsNext,
@@ -230,14 +257,23 @@ class WatchItemsController extends Notifier<WatchItemsView> {
         kRejectVerdicts.contains(item.verdict) ? [...r, item] : r,
       ),
       rejectsNext: state.rejectsNext,
+      waiting: waiting == null
+          ? null
+          : _byNewest([
+              ...waiting.where(other),
+              if (kWaitingVerdicts.contains(item.verdict)) item,
+            ]),
+      waitingNext: state.waitingNext,
       error: state.error,
     );
   }
 
-  /// The first page of both lists; a failure is kept and rethrown.
+  /// The first page of both lists (and of Waiting, once it was asked for);
+  /// a failure is kept and rethrown.
   Future<void> refresh() async {
     final api = _api;
     if (api == null) return;
+    final withWaiting = state.waiting != null;
     try {
       final hits = await api.watchItems(slug, limit: pageSize);
       final rejects = await api.watchItems(
@@ -245,54 +281,109 @@ class WatchItemsController extends Notifier<WatchItemsView> {
         verdicts: kRejectVerdicts,
         limit: pageSize,
       );
+      final waiting = withWaiting
+          ? await api.watchItems(
+              slug,
+              verdicts: kWaitingVerdicts,
+              limit: pageSize,
+            )
+          : null;
       if (ref.mounted) {
         state = WatchItemsView(
           hits: hits.items,
           hitsNext: hits.nextBefore,
           rejects: rejects.items,
           rejectsNext: rejects.nextBefore,
+          waiting: waiting?.items ?? state.waiting,
+          waitingNext: waiting == null ? state.waitingNext : waiting.nextBefore,
         );
       }
     } on Object catch (e) {
-      if (ref.mounted) {
-        state = WatchItemsView(
-          hits: state.hits,
-          hitsNext: state.hitsNext,
-          rejects: state.rejects,
-          rejectsNext: state.rejectsNext,
-          error: e,
-        );
-      }
+      if (ref.mounted) _failed(e);
       rethrow;
     }
   }
 
-  /// The next page of hits ([rejected] = of the Rejected section).
-  Future<void> loadMore({bool rejected = false}) async {
+  void _failed(Object e) => state = WatchItemsView(
+    hits: state.hits,
+    hitsNext: state.hitsNext,
+    rejects: state.rejects,
+    rejectsNext: state.rejectsNext,
+    waiting: state.waiting,
+    waitingNext: state.waitingNext,
+    error: e,
+  );
+
+  /// The first page of the listings waiting for the judge (the desktop's
+  /// Waiting tab); a failure is kept and rethrown.
+  Future<void> loadWaiting() async {
     final api = _api;
-    final next = rejected ? state.rejectsNext : state.hitsNext;
+    if (api == null) return;
+    try {
+      final page = await api.watchItems(
+        slug,
+        verdicts: kWaitingVerdicts,
+        limit: pageSize,
+      );
+      if (!ref.mounted) return;
+      state = WatchItemsView(
+        hits: state.hits,
+        hitsNext: state.hitsNext,
+        rejects: state.rejects,
+        rejectsNext: state.rejectsNext,
+        waiting: page.items,
+        waitingNext: page.nextBefore,
+        error: state.error,
+      );
+    } on Object catch (e) {
+      if (ref.mounted) _failed(e);
+      rethrow;
+    }
+  }
+
+  /// The next page of hits ([rejected] = of the Rejected section, [list]
+  /// = of one of the desktop's tabs).
+  Future<void> loadMore({bool rejected = false, WatchItemList? list}) async {
+    final api = _api;
+    final which = list ?? (rejected ? WatchItemList.rejected : null);
+    final next = switch (which) {
+      WatchItemList.rejected => state.rejectsNext,
+      WatchItemList.waiting => state.waitingNext,
+      WatchItemList.hits || null => state.hitsNext,
+    };
     if (api == null || next == null) return;
     final page = await api.watchItems(
       slug,
-      verdicts: rejected ? kRejectVerdicts : const ['hits'],
+      verdicts: switch (which) {
+        WatchItemList.rejected => kRejectVerdicts,
+        WatchItemList.waiting => kWaitingVerdicts,
+        WatchItemList.hits || null => const ['hits'],
+      },
       before: next,
       limit: pageSize,
     );
     if (!ref.mounted) return;
     final s = state;
-    state = rejected
-        ? WatchItemsView(
-            hits: s.hits,
-            hitsNext: s.hitsNext,
-            rejects: _merged(s.rejects, page.items),
-            rejectsNext: page.nextBefore,
-          )
-        : WatchItemsView(
-            hits: _merged(s.hits, page.items),
-            hitsNext: page.nextBefore,
-            rejects: s.rejects,
-            rejectsNext: s.rejectsNext,
-          );
+    state = WatchItemsView(
+      hits: which == WatchItemList.hits || which == null
+          ? _merged(s.hits, page.items)
+          : s.hits,
+      hitsNext: which == WatchItemList.hits || which == null
+          ? page.nextBefore
+          : s.hitsNext,
+      rejects: which == WatchItemList.rejected
+          ? _merged(s.rejects, page.items)
+          : s.rejects,
+      rejectsNext: which == WatchItemList.rejected
+          ? page.nextBefore
+          : s.rejectsNext,
+      waiting: which == WatchItemList.waiting
+          ? _merged(s.waiting, page.items)
+          : s.waiting,
+      waitingNext: which == WatchItemList.waiting
+          ? page.nextBefore
+          : s.waitingNext,
+    );
   }
 }
 

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../ui/desktop/chats_area.dart';
 import '../ui/desktop/desktop_shell.dart';
 import '../ui/desktop/news_area.dart';
+import '../ui/desktop/watches_area.dart';
 import '../ui/general/general_widgets.dart' show ChatKind;
 import '../ui/screens/approvals_screen.dart';
 import '../ui/screens/archived_chats_screen.dart';
@@ -33,7 +34,6 @@ import '../ui/screens/terminal_screen.dart';
 import '../ui/screens/terminal_settings_screen.dart';
 import '../ui/screens/trash_screen.dart';
 import '../ui/screens/watch_detail_screen.dart';
-import '../ui/screens/watches_screen.dart';
 import 'router.dart';
 import 'session.dart';
 
@@ -59,6 +59,7 @@ GoRouter buildDesktopRouter({
   final newsSettingsKey = GlobalKey<NavigatorState>(
     debugLabel: 'desktop.newsSettings',
   );
+  final watchesKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.watches');
 
   Widget morePage(MorePage page, GoRouterState state) => switch (page) {
     MorePage.settings => const SettingsScreen(),
@@ -66,7 +67,8 @@ GoRouter buildDesktopRouter({
     MorePage.system => const SystemScreen(),
     MorePage.schedules => const SchedulesScreen(),
     MorePage.observability => const ObservabilityScreen(),
-    MorePage.watches => const WatchesScreen(),
+    // a shell of its own (WatchesArea, L2c2b)
+    MorePage.watches => const WatchesPlaceholder(),
     // a shell of its own (NewsArea, L2c2)
     MorePage.news => const NewsPlaceholder(),
     MorePage.clipboard => const ClipboardScreen(),
@@ -236,10 +238,42 @@ GoRouter buildDesktopRouter({
               ),
             ],
           ),
+          // Watches: the list stays while the watch in the content changes
+          ShellRoute(
+            navigatorKey: watchesKey,
+            pageBuilder: (context, state, child) => NoTransitionPage<void>(
+              key: state.pageKey,
+              child: WatchesArea(
+                location: state.uri.toString(),
+                content: child,
+              ),
+            ),
+            routes: [
+              GoRoute(
+                path: Routes.watches,
+                pageBuilder: (_, state) =>
+                    _flat(state, const WatchesPlaceholder()),
+              ),
+              GoRoute(
+                path: '${Routes.watches}/:slug',
+                pageBuilder: (_, state) {
+                  final slug = state.pathParameters['slug']!;
+                  return _flat(
+                    state,
+                    WatchDetailScreen(
+                      key: ValueKey('watch.$slug'),
+                      slug: slug,
+                      hit: int.tryParse(state.uri.queryParameters['hit'] ?? ''),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
           for (final page in MorePage.values)
             if (page == MorePage.mirroring)
               GoRoute(path: page.route, redirect: (_, _) => Routes.dashboard)
-            else if (page == MorePage.news)
+            else if (page == MorePage.news || page == MorePage.watches)
               ...const <RouteBase>[]
             else
               GoRoute(
@@ -260,13 +294,6 @@ GoRouter buildDesktopRouter({
                       builder: (_, _) => const GeneralSettingsScreen(),
                     ),
                   ],
-                  if (page == MorePage.watches)
-                    GoRoute(
-                      path: ':slug',
-                      builder: (_, state) => WatchDetailScreen(
-                        slug: state.pathParameters['slug']!,
-                      ),
-                    ),
                   if (page == MorePage.schedules) ...[
                     GoRoute(
                       path: 'new',
