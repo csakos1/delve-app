@@ -85,6 +85,17 @@ abstract final class Routes {
   static const newsSettings = '/more/news/settings';
   static String newsFeed(String id) =>
       '/more/news/feed/${Uri.encodeComponent(id)}';
+
+  /// The desktop's News list filtered to one topic (L2c2: Open topic).
+  static String newsTopic(String topic) =>
+      Uri(path: news, queryParameters: {'topic': topic}).toString();
+
+  /// The desktop's News settings: one [section] (`topics`, `feeds`, `push`),
+  /// with a [topic]'s description editor in the inspector (L2c2).
+  static String newsSettingsAt(String section, {String? topic}) => Uri(
+    path: newsSettings,
+    queryParameters: {'section': section, 'topic': ?topic},
+  ).toString();
   static String watch(String slug) =>
       '/more/watches/${Uri.encodeComponent(slug)}';
   static const settings = '/more/settings';

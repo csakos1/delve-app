@@ -5588,4 +5588,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopApprovalsYou => 'You · this device';
+
+  @override
+  String get newsStoryTab => 'Story';
+
+  @override
+  String get newsOpenTopic => 'Open topic';
+
+  @override
+  String get newsTopicTab => 'Topic';
+
+  @override
+  String get desktopNewsEmpty => 'No story open';
+
+  @override
+  String get desktopNewsEmptySub => 'Pick one from the list';
 }

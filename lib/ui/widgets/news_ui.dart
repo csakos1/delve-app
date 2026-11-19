@@ -474,13 +474,27 @@ class NewsStoryRow extends ConsumerWidget {
               ],
             ),
           );
+    // the desktop's list column: the open story is selected (surface-3),
+    // a right click opens the row's menu (L2c2)
+    final desktop = DesktopLayout.of(context);
+    final selected = desktop && SelectedNewsStory.of(context) == i.id;
     return Material(
-      type: MaterialType.transparency,
+      key: selected ? Key('news.row.selected.${i.id}') : null,
+      type: selected ? MaterialType.canvas : MaterialType.transparency,
+      color: selected ? context.colors.surfaceContainerHigh : null,
+      borderRadius: selected
+          ? BorderRadius.circular(DelveDesktop.rowRadius)
+          : null,
       child: InkWell(
         key: Key('news.row.${i.id}'),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(
+          desktop ? DelveDesktop.rowRadius : 4,
+        ),
         onTap: () => openNewsStory(context, i.id),
         onLongPress: onLongPress == null
+            ? null
+            : () => onLongPress!(context, i),
+        onSecondaryTap: onLongPress == null || !desktop
             ? null
             : () => onLongPress!(context, i),
         child: Padding(
@@ -490,6 +504,20 @@ class NewsStoryRow extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// The story open in the desktop's content (L2c2): its row in the list
+/// column shows selected.
+class SelectedNewsStory extends InheritedWidget {
+  const SelectedNewsStory({super.key, required this.id, required super.child});
+
+  final int? id;
+
+  static int? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<SelectedNewsStory>()?.id;
+
+  @override
+  bool updateShouldNotify(SelectedNewsStory oldWidget) => oldWidget.id != id;
 }
 
 /// Opens the reading view of a story.

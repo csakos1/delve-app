@@ -17,13 +17,17 @@ import 'package:delve/ui/desktop/chats_area.dart';
 import 'package:delve/ui/desktop/desktop_page.dart';
 import 'package:delve/ui/desktop/desktop_shell.dart';
 import 'package:delve/ui/desktop/intake.dart';
+import 'package:delve/ui/desktop/news_area.dart';
 import 'package:delve/ui/desktop/panes.dart';
 import 'package:delve/ui/desktop/status_bar.dart';
+import 'package:delve/ui/general/general_widgets.dart' show DelveFilterChip;
 import 'package:delve/ui/screens/approvals_screen.dart';
 import 'package:delve/ui/screens/archived_chats_screen.dart';
 import 'package:delve/ui/screens/chat_screen.dart';
 import 'package:delve/ui/screens/chats_screen.dart';
 import 'package:delve/ui/screens/dashboard_screen.dart';
+import 'package:delve/ui/screens/news_screen.dart';
+import 'package:delve/ui/screens/news_story_screen.dart';
 import 'package:delve/ui/screens/observability_screen.dart';
 import 'package:delve/ui/screens/system_screen.dart';
 import 'package:drift/drift.dart' show Value;
@@ -38,6 +42,7 @@ import 'attachments_test.dart'
     show FakeAttachmentApi, FakePicker, FakePrep, file, photo, png;
 import 'chat_screen_test.dart'
     show FakeChatActions, conversation, liveStatus, seedFinished, seedRunning;
+import 'news_test.dart' show newsJson, storyJson;
 import 'support/fake_openrouter.dart' show testOpenRouterKey;
 import 'support/fake_server.dart' show FakeReply, FakeServer;
 import 'support/harness.dart';
@@ -1420,6 +1425,215 @@ void main() {
       expect(queue.dy, gen.dy);
       expect(prefill.dx, greaterThan(gen.dx));
       expect(queue.dx, greaterThan(prefill.dx));
+    });
+  });
+
+  group('News on the desktop (L2c2a)', () {
+    /// The sections (Sailing: 8121; Local AI: the release 8140), the story
+    /// 8121 and the settings.
+    void serveNews(FakeServer server) {
+      final release = FakeServer.sample('news_item_release');
+      server
+        ..json('GET', '/api/v1/news', {
+          ...FakeServer.sample('news_digest'),
+          'top': [newsJson(), release],
+        })
+        ..json('GET', '/api/v1/news/sections', {
+          'data': [
+            {
+              ...FakeServer.sample('news_section'),
+              'top': [newsJson()],
+            },
+            {
+              'topic': 'local_ai',
+              'name': 'Local AI',
+              'count': 1,
+              'week': 3,
+              'new': 1,
+              'top': [release],
+            },
+          ],
+        })
+        ..json('GET', '/api/v1/news/items', {
+          'data': [newsJson()],
+          'next_cursor': null,
+        })
+        ..json('GET', '/api/v1/news/items/8121', storyJson())
+        ..on(
+          'PATCH',
+          '/api/v1/news/items/8121',
+          (_) => FakeReply(200, storyJson({'read': true})),
+        )
+        ..json('GET', '/api/v1/news/topics', {
+          'data': [FakeServer.sample('news_topic')],
+        })
+        ..json('GET', '/api/v1/news/sources', {
+          'data': [FakeServer.sample('news_source')],
+        })
+        ..json(
+          'GET',
+          '/api/v1/news/settings',
+          FakeServer.sample('news_settings'),
+        );
+    }
+
+    Future<TestEnv> news(WidgetTester t, {Size window = _frame}) async {
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: window,
+        before: (env) async => serveNews(env.server),
+      );
+      await _ctrl(t, LogicalKeyboardKey.digit5);
+      return env;
+    }
+
+    Finder inside(String key, Finder f) =>
+        find.descendant(of: find.byKey(Key(key)), matching: f);
+
+    test('the story of a location', () {
+      expect(selectedStory(Routes.news), isNull);
+      expect(selectedStory(Routes.newsStory(8121)), 8121);
+      expect(selectedStory(Routes.newsSettings), isNull);
+    });
+
+    testWidgets('the list in the list column, a story in the content, its '
+        'sources and feedback in the inspector', (t) async {
+      await news(t);
+      expect(find.byType(NewsArea), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('pane.list')),
+          matching: find.byType(NewsScreen),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('news.placeholder')), findsOneWidget);
+      // the News list column is 360 wide
+      expect(_width(t, 'pane.list'), DelveDesktop.listDefaultNews);
+
+      await t.tap(find.byKey(const Key('news.row.8121')));
+      await t.pumpAndSettle();
+      expect(find.byType(NewsStoryScreen), findsOneWidget);
+      expect(find.byKey(const Key('news.row.selected.8121')), findsOneWidget);
+      expect(find.byKey(const Key('inspector.story')), findsOneWidget);
+      expect(
+        inside('inspector.story', find.byKey(const Key('news.story.original'))),
+        findsOneWidget,
+      );
+      expect(
+        inside('inspector.story', find.byKey(const Key('news.story.more'))),
+        findsOneWidget,
+      );
+      expect(
+        inside('news.story', find.byKey(const Key('news.story.original'))),
+        findsNothing,
+      );
+      expect(find.byKey(const Key('news.inspector.topic')), findsOneWidget);
+      // the reading column under a 48 px header with the inspector toggle
+      expect(find.byKey(const Key('readingColumn')), findsOneWidget);
+      expect(find.byKey(const Key('pane.inspector.toggle')), findsOneWidget);
+
+      // the inspector closed: they are back at the end of the column
+      await _ctrl(t, LogicalKeyboardKey.keyI);
+      expect(find.byKey(const Key('inspector.story')), findsNothing);
+      await t.scrollUntilVisible(
+        find.byKey(const Key('news.story.original')),
+        300,
+        // the reading view's own (the first; the column has more inside)
+        scrollable: find
+            .descendant(
+              of: find.byKey(const Key('news.story')),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      expect(
+        inside('news.story', find.byKey(const Key('news.story.original'))),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('J opens the first story, then the next', (t) async {
+      await news(t);
+      await t.sendKeyEvent(LogicalKeyboardKey.keyJ);
+      await t.pumpAndSettle();
+      expect(find.byKey(const ValueKey('news.story.8121')), findsOneWidget);
+      await t.sendKeyEvent(LogicalKeyboardKey.keyJ);
+      await t.pumpAndSettle();
+      expect(find.byKey(const ValueKey('news.story.8140')), findsOneWidget);
+      await t.sendKeyEvent(LogicalKeyboardKey.keyK);
+      await t.pumpAndSettle();
+      expect(find.byKey(const ValueKey('news.story.8121')), findsOneWidget);
+    });
+
+    testWidgets('Open topic: the list shows the topic', (t) async {
+      await news(t);
+      await t.tap(find.byKey(const Key('news.row.8121')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('news.inspector.openTopic')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('news.placeholder')), findsOneWidget);
+      final chip = find.byKey(const Key('news.chip.sailing'));
+      expect(t.widget<DelveFilterChip>(chip).selected, isTrue);
+      // the News list keeps its 360 after the story's overlay rule ran
+      expect(_width(t, 'pane.list'), DelveDesktop.listDefaultNews);
+    });
+
+    testWidgets('News settings: the sections in the list column; a topic '
+        'opens its description in the inspector', (t) async {
+      await news(t);
+      await t.tap(find.byKey(const Key('news.settings')));
+      await t.pumpAndSettle();
+      expect(find.byType(NewsSettingsArea), findsOneWidget);
+      expect(find.byKey(const Key('newsSettings.nav')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(PaneHeader),
+          matching: find.text('Topics'),
+        ),
+        findsOneWidget,
+      );
+      await t.tap(find.byKey(const Key('newsSettings.nav.feeds')));
+      await t.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byType(PaneHeader),
+          matching: find.text('Feeds'),
+        ),
+        findsOneWidget,
+      );
+      await t.tap(find.byKey(const Key('newsSettings.nav.topics')));
+      await t.pumpAndSettle();
+      await t.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('newsSettings.topic.sailing')),
+          matching: find.text('Sailing'),
+        ),
+      );
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('inspector.topic')), findsOneWidget);
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.byKey(const Key('newsSettings.editor.text')), findsOneWidget);
+      await t.tap(find.byKey(const Key('newsSettings.editor.cancel')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('inspector.topic')), findsNothing);
+
+      await t.tap(find.byKey(const Key('newsSettings.back')));
+      await t.pumpAndSettle();
+      expect(find.byType(NewsArea), findsOneWidget);
+    });
+
+    testWidgets('the phone: the story is a page of its own', (t) async {
+      await pumpDelve(t, before: (env) async => serveNews(env.server));
+      await t.tap(find.text('More'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('News'));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('news.row.8121')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('inspector.story')), findsNothing);
+      expect(find.byKey(const Key('news.story.original')), findsOneWidget);
     });
   });
 }

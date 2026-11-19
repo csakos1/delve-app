@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../ui/desktop/chats_area.dart';
 import '../ui/desktop/desktop_shell.dart';
+import '../ui/desktop/news_area.dart';
 import '../ui/general/general_widgets.dart' show ChatKind;
 import '../ui/screens/approvals_screen.dart';
 import '../ui/screens/archived_chats_screen.dart';
@@ -17,7 +18,6 @@ import '../ui/screens/files_screen.dart';
 import '../ui/screens/general_chat_screen.dart';
 import '../ui/screens/general_settings_screen.dart';
 import '../ui/screens/more_screen.dart';
-import '../ui/screens/news_screen.dart';
 import '../ui/screens/news_settings_screen.dart';
 import '../ui/screens/news_story_screen.dart';
 import '../ui/screens/observability_screen.dart';
@@ -55,6 +55,10 @@ GoRouter buildDesktopRouter({
   final rootKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.root');
   final shellKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.shell');
   final chatsKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.chats');
+  final newsKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.news');
+  final newsSettingsKey = GlobalKey<NavigatorState>(
+    debugLabel: 'desktop.newsSettings',
+  );
 
   Widget morePage(MorePage page, GoRouterState state) => switch (page) {
     MorePage.settings => const SettingsScreen(),
@@ -63,9 +67,8 @@ GoRouter buildDesktopRouter({
     MorePage.schedules => const SchedulesScreen(),
     MorePage.observability => const ObservabilityScreen(),
     MorePage.watches => const WatchesScreen(),
-    MorePage.news => NewsScreen(
-      weekly: state.uri.queryParameters['view'] == 'weekly',
-    ),
+    // a shell of its own (NewsArea, L2c2)
+    MorePage.news => const NewsPlaceholder(),
     MorePage.clipboard => const ClipboardScreen(),
     MorePage.about => const PersonaScreen(),
     // phone only: the router sends it to the Dashboard
@@ -179,9 +182,65 @@ GoRouter buildDesktopRouter({
               GoRoute(path: 'trash', builder: (_, _) => const TrashScreen()),
             ],
           ),
+          // News settings: the sections in the list column (L2c2)
+          ShellRoute(
+            navigatorKey: newsSettingsKey,
+            pageBuilder: (context, state, child) => NoTransitionPage<void>(
+              key: state.pageKey,
+              child: NewsSettingsArea(
+                location: state.uri.toString(),
+                content: child,
+              ),
+            ),
+            routes: [
+              GoRoute(
+                path: Routes.newsSettings,
+                pageBuilder: (_, state) => _flat(
+                  state,
+                  NewsSettingsScreen(
+                    section: state.uri.queryParameters['section'],
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: '${Routes.news}/feed/:id',
+                pageBuilder: (_, state) => _flat(
+                  state,
+                  NewsFeedScreen(id: state.pathParameters['id']!),
+                ),
+              ),
+            ],
+          ),
+          // News: the list stays while the story in the content changes
+          ShellRoute(
+            navigatorKey: newsKey,
+            pageBuilder: (context, state, child) => NoTransitionPage<void>(
+              key: state.pageKey,
+              child: NewsArea(location: state.uri.toString(), content: child),
+            ),
+            routes: [
+              GoRoute(
+                path: Routes.news,
+                pageBuilder: (_, state) =>
+                    _flat(state, const NewsPlaceholder()),
+              ),
+              GoRoute(
+                path: '${Routes.news}/story/:id',
+                pageBuilder: (_, state) {
+                  final id = int.parse(state.pathParameters['id']!);
+                  return _flat(
+                    state,
+                    NewsStoryScreen(key: ValueKey('news.story.$id'), id: id),
+                  );
+                },
+              ),
+            ],
+          ),
           for (final page in MorePage.values)
             if (page == MorePage.mirroring)
               GoRoute(path: page.route, redirect: (_, _) => Routes.dashboard)
+            else if (page == MorePage.news)
+              ...const <RouteBase>[]
             else
               GoRoute(
                 path: page.route,
@@ -199,23 +258,6 @@ GoRouter buildDesktopRouter({
                     GoRoute(
                       path: 'general',
                       builder: (_, _) => const GeneralSettingsScreen(),
-                    ),
-                  ],
-                  if (page == MorePage.news) ...[
-                    GoRoute(
-                      path: 'story/:id',
-                      builder: (_, state) => NewsStoryScreen(
-                        id: int.parse(state.pathParameters['id']!),
-                      ),
-                    ),
-                    GoRoute(
-                      path: 'settings',
-                      builder: (_, _) => const NewsSettingsScreen(),
-                    ),
-                    GoRoute(
-                      path: 'feed/:id',
-                      builder: (_, state) =>
-                          NewsFeedScreen(id: state.pathParameters['id']!),
                     ),
                   ],
                   if (page == MorePage.watches)

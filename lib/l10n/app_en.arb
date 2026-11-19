@@ -4253,5 +4253,10 @@
       }
     }
   },
-  "desktopApprovalsYou": "You · this device"
+  "desktopApprovalsYou": "You · this device",
+  "newsStoryTab": "Story",
+  "newsOpenTopic": "Open topic",
+  "newsTopicTab": "Topic",
+  "desktopNewsEmpty": "No story open",
+  "desktopNewsEmptySub": "Pick one from the list"
 }

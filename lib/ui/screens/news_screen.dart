@@ -10,6 +10,9 @@ import '../../app/news.dart';
 import '../../app/router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_page.dart';
+import '../desktop/intake.dart'
+    show ListCommandSlot, ListCommands, listCommandSlotProvider;
 import '../format.dart';
 import '../general/general_widgets.dart' show DelveFilterChip;
 import '../widgets/news_ui.dart';
@@ -49,26 +52,76 @@ const double _textX = 48;
 /// the day on one edge, Show all N), one topic with an edge per day,
 /// Saved with an edge per row. “Last week” is the same page without chips.
 class NewsScreen extends ConsumerStatefulWidget {
-  const NewsScreen({super.key, this.weekly = false});
+  const NewsScreen({super.key, this.weekly = false, this.topic, this.selected});
 
   /// Opened from the Dashboard's “Last week” row.
   final bool weekly;
+
+  /// The desktop (L2c2): open on this topic (the inspector's Open topic).
+  final String? topic;
+
+  /// The desktop: the story open in the content (its row is selected).
+  final int? selected;
 
   @override
   ConsumerState<NewsScreen> createState() => _NewsScreenState();
 }
 
 class _NewsScreenState extends ConsumerState<NewsScreen> {
-  late NewsFilter _filter = widget.weekly
-      ? const NewsFilterWeekly()
-      : const NewsFilterAll();
+  late NewsFilter _filter = switch (widget.topic) {
+    final t? => NewsFilterTopic(t),
+    null when widget.weekly => const NewsFilterWeekly(),
+    null => const NewsFilterAll(),
+  };
+
+  /// The desktop: the stories in the order shown (J / K).
+  List<int> _order = const [];
+  late final ListCommandSlot _keys;
+  late final PageCommandSlot _pageKeys;
 
   @override
   void initState() {
     super.initState();
+    _keys = ref.read(listCommandSlotProvider);
+    _pageKeys = ref.read(pageCommandSlotProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) unawaited(_refresh(quiet: true));
     });
+  }
+
+  /// The desktop's list stays while the content changes: a new topic (Open
+  /// topic) or last week (the Dashboard's row) changes the filter; a story
+  /// opening (no topic in its location) keeps it.
+  @override
+  void didUpdateWidget(NewsScreen old) {
+    super.didUpdateWidget(old);
+    final NewsFilter? next = switch (widget.topic) {
+      final t? when t != old.topic => NewsFilterTopic(t),
+      null when widget.weekly && !old.weekly => const NewsFilterWeekly(),
+      _ => null,
+    };
+    if (next == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _select(next);
+    });
+  }
+
+  @override
+  void dispose() {
+    _keys.unregister(this);
+    _pageKeys.unregister(this);
+    super.dispose();
+  }
+
+  /// J / K: the next / previous story of the list (the first without one
+  /// open).
+  void _step(int by) {
+    final order = _order;
+    if (order.isEmpty) return;
+    final at = widget.selected == null ? -1 : order.indexOf(widget.selected!);
+    final next = at < 0 ? 0 : (at + by).clamp(0, order.length - 1);
+    if (next == at) return;
+    openNewsStory(context, order[next]);
   }
 
   NewsListKey? get _listKey => switch (_filter) {
@@ -111,6 +164,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
     final l = AppLocalizations.of(context);
     final view = ref.watch(newsProvider);
     final sections = view.sections;
+    if (DesktopLayout.of(context)) return _desktop(context, l, view);
     return Scaffold(
       appBar: PageColourBar(
         title: widget.weekly ? l.newsLastWeek : l.newsTitle,
@@ -152,10 +206,71 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
     );
   }
 
-  List<Widget> _body(BuildContext context, AppLocalizations l, NewsView view) {
+  /// The desktop's list column (27W-5a): a 48 px header with News settings,
+  /// the chips, the sections or the filtered list; the open story's row is
+  /// selected. J / K step through the stories, Ctrl+R reloads.
+  Widget _desktop(BuildContext context, AppLocalizations l, NewsView view) {
+    _keys.register(
+      this,
+      ListCommands(
+        next: () => _step(1),
+        previous: () => _step(-1),
+        archive: () {},
+        undo: () {},
+      ),
+    );
+    _pageKeys.register(
+      this,
+      PageCommands(refresh: () => unawaited(_refresh())),
+    );
+    final order = <int>[];
+    final body = _body(context, l, view, order: order);
+    _order = order;
+    return SelectedNewsStory(
+      id: widget.selected,
+      child: TopLevelPage(
+        title: _filter is NewsFilterWeekly ? l.newsLastWeek : l.newsTitle,
+        background: context.colors.surfaceContainerLow,
+        actions: [
+          IconButton(
+            key: const Key('news.settings'),
+            tooltip: l.newsSettingsTitle,
+            onPressed: () => context.open(Routes.newsSettingsAt('topics')),
+            icon: const SymbolIcon(
+              DelveIcons.settings,
+              size: DelveDesktop.iconButtonIcon,
+            ),
+          ),
+        ],
+        child: CustomScrollView(
+          key: const Key('news.list'),
+          slivers: [
+            SliverToBoxAdapter(
+              child: _Chips(
+                filter: _filter,
+                sections: view.sections ?? const [],
+                onSelect: _select,
+              ),
+            ),
+            ...body,
+            const SliverToBoxAdapter(
+              child: SizedBox(height: DelveTokens.space4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _body(
+    BuildContext context,
+    AppLocalizations l,
+    NewsView view, {
+    List<int>? order,
+  }) {
     final key = _listKey;
-    if (key == null) return _all(context, l, view);
-    return _list(context, l, key);
+    if (key == null) return _all(context, l, view, order);
+    return _list(context, l, key, order);
   }
 
   Widget _status(BuildContext context, String text) => Padding(
@@ -182,7 +297,12 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
   void _menu(BuildContext ctx, NewsItem i) =>
       unawaited(showNewsMenu(ctx, ref, i));
 
-  List<Widget> _all(BuildContext context, AppLocalizations l, NewsView view) {
+  List<Widget> _all(
+    BuildContext context,
+    AppLocalizations l,
+    NewsView view, [
+    List<int>? order,
+  ]) {
     final sections = view.sections;
     if (sections == null) {
       return [SliverToBoxAdapter(child: _loading(view.error))];
@@ -208,6 +328,10 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
       for (final s in sections)
         if (s.week > 0 || s.count > 0) s,
     ];
+    order?.addAll([
+      for (final s in shown)
+        for (final item in s.top) item.id,
+    ]);
     return [
       SliverToBoxAdapter(
         child: _status(
@@ -275,8 +399,9 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
   List<Widget> _list(
     BuildContext context,
     AppLocalizations l,
-    NewsListKey key,
-  ) {
+    NewsListKey key, [
+    List<int>? order,
+  ]) {
     final list = ref.watch(newsListProvider(key));
     final items = list.items;
     final now = DateTime.now();
@@ -322,6 +447,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
         ),
       ];
     }
+    order?.addAll([for (final item in items) item.id]);
     final List<Widget> body;
     if (topic != null) {
       // one edge per day, the day's header at the text column
@@ -519,10 +645,17 @@ class _SectionHeader extends StatelessWidget {
               ),
               if (t != null) ...[
                 const SizedBox(width: DelveTokens.space2),
-                Text(
-                  t,
-                  style: context.text.labelMedium!.copyWith(
-                    color: context.delve.textMuted,
+                // a narrow list column (the desktop's 240 – 300) cuts the
+                // count before the name
+                Flexible(
+                  child: Text(
+                    t,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: context.text.labelMedium!.copyWith(
+                      color: context.delve.textMuted,
+                    ),
                   ),
                 ),
               ],

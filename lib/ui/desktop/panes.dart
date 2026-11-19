@@ -59,14 +59,22 @@ class PaneLayouts extends Notifier<Map<String, PaneLayout>> {
   @override
   Map<String, PaneLayout> build() => const {};
 
-  PaneLayout of(String area, {double list = DelveDesktop.listDefault}) =>
-      state[area] ?? PaneLayout(list: list);
+  /// Each area's own default list width (News 360), as its panes say: a
+  /// layout first stored by a toggle or an overlay starts from it.
+  final Map<String, double> _listDefaults = {};
+
+  /// [DesktopPanes] tells its area's default list width.
+  void listDefaultOf(String area, double width) => _listDefaults[area] = width;
+
+  PaneLayout of(String area, {double? list}) =>
+      state[area] ??
+      PaneLayout(list: list ?? _listDefaults[area] ?? DelveDesktop.listDefault);
 
   void _set(String area, PaneLayout layout) => state = {...state, area: layout};
 
   void setList(String area, double width, {double? fallback}) => _set(
     area,
-    of(area, list: fallback ?? DelveDesktop.listDefault).copyWith(
+    of(area, list: fallback).copyWith(
       list: width
           .clamp(DelveDesktop.listMin, DelveDesktop.listMax)
           .roundToDouble(),
@@ -233,7 +241,8 @@ class DesktopPanes extends ConsumerWidget {
     final cs = context.colors;
     final layouts = ref.watch(paneLayoutsProvider.notifier);
     ref.watch(paneLayoutsProvider);
-    final p = layouts.of(area, list: listDefault);
+    layouts.listDefaultOf(area, listDefault);
+    final p = layouts.of(area);
     final width = MediaQuery.sizeOf(context).width;
     final at = PanePlacement.of(
       p,
@@ -559,6 +568,95 @@ class InspectorOverlayClose extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// A tab: `labelLarge` 13, selected 600 with a 2 px accent underline.
+class InspectorTab extends StatelessWidget {
+  const InspectorTab({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          height: DelveDesktop.paneHeader,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: selected ? cs.primary : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+          child: Text(
+            label,
+            style: context.text.labelLarge!.copyWith(
+              fontSize: 13,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+              color: selected ? cs.onSurface : cs.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// An inspector with one tab (News: Story, News settings: Topic, Watches:
+/// Hit …): the 48 px tab row with [label] selected and, as an overlay, the
+/// close button; then [child].
+class InspectorFrame extends StatelessWidget {
+  const InspectorFrame({
+    super.key,
+    required this.label,
+    required this.child,
+    this.tabKey,
+  });
+
+  final String label;
+  final Widget child;
+  final Key? tabKey;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      SizedBox(
+        height: DelveDesktop.paneHeader,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Row(
+            children: [
+              InspectorTab(
+                key: tabKey,
+                label: label,
+                selected: true,
+                onTap: () {},
+              ),
+              const Spacer(),
+              const InspectorOverlayClose(),
+            ],
+          ),
+        ),
+      ),
+      Expanded(child: child),
+    ],
+  );
 }
 
 /// The content's reading column (design 27): in the desktop layout at most

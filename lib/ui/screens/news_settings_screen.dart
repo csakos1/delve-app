@@ -14,6 +14,9 @@ import '../../app/router.dart';
 import '../../app/session.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_page.dart';
+import '../desktop/list_area.dart' show SectionRow;
+import '../desktop/panes.dart' show InspectorFrame;
 import '../format.dart';
 import '../widgets/news_ui.dart';
 import '../widgets/page_scaffolds.dart';
@@ -31,7 +34,11 @@ const int kNewsDescriptionChars = 1500;
 /// opens the feed), the digest time and the must-read push with its daily
 /// limit.
 class NewsSettingsScreen extends ConsumerStatefulWidget {
-  const NewsSettingsScreen({super.key});
+  const NewsSettingsScreen({super.key, this.section});
+
+  /// The desktop (27W-5e): the one section shown (`topics`, `feeds`,
+  /// `push`); the list column has the sections. Null on the phone: all.
+  final String? section;
 
   @override
   ConsumerState<NewsSettingsScreen> createState() => _NewsSettingsScreenState();
@@ -160,9 +167,51 @@ class _NewsSettingsScreenState extends ConsumerState<NewsSettingsScreen> {
         ),
       );
     }
+    if (DesktopLayout.of(context)) return _desktop(context, l, config);
     return Scaffold(
       appBar: PageColourBar(title: l.newsSettingsTitle),
       body: UnderBarFade(child: body),
+    );
+  }
+
+  /// The desktop: one section as a 680 px page under its header; a topic's
+  /// description opens in the inspector (27W-5e).
+  Widget _desktop(BuildContext context, AppLocalizations l, NewsConfig c) {
+    final section = NewsSettingsSection.of(widget.section);
+    final error = c.error;
+    final Widget body;
+    if (!c.loaded) {
+      body = error == null
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(DelveDesktop.contentGutter),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: StatusBanner(
+                  key: const Key('newsSettings.error'),
+                  kind: StatusKind.alert,
+                  icon: DelveIcons.error,
+                  text: l.newsSettingsLoadFailed(apiErrorText(l, error)),
+                  actionLabel: l.retry,
+                  onAction: _refresh,
+                ),
+              ),
+            );
+    } else {
+      body = DesktopPageBody(
+        key: const Key('newsSettings'),
+        maxWidth: DelveDesktop.detailColumn,
+        children: switch (section) {
+          NewsSettingsSection.topics => _topics(l, c),
+          NewsSettingsSection.feeds => _feeds(l, c),
+          NewsSettingsSection.push => _digestAndPush(l, c.settings!),
+        },
+      );
+    }
+    return DesktopPage(
+      title: section.title(l),
+      inspectorToggle: true,
+      child: body,
     );
   }
 
@@ -191,7 +240,9 @@ class _NewsSettingsScreenState extends ConsumerState<NewsSettingsScreen> {
                   () => _config.setTopicEnabled(t.id, v),
                 ),
               ),
-              onTap: () => unawaited(showNewsTopicEditor(context, t)),
+              onTap: () => DesktopLayout.of(context)
+                  ? context.open(Routes.newsSettingsAt('topics', topic: t.id))
+                  : unawaited(showNewsTopicEditor(context, t)),
             ),
         ],
       ),
@@ -546,9 +597,33 @@ Future<void> showNewsTopicEditor(BuildContext context, NewsTopic topic) =>
       builder: (_) => _TopicEditor(topic: topic),
     );
 
+/// The desktop's Topic inspector (27W-5e): the description editor of
+/// [topic] (the phone's sheet); Save and Cancel go back to the topics.
+class NewsTopicInspector extends ConsumerWidget {
+  const NewsTopicInspector({super.key, required this.topic});
+
+  final String topic;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final t = ref.watch(newsConfigProvider).topic(topic);
+    return InspectorFrame(
+      key: const Key('inspector.topic'),
+      label: l.newsTopicTab,
+      child: t == null
+          ? const SizedBox.shrink()
+          : _TopicEditor(key: ValueKey(t.id), topic: t, embedded: true),
+    );
+  }
+}
+
 class _TopicEditor extends ConsumerStatefulWidget {
-  const _TopicEditor({required this.topic});
+  const _TopicEditor({super.key, required this.topic, this.embedded = false});
   final NewsTopic topic;
+
+  /// In the desktop's inspector: done goes back to the topics.
+  final bool embedded;
 
   @override
   ConsumerState<_TopicEditor> createState() => _TopicEditorState();
@@ -590,7 +665,7 @@ class _TopicEditorState extends ConsumerState<_TopicEditor> {
             description: description == t.description ? null : description,
             enabled: _on == t.enabled ? null : _on,
           );
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) _done();
     } on Object catch (e) {
       if (mounted) {
         setState(() {
@@ -600,6 +675,11 @@ class _TopicEditorState extends ConsumerState<_TopicEditor> {
       }
     }
   }
+
+  /// Closes the sheet, or the inspector's editor.
+  void _done() => widget.embedded
+      ? context.open(Routes.newsSettingsAt('topics'))
+      : Navigator.of(context).pop();
 
   @override
   Widget build(BuildContext context) {
@@ -611,12 +691,14 @@ class _TopicEditorState extends ConsumerState<_TopicEditor> {
       key: const Key('newsSettings.editor'),
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          DelveTokens.space5,
-          DelveTokens.space2,
-          DelveTokens.space5,
-          DelveTokens.space5,
-        ),
+        padding: widget.embedded
+            ? const EdgeInsets.fromLTRB(12, 4, 12, 12)
+            : const EdgeInsets.fromLTRB(
+                DelveTokens.space5,
+                DelveTokens.space2,
+                DelveTokens.space5,
+                DelveTokens.space5,
+              ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -714,7 +796,8 @@ class _TopicEditorState extends ConsumerState<_TopicEditor> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                  onPressed: _saving ? null : () => Navigator.of(context).pop(),
+                  key: const Key('newsSettings.editor.cancel'),
+                  onPressed: _saving ? null : _done,
                   child: Text(l.cancel),
                 ),
                 const SizedBox(width: DelveTokens.space2),
@@ -1258,4 +1341,88 @@ class _Detail extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// The desktop's News settings sections (the list column, 27W-5e).
+enum NewsSettingsSection {
+  topics,
+  feeds,
+  push;
+
+  /// The section of a location's `section` (topics when unknown).
+  static NewsSettingsSection of(String? name) =>
+      values.firstWhere((s) => s.name == name, orElse: () => topics);
+
+  String title(AppLocalizations l) => switch (this) {
+    topics => l.newsSetTopics,
+    feeds => l.newsSetFeeds,
+    push => l.newsSetDigestPush,
+  };
+
+  IconData get icon => switch (this) {
+    topics => NewsIcons.news,
+    feeds => NewsIcons.failingFeeds,
+    push => DelveIcons.notifications,
+  };
+}
+
+/// The desktop's list column of News settings: back to News, then the
+/// sections as 32 px rows.
+class NewsSettingsNav extends StatelessWidget {
+  const NewsSettingsNav({super.key, required this.section});
+
+  final NewsSettingsSection section;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final cs = context.colors;
+    return Material(
+      key: const Key('newsSettings.nav'),
+      color: cs.surfaceContainerLow,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: DelveDesktop.paneHeader,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 6, right: 10),
+              child: Row(
+                children: [
+                  IconButton(
+                    key: const Key('newsSettings.back'),
+                    tooltip: l.newsTitle,
+                    onPressed: () => context.open(Routes.news),
+                    icon: const SymbolIcon(
+                      DelveIcons.arrowBack,
+                      size: DelveDesktop.iconButtonIcon,
+                    ),
+                  ),
+                  const SizedBox(width: DelveTokens.space1),
+                  Expanded(
+                    child: Text(
+                      l.newsSettingsTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: DelveDesktopText.paneTitle.copyWith(
+                        color: cs.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          for (final s in NewsSettingsSection.values)
+            SectionRow(
+              key: Key('newsSettings.nav.${s.name}'),
+              icon: s.icon,
+              label: s.title(l),
+              selected: s == section,
+              onTap: () => context.open(Routes.newsSettingsAt(s.name)),
+            ),
+        ],
+      ),
+    );
+  }
 }

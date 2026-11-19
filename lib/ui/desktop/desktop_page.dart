@@ -104,27 +104,37 @@ class DesktopColumns extends StatelessWidget {
   );
 }
 
-/// A page of the desktop's content pane without a list column (System,
-/// Observability): the 48 px pane header, then the body.
+/// A page of the desktop's content pane (System, Observability, a News
+/// settings section): the 48 px pane header, then the body. A Scaffold, so
+/// its snackbars show.
 class DesktopPage extends StatelessWidget {
   const DesktopPage({
     super.key,
     required this.title,
     required this.child,
     this.actions = const [],
+    this.inspectorToggle = false,
   });
 
   final String title;
   final List<Widget> actions;
   final Widget child;
 
+  /// The header ends with the inspector toggle (it shows only where the
+  /// area has an inspector).
+  final bool inspectorToggle;
+
   @override
-  Widget build(BuildContext context) => Material(
-    color: context.colors.surface,
-    child: Column(
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: context.colors.surface,
+    body: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        PaneHeader(title: title, actions: actions),
+        PaneHeader(
+          title: title,
+          actions: actions,
+          inspectorToggle: inspectorToggle,
+        ),
         Expanded(child: child),
       ],
     ),

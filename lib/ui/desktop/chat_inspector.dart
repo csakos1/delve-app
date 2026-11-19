@@ -101,7 +101,7 @@ class ChatInspector extends ConsumerWidget {
             padding: const EdgeInsets.only(left: 6, right: 6),
             child: Row(
               children: [
-                _Tab(
+                InspectorTab(
                   key: const Key('inspector.tab.run'),
                   label: l.desktopInspectorRun,
                   selected: tab == ChatInspectorTab.run,
@@ -109,7 +109,7 @@ class ChatInspector extends ConsumerWidget {
                       .read(chatInspectorTabProvider.notifier)
                       .show(ChatInspectorTab.run),
                 ),
-                _Tab(
+                InspectorTab(
                   key: const Key('inspector.tab.usage'),
                   label: l.usageTitle,
                   selected: tab == ChatInspectorTab.usage,
@@ -160,7 +160,7 @@ class GeneralInspector extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Row(
               children: [
-                _Tab(label: l.usageTitle, selected: true, onTap: () {}),
+                InspectorTab(label: l.usageTitle, selected: true, onTap: () {}),
                 const Spacer(),
                 const InspectorOverlayClose(),
               ],
@@ -169,53 +169,6 @@ class GeneralInspector extends StatelessWidget {
         ),
         Expanded(child: GeneralUsageSheet(chatId: chatId, embedded: true)),
       ],
-    );
-  }
-}
-
-/// A tab: `labelLarge` 13, selected 600 with a 2 px accent underline.
-class _Tab extends StatelessWidget {
-  const _Tab({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.colors;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          height: DelveDesktop.paneHeader,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: selected ? cs.primary : Colors.transparent,
-                width: 2,
-              ),
-            ),
-          ),
-          child: Text(
-            label,
-            style: context.text.labelLarge!.copyWith(
-              fontSize: 13,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-              color: selected ? cs.onSurface : cs.onSurfaceVariant,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

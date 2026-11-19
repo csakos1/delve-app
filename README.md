@@ -463,6 +463,11 @@ Deny, Ctrl+Enter / Ctrl+Backspace on a focused row, the outcome for 1.5 s) and t
 side, Observability a grid with the ranges in the header; the local models picker is a popover
 there, on the Dashboard and on the status bar's model. Ctrl+R refreshes the open page
 (`PageCommands`).
+News is a list area (`lib/ui/desktop/list_area.dart`, `news_area.dart`): the list (chips,
+sections, the open story selected; J / K step through it) in a 360 list column, the reading
+view in the content and the Story inspector (topic with Open topic, sources, Open original,
+feedback – back at the end of the column while the inspector is closed); News settings has its
+sections in the list column and a topic's description editor in the inspector.
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.

@@ -5,9 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../api/models/models.dart';
+import '../../app/layout.dart';
 import '../../app/news.dart';
+import '../../app/router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/panes.dart';
 import '../format.dart';
 import '../links.dart';
 import '../widgets/news_ui.dart';
@@ -81,75 +84,213 @@ class _NewsStoryScreenState extends ConsumerState<NewsStoryScreen> {
     final story = view.story;
     final ctl = ref.read(newsStoryProvider(widget.id).notifier);
     final item = story?.item;
-    return Scaffold(
-      appBar: PageColourBar(
-        title: '',
-        actions: [
-          if (item != null) ...[
-            IconButton(
-              key: const Key('news.story.open'),
-              tooltip: l.newsOpenOriginal,
-              onPressed: () => openLink(context, ref, item.originalUrl),
-              icon: const SymbolIcon(NewsIcons.openOriginal, size: 22),
+    final desktop = DesktopLayout.of(context);
+    final icon = desktop ? DelveDesktop.iconButtonIcon : 22.0;
+    final actions = [
+      if (item != null) ...[
+        IconButton(
+          key: const Key('news.story.open'),
+          tooltip: l.newsOpenOriginal,
+          onPressed: () => openLink(context, ref, item.originalUrl),
+          icon: SymbolIcon(NewsIcons.openOriginal, size: icon),
+        ),
+        _Toggle(
+          key: const Key('news.story.save'),
+          on: item.saved,
+          icon: NewsIcons.saved,
+          size: icon,
+          tooltip: item.saved ? l.newsRemoveFromSaved : l.newsSave,
+          onPressed: () => _act(
+            () => ctl.setSaved(!item.saved),
+            item.saved ? l.newsRemovedFromSaved : l.newsSavedSnack,
+          ),
+        ),
+        if (!desktop) const SizedBox(width: DelveTokens.space1),
+      ],
+    ];
+    // the desktop (27W-5a): the reading column under a 48 px header; with
+    // the inspector docked, sources, Open original and the feedback are
+    // there instead of at the end of the column
+    final docked =
+        desktop &&
+        (PaneScope.maybeOf(context)?.placement.inspectorDocked ?? false);
+    final Widget content = switch (story) {
+      null when view.error != null => Padding(
+        padding: const EdgeInsets.all(DelveTokens.space4),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: StatusBanner(
+            kind: StatusKind.alert,
+            icon: DelveIcons.error,
+            text: l.newsStoryFailed(apiErrorText(l, view.error!)),
+            actionLabel: l.retry,
+            onAction: () => unawaited(_load()),
+          ),
+        ),
+      ),
+      null => const Center(child: CircularProgressIndicator()),
+      final NewsStory s => _Story(
+        story: s,
+        fetching: view.fetching,
+        inInspector: docked,
+        onFetch: () => _act(ctl.fetchText),
+        onFeedback: (f) => _act(() => ctl.setFeedback(f)),
+        onHide: () => _hide(s.item),
+      ),
+    };
+    if (desktop) {
+      return Scaffold(
+        backgroundColor: context.colors.surface,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PaneHeader(
+              title: item == null
+                  ? ''
+                  : ref.watch(newsProvider).topicName(item.topic),
+              actions: actions,
+              inspectorToggle: true,
             ),
-            _Toggle(
-              key: const Key('news.story.save'),
-              on: item.saved,
-              icon: NewsIcons.saved,
-              size: 22,
-              tooltip: item.saved ? l.newsRemoveFromSaved : l.newsSave,
-              onPressed: () => _act(
-                () => ctl.setSaved(!item.saved),
-                item.saved ? l.newsRemovedFromSaved : l.newsSavedSnack,
-              ),
-            ),
-            const SizedBox(width: DelveTokens.space1),
+            Expanded(child: ReadingColumn(child: content)),
           ],
-        ],
-      ),
-      body: UnderBarFade(
-        child: switch (story) {
-          null when view.error != null => Padding(
-            padding: const EdgeInsets.all(DelveTokens.space4),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: StatusBanner(
-                kind: StatusKind.alert,
-                icon: DelveIcons.error,
-                text: l.newsStoryFailed(apiErrorText(l, view.error!)),
-                actionLabel: l.retry,
-                onAction: () => unawaited(_load()),
-              ),
-            ),
-          ),
-          null => const Center(child: CircularProgressIndicator()),
-          final NewsStory s => _Story(
-            story: s,
-            fetching: view.fetching,
-            onFetch: () => _act(ctl.fetchText),
-            onFeedback: (f) => _act(() => ctl.setFeedback(f)),
-            onHide: () => _hide(s.item),
-          ),
-        },
-      ),
+        ),
+      );
+    }
+    return Scaffold(
+      appBar: PageColourBar(title: '', actions: actions),
+      body: UnderBarFade(child: content),
     );
   }
 
-  Future<void> _hide(NewsItem item) async {
+  Future<void> _hide(NewsItem item) => hideNewsSource(context, ref, item);
+}
+
+/// Hides [item]'s feed, with Undo in the snackbar (the reading view and the
+/// desktop's Story inspector).
+Future<void> hideNewsSource(
+  BuildContext context,
+  WidgetRef ref,
+  NewsItem item,
+) async {
+  final l = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  final news = ref.read(newsProvider.notifier);
+  final source = item.source!;
+  final name = item.publisher ?? source;
+  void say(String text, {VoidCallback? undo}) => messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(text),
+        action: undo == null
+            ? null
+            : SnackBarAction(label: l.newsUndo, onPressed: undo),
+      ),
+    );
+  try {
+    await news.setSource(source, enabled: false);
+    say(
+      l.newsSourceHidden(name),
+      undo: () => unawaited(news.setSource(source, enabled: true)),
+    );
+  } on Object catch (e) {
+    say(l.newsActionFailed(apiErrorText(l, e)));
+  }
+}
+
+/// The desktop's Story inspector (27W-5a): the topic with Open topic, the
+/// sources, Open original and the feedback – what the phone has at the end
+/// of the reading view.
+class NewsStoryInspector extends ConsumerWidget {
+  const NewsStoryInspector({super.key, required this.id});
+
+  final int id;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    final news = ref.read(newsProvider.notifier);
-    final source = item.source!;
-    final name = item.publisher ?? source;
-    try {
-      await news.setSource(source, enabled: false);
-      if (!mounted) return;
-      _say(
-        l.newsSourceHidden(name),
-        undo: () => unawaited(news.setSource(source, enabled: true)),
-      );
-    } on Object catch (e) {
-      if (mounted) _say(l.newsActionFailed(apiErrorText(l, e)));
+    final story = ref.watch(newsStoryProvider(id)).story;
+    final ctl = ref.read(newsStoryProvider(id).notifier);
+    final messenger = ScaffoldMessenger.of(context);
+    Future<void> feedback(String f) async {
+      try {
+        await ctl.setFeedback(f);
+      } on Object catch (e) {
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(content: Text(l.newsActionFailed(apiErrorText(l, e)))),
+          );
+      }
     }
+
+    return InspectorFrame(
+      key: const Key('inspector.story'),
+      label: l.newsStoryTab,
+      child: switch (story) {
+        null => const SizedBox.shrink(),
+        final NewsStory s => ListView(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+          children: [
+            if (s.item.topic case final topic?) ...[
+              _InspectorTopic(topic: topic),
+              const SizedBox(height: DelveTokens.space3),
+            ],
+            if (s.others.isNotEmpty) _Sources(story: s, now: DateTime.now()),
+            const SizedBox(height: DelveTokens.space4),
+            _OpenOriginal(item: s.item),
+            const SizedBox(height: DelveTokens.space4),
+            _Feedback(
+              item: s.item,
+              onFeedback: (f) => unawaited(feedback(f)),
+              onHide: () => unawaited(hideNewsSource(context, ref, s.item)),
+            ),
+          ],
+        ),
+      },
+    );
+  }
+}
+
+/// The inspector's topic: the tile, the name in the topic colour, Open
+/// topic (the list column shows the topic).
+class _InspectorTopic extends ConsumerWidget {
+  const _InspectorTopic({required this.topic});
+  final String topic;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final style = TopicStyle.of(topic);
+    return Row(
+      key: const Key('news.inspector.topic'),
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: style.tile,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          alignment: Alignment.center,
+          child: SymbolIcon(style.glyph, size: 20, color: style.color),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            ref.watch(newsProvider).topicName(topic),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: context.text.titleSmall!.copyWith(color: style.color),
+          ),
+        ),
+        TextButton(
+          key: const Key('news.inspector.openTopic'),
+          onPressed: () => context.open(Routes.newsTopic(topic)),
+          child: Text(l.newsOpenTopic),
+        ),
+      ],
+    );
   }
 }
 
@@ -160,10 +301,15 @@ class _Story extends StatelessWidget {
     required this.onFetch,
     required this.onFeedback,
     required this.onHide,
+    this.inInspector = false,
   });
 
   final NewsStory story;
   final bool fetching;
+
+  /// The desktop's docked inspector shows the sources, Open original and
+  /// the feedback: the column ends with the text.
+  final bool inInspector;
   final VoidCallback onFetch;
   final ValueChanged<String> onFeedback;
   final VoidCallback onHide;
@@ -179,9 +325,11 @@ class _Story extends StatelessWidget {
     final summaryBlock = !i.isRelease && (i.summaryHu != null || text != null);
     return ListView(
       key: const Key('news.story'),
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         DelveTokens.space5,
-        UnderBarFade.height + 6,
+        DesktopLayout.of(context)
+            ? DelveDesktop.contentGutter
+            : UnderBarFade.height + 6,
         DelveTokens.space5,
         28,
       ),
@@ -234,11 +382,13 @@ class _Story extends StatelessWidget {
             _Excerpt(text: e),
           _TextState(story: story, fetching: fetching, onFetch: onFetch),
         ],
-        if (story.others.isNotEmpty) _Sources(story: story, now: now),
-        const SizedBox(height: DelveTokens.space5),
-        _OpenOriginal(item: i),
-        const SizedBox(height: DelveTokens.space5),
-        _Feedback(item: i, onFeedback: onFeedback, onHide: onHide),
+        if (!inInspector) ...[
+          if (story.others.isNotEmpty) _Sources(story: story, now: now),
+          const SizedBox(height: DelveTokens.space5),
+          _OpenOriginal(item: i),
+          const SizedBox(height: DelveTokens.space5),
+          _Feedback(item: i, onFeedback: onFeedback, onHide: onHide),
+        ],
       ],
     );
   }
@@ -779,7 +929,9 @@ class _OpenOriginal extends ConsumerWidget {
       children: [
         FilledButton.tonalIcon(
           key: const Key('news.story.original'),
-          style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
+          style: FilledButton.styleFrom(
+            minimumSize: Size(0, DesktopLayout.of(context) ? 36 : 48),
+          ),
           onPressed: () => openLink(context, ref, item.originalUrl),
           icon: const SymbolIcon(NewsIcons.openOriginal, size: 20),
           label: Text(item.isRelease ? l.newsOpenReleases : l.newsOpenOriginal),

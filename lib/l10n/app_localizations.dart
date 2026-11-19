@@ -8708,6 +8708,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You · this device'**
   String get desktopApprovalsYou;
+
+  /// No description provided for @newsStoryTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Story'**
+  String get newsStoryTab;
+
+  /// No description provided for @newsOpenTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Open topic'**
+  String get newsOpenTopic;
+
+  /// No description provided for @newsTopicTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic'**
+  String get newsTopicTab;
+
+  /// No description provided for @desktopNewsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No story open'**
+  String get desktopNewsEmpty;
+
+  /// No description provided for @desktopNewsEmptySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one from the list'**
+  String get desktopNewsEmptySub;
 }
 
 class _AppLocalizationsDelegate
