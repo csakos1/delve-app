@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../api/models/models.dart';
 import '../../app/news.dart';
+import '../../app/platform.dart';
 import '../../app/router.dart';
 import '../../app/session.dart';
 import '../../l10n/app_localizations.dart';
@@ -264,7 +265,10 @@ class _NewsSettingsScreenState extends ConsumerState<NewsSettingsScreen> {
     final max = (_pending['push_max'] as int?) ?? settings.pushMax;
     final pushBusy = _pending.containsKey('push');
     final maxBusy = _pending.containsKey('push_max');
-    final phoneOff = ref.watch(deviceInfoProvider).value?.notify.news == false;
+    // only where this device gets pushes (not the Linux app yet)
+    final phoneOff =
+        ref.watch(platformCapsProvider).push &&
+        ref.watch(deviceInfoProvider).value?.notify.news == false;
     return [
       _Section(l.newsSetDigestPush),
       _Row(

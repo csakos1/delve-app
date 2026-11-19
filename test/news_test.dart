@@ -6,15 +6,23 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/fake_server.dart';
 import 'support/harness.dart';
 
+/// Two hours ago, but always today (local): just after midnight "2 h ago"
+/// would be yesterday, and the page's TODAY group would be empty.
+DateTime _earlierToday() {
+  final now = DateTime.now();
+  final sinceMidnight = now.difference(DateTime(now.year, now.month, now.day));
+  final back = sinceMidnight ~/ 2;
+  return now.subtract(
+    back < const Duration(hours: 2) ? back : const Duration(hours: 2),
+  );
+}
+
 /// A story from `samples.json` with [overrides] (snake_case keys).
 Map<String, Object?> newsJson([Map<String, Object?> overrides = const {}]) => {
   ...FakeServer.sample('news_item'),
   'saved': false,
   'feedback': null,
-  'published_at': DateTime.now()
-      .toUtc()
-      .subtract(const Duration(hours: 2))
-      .toIso8601String(),
+  'published_at': _earlierToday().toUtc().toIso8601String(),
   ...overrides,
 };
 

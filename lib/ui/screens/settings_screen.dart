@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../../api/api_error.dart';
 import '../../api/models/models.dart';
 import '../../app/news.dart';
+import '../../app/platform.dart';
 import '../../app/router.dart';
 import '../../app/session.dart';
 import '../../general/general_providers.dart';
@@ -40,6 +41,8 @@ class SettingsScreen extends ConsumerWidget {
     final status = ref.watch(serverStatusProvider);
     final device = ref.watch(deviceInfoProvider);
     final app = ref.watch(appInfoProvider).value;
+    final caps = ref.watch(platformCapsProvider);
+    final tools = ref.watch(desktopToolsProvider);
     final mono = DelveText.mono.copyWith(
       color: context.colors.onSurfaceVariant,
     );
@@ -103,10 +106,27 @@ class SettingsScreen extends ConsumerWidget {
                 _ => null,
               },
             ),
-            _Section(l.settingsNotifications),
-            _Notifications(device: device),
-            _Section(l.settingsTerminal),
-            const _TerminalRow(),
+            // the Linux app has no push yet (L3)
+            if (caps.push) ...[
+              _Section(l.settingsNotifications),
+              _Notifications(device: device),
+            ],
+            if (!caps.desktopToolsByDefault) ...[
+              _Section(l.settingsDesktopTools),
+              _Item(
+                icon: DelveIcons.terminal,
+                title: l.settingsDesktopToolsRow,
+                subtitle: l.settingsDesktopToolsSub,
+                trailing: Switch(
+                  key: const Key('settings.desktopTools'),
+                  value: tools,
+                  onChanged: (on) => unawaited(
+                    ref.read(desktopToolsProvider.notifier).set(on: on),
+                  ),
+                ),
+              ),
+            ],
+            if (tools) ...[_Section(l.settingsTerminal), const _TerminalRow()],
             _Section(l.settingsGeneralSection),
             const _GeneralRow(),
             _Section(l.settingsThinkingRoute),

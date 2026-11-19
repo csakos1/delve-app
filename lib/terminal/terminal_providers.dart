@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/platform.dart';
 import '../app/session.dart';
 import 'secrets.dart';
 import 'ssh_link.dart';
@@ -59,6 +60,7 @@ final terminalServiceProvider = Provider<TerminalService>((ref) {
     keepAlive: ref.watch(terminalKeepAliveProvider),
     timing: ref.watch(terminalTimingProvider),
     defaultHost: session.credentials?.server.host ?? '',
+    lockEnabled: ref.watch(platformCapsProvider).terminalLock,
   );
   final network = ref.read(terminalNetworkProvider).listen((event) {
     terminalTrace.add('net', networkText(event));

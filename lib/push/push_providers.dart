@@ -2,14 +2,18 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/platform.dart';
 import '../app/session.dart';
 import '../sync/sync_providers.dart';
 import 'local_notifications.dart';
 import 'push_controller.dart';
 import 'push_transport.dart';
 
-/// Widget tests turn push off (no Firebase, no notification plugin).
-final pushEnabledProvider = Provider<bool>((ref) => true);
+/// Push needs Firebase (the phone); widget tests turn it off (no Firebase,
+/// no notification plugin).
+final pushEnabledProvider = Provider<bool>(
+  (ref) => ref.watch(platformCapsProvider).push,
+);
 
 final pushTransportProvider = Provider<PushTransport>(
   (ref) => FirebasePushTransport(),

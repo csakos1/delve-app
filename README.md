@@ -360,6 +360,7 @@ test/
 tool/
   gen_contract_samples.py    regenerates samples.json with the backend serializers
   android-setup.py           one-off Android project settings
+  linux-setup.py             one-off Linux runner settings (title, no header bar on Hyprland)
   ws-record.py               records WebSocket conversations with a backend
   format.sh                  dart format for hand-written files
 ```
@@ -407,6 +408,29 @@ the signer with `apksigner verify --print-certs <apk>` (the `keytool -printcert 
 check sees no v1 signature and prints nothing). An app signed with one key cannot be
 updated by an APK signed with another: switching keys means uninstalling (and pairing
 again). Keep a backup of the keystore and its password.
+
+### Linux desktop app
+
+The same app runs on the desktop (Hyprland / Wayland, GTK 3). What a platform can do is
+`PlatformCaps` (`lib/app/platform.dart`): the Linux app has no push yet, no Android services
+(share target, notification mirroring, keep-alive, transfers notification, PDF preview,
+camera) and no terminal lock; Terminal, Files and the desktop's clipboard show only after
+Settings → Desktop tools (they reach a desktop over SSH – on the desktop itself they are not
+needed). Downloads go to the XDG download folder's `Delve` (`~/Downloads/Delve`), images are
+resized with the pure Dart `image` package, the token stays in the keyring
+(`flutter_secure_storage` → libsecret). Pair it with the same `https://….ts.net` address as
+the phone (the backend listens on loopback only).
+
+```sh
+sudo pacman -S --needed clang cmake ninja gtk3 pkgconf libsecret   # once
+# linux/ was made once with: flutter create --org hu.csakos --project-name delve
+#   --platforms linux .  (then rm -f test/widget_test.dart; python3 tool/linux-setup.py)
+flutter build linux --release
+build/linux/x64/release/bundle/delve
+```
+
+Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
+`pumpDelve` for the desktop.
 
 ### Push (Firebase)
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models/models.dart';
+import '../../app/platform.dart';
 import '../../attachments/attachment_store.dart';
 import '../../attachments/composer_attachments.dart';
 import '../../attachments/picker.dart';
@@ -576,6 +577,11 @@ Future<AttachSource?> showAttachSourceSheet(
       onTap: enabled ? () => Navigator.of(context).pop(s) : null,
     );
     final images = noImagesModel == null;
+    // no camera on the desktop
+    final camera = ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(platformCapsProvider).camera;
     return SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -642,12 +648,13 @@ Future<AttachSource?> showAttachSourceSheet(
             l.attachPhotos,
             enabled: images,
           ),
-          tile(
-            AttachSource.camera,
-            DelveIcons.camera,
-            l.attachCamera,
-            enabled: images,
-          ),
+          if (camera)
+            tile(
+              AttachSource.camera,
+              DelveIcons.camera,
+              l.attachCamera,
+              enabled: images,
+            ),
           tile(AttachSource.file, DelveIcons.attachFile, l.attachFile),
           const SizedBox(height: DelveTokens.space2),
         ],

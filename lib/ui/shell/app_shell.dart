@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/platform.dart';
 import '../../app/providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
@@ -10,9 +11,23 @@ import '../widgets/page_scaffolds.dart';
 /// The shell branch of the Terminal tab.
 const kTerminalBranch = 1;
 
+/// The shell branch of the Files tab.
+const kFilesBranch = 2;
+
+/// The shell branches the bottom navigation shows, in order: all five, or
+/// without Terminal and Files when the desktop tools are off (the Linux
+/// app's default).
+List<int> visibleBranches({required bool desktopTools}) => [
+  0,
+  if (desktopTools) ...[kTerminalBranch, kFilesBranch],
+  3,
+  4,
+];
+
 /// Bottom navigation for the top-level screens: Chats · Terminal · Files ·
-/// Dashboard · More. Chats carries a warn dot while an approval waits (its
-/// count is in the Chats header).
+/// Dashboard · More (Terminal and Files only with the desktop tools). Chats
+/// carries a warn dot while an approval waits (its count is in the Chats
+/// header).
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.shell});
 
@@ -22,6 +37,11 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final pending = ref.watch(answerableApprovalCountProvider).value ?? 0;
+    final branches = visibleBranches(
+      desktopTools: ref.watch(desktopToolsProvider),
+    );
+    // a hidden branch in front (the tools were just turned off): Chats
+    final selected = branches.indexOf(shell.currentIndex);
 
     NavigationDestination dest(
       IconData icon,
@@ -60,22 +80,30 @@ class AppShell extends ConsumerWidget {
           ),
         ),
         child: NavigationBar(
-          selectedIndex: shell.currentIndex,
-          onDestinationSelected: (i) =>
-              shell.goBranch(i, initialLocation: i == shell.currentIndex),
+          selectedIndex: selected < 0 ? 0 : selected,
+          onDestinationSelected: (i) {
+            final branch = branches[i];
+            shell.goBranch(
+              branch,
+              initialLocation: branch == shell.currentIndex,
+            );
+          },
           destinations: [
-            dest(
-              DelveIcons.chats,
-              l.navChats,
-              dot: pending > 0,
-              semantics: pending > 0
-                  ? '${l.navChats}, ${l.approvalsBadge(pending)}'
-                  : null,
-            ),
-            dest(DelveIcons.terminal, l.navTerminal),
-            dest(DelveIcons.files, l.navFiles),
-            dest(DelveIcons.dashboard, l.navDashboard),
-            dest(DelveIcons.more, l.navMore),
+            for (final branch in branches)
+              switch (branch) {
+                0 => dest(
+                  DelveIcons.chats,
+                  l.navChats,
+                  dot: pending > 0,
+                  semantics: pending > 0
+                      ? '${l.navChats}, ${l.approvalsBadge(pending)}'
+                      : null,
+                ),
+                kTerminalBranch => dest(DelveIcons.terminal, l.navTerminal),
+                kFilesBranch => dest(DelveIcons.files, l.navFiles),
+                3 => dest(DelveIcons.dashboard, l.navDashboard),
+                _ => dest(DelveIcons.more, l.navMore),
+              },
           ],
         ),
       ),

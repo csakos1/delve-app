@@ -202,6 +202,12 @@ abstract class AppLocalizations {
   /// **'Pair this phone'**
   String get pairTitle;
 
+  /// No description provided for @pairTitleComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Pair this computer'**
+  String get pairTitleComputer;
+
   /// No description provided for @pairIntro.
   ///
   /// In en, this message translates to:
@@ -3418,6 +3424,24 @@ abstract class AppLocalizations {
   /// **'Terminal'**
   String get settingsTerminal;
 
+  /// No description provided for @settingsDesktopTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop tools'**
+  String get settingsDesktopTools;
+
+  /// No description provided for @settingsDesktopToolsRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal, Files and Clipboard'**
+  String get settingsDesktopToolsRow;
+
+  /// No description provided for @settingsDesktopToolsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Over SSH to the desktop. Not needed on the desktop itself.'**
+  String get settingsDesktopToolsSub;
+
   /// No description provided for @termTitle.
   ///
   /// In en, this message translates to:
@@ -6501,6 +6525,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share'**
   String get generalExportShare;
+
+  /// No description provided for @generalExportShowFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Show folder'**
+  String get generalExportShowFolder;
 
   /// No description provided for @generalExportFailed.
   ///

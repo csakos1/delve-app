@@ -71,6 +71,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairTitle => 'Pair this phone';
 
   @override
+  String get pairTitleComputer => 'Pair this computer';
+
+  @override
   String get pairIntro =>
       'Connect to your Delve server over Tailscale. Get an 8-digit code on the desktop with: sudo delve pair';
 
@@ -2099,6 +2102,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTerminal => 'Terminal';
+
+  @override
+  String get settingsDesktopTools => 'Desktop tools';
+
+  @override
+  String get settingsDesktopToolsRow => 'Terminal, Files and Clipboard';
+
+  @override
+  String get settingsDesktopToolsSub =>
+      'Over SSH to the desktop. Not needed on the desktop itself.';
 
   @override
   String get termTitle => 'Terminal';
@@ -4154,6 +4167,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get generalExportShare => 'Share';
+
+  @override
+  String get generalExportShowFolder => 'Show folder';
 
   @override
   String generalExportFailed(String error) {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/platform.dart';
 import '../../l10n/app_localizations.dart';
 import '../../terminal/desktop_clipboard.dart';
 import '../../terminal/terminal_providers.dart';
@@ -117,17 +118,21 @@ class _ClipboardQuickRowState extends ConsumerState<ClipboardQuickRow> {
   }
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: _service,
-    builder: (context, _) {
-      if (!_service.ready || !_service.config.verified) {
-        return const SizedBox.shrink();
-      }
-      return const Padding(
-        key: Key('dashboard.clipboard'),
-        padding: EdgeInsets.only(bottom: DelveTokens.space4),
-        child: ClipboardButtons(),
-      );
-    },
-  );
+  Widget build(BuildContext context) {
+    // over SSH like the terminal: hidden without the desktop tools (Linux)
+    final tools = ref.watch(desktopToolsProvider);
+    return ListenableBuilder(
+      listenable: _service,
+      builder: (context, _) {
+        if (!tools || !_service.ready || !_service.config.verified) {
+          return const SizedBox.shrink();
+        }
+        return const Padding(
+          key: Key('dashboard.clipboard'),
+          padding: EdgeInsets.only(bottom: DelveTokens.space4),
+          child: ClipboardButtons(),
+        );
+      },
+    );
+  }
 }

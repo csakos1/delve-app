@@ -1,9 +1,13 @@
+import 'dart:isolate';
 import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image/image.dart' as img;
+
+import '../app/platform.dart';
 
 /// The longer side of a photo sent to the model (decision 323).
 const int kImageLongSide = 1536;
@@ -78,4 +82,77 @@ class NativeImagePrep implements ImagePrep {
   }
 }
 
-final imagePrepProvider = Provider<ImagePrep>((ref) => NativeImagePrep());
+/// The same result without a platform plugin (the Linux app): decode, turn
+/// upright by the EXIF orientation, scale the longer side to
+/// [kImageLongSide], JPEG at [kImageQuality] (70 when still too large), EXIF
+/// dropped. In an isolate: a 12 MP photo takes a moment in pure Dart.
+class DartImagePrep implements ImagePrep {
+  const DartImagePrep();
+
+  @override
+  Future<Uint8List> prepare(Uint8List source) async {
+    final out = await Isolate.run(() => dartPrepare(source));
+    return switch (out) {
+      DartPrepOk(:final bytes) => bytes,
+      DartPrepUnreadable() => throw const ImagePrepFailed(
+        'not a readable image',
+      ),
+      DartPrepTooLarge() => throw const ImagePrepFailed(
+        'too large after compression',
+      ),
+    };
+  }
+}
+
+/// [DartImagePrep]'s answer across the isolate (plain data, no exception).
+sealed class DartPrepResult {
+  const DartPrepResult();
+}
+
+class DartPrepOk extends DartPrepResult {
+  const DartPrepOk(this.bytes);
+  final Uint8List bytes;
+}
+
+class DartPrepUnreadable extends DartPrepResult {
+  const DartPrepUnreadable();
+}
+
+class DartPrepTooLarge extends DartPrepResult {
+  const DartPrepTooLarge();
+}
+
+/// The work of [DartImagePrep], synchronous (tests call it directly).
+@visibleForTesting
+DartPrepResult dartPrepare(Uint8List source, {int maxBytes = kMaxImageBytes}) {
+  final decoded = img.decodeImage(source);
+  if (decoded == null) return const DartPrepUnreadable();
+  var image = img.bakeOrientation(decoded);
+  final long = max(image.width, image.height);
+  if (long > kImageLongSide) {
+    image = image.width >= image.height
+        ? img.copyResize(
+            image,
+            width: kImageLongSide,
+            interpolation: img.Interpolation.average,
+          )
+        : img.copyResize(
+            image,
+            height: kImageLongSide,
+            interpolation: img.Interpolation.average,
+          );
+  }
+  image.exif = img.ExifData(); // no GPS or camera data to the model
+  for (final quality in const [kImageQuality, 70]) {
+    final out = img.encodeJpg(image, quality: quality);
+    if (out.length <= maxBytes) return DartPrepOk(out);
+  }
+  return const DartPrepTooLarge();
+}
+
+/// The phone: flutter_image_compress; elsewhere the Dart encoder.
+final imagePrepProvider = Provider<ImagePrep>(
+  (ref) => ref.watch(platformCapsProvider).nativeImages
+      ? NativeImagePrep()
+      : const DartImagePrep(),
+);

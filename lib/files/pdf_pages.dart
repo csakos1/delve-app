@@ -80,3 +80,22 @@ class ChannelPdfPages implements PdfPages {
     await _call<void>('pdfClose', {'id': doc});
   }
 }
+
+/// No PDF renderer on this platform (the Linux app): the preview says so,
+/// Download still works.
+class NoPdfPages implements PdfPages {
+  const NoPdfPages();
+
+  @override
+  Future<PdfInfo> open(String path) async => throw const PdfProblem(
+    PdfProblemKind.failed,
+    'no PDF preview on this platform – download it instead',
+  );
+
+  @override
+  Future<Uint8List> render(int doc, int page, int width) async =>
+      throw const PdfProblem(PdfProblemKind.failed, 'no PDF preview');
+
+  @override
+  Future<void> close(int doc) async {}
+}

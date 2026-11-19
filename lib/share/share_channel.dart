@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/platform.dart';
 import '../attachments/picker.dart';
 
 /// What another app shared with Delve ("Share to Delve", design 17).
@@ -159,8 +160,9 @@ class PlatformShareSource implements ShareSource {
   }
 }
 
-/// Null: no sharing (tests, unless they give a fake).
+/// Null: no sharing (tests, unless they give a fake; the Linux app).
 final shareSourceProvider = Provider<ShareSource?>((ref) {
+  if (!ref.watch(platformCapsProvider).shareTarget) return null;
   final source = PlatformShareSource();
   ref.onDispose(source.dispose);
   return source;

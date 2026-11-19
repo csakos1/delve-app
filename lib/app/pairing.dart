@@ -4,6 +4,7 @@ import '../api/api_error.dart';
 import '../api/rest_client.dart';
 import '../data/credentials.dart';
 import 'pairing_input.dart';
+import 'platform.dart';
 import 'session.dart';
 
 /// What went wrong with the last attempt (at most one is set).
@@ -85,7 +86,7 @@ class PairingController extends Notifier<PairingState> {
       final meta = await api.meta();
       final device = await api.register(
         '${digits.substring(0, 4)}-${digits.substring(4)}',
-        name: kDeviceName,
+        name: ref.read(platformCapsProvider).deviceName,
         appVersion: app?.version,
       );
       await ref

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/pairing.dart';
 import '../../app/pairing_input.dart';
+import '../../app/platform.dart';
 import '../../app/session.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
@@ -156,7 +157,12 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
                 const SizedBox(height: 40),
                 Semantics(
                   header: true,
-                  child: Text(l.pairTitle, style: context.text.headlineSmall),
+                  child: Text(
+                    ref.watch(platformCapsProvider).phone
+                        ? l.pairTitle
+                        : l.pairTitleComputer,
+                    style: context.text.headlineSmall,
+                  ),
                 ),
                 const SizedBox(height: DelveTokens.space3),
                 Text(

@@ -1,5 +1,6 @@
 import 'package:delve/app/app.dart';
 import 'package:delve/app/chat.dart';
+import 'package:delve/app/platform.dart';
 import 'package:delve/app/providers.dart';
 import 'package:delve/app/session.dart';
 import 'package:delve/attachments/attachment_store.dart';
@@ -58,6 +59,7 @@ class TestEnv {
     TerminalFakes? terminal,
     String? generalKey,
     FakeMirror? mirror,
+    this.caps,
   }) : terminal = terminal ?? TerminalFakes(),
        mirror = mirror ?? FakeMirror(),
        db = memoryDb(),
@@ -102,6 +104,9 @@ class TestEnv {
   /// The Android side of notification mirroring (no platform channel).
   final FakeMirror mirror;
 
+  /// The platform the app thinks it runs on (default: the phone).
+  final PlatformCaps? caps;
+
   // (The override list is written out twice: its element type lives in a
   // different library across Riverpod versions.)
   ProviderScope app(Widget child) => ProviderScope(
@@ -129,6 +134,7 @@ class TestEnv {
       generalKeyStoreProvider.overrideWithValue(generalKeys),
       openRouterAdapterProvider.overrideWithValue(openRouter),
       mirrorPlatformProvider.overrideWithValue(mirror),
+      if (caps case final c?) platformCapsProvider.overrideWithValue(c),
       if (push case final p?)
         pushStateProvider.overrideWith((ref) => Stream.value(p)),
       if (status case final s?)
@@ -169,6 +175,7 @@ class TestEnv {
         generalKeyStoreProvider.overrideWithValue(generalKeys),
         openRouterAdapterProvider.overrideWithValue(openRouter),
         mirrorPlatformProvider.overrideWithValue(mirror),
+        if (caps case final c?) platformCapsProvider.overrideWithValue(c),
         if (push case final p?)
           pushStateProvider.overrideWith((ref) => Stream.value(p)),
         if (status case final s?)
@@ -211,6 +218,7 @@ Future<TestEnv> pumpDelve(
   TerminalFakes? terminal,
   String? generalKey,
   FakeMirror? mirror,
+  PlatformCaps? caps,
   Future<void> Function(TestEnv env)? before,
   bool settle = true,
 }) async {
@@ -224,6 +232,7 @@ Future<TestEnv> pumpDelve(
     terminal: terminal,
     generalKey: generalKey,
     mirror: mirror,
+    caps: caps,
   );
   addTearDown(env.dispose);
   setDesignSize(tester);

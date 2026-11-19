@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/platform.dart';
 import '../../app/router.dart';
 import '../../attachments/composer_attachments.dart';
 import '../../attachments/image_prep.dart';
@@ -756,6 +757,11 @@ Future<_AddChoice?> _showAddSheet(
   backgroundColor: context.colors.surfaceContainerHigh,
   builder: (context) {
     final l = AppLocalizations.of(context);
+    // no camera on the desktop
+    final camera = ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(platformCapsProvider).camera;
     Widget tile(_AddChoice c, AttachSource s, IconData icon, String label) =>
         SizedBox(
           height: 60,
@@ -805,12 +811,13 @@ Future<_AddChoice?> _showAddSheet(
             DelveIcons.photos,
             l.attachPhotos,
           ),
-          tile(
-            _AddChoice.camera,
-            AttachSource.camera,
-            DelveIcons.camera,
-            l.attachCamera,
-          ),
+          if (camera)
+            tile(
+              _AddChoice.camera,
+              AttachSource.camera,
+              DelveIcons.camera,
+              l.attachCamera,
+            ),
           tile(
             _AddChoice.files,
             AttachSource.file,

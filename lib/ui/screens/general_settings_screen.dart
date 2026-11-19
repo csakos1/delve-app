@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../app/platform.dart';
 import '../../attachments/picker.dart';
 import '../../files/device_files.dart';
 import '../../files/files_providers.dart';
@@ -167,7 +168,10 @@ class _GeneralSettingsScreenState extends ConsumerState<GeneralSettingsScreen> {
             persist: false,
             duration: const Duration(seconds: 10),
             action: SnackBarAction(
-              label: l.generalExportShare,
+              // the desktop has no share sheet: the folder instead
+              label: ref.read(platformCapsProvider).shareSheet
+                  ? l.generalExportShare
+                  : l.generalExportShowFolder,
               onPressed: () => unawaited(device.share(uri, _zipMime)),
             ),
           ),

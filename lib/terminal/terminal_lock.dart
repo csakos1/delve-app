@@ -4,15 +4,22 @@ import 'package:local_auth/local_auth.dart';
 const kTerminalLockAfter = Duration(minutes: 15);
 
 /// The terminal locks after [after] without input, and on a cold start.
+/// Not [enabled] (the Linux app – no fingerprint there, and it is the
+/// user's own computer): never locked.
 class TerminalLock {
-  TerminalLock({this.after = kTerminalLockAfter, DateTime Function()? now})
-    : _now = now ?? DateTime.now;
+  TerminalLock({
+    this.after = kTerminalLockAfter,
+    this.enabled = true,
+    DateTime Function()? now,
+  }) : _now = now ?? DateTime.now;
 
   final Duration after;
+  final bool enabled;
   final DateTime Function() _now;
   DateTime? _lastActive;
 
   bool get locked {
+    if (!enabled) return false;
     final last = _lastActive;
     return last == null || _now().difference(last) >= after;
   }

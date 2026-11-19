@@ -52,9 +52,10 @@ class TerminalService extends ChangeNotifier {
     this.timing = const TerminalTiming(),
     DateTime Function()? now,
     Duration lockAfter = kTerminalLockAfter,
+    bool lockEnabled = true,
   }) : _dialer = dialer,
        _now = now,
-       lock = TerminalLock(after: lockAfter, now: now) {
+       lock = TerminalLock(after: lockAfter, now: now, enabled: lockEnabled) {
     // before load: the one tab of a terminal set up before T3
     _tabs.add(_makeTab(SavedTabs.first.tabs.single));
     _active = 0;

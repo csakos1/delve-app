@@ -25,6 +25,7 @@
   "chatTitle": "Chat",
   "back": "Back",
   "pairTitle": "Pair this phone",
+  "pairTitleComputer": "Pair this computer",
   "pairIntro": "Connect to your Delve server over Tailscale. Get an 8-digit code on the desktop with: sudo delve pair",
   "pairServerUrl": "Server URL",
   "pairServerUrlHint": "https://archlinux.<tailnet>.ts.net",
@@ -1598,6 +1599,9 @@
   "watchesNote": "Watches run on a schedule without the model. New ones and changes are made in a chat.",
   "navTerminal": "Terminal",
   "settingsTerminal": "Terminal",
+  "settingsDesktopTools": "Desktop tools",
+  "settingsDesktopToolsRow": "Terminal, Files and Clipboard",
+  "settingsDesktopToolsSub": "Over SSH to the desktop. Not needed on the desktop itself.",
   "termTitle": "Terminal",
   "termSetupSubtitle": "Set up once · the key never leaves this phone",
   "termStepKey": "This phone's key",
@@ -3210,6 +3214,7 @@
     }
   },
   "generalExportShare": "Share",
+  "generalExportShowFolder": "Show folder",
   "generalExportFailed": "Couldn't export: {error}",
   "@generalExportFailed": {
     "placeholders": {

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../app/platform.dart';
 import '../../l10n/app_localizations.dart';
 import '../../terminal/secrets.dart';
 import '../../terminal/terminal_providers.dart';
@@ -170,6 +171,7 @@ class _TerminalSettingsScreenState
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final caps = ref.watch(platformCapsProvider);
     return SubPage(
       title: l.termTitle,
       child: ListenableBuilder(
@@ -190,16 +192,17 @@ class _TerminalSettingsScreenState
             padding: const EdgeInsets.only(bottom: DelveTokens.space8),
             children: [
               _Section(l.termSettingsConnection),
-              SwitchListTile(
-                key: const Key('terminalSettings.background'),
-                secondary: const SymbolIcon(DelveIcons.sync),
-                title: Text(l.termBackground),
-                subtitle: Text(l.termBackgroundSub),
-                isThreeLine: true,
-                value: s.keepConnected,
-                onChanged: (on) => unawaited(s.setKeepConnected(on: on)),
-              ),
-              if (s.keepConnected && s.keepRefused)
+              if (caps.backgroundService)
+                SwitchListTile(
+                  key: const Key('terminalSettings.background'),
+                  secondary: const SymbolIcon(DelveIcons.sync),
+                  title: Text(l.termBackground),
+                  subtitle: Text(l.termBackgroundSub),
+                  isThreeLine: true,
+                  value: s.keepConnected,
+                  onChanged: (on) => unawaited(s.setKeepConnected(on: on)),
+                ),
+              if (caps.backgroundService && s.keepConnected && s.keepRefused)
                 _Row(
                   key: const Key('terminalSettings.backgroundRefused'),
                   icon: DelveIcons.warning,
@@ -207,7 +210,9 @@ class _TerminalSettingsScreenState
                   title: l.termBackgroundNoStart,
                   titleColor: alert,
                 ),
-              if (s.keepConnected && s.batteryExempt == false)
+              if (caps.backgroundService &&
+                  s.keepConnected &&
+                  s.batteryExempt == false)
                 _Row(
                   key: const Key('terminalSettings.battery'),
                   icon: DelveIcons.warning,
@@ -224,11 +229,12 @@ class _TerminalSettingsScreenState
                 subtitleStyle: mono,
                 onTap: _editTarget,
               ),
-              _Row(
-                icon: DelveIcons.lock,
-                title: l.termLockRow,
-                subtitle: l.termLockRowSub,
-              ),
+              if (caps.terminalLock)
+                _Row(
+                  icon: DelveIcons.lock,
+                  title: l.termLockRow,
+                  subtitle: l.termLockRowSub,
+                ),
               _Section(l.termDisplay),
               _FontSize(service: s),
               _Section(l.termPhoneKey),

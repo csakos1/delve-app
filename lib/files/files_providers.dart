@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app/platform.dart';
 import '../terminal/terminal_providers.dart';
+import '../ui/links.dart';
 import 'device_files.dart';
 import 'files_service.dart';
+import 'linux_device_files.dart';
 import 'pdf_pages.dart';
 import 'sftp_fs.dart';
 import 'transfer_notice.dart';
@@ -13,17 +16,26 @@ final filesDialerProvider = Provider<FilesDialer>(
   (ref) => const SftpFilesDialer(),
 );
 
-/// Downloads/Delve and other apps (tests: a fake).
+/// Downloads/Delve and other apps (tests: a fake). The phone: MediaStore;
+/// the Linux app: the folder itself.
 final deviceFilesProvider = Provider<DeviceFiles>(
-  (ref) => const ChannelDeviceFiles(),
+  (ref) => ref.watch(platformCapsProvider).phone
+      ? const ChannelDeviceFiles()
+      : LinuxDeviceFiles(open: ref.watch(linkOpenerProvider)),
 );
 
 /// The PDF preview's pages (tests: a fake).
-final pdfPagesProvider = Provider<PdfPages>((ref) => const ChannelPdfPages());
+final pdfPagesProvider = Provider<PdfPages>(
+  (ref) => ref.watch(platformCapsProvider).pdfPreview
+      ? const ChannelPdfPages()
+      : const NoPdfPages(),
+);
 
 /// The transfers' background service and notification (F3b; tests: a fake).
 final transferNoticeProvider = Provider<TransferNotice>(
-  (ref) => ChannelTransferNotice(),
+  (ref) => ref.watch(platformCapsProvider).backgroundService
+      ? ChannelTransferNotice()
+      : const NoTransferNotice(),
 );
 
 /// The transfers notification's Open asked for the Transfers sheet:
