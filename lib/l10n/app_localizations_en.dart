@@ -5670,4 +5670,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopWatchListing => 'Listing';
+
+  @override
+  String get desktopSchedulesEmpty => 'No schedule open';
+
+  @override
+  String get desktopSchedulesEmptySub => 'Pick one from the list';
+
+  @override
+  String get desktopScheduleDetails => 'Details';
+
+  @override
+  String get desktopScheduleCron => 'Cron';
+
+  @override
+  String get desktopScheduleLastRun => 'Last run';
+
+  @override
+  String get desktopScheduleRunsTab => 'Runs';
+
+  @override
+  String get desktopScheduleOlderRuns => 'Load older';
+
+  @override
+  String get desktopScheduleBriefRuns =>
+      'The brief is written without a run: each one is a card on the Dashboard.';
+
+  @override
+  String get desktopScheduleRunsOld =>
+      'This server lists only the last run; the rest needs a backend with API 22.';
 }

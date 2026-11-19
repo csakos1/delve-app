@@ -19,6 +19,7 @@ import 'package:delve/ui/desktop/desktop_shell.dart';
 import 'package:delve/ui/desktop/intake.dart';
 import 'package:delve/ui/desktop/news_area.dart';
 import 'package:delve/ui/desktop/panes.dart';
+import 'package:delve/ui/desktop/schedules_area.dart';
 import 'package:delve/ui/desktop/status_bar.dart';
 import 'package:delve/ui/desktop/watches_area.dart';
 import 'package:delve/ui/general/general_widgets.dart' show DelveFilterChip;
@@ -30,6 +31,8 @@ import 'package:delve/ui/screens/dashboard_screen.dart';
 import 'package:delve/ui/screens/news_screen.dart';
 import 'package:delve/ui/screens/news_story_screen.dart';
 import 'package:delve/ui/screens/observability_screen.dart';
+import 'package:delve/ui/screens/schedule_editor_screen.dart';
+import 'package:delve/ui/screens/schedules_screen.dart';
 import 'package:delve/ui/screens/system_screen.dart';
 import 'package:delve/ui/screens/watch_detail_screen.dart';
 import 'package:delve/ui/screens/watches_screen.dart';
@@ -1729,6 +1732,11 @@ void main() {
       expect(find.byType(FloatingActionButton), findsNothing);
       expect(find.byKey(const Key('watches.new')), findsOneWidget);
       expect(_width(t, 'pane.list'), DelveDesktop.listDefault);
+      // the green dot only on the watches that run (not paused, not failing)
+      expect(find.byKey(const Key('watch.active.$slug')), findsOneWidget);
+      expect(find.byKey(const Key('watch.active.doom')), findsOneWidget);
+      expect(find.byKey(const Key('watch.active.bambu')), findsNothing);
+      expect(find.byKey(const Key('watch.active.deck')), findsNothing);
 
       await open(t, 'RTX 4070 Super ≤180k');
       expect(find.byType(WatchDetailScreen), findsOneWidget);
@@ -1860,6 +1868,192 @@ void main() {
       await t.pumpAndSettle();
       expect(find.byKey(const Key('watch.tab.hits')), findsNothing);
       expect(find.text('HITS · 3'), findsOneWidget);
+    });
+  });
+
+  group('Schedules on the desktop (L2c2b2)', () {
+    final briefId = FakeServer.sample('schedule')['id']! as String;
+    final promptId = FakeServer.sample('schedule_prompt')['id']! as String;
+
+    Future<TestEnv> schedules(WidgetTester t) async {
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        before: (env) async {
+          env.server
+            ..json('GET', '/api/v1/schedules/$promptId/runs', {
+              'data': [
+                FakeServer.sample('schedule_run'),
+                FakeServer.sample('schedule_run_failed'),
+              ],
+              'next_before': null,
+            })
+            ..json('GET', '/api/v1/schedules/$briefId/runs', {
+              'data': <Object?>[],
+              'next_before': null,
+            })
+            ..on(
+              'PATCH',
+              '/api/v1/schedules/$promptId',
+              (r) => FakeReply(200, {
+                ...FakeServer.sample('schedule_prompt'),
+                ...?(r.data as Map<String, Object?>?),
+              }),
+            );
+        },
+      );
+      await _ctrl(t, LogicalKeyboardKey.digit7);
+      return env;
+    }
+
+    Future<void> openPrompt(WidgetTester t) async {
+      await t.tap(
+        find.descendant(
+          of: find.byKey(const Key('pane.list')),
+          matching: find.text('Arch news digest'),
+        ),
+      );
+      await t.pumpAndSettle();
+    }
+
+    test('what a location shows', () {
+      expect(selectedSchedule(Routes.schedules), (id: null, editing: false));
+      expect(selectedSchedule(Routes.newSchedule), (id: null, editing: true));
+      expect(selectedSchedule(Routes.schedule('a')), (id: 'a', editing: false));
+      expect(selectedSchedule(Routes.editSchedule('a')), (
+        id: 'a',
+        editing: true,
+      ));
+    });
+
+    testWidgets('the schedules with switches in the list column, a '
+        "schedule's page in the content, its runs in the inspector", (t) async {
+      final env = await schedules(t);
+      expect(find.byType(SchedulesArea), findsOneWidget);
+      expect(find.byKey(const Key('schedules.placeholder')), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsNothing);
+      expect(find.byKey(Key('schedule.$promptId.switch')), findsOneWidget);
+      expect(find.byKey(Key('schedule.$briefId.switch')), findsOneWidget);
+
+      await openPrompt(t);
+      expect(find.byType(SchedulePage), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(PaneHeader),
+          matching: find.text('Arch news digest'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text("Summarize today's Arch news in three lines."),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('inspector.runs')), findsOneWidget);
+      expect(
+        find.byKey(const Key('inspector.runs.run_4a7c2e9b1d3f5a6c')),
+        findsOneWidget,
+      );
+      expect(find.text('llama-server is not running'), findsOneWidget);
+      expect(find.byKey(const Key('inspector.runs.more')), findsNothing);
+      expect(
+        env.server.calls,
+        contains('GET /api/v1/schedules/$promptId/runs'),
+      );
+    });
+
+    testWidgets('an API 21 server: the inspector has the last run only', (
+      t,
+    ) async {
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        before: (env) async => env.server
+          ..json('GET', '/api/v1/meta', {
+            ...FakeServer.meta,
+            'api_revision': 21,
+          }),
+      );
+      await _ctrl(t, LogicalKeyboardKey.digit7);
+      await openPrompt(t);
+      expect(find.byKey(const Key('inspector.runs.last')), findsOneWidget);
+      expect(
+        env.server.calls,
+        isNot(contains('GET /api/v1/schedules/$promptId/runs')),
+      );
+    });
+
+    testWidgets('the brief: its last run, no list of runs', (t) async {
+      await schedules(t);
+      await t.tap(
+        find.descendant(
+          of: find.byKey(const Key('pane.list')),
+          matching: find.text('Morning brief'),
+        ),
+      );
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('inspector.runs.last')), findsOneWidget);
+      expect(find.byKey(const Key('schedule.page.delete')), findsNothing);
+    });
+
+    testWidgets('Edit opens the editor in the content; Ctrl+S saves and '
+        'goes back to the page, Esc cancels', (t) async {
+      final env = await schedules(t);
+      await openPrompt(t);
+      await t.tap(find.byKey(const Key('schedule.page.edit')));
+      await t.pumpAndSettle();
+      expect(find.byType(ScheduleEditorScreen), findsOneWidget);
+      expect(find.byKey(const Key('schedule.editor')), findsOneWidget);
+      // the editor has nothing to inspect; the list keeps the row selected
+      expect(find.byKey(const Key('inspector.runs')), findsNothing);
+      expect(find.byKey(const Key('pane.list')), findsOneWidget);
+
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await t.pumpAndSettle();
+      expect(find.byType(SchedulePage), findsOneWidget);
+      expect(
+        env.server.calls,
+        isNot(contains('PATCH /api/v1/schedules/$promptId')),
+      );
+
+      await t.tap(find.byKey(const Key('schedule.page.edit')));
+      await t.pumpAndSettle();
+      await _ctrl(t, LogicalKeyboardKey.keyS);
+      expect(env.server.calls, contains('PATCH /api/v1/schedules/$promptId'));
+      expect(find.byType(SchedulePage), findsOneWidget);
+      expect(find.byType(ScheduleEditorScreen), findsNothing);
+    });
+
+    testWidgets("a row's switch pauses the schedule", (t) async {
+      final env = await schedules(t);
+      await t.tap(find.byKey(Key('schedule.$promptId.switch')));
+      await t.pumpAndSettle();
+      final patch = env.server.requests.singleWhere((r) => r.method == 'PATCH');
+      expect(patch.data, {'enabled': false});
+    });
+
+    testWidgets('New schedule: the editor in the content, no inspector', (
+      t,
+    ) async {
+      await schedules(t);
+      await t.tap(find.byKey(const Key('schedules.new')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const ValueKey('schedule.new')), findsOneWidget);
+      expect(find.byKey(const Key('pane.inspector.toggle')), findsNothing);
+      await t.tap(find.byKey(const Key('schedule.cancel')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('schedules.placeholder')), findsOneWidget);
+    });
+
+    testWidgets('J / K step through the schedules', (t) async {
+      await schedules(t);
+      await t.sendKeyEvent(LogicalKeyboardKey.keyJ);
+      await t.pumpAndSettle();
+      expect(find.byKey(ValueKey('schedule.page.$briefId')), findsOneWidget);
+      await t.sendKeyEvent(LogicalKeyboardKey.keyJ);
+      await t.pumpAndSettle();
+      expect(find.byKey(ValueKey('schedule.page.$promptId')), findsOneWidget);
     });
   });
 }

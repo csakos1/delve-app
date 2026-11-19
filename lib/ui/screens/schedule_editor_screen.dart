@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/api_error.dart';
@@ -8,9 +9,14 @@ import '../../api/models/models.dart';
 import '../../api/rest_client.dart';
 import '../../app/chat_list.dart';
 import '../../app/cron_preset.dart';
+import '../../app/layout.dart';
+import '../../app/router.dart';
 import '../../app/schedules.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_page.dart' show DesktopPageBody;
+import '../desktop/layers.dart' show showDesktopConfirm;
+import '../desktop/panes.dart' show KeyCap, PaneHeader;
 import '../format.dart';
 import '../schedule_text.dart';
 import '../widgets/chat_row.dart';
@@ -21,7 +27,9 @@ enum Repeat { daily, weekly, cron }
 
 /// 14b: a new schedule ([scheduleId] null) or an existing one. The morning
 /// brief only takes its timing; a prompt schedule also its name, prompt, the
-/// chat it posts to and thinking.
+/// chat it posts to and thinking. On the desktop (27W-7b) it fills the
+/// content pane: Save is Ctrl+S, Cancel is Esc; both lead to the schedule's
+/// page.
 class ScheduleEditorScreen extends ConsumerStatefulWidget {
   const ScheduleEditorScreen({super.key, this.scheduleId});
 
@@ -53,9 +61,16 @@ class _ScheduleEditorScreenState extends ConsumerState<ScheduleEditorScreen> {
 
   Schedule? _original;
 
+  /// The desktop: holds the focus for Ctrl+S / Esc while no field has it.
+  final _keys = FocusNode(debugLabel: 'schedule.editor');
+
   @override
   void initState() {
     super.initState();
+    // the shell keeps the focus otherwise (autofocus does not reach here)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && DesktopLayout.of(context)) _keys.requestFocus();
+    });
     final id = widget.scheduleId;
     final s = id == null ? null : ref.read(schedulesProvider).byId(id);
     _original = s;
@@ -82,6 +97,7 @@ class _ScheduleEditorScreenState extends ConsumerState<ScheduleEditorScreen> {
 
   @override
   void dispose() {
+    _keys.dispose();
     _name.dispose();
     _prompt.dispose();
     _cron.dispose();
@@ -199,8 +215,9 @@ class _ScheduleEditorScreenState extends ConsumerState<ScheduleEditorScreen> {
     final ctl = ref.read(schedulesProvider.notifier);
     final original = _original;
     try {
+      final Schedule saved;
       if (original == null) {
-        await ctl.create(
+        saved = await ctl.create(
           ScheduleDraft(
             name: _name.text.trim(),
             cron: cron,
@@ -210,9 +227,14 @@ class _ScheduleEditorScreenState extends ConsumerState<ScheduleEditorScreen> {
           ),
         );
       } else {
-        await ctl.change(original.id, _changes(original, cron));
+        saved = await ctl.change(original.id, _changes(original, cron));
       }
-      if (mounted) unawaited(Navigator.of(context).maybePop());
+      if (!mounted) return;
+      if (DesktopLayout.of(context)) {
+        context.open(Routes.schedule(saved.id));
+      } else {
+        unawaited(Navigator.of(context).maybePop());
+      }
     } on ApiRequestError catch (e) {
       final text = scheduleErrorText(l, e.code ?? '');
       final field = switch (e.code) {
@@ -257,6 +279,23 @@ class _ScheduleEditorScreenState extends ConsumerState<ScheduleEditorScreen> {
     final l = AppLocalizations.of(context);
     final s = _original;
     if (s == null) return;
+    if (DesktopLayout.of(context)) {
+      final ok = await showDesktopConfirm(
+        context,
+        title: l.schedDeleteTitle(s.name),
+        body: l.schedDeleteBody,
+        action: l.schedDeleteConfirm,
+        destructive: true,
+      );
+      if (!ok || !mounted) return;
+      try {
+        await ref.read(schedulesProvider.notifier).delete(s.id);
+        if (mounted) context.open(Routes.schedules);
+      } on Object catch (e) {
+        _snack(l.schedulesSaveFailed(apiErrorText(l, e)));
+      }
+      return;
+    }
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -289,10 +328,97 @@ class _ScheduleEditorScreenState extends ConsumerState<ScheduleEditorScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
+  /// Esc on the desktop: back to the schedule's page (a new one: the list).
+  void _close() {
+    final id = widget.scheduleId;
+    context.open(id == null ? Routes.schedules : Routes.schedule(id));
+  }
+
+  /// The desktop's editor (27W-7b): a 48 px header with Cancel and Save, the
+  /// form in a 680 column; Ctrl+S saves, Esc cancels.
+  Widget _desktop(AppLocalizations l, bool missing) {
+    final save = !missing && !_saving;
+    return Scaffold(
+      backgroundColor: context.colors.surface,
+      body: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
+            if (save) unawaited(_save());
+          },
+          const SingleActivator(LogicalKeyboardKey.escape): _close,
+        },
+        child: Focus(
+          focusNode: _keys,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              PaneHeader(
+                title: widget.scheduleId == null
+                    ? l.schedNewTitle
+                    : l.schedEditTitle,
+                actions: [
+                  TextButton(
+                    key: const Key('schedule.cancel'),
+                    onPressed: _close,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(l.cancel),
+                        const SizedBox(width: 6),
+                        const KeyCap('Esc'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: DelveTokens.space2),
+                  if (!missing)
+                    FilledButton(
+                      key: const Key('schedule.save'),
+                      onPressed: save ? () => unawaited(_save()) : null,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(l.schedSave),
+                          const SizedBox(width: 6),
+                          const KeyCap('Ctrl+S'),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              Expanded(
+                child: missing
+                    ? Padding(
+                        padding: const EdgeInsets.all(
+                          DelveDesktop.contentGutter,
+                        ),
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: StatusBanner(
+                            kind: StatusKind.info,
+                            icon: DelveIcons.info,
+                            text: l.schedMissing,
+                          ),
+                        ),
+                      )
+                    : DesktopPageBody(
+                        key: const Key('schedule.editor'),
+                        maxWidth: DelveDesktop.detailColumn,
+                        top: DelveTokens.space4,
+                        children: _form(l),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final missing = widget.scheduleId != null && _original == null;
+    if (DesktopLayout.of(context)) return _desktop(l, missing);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -331,69 +457,64 @@ class _ScheduleEditorScreenState extends ConsumerState<ScheduleEditorScreen> {
                 DelveTokens.space4,
                 DelveTokens.space6 + MediaQuery.paddingOf(context).bottom,
               ),
-              children: [
-                TextField(
-                  key: const Key('schedule.name'),
-                  controller: _name,
-                  enabled: !_isBrief,
-                  maxLength: 64,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(
-                    labelText: l.schedName,
-                    errorText: _errors['name'],
-                    counterText: '',
-                  ),
-                ),
-                const SizedBox(height: DelveTokens.space4),
-                _Label(l.schedRepeats),
-                SegmentedButton<Repeat>(
-                  key: const Key('schedule.repeat'),
-                  segments: [
-                    ButtonSegment(
-                      value: Repeat.daily,
-                      label: Text(l.schedDaily),
-                    ),
-                    ButtonSegment(
-                      value: Repeat.weekly,
-                      label: Text(l.schedWeekly),
-                    ),
-                    ButtonSegment(value: Repeat.cron, label: Text(l.schedCron)),
-                  ],
-                  selected: {_repeat},
-                  onSelectionChanged: (v) => _setRepeat(v.single),
-                  style: SegmentedButton.styleFrom(
-                    selectedBackgroundColor: context.colors.primaryContainer,
-                    selectedForegroundColor: context.colors.primary,
-                  ),
-                ),
-                const SizedBox(height: DelveTokens.space3),
-                ..._timingFields(l),
-                const SizedBox(height: DelveTokens.space2),
-                _Summary(
-                  text: presetText(
-                    l,
-                    _preset,
-                    // the server's reading fits only the cron it was made for
-                    _preset.toCron() == _original?.cron
-                        ? _original?.description ?? ''
-                        : '',
-                  ),
-                  cron: _preset.toCron(),
-                  error: _errors['timing'] ?? _timingProblem(l),
-                ),
-                if (_isBrief) ...[
-                  const SizedBox(height: DelveTokens.space4),
-                  StatusBanner(
-                    kind: StatusKind.info,
-                    icon: DelveIcons.brief,
-                    text: l.schedBriefNote,
-                  ),
-                ] else
-                  ..._promptFields(l),
-              ],
+              children: _form(l),
             ),
     );
   }
+
+  /// The fields (the phone's page and the desktop's column).
+  List<Widget> _form(AppLocalizations l) => [
+    TextField(
+      key: const Key('schedule.name'),
+      controller: _name,
+      enabled: !_isBrief,
+      maxLength: 64,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: InputDecoration(
+        labelText: l.schedName,
+        errorText: _errors['name'],
+        counterText: '',
+      ),
+    ),
+    const SizedBox(height: DelveTokens.space4),
+    _Label(l.schedRepeats),
+    SegmentedButton<Repeat>(
+      key: const Key('schedule.repeat'),
+      segments: [
+        ButtonSegment(value: Repeat.daily, label: Text(l.schedDaily)),
+        ButtonSegment(value: Repeat.weekly, label: Text(l.schedWeekly)),
+        ButtonSegment(value: Repeat.cron, label: Text(l.schedCron)),
+      ],
+      selected: {_repeat},
+      onSelectionChanged: (v) => _setRepeat(v.single),
+      style: SegmentedButton.styleFrom(
+        selectedBackgroundColor: context.colors.primaryContainer,
+        selectedForegroundColor: context.colors.primary,
+      ),
+    ),
+    const SizedBox(height: DelveTokens.space3),
+    ..._timingFields(l),
+    const SizedBox(height: DelveTokens.space2),
+    _Summary(
+      text: presetText(
+        l,
+        _preset,
+        // the server's reading fits only the cron it was made for
+        _preset.toCron() == _original?.cron ? _original?.description ?? '' : '',
+      ),
+      cron: _preset.toCron(),
+      error: _errors['timing'] ?? _timingProblem(l),
+    ),
+    if (_isBrief) ...[
+      const SizedBox(height: DelveTokens.space4),
+      StatusBanner(
+        kind: StatusKind.info,
+        icon: DelveIcons.brief,
+        text: l.schedBriefNote,
+      ),
+    ] else
+      ..._promptFields(l),
+  ];
 
   List<Widget> _timingFields(AppLocalizations l) => switch (_repeat) {
     Repeat.daily => [

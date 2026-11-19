@@ -348,6 +348,10 @@ class _IconLine extends StatelessWidget {
   );
 }
 
+/// The watch runs on its schedule: active, not paused, its last check did
+/// not fail (the desktop row's green dot).
+bool watchRunning(Watch w) => w.state == 'active' && !w.paused && !w.failing;
+
 /// A watch in the desktop's list column (27W-9a): a 52 px two-line row –
 /// source icon, name and “N new”; under it the next check, the paused state
 /// or the error (in `alert`). The open watch's row is selected.
@@ -398,7 +402,7 @@ class DesktopWatchRow extends StatelessWidget {
       );
     } else {
       final status = watchStatus(l, w);
-      final active = w.state == 'active' && !w.paused;
+      final active = watchRunning(w);
       line2 = Text(
         active
             ? '${sourceLabel(l, w.source)} · '
@@ -449,6 +453,21 @@ class DesktopWatchRow extends StatelessWidget {
                       NewPill(
                         key: Key('watch.new.${w.slug}'),
                         label: l.watchNew(w.hits24h),
+                      ),
+                    ],
+                    if (watchRunning(w)) ...[
+                      const SizedBox(width: DelveTokens.space2),
+                      Tooltip(
+                        message: l.watchStateActive,
+                        child: Container(
+                          key: Key('watch.active.${w.slug}'),
+                          width: DelveDesktop.statusBarDot,
+                          height: DelveDesktop.statusBarDot,
+                          decoration: BoxDecoration(
+                            color: context.status(StatusKind.ok).fg,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
                     ],
                   ],

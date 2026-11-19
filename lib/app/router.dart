@@ -72,6 +72,10 @@ abstract final class Routes {
   static const newSchedule = '/more/schedules/new';
   static String editSchedule(String id) =>
       '/more/schedules/edit/${Uri.encodeComponent(id)}';
+
+  /// The desktop's page of one schedule (its runs in the inspector).
+  static String schedule(String id) =>
+      '/more/schedules/${Uri.encodeComponent(id)}';
   static const observability = '/more/observability';
   static const watches = '/more/watches';
 

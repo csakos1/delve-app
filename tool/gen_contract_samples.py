@@ -12,7 +12,7 @@ from delve.serialize import approval_out, card_out, conversation_out, message_ou
 from delve.llama import Props
 from delve.system import Parts, switch_out, system_out
 from delve.brief import brief_payload
-from delve.schedules import schedule_out
+from delve.schedules import schedule_out, schedule_run_out
 from delve.stats import RANGES, GpuBucket, RunRow, bucket_edges, edges_between, stats_out
 from delve.mirror import mirror_out
 from delve.persona import Persona, Section, Topic, persona_out, section_out, topic_out
@@ -253,6 +253,18 @@ shapes = {
         at=(t0 - timedelta(minutes=2)).isoformat(), error="exited", elapsed_s=34),
     "schedule": schedule_out(brief_sched),
     "schedule_prompt": schedule_out(prompt_sched),
+    # API 22: GET /api/v1/schedules/{id}/runs
+    "schedule_run": schedule_run_out(Run(**{**{c: getattr(run, c) for c in (
+        "conversation_id", "thinking", "usage", "perf", "model")},
+        "run_id": "run_4a7c2e9b1d3f5a6c", "status": "completed", "origin": "schedule",
+        "queued_at": t0 - timedelta(minutes=47), "started_at": t0 - timedelta(minutes=47),
+        "ended_at": t0 - timedelta(minutes=46), "error": None}), conv.title),
+    "schedule_run_failed": schedule_run_out(Run(**{**{c: getattr(run, c) for c in (
+        "conversation_id", "thinking", "model")},
+        "run_id": "run_0d2f4b6a8c1e3a5b", "status": "failed", "origin": "schedule",
+        "queued_at": t0 - timedelta(hours=12), "started_at": t0 - timedelta(hours=12),
+        "ended_at": t0 - timedelta(hours=12) + timedelta(seconds=9), "usage": None, "perf": None,
+        "error": "llama-server is not running"}), None),
     "brief_payload": brief,
     "brief_incident": brief["incidents"][0],
     "card_brief": card_out(brief_card),

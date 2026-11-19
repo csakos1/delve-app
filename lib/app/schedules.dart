@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/events.dart';
 import '../api/models/models.dart';
+import '../api/protocol.dart' show kScheduleRunsRevision;
 import '../api/rest_client.dart';
 import '../sync/sync_providers.dart';
 import 'session.dart';
@@ -130,3 +131,97 @@ class SchedulesController extends Notifier<SchedulesView> {
 final schedulesProvider = NotifierProvider<SchedulesController, SchedulesView>(
   SchedulesController.new,
 );
+
+/// A schedule's runs, newest first (the desktop's Runs inspector, 27W-7a;
+/// API 22). The brief writes cards, not runs: its list is empty.
+@immutable
+class ScheduleRunsView {
+  const ScheduleRunsView({
+    this.items,
+    this.next,
+    this.error,
+    this.unsupported = false,
+  });
+
+  /// null before the first answer.
+  final List<ScheduleRunEntry>? items;
+
+  /// Where the next page ends (null = all loaded).
+  final DateTime? next;
+  final Object? error;
+
+  /// The server is older than API 22: only the schedule's last run is known.
+  final bool unsupported;
+}
+
+class ScheduleRunsController extends Notifier<ScheduleRunsView> {
+  ScheduleRunsController(this.id);
+
+  final String id;
+
+  static const int pageSize = 20;
+
+  @override
+  ScheduleRunsView build() {
+    ref.watch(apiProvider); // another server starts empty
+    return const ScheduleRunsView();
+  }
+
+  DelveApi? get _api => ref.read(apiProvider);
+
+  bool get _supported {
+    final session = ref.read(sessionProvider);
+    final meta = session is SessionPaired ? session.meta : null;
+    return meta == null || meta.apiRevision >= kScheduleRunsRevision;
+  }
+
+  /// The first page; a failure is kept in [ScheduleRunsView.error] and
+  /// rethrown.
+  Future<void> refresh() async {
+    final api = _api;
+    if (api == null) return;
+    if (!_supported) {
+      state = const ScheduleRunsView(items: [], unsupported: true);
+      return;
+    }
+    try {
+      final page = await api.scheduleRuns(id, limit: pageSize);
+      if (ref.mounted) {
+        state = ScheduleRunsView(items: page.items, next: page.nextBefore);
+      }
+    } on Object catch (e) {
+      if (ref.mounted) {
+        state = ScheduleRunsView(
+          items: state.items,
+          next: state.next,
+          error: e,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  /// The next page (Load older).
+  Future<void> loadMore() async {
+    final api = _api;
+    final next = state.next;
+    if (api == null || next == null) return;
+    final page = await api.scheduleRuns(id, before: next, limit: pageSize);
+    if (!ref.mounted) return;
+    final seen = {
+      for (final r in state.items ?? const <ScheduleRunEntry>[]) r.runId,
+    };
+    state = ScheduleRunsView(
+      items: [
+        ...?state.items,
+        ...page.items.where((r) => !seen.contains(r.runId)),
+      ],
+      next: page.nextBefore,
+    );
+  }
+}
+
+final scheduleRunsProvider =
+    NotifierProvider.family<ScheduleRunsController, ScheduleRunsView, String>(
+      ScheduleRunsController.new,
+    );

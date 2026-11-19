@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../ui/desktop/chats_area.dart';
 import '../ui/desktop/desktop_shell.dart';
 import '../ui/desktop/news_area.dart';
+import '../ui/desktop/schedules_area.dart';
 import '../ui/desktop/watches_area.dart';
 import '../ui/general/general_widgets.dart' show ChatKind;
 import '../ui/screens/approvals_screen.dart';
@@ -60,12 +61,16 @@ GoRouter buildDesktopRouter({
     debugLabel: 'desktop.newsSettings',
   );
   final watchesKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.watches');
+  final schedulesKey = GlobalKey<NavigatorState>(
+    debugLabel: 'desktop.schedules',
+  );
 
   Widget morePage(MorePage page, GoRouterState state) => switch (page) {
     MorePage.settings => const SettingsScreen(),
     MorePage.archived => const ArchivedChatsScreen(),
     MorePage.system => const SystemScreen(),
-    MorePage.schedules => const SchedulesScreen(),
+    // a shell of its own (SchedulesArea, L2c2b)
+    MorePage.schedules => const SchedulesPlaceholder(),
     MorePage.observability => const ObservabilityScreen(),
     // a shell of its own (WatchesArea, L2c2b)
     MorePage.watches => const WatchesPlaceholder(),
@@ -270,10 +275,61 @@ GoRouter buildDesktopRouter({
               ),
             ],
           ),
+          // Schedules: the list stays; the page or the editor in the content
+          ShellRoute(
+            navigatorKey: schedulesKey,
+            pageBuilder: (context, state, child) => NoTransitionPage<void>(
+              key: state.pageKey,
+              child: SchedulesArea(
+                location: state.uri.toString(),
+                content: child,
+              ),
+            ),
+            routes: [
+              GoRoute(
+                path: Routes.schedules,
+                pageBuilder: (_, state) =>
+                    _flat(state, const SchedulesPlaceholder()),
+              ),
+              // before ':id': 'new' and 'edit' are not schedules
+              GoRoute(
+                path: Routes.newSchedule,
+                pageBuilder: (_, state) => _flat(
+                  state,
+                  const ScheduleEditorScreen(key: ValueKey('schedule.new')),
+                ),
+              ),
+              GoRoute(
+                path: '${Routes.schedules}/edit/:id',
+                pageBuilder: (_, state) {
+                  final id = state.pathParameters['id']!;
+                  return _flat(
+                    state,
+                    ScheduleEditorScreen(
+                      key: ValueKey('schedule.edit.$id'),
+                      scheduleId: id,
+                    ),
+                  );
+                },
+              ),
+              GoRoute(
+                path: '${Routes.schedules}/:id',
+                pageBuilder: (_, state) {
+                  final id = state.pathParameters['id']!;
+                  return _flat(
+                    state,
+                    SchedulePage(key: ValueKey('schedule.page.$id'), id: id),
+                  );
+                },
+              ),
+            ],
+          ),
           for (final page in MorePage.values)
             if (page == MorePage.mirroring)
               GoRoute(path: page.route, redirect: (_, _) => Routes.dashboard)
-            else if (page == MorePage.news || page == MorePage.watches)
+            else if (page == MorePage.news ||
+                page == MorePage.watches ||
+                page == MorePage.schedules)
               ...const <RouteBase>[]
             else
               GoRoute(
@@ -292,18 +348,6 @@ GoRouter buildDesktopRouter({
                     GoRoute(
                       path: 'general',
                       builder: (_, _) => const GeneralSettingsScreen(),
-                    ),
-                  ],
-                  if (page == MorePage.schedules) ...[
-                    GoRoute(
-                      path: 'new',
-                      builder: (_, _) => const ScheduleEditorScreen(),
-                    ),
-                    GoRoute(
-                      path: 'edit/:id',
-                      builder: (_, state) => ScheduleEditorScreen(
-                        scheduleId: state.pathParameters['id'],
-                      ),
                     ),
                   ],
                 ],

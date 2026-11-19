@@ -5,6 +5,10 @@
 /// contract; a smaller server revision shows the "server too old" screen.
 const int kMinApiRevision = 21; // 21: pushes on the socket (desktop app)
 
+/// The revision that lists a schedule's runs (`GET /schedules/{id}/runs`);
+/// an older server shows only the last run.
+const int kScheduleRunsRevision = 22;
+
 /// REST routes the app calls (method + path template); checked against the
 /// backend contract in `test/contract_test.dart`.
 abstract final class ApiRoutes {
@@ -43,6 +47,9 @@ abstract final class ApiRoutes {
   static const patchSchedule = ('PATCH', '/api/v1/schedules/{schedule_id}');
   static const deleteSchedule = ('DELETE', '/api/v1/schedules/{schedule_id}');
   static const runSchedule = ('POST', '/api/v1/schedules/{schedule_id}/run');
+
+  /// API 22: a schedule's runs, newest first (the desktop's Runs inspector).
+  static const scheduleRuns = ('GET', '/api/v1/schedules/{schedule_id}/runs');
   static const stats = ('GET', '/api/v1/stats');
   static const uploadAttachment = ('POST', '/api/v1/attachments');
   static const attachment = ('GET', '/api/v1/attachments/{attachment_id}');
@@ -119,6 +126,7 @@ abstract final class ApiRoutes {
     patchSchedule,
     deleteSchedule,
     runSchedule,
+    scheduleRuns,
     stats,
     uploadAttachment,
     attachment,

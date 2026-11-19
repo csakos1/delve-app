@@ -640,4 +640,319 @@ as int,
 
 }
 
+
+/// @nodoc
+mixin _$ScheduleRunEntry {
+
+ String get runId; String get conversationId; String get status; bool get thinking; String get origin; DateTime get queuedAt; DateTime? get startedAt; DateTime? get endedAt; Map<String, Object?>? get usage; Map<String, Object?>? get perf; String? get error; String? get model; String? get conversationTitle;
+/// Create a copy of ScheduleRunEntry
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ScheduleRunEntryCopyWith<ScheduleRunEntry> get copyWith => _$ScheduleRunEntryCopyWithImpl<ScheduleRunEntry>(this as ScheduleRunEntry, _$identity);
+
+  /// Serializes this ScheduleRunEntry to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScheduleRunEntry&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.queuedAt, queuedAt) || other.queuedAt == queuedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&const DeepCollectionEquality().equals(other.usage, usage)&&const DeepCollectionEquality().equals(other.perf, perf)&&(identical(other.error, error) || other.error == error)&&(identical(other.model, model) || other.model == model)&&(identical(other.conversationTitle, conversationTitle) || other.conversationTitle == conversationTitle));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,runId,conversationId,status,thinking,origin,queuedAt,startedAt,endedAt,const DeepCollectionEquality().hash(usage),const DeepCollectionEquality().hash(perf),error,model,conversationTitle);
+
+@override
+String toString() {
+  return 'ScheduleRunEntry(runId: $runId, conversationId: $conversationId, status: $status, thinking: $thinking, origin: $origin, queuedAt: $queuedAt, startedAt: $startedAt, endedAt: $endedAt, usage: $usage, perf: $perf, error: $error, model: $model, conversationTitle: $conversationTitle)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ScheduleRunEntryCopyWith<$Res>  {
+  factory $ScheduleRunEntryCopyWith(ScheduleRunEntry value, $Res Function(ScheduleRunEntry) _then) = _$ScheduleRunEntryCopyWithImpl;
+@useResult
+$Res call({
+ String runId, String conversationId, String status, bool thinking, String origin, DateTime queuedAt, DateTime? startedAt, DateTime? endedAt, Map<String, Object?>? usage, Map<String, Object?>? perf, String? error, String? model, String? conversationTitle
+});
+
+
+
+
+}
+/// @nodoc
+class _$ScheduleRunEntryCopyWithImpl<$Res>
+    implements $ScheduleRunEntryCopyWith<$Res> {
+  _$ScheduleRunEntryCopyWithImpl(this._self, this._then);
+
+  final ScheduleRunEntry _self;
+  final $Res Function(ScheduleRunEntry) _then;
+
+/// Create a copy of ScheduleRunEntry
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? runId = null,Object? conversationId = null,Object? status = null,Object? thinking = null,Object? origin = null,Object? queuedAt = null,Object? startedAt = freezed,Object? endedAt = freezed,Object? usage = freezed,Object? perf = freezed,Object? error = freezed,Object? model = freezed,Object? conversationTitle = freezed,}) {
+  return _then(_self.copyWith(
+runId: null == runId ? _self.runId : runId // ignore: cast_nullable_to_non_nullable
+as String,conversationId: null == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
+as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,thinking: null == thinking ? _self.thinking : thinking // ignore: cast_nullable_to_non_nullable
+as bool,origin: null == origin ? _self.origin : origin // ignore: cast_nullable_to_non_nullable
+as String,queuedAt: null == queuedAt ? _self.queuedAt : queuedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,startedAt: freezed == startedAt ? _self.startedAt : startedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,endedAt: freezed == endedAt ? _self.endedAt : endedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,usage: freezed == usage ? _self.usage : usage // ignore: cast_nullable_to_non_nullable
+as Map<String, Object?>?,perf: freezed == perf ? _self.perf : perf // ignore: cast_nullable_to_non_nullable
+as Map<String, Object?>?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,model: freezed == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
+as String?,conversationTitle: freezed == conversationTitle ? _self.conversationTitle : conversationTitle // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ScheduleRunEntry].
+extension ScheduleRunEntryPatterns on ScheduleRunEntry {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ScheduleRunEntry value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ScheduleRunEntry() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ScheduleRunEntry value)  $default,){
+final _that = this;
+switch (_that) {
+case _ScheduleRunEntry():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ScheduleRunEntry value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ScheduleRunEntry() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error,  String? model,  String? conversationTitle)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ScheduleRunEntry() when $default != null:
+return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error,_that.model,_that.conversationTitle);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error,  String? model,  String? conversationTitle)  $default,) {final _that = this;
+switch (_that) {
+case _ScheduleRunEntry():
+return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error,_that.model,_that.conversationTitle);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String runId,  String conversationId,  String status,  bool thinking,  String origin,  DateTime queuedAt,  DateTime? startedAt,  DateTime? endedAt,  Map<String, Object?>? usage,  Map<String, Object?>? perf,  String? error,  String? model,  String? conversationTitle)?  $default,) {final _that = this;
+switch (_that) {
+case _ScheduleRunEntry() when $default != null:
+return $default(_that.runId,_that.conversationId,_that.status,_that.thinking,_that.origin,_that.queuedAt,_that.startedAt,_that.endedAt,_that.usage,_that.perf,_that.error,_that.model,_that.conversationTitle);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ScheduleRunEntry implements ScheduleRunEntry {
+  const _ScheduleRunEntry({required this.runId, required this.conversationId, required this.status, required this.thinking, required this.origin, required this.queuedAt, this.startedAt, this.endedAt, final  Map<String, Object?>? usage, final  Map<String, Object?>? perf, this.error, this.model, this.conversationTitle}): _usage = usage,_perf = perf;
+  factory _ScheduleRunEntry.fromJson(Map<String, dynamic> json) => _$ScheduleRunEntryFromJson(json);
+
+@override final  String runId;
+@override final  String conversationId;
+@override final  String status;
+@override final  bool thinking;
+@override final  String origin;
+@override final  DateTime queuedAt;
+@override final  DateTime? startedAt;
+@override final  DateTime? endedAt;
+ final  Map<String, Object?>? _usage;
+@override Map<String, Object?>? get usage {
+  final value = _usage;
+  if (value == null) return null;
+  if (_usage is EqualUnmodifiableMapView) return _usage;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(value);
+}
+
+ final  Map<String, Object?>? _perf;
+@override Map<String, Object?>? get perf {
+  final value = _perf;
+  if (value == null) return null;
+  if (_perf is EqualUnmodifiableMapView) return _perf;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(value);
+}
+
+@override final  String? error;
+@override final  String? model;
+@override final  String? conversationTitle;
+
+/// Create a copy of ScheduleRunEntry
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ScheduleRunEntryCopyWith<_ScheduleRunEntry> get copyWith => __$ScheduleRunEntryCopyWithImpl<_ScheduleRunEntry>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ScheduleRunEntryToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScheduleRunEntry&&(identical(other.runId, runId) || other.runId == runId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.thinking, thinking) || other.thinking == thinking)&&(identical(other.origin, origin) || other.origin == origin)&&(identical(other.queuedAt, queuedAt) || other.queuedAt == queuedAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.endedAt, endedAt) || other.endedAt == endedAt)&&const DeepCollectionEquality().equals(other._usage, _usage)&&const DeepCollectionEquality().equals(other._perf, _perf)&&(identical(other.error, error) || other.error == error)&&(identical(other.model, model) || other.model == model)&&(identical(other.conversationTitle, conversationTitle) || other.conversationTitle == conversationTitle));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,runId,conversationId,status,thinking,origin,queuedAt,startedAt,endedAt,const DeepCollectionEquality().hash(_usage),const DeepCollectionEquality().hash(_perf),error,model,conversationTitle);
+
+@override
+String toString() {
+  return 'ScheduleRunEntry(runId: $runId, conversationId: $conversationId, status: $status, thinking: $thinking, origin: $origin, queuedAt: $queuedAt, startedAt: $startedAt, endedAt: $endedAt, usage: $usage, perf: $perf, error: $error, model: $model, conversationTitle: $conversationTitle)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ScheduleRunEntryCopyWith<$Res> implements $ScheduleRunEntryCopyWith<$Res> {
+  factory _$ScheduleRunEntryCopyWith(_ScheduleRunEntry value, $Res Function(_ScheduleRunEntry) _then) = __$ScheduleRunEntryCopyWithImpl;
+@override @useResult
+$Res call({
+ String runId, String conversationId, String status, bool thinking, String origin, DateTime queuedAt, DateTime? startedAt, DateTime? endedAt, Map<String, Object?>? usage, Map<String, Object?>? perf, String? error, String? model, String? conversationTitle
+});
+
+
+
+
+}
+/// @nodoc
+class __$ScheduleRunEntryCopyWithImpl<$Res>
+    implements _$ScheduleRunEntryCopyWith<$Res> {
+  __$ScheduleRunEntryCopyWithImpl(this._self, this._then);
+
+  final _ScheduleRunEntry _self;
+  final $Res Function(_ScheduleRunEntry) _then;
+
+/// Create a copy of ScheduleRunEntry
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? runId = null,Object? conversationId = null,Object? status = null,Object? thinking = null,Object? origin = null,Object? queuedAt = null,Object? startedAt = freezed,Object? endedAt = freezed,Object? usage = freezed,Object? perf = freezed,Object? error = freezed,Object? model = freezed,Object? conversationTitle = freezed,}) {
+  return _then(_ScheduleRunEntry(
+runId: null == runId ? _self.runId : runId // ignore: cast_nullable_to_non_nullable
+as String,conversationId: null == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
+as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,thinking: null == thinking ? _self.thinking : thinking // ignore: cast_nullable_to_non_nullable
+as bool,origin: null == origin ? _self.origin : origin // ignore: cast_nullable_to_non_nullable
+as String,queuedAt: null == queuedAt ? _self.queuedAt : queuedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,startedAt: freezed == startedAt ? _self.startedAt : startedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,endedAt: freezed == endedAt ? _self.endedAt : endedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,usage: freezed == usage ? _self._usage : usage // ignore: cast_nullable_to_non_nullable
+as Map<String, Object?>?,perf: freezed == perf ? _self._perf : perf // ignore: cast_nullable_to_non_nullable
+as Map<String, Object?>?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,model: freezed == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
+as String?,conversationTitle: freezed == conversationTitle ? _self.conversationTitle : conversationTitle // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
 // dart format on

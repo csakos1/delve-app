@@ -51,6 +51,30 @@ abstract class OpenRun with _$OpenRun {
       _$OpenRunFromJson(json);
 }
 
+/// `schedule_run` shape (API 22, `GET /schedules/{id}/runs`): one run of a
+/// prompt schedule with the title of its chat (null while it has none).
+@freezed
+abstract class ScheduleRunEntry with _$ScheduleRunEntry {
+  const factory ScheduleRunEntry({
+    required String runId,
+    required String conversationId,
+    required String status,
+    required bool thinking,
+    required String origin,
+    required DateTime queuedAt,
+    DateTime? startedAt,
+    DateTime? endedAt,
+    Map<String, Object?>? usage,
+    Map<String, Object?>? perf,
+    String? error,
+    String? model,
+    String? conversationTitle,
+  }) = _ScheduleRunEntry;
+
+  factory ScheduleRunEntry.fromJson(Map<String, Object?> json) =>
+      _$ScheduleRunEntryFromJson(json);
+}
+
 /// Run states in which a run still occupies the queue.
 const Set<String> openRunStatuses = <String>{
   'queued',

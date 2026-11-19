@@ -70,6 +70,7 @@ void main() {
           'llama_model': (j) => LlamaModel.fromJson(j).toJson(),
           'llama_switch': (j) => LlamaSwitch.fromJson(j).toJson(),
           'schedule': (j) => Schedule.fromJson(j).toJson(),
+          'schedule_run': (j) => ScheduleRunEntry.fromJson(j).toJson(),
           'brief_payload': (j) => Brief.fromJson(j).toJson(),
           'brief_incident': (j) => BriefIncident.fromJson(j).toJson(),
           'stats': (j) => Stats.fromJson(j).toJson(),

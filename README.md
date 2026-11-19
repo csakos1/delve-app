@@ -473,7 +473,13 @@ watch in its header; J / K), the open watch in the content with its listings in 
 Rejected · Waiting (the listings waiting for the judge load when the tab opens) – and the
 selected listing in the Hit inspector (`?hit=`; price, the judge's note, Open link). A double
 click on a listing opens its link, right-click has Open link · Copy link; a failing watch
-shows the reason with Fix in chat.
+shows the reason with Fix in chat; a green dot marks the watches that run.
+Schedules too (`schedules_area.dart`): the schedules with 40 × 24 switches in the list column
+(New schedule in its header; J / K), the open schedule's page in the content (timing and its
+switch, Run now, Edit, the prompt, where it posts, thinking, the last run; Delete with the
+desktop dialog) and its runs in the Runs inspector (`GET /schedules/{id}/runs`, backend API 22;
+an older server and the brief show only the last run). The editor replaces the page in the
+content: Ctrl+S saves, Esc cancels, both lead back to the page.
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.

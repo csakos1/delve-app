@@ -744,6 +744,49 @@
       "created_at": "2026-10-18T21:39:00.123456+00:00",
       "updated_at": "2026-10-19T20:52:00.123456+00:00"
     },
+    "schedule_run": {
+      "run_id": "run_4a7c2e9b1d3f5a6c",
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "status": "completed",
+      "thinking": false,
+      "origin": "schedule",
+      "queued_at": "2026-10-19T20:52:00.123456+00:00",
+      "started_at": "2026-10-19T20:52:00.123456+00:00",
+      "ended_at": "2026-10-19T20:53:00.123456+00:00",
+      "usage": {
+        "input_tokens": 17315,
+        "output_tokens": 63,
+        "cache_read_tokens": 17152
+      },
+      "perf": {
+        "sse_reconnects": 0,
+        "first_delta_s": 2.96,
+        "context_source": "final_read",
+        "llama_calls_seen": 2,
+        "prompt_tokens": 122,
+        "predicted_tokens": 63,
+        "prefill_tps": 210.4,
+        "gen_tps": 20.6
+      },
+      "error": null,
+      "model": "Qwen3.8-27B · IQ4_XS",
+      "conversation_title": "Kernel and CPU count"
+    },
+    "schedule_run_failed": {
+      "run_id": "run_0d2f4b6a8c1e3a5b",
+      "conversation_id": "c_5f2a9e1b7c3d4e6f",
+      "status": "failed",
+      "thinking": false,
+      "origin": "schedule",
+      "queued_at": "2026-10-19T09:39:00.123456+00:00",
+      "started_at": "2026-10-19T09:39:00.123456+00:00",
+      "ended_at": "2026-10-19T09:39:09.123456+00:00",
+      "usage": null,
+      "perf": null,
+      "error": "llama-server is not running",
+      "model": "Qwen3.8-27B · IQ4_XS",
+      "conversation_title": null
+    },
     "brief_payload": {
       "date": "2026-10-19",
       "uptime_s": 275400,
@@ -5559,7 +5602,7 @@
   "connection": {
     "hello.ok": {
       "server_version": "0.1.0",
-      "api_revision": 21,
+      "api_revision": 22,
       "revision": "eb4045ed6a94",
       "hermes": "ok",
       "hermes_version": "0.22.2",
@@ -5574,7 +5617,7 @@
     },
     "meta": {
       "server_version": "0.1.0",
-      "api_revision": 21,
+      "api_revision": 22,
       "revision": "eb4045ed6a94",
       "python": "3.14.8",
       "hermes_expected_version": "0.22.2",
@@ -5582,7 +5625,7 @@
     },
     "status": {
       "server_version": "0.1.0",
-      "api_revision": 21,
+      "api_revision": 22,
       "revision": null,
       "hermes": null,
       "hermes_version": null,

@@ -473,6 +473,26 @@ class DelveApi {
     Watch.fromJson,
   );
 
+  /// A schedule's runs, newest first (API 22); [before] the `queued_at` the
+  /// page ends at (a page's `nextBefore`). 404 `schedule_not_found`.
+  Future<ScheduleRunPage> scheduleRuns(
+    String id, {
+    DateTime? before,
+    int limit = 20,
+  }) async {
+    final json = await _json(
+      ApiRoutes.scheduleRuns,
+      params: {'schedule_id': id},
+      query: {'before': before?.toUtc().toIso8601String(), 'limit': limit},
+    );
+    return _parse(
+      json,
+      (j) => ScheduleRunPage([
+        for (final r in _list(j, 'data')) ScheduleRunEntry.fromJson(r),
+      ], DateTime.tryParse(j['next_before'] as String? ?? '')),
+    );
+  }
+
   // --- news (N2) -----------------------------------------------------------
 
   /// The Dashboard block.
@@ -692,6 +712,13 @@ class WatchItemPage {
   const WatchItemPage(this.items, this.nextBefore);
   final List<WatchItem> items;
   final int? nextBefore;
+}
+
+/// `GET /schedules/{id}/runs`: one page and where the next ends (null = last).
+class ScheduleRunPage {
+  const ScheduleRunPage(this.items, this.nextBefore);
+  final List<ScheduleRunEntry> items;
+  final DateTime? nextBefore;
 }
 
 /// `GET /news/items`: one page and the id to continue from (null = last).

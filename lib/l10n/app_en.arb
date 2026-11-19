@@ -4306,5 +4306,14 @@
     }
   },
   "desktopWatchJudge": "Judge",
-  "desktopWatchListing": "Listing"
+  "desktopWatchListing": "Listing",
+  "desktopSchedulesEmpty": "No schedule open",
+  "desktopSchedulesEmptySub": "Pick one from the list",
+  "desktopScheduleDetails": "Details",
+  "desktopScheduleCron": "Cron",
+  "desktopScheduleLastRun": "Last run",
+  "desktopScheduleRunsTab": "Runs",
+  "desktopScheduleOlderRuns": "Load older",
+  "desktopScheduleBriefRuns": "The brief is written without a run: each one is a card on the Dashboard.",
+  "desktopScheduleRunsOld": "This server lists only the last run; the rest needs a backend with API 22."
 }

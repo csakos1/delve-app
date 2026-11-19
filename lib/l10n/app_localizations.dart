@@ -8816,6 +8816,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Listing'**
   String get desktopWatchListing;
+
+  /// No description provided for @desktopSchedulesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No schedule open'**
+  String get desktopSchedulesEmpty;
+
+  /// No description provided for @desktopSchedulesEmptySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one from the list'**
+  String get desktopSchedulesEmptySub;
+
+  /// No description provided for @desktopScheduleDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get desktopScheduleDetails;
+
+  /// No description provided for @desktopScheduleCron.
+  ///
+  /// In en, this message translates to:
+  /// **'Cron'**
+  String get desktopScheduleCron;
+
+  /// No description provided for @desktopScheduleLastRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Last run'**
+  String get desktopScheduleLastRun;
+
+  /// No description provided for @desktopScheduleRunsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs'**
+  String get desktopScheduleRunsTab;
+
+  /// No description provided for @desktopScheduleOlderRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'Load older'**
+  String get desktopScheduleOlderRuns;
+
+  /// No description provided for @desktopScheduleBriefRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'The brief is written without a run: each one is a card on the Dashboard.'**
+  String get desktopScheduleBriefRuns;
+
+  /// No description provided for @desktopScheduleRunsOld.
+  ///
+  /// In en, this message translates to:
+  /// **'This server lists only the last run; the rest needs a backend with API 22.'**
+  String get desktopScheduleRunsOld;
 }
 
 class _AppLocalizationsDelegate
