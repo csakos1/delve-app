@@ -359,6 +359,21 @@ void main() {
     expect(ws.connections, hasLength(1));
   });
 
+  test('a push frame (L3) goes to pushes, not to the log', () async {
+    final got = <Map<String, Object?>>[];
+    final sub = engine.pushes.listen(got.add);
+    addTearDown(sub.cancel);
+    await engine.start();
+    await live();
+    ws.connections.first.sendRaw({
+      'type': 'push',
+      'data': {'kind': 'news', 'item': '7'},
+    });
+    await eventually(() => got.isNotEmpty);
+    expect(got.single, {'kind': 'news', 'item': '7'});
+    expect(await logKinds(), isNot(contains('protocol')));
+  });
+
   test('no hello.ok in time: reconnect', () async {
     ws.autoHello = false;
     await engine.start();

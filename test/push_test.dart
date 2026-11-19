@@ -139,6 +139,7 @@ Future<void> flush() async {
 }
 
 void main() {
+  desktopPushTests();
   group('messages', () {
     test('parse every kind; malformed ones are ignored', () {
       final a = PushMessage.parse(approvalData())! as ApprovalPush;
@@ -952,6 +953,72 @@ void main() {
         'notify': {'news': true},
       });
       expect(t.widget<Switch>(news).value, isTrue);
+    });
+  });
+}
+
+/// The desktop app (L3): pushes on the socket, shown while the window is not
+/// focused.
+void desktopPushTests() {
+  group('desktop (L3)', () {
+    test('the socket transport passes what comes while unfocused, and '
+        'always an approval\'s removal', () async {
+      final source = StreamController<Map<String, Object?>>.broadcast();
+      addTearDown(source.close);
+      var focused = true;
+      final t = SocketPushTransport(source.stream, focused: () => focused);
+      expect(await t.init(), isTrue);
+      await t.register();
+      final got = <Object?>[];
+      final sub = t.messages.listen((d) => got.add(d['kind']));
+      addTearDown(sub.cancel);
+      source
+        ..add(runDoneData())
+        ..add({'kind': 'approval_resolved', 'request_id': 'apr_1'});
+      await flush();
+      focused = false;
+      source.add(approvalData());
+      await flush();
+      expect(got, ['approval_resolved', 'approval']);
+      expect(await t.tokens.isEmpty, isTrue);
+    });
+
+    test('unfocused: everything shows as in the background – also a run '
+        'that finished in the chat on screen', () async {
+      final server = FakeServer();
+      final n = FakeNotifications();
+      final transport = FakeTransport(initialToken: null);
+      addTearDown(transport.close);
+      final c = PushController(
+        api: DelveApi(
+          server: testServer,
+          token: 'dlv_test-token',
+          adapter: server,
+        ),
+        transport: transport,
+        notifications: n,
+        visibleChat: () => 'c_1',
+        inForeground: () => false,
+        clock: () => now,
+      );
+      addTearDown(c.dispose);
+      await c.start();
+      transport.incoming
+        ..add(runDoneData())
+        ..add(approvalData());
+      await flush();
+      expect(n.shown.map((s) => s.channel), [
+        NotifyChannel.runs,
+        NotifyChannel.approvals,
+      ]);
+      expect(server.calls, isEmpty); // no FCM token to register
+    });
+
+    test('freedesktop markup is escaped', () {
+      expect(
+        linuxMarkupEscape('ls > out && cat <f'),
+        'ls &gt; out &amp;&amp; cat &lt;f',
+      );
     });
   });
 }

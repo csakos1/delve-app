@@ -412,7 +412,10 @@ again). Keep a backup of the keystore and its password.
 ### Linux desktop app
 
 The same app runs on the desktop (Hyprland / Wayland, GTK 3). What a platform can do is
-`PlatformCaps` (`lib/app/platform.dart`): the Linux app has no push yet, no Android services
+`PlatformCaps` (`lib/app/platform.dart`): the Linux app has no FCM – it gets the same pushes
+on its WebSocket (`push` frames, backend API 21; `SocketPushTransport`) and shows them as
+desktop notifications (swaync: actions, markup escaped) only while its window is not
+focused and only while it runs; it has no Android services
 (share target, notification mirroring, keep-alive, transfers notification, PDF preview,
 camera) and no terminal lock; Terminal, Files and the desktop's clipboard show only after
 Settings → Desktop tools (they reach a desktop over SSH – on the desktop itself they are not

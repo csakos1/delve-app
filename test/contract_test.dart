@@ -407,6 +407,7 @@ void main() {
         'error',
         'pong',
         'keepalive',
+        'push',
       });
       final hello = IncomingFrame.parse({
         'type': 'hello.ok',

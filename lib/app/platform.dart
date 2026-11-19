@@ -17,6 +17,7 @@ class PlatformCaps {
   const PlatformCaps({
     required this.phone,
     required this.push,
+    required this.desktopNotifications,
     required this.notificationMirror,
     required this.shareTarget,
     required this.shareSheet,
@@ -33,6 +34,7 @@ class PlatformCaps {
   static const android = PlatformCaps(
     phone: true,
     push: true,
+    desktopNotifications: false,
     notificationMirror: true,
     shareTarget: true,
     shareSheet: true,
@@ -49,6 +51,7 @@ class PlatformCaps {
   static PlatformCaps linux({String? host}) => PlatformCaps(
     phone: false,
     push: false,
+    desktopNotifications: true,
     notificationMirror: false,
     shareTarget: false,
     shareSheet: false,
@@ -71,8 +74,15 @@ class PlatformCaps {
   /// A phone (texts say "this phone"); false: a computer.
   final bool phone;
 
-  /// Firebase push (Settings → Notifications, the background handler).
+  /// Firebase push (the background handler, the FCM token).
   final bool push;
+
+  /// The same pushes on the WebSocket while the app runs, shown as desktop
+  /// notifications when the window is not focused (L3, API 21).
+  final bool desktopNotifications;
+
+  /// Any notifications: Settings → Notifications shows.
+  bool get notifications => push || desktopNotifications;
 
   /// This phone's notifications to the desktop (DA2b, More → Mirroring).
   final bool notificationMirror;

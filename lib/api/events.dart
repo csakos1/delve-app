@@ -1,8 +1,8 @@
 // WebSocket frames from the server (delve-backend README, "WebSocket").
 //
 // Broadcast events arrive as `{type, seq, data}` and become a [ServerEvent];
-// replies on one socket (`hello.ok`, `ack`, `error`, `pong`, `keepalive`)
-// arrive without `seq` and become a [ConnectionFrame]. An event type this
+// replies on one socket (`hello.ok`, `ack`, `error`, `pong`, `keepalive`,
+// and `push` for a device without FCM – the desktop app) arrive without `seq` and become a [ConnectionFrame]. An event type this
 // build does not know is kept as [UnknownEvent] (additive server changes must
 // not break an older app); a known type with a malformed payload throws
 // [FormatException].
@@ -39,6 +39,7 @@ sealed class IncomingFrame {
       ),
       'pong' => PongFrame(ref),
       'keepalive' => const KeepaliveFrame(),
+      'push' => PushFrame(data),
       _ => UnknownFrame(type, data),
     };
   }
@@ -77,6 +78,13 @@ final class PongFrame extends ConnectionFrame {
 
 final class KeepaliveFrame extends ConnectionFrame {
   const KeepaliveFrame();
+}
+
+/// A push's data on the socket (API 21): the backend sends it to a device
+/// without an FCM token – the desktop app – instead of FCM.
+final class PushFrame extends ConnectionFrame {
+  const PushFrame(this.data);
+  final Json data;
 }
 
 final class UnknownFrame extends ConnectionFrame {

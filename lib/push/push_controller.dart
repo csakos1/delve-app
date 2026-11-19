@@ -63,8 +63,10 @@ class PushController {
     required this.transport,
     required this.notifications,
     required this.visibleChat,
+    bool Function()? inForeground,
     DateTime Function()? clock,
-  }) : _now = clock ?? DateTime.now;
+  }) : _now = clock ?? DateTime.now,
+       _inForeground = inForeground ?? _always;
 
   final DelveApi api;
   final PushTransport transport;
@@ -74,6 +76,12 @@ class PushController {
   /// notification); null when none is.
   final String? Function() visibleChat;
   final DateTime Function() _now;
+
+  /// Whether a message arrives with the app in front (the phone: FCM hands
+  /// over only those); the desktop says false – its transport passes only
+  /// what came while the window was not focused.
+  final bool Function() _inForeground;
+  static bool _always() => true;
 
   final _events = StreamController<PushEvent>.broadcast();
   final _states = StreamController<PushState>.broadcast();
@@ -113,17 +121,18 @@ class PushController {
     _subs
       ..add(transport.tokens.listen((t) => unawaited(_register(t))))
       ..add(
-        transport.messages.listen(
-          (data) => unawaited(
+        transport.messages.listen((data) {
+          final foreground = _inForeground();
+          unawaited(
             handlePush(
               data,
               notifications,
               now: _now(),
-              foreground: true,
-              visibleChat: visibleChat(),
+              foreground: foreground,
+              visibleChat: foreground ? visibleChat() : null,
             ),
-          ),
-        ),
+          );
+        }),
       );
     try {
       await transport.register(); // the token arrives on `tokens`

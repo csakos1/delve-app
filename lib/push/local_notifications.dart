@@ -57,6 +57,8 @@ class LocalNotifications implements PhoneNotifications {
         // white D on transparent (res/drawable/ic_stat_delve.xml): Android
         // tints the small icon, a full-colour one would show as a square
         android: AndroidInitializationSettings('@drawable/ic_stat_delve'),
+        // the desktop app (L3): freedesktop notifications (swaync)
+        linux: LinuxInitializationSettings(defaultActionName: 'Open'),
       ),
       onDidReceiveNotificationResponse: (r) =>
           _taps.add(NotificationTap(actionId: r.actionId, payload: r.payload)),
@@ -68,7 +70,12 @@ class LocalNotifications implements PhoneNotifications {
   @override
   Future<NotificationTap?> launchTap() async {
     await init();
-    final details = await _plugin.getNotificationAppLaunchDetails();
+    final NotificationAppLaunchDetails? details;
+    try {
+      details = await _plugin.getNotificationAppLaunchDetails();
+    } on Object {
+      return null; // a platform without launch details (the desktop)
+    }
     final r = details?.notificationResponse;
     if (details == null || !details.didNotificationLaunchApp || r == null) {
       return null;
@@ -81,11 +88,14 @@ class LocalNotifications implements PhoneNotifications {
         AndroidFlutterLocalNotificationsPlugin
       >();
 
-  /// Whether Android lets Delve post notifications.
+  /// Whether Android lets Delve post notifications (the desktop has no
+  /// such permission: yes).
   @override
   Future<bool> enabled() async {
     await init();
-    return await _android?.areNotificationsEnabled() ?? false;
+    final android = _android;
+    return android == null ||
+        (await android.areNotificationsEnabled() ?? false);
   }
 
   /// Android 13+: the system dialog (Android stops showing it after the user
@@ -93,7 +103,9 @@ class LocalNotifications implements PhoneNotifications {
   @override
   Future<bool> requestPermission() async {
     await init();
-    return await _android?.requestNotificationsPermission() ?? false;
+    final android = _android;
+    return android == null ||
+        (await android.requestNotificationsPermission() ?? false);
   }
 
   @override
@@ -155,11 +167,26 @@ class LocalNotifications implements PhoneNotifications {
           ),
       ],
     );
+    // the desktop (L3): the whole body (swaync shows several lines, as
+    // markup – hence the escaping), the same actions; an approval stays until
+    // it is answered or removed (critical: no timeout)
+    final linux = LinuxNotificationDetails(
+      urgency: approvals
+          ? LinuxNotificationUrgency.critical
+          : LinuxNotificationUrgency.normal,
+      actions: [
+        for (final a in spec.actions)
+          LinuxNotificationAction(key: a.id, label: a.label),
+      ],
+    );
+    final body = _android == null
+        ? linuxMarkupEscape(spec.body)
+        : spec.body.split('\n').first;
     await _plugin.show(
       id: spec.id,
       title: spec.title,
-      body: spec.body.split('\n').first,
-      notificationDetails: NotificationDetails(android: android),
+      body: body,
+      notificationDetails: NotificationDetails(android: android, linux: linux),
       payload: spec.payload,
     );
   }
@@ -176,3 +203,10 @@ class LocalNotifications implements PhoneNotifications {
     await _plugin.cancelAll();
   }
 }
+
+/// freedesktop notification bodies are markup (`body-markup`): a command
+/// such as `ls > out && cat <f` must show as written.
+String linuxMarkupEscape(String text) => text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');

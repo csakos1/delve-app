@@ -106,8 +106,8 @@ class SettingsScreen extends ConsumerWidget {
                 _ => null,
               },
             ),
-            // the Linux app has no push yet (L3)
-            if (caps.push) ...[
+            // the phone (FCM) and the desktop (the socket, L3)
+            if (caps.notifications) ...[
               _Section(l.settingsNotifications),
               _Notifications(device: device),
             ],

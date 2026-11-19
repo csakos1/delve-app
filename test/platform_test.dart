@@ -38,6 +38,7 @@ void main() {
       final caps = PlatformCaps.current();
       expect(caps.phone, isFalse);
       expect(caps.push, isFalse);
+      expect(caps.desktopNotifications && caps.notifications, isTrue);
       expect(caps.desktopToolsByDefault, isFalse);
       expect(caps.deviceName, startsWith('linux'));
     });
@@ -91,7 +92,7 @@ void main() {
       expect(find.byKey(const Key('dashboard.clipboard')), findsNothing);
     });
 
-    testWidgets('Settings: no notifications; the desktop tools switch shows '
+    testWidgets('Settings: notifications (L3); the desktop tools switch shows '
         'Terminal and Files and is remembered', (t) async {
       final env = await pumpDelve(t, caps: _linux);
       await t.tap(_navLabel('More'));
@@ -99,9 +100,13 @@ void main() {
       await t.tap(find.text('Settings'));
       await t.pumpAndSettle();
 
+      await t.scrollUntilVisible(
+        find.text('NOTIFICATIONS'),
+        200,
+        scrollable: _settingsList,
+      );
       final toggle = find.byKey(const Key('settings.desktopTools'));
       await t.scrollUntilVisible(toggle, 200, scrollable: _settingsList);
-      expect(find.text('NOTIFICATIONS'), findsNothing);
       expect(find.text('TERMINAL'), findsNothing);
       expect(t.widget<Switch>(toggle).value, isFalse);
 

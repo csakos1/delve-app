@@ -161,6 +161,11 @@ class SyncEngine {
   /// `news.updated` events (N2).
   Stream<NewsUpdated> get newsUpdates => _newsController.stream;
 
+  final _pushController = StreamController<Map<String, Object?>>.broadcast();
+
+  /// `push` frames: a push's data on this socket (the desktop app, L3).
+  Stream<Map<String, Object?>> get pushes => _pushController.stream;
+
   Uri get webSocketUrl => webSocketUri(credentials.server, ApiRoutes.ws.$2);
 
   bool _started = false;
@@ -289,6 +294,7 @@ class SyncEngine {
     await _scheduleController.close();
     await _watchController.close();
     await _newsController.close();
+    await _pushController.close();
   }
 
   // ---------------------------------------------------------------------------
@@ -517,6 +523,8 @@ class SyncEngine {
         _answer(id, const {});
       case KeepaliveFrame():
         break;
+      case PushFrame(:final data):
+        if (!_disposed) _pushController.add(data);
       case UnknownFrame(:final type):
         _log(LogKind.protocol, 'unknown frame $type');
       case final ServerEvent event:

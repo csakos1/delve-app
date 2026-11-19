@@ -265,9 +265,9 @@ class _NewsSettingsScreenState extends ConsumerState<NewsSettingsScreen> {
     final max = (_pending['push_max'] as int?) ?? settings.pushMax;
     final pushBusy = _pending.containsKey('push');
     final maxBusy = _pending.containsKey('push_max');
-    // only where this device gets pushes (not the Linux app yet)
+    // where this device gets pushes (the phone; the desktop since L3)
     final phoneOff =
-        ref.watch(platformCapsProvider).push &&
+        ref.watch(platformCapsProvider).notifications &&
         ref.watch(deviceInfoProvider).value?.notify.news == false;
     return [
       _Section(l.newsSetDigestPush),
