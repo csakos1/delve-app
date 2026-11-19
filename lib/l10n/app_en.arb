@@ -4092,5 +4092,70 @@
         "type": "String"
       }
     }
-  }
+  },
+  "desktopKeyArea": "Ctrl+{digit}",
+  "@desktopKeyArea": {
+    "placeholders": {
+      "digit": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopKeySettings": "Ctrl+,",
+  "desktopKeyNewChat": "Ctrl+N",
+  "desktopInspectorToggle": "Inspector (Ctrl+I)",
+  "desktopInspectorClose": "Close the inspector",
+  "desktopChatsEmpty": "No chat open",
+  "desktopChatsEmptySub": "Pick one from the list or start a new one",
+  "desktopStatusConnected": "Connected",
+  "desktopStatusReconnecting": "Reconnecting…",
+  "desktopStatusOfflineSince": "Offline · last seen {time}",
+  "@desktopStatusOfflineSince": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopStatusApprovals": "{count, plural, =1{1 approval · {clock}} other{{count} approvals · {clock}}}",
+  "@desktopStatusApprovals": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "clock": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopStatusLate": "{count, plural, =1{1 late approval · until {time}} other{{count} late approvals · until {time}}}",
+  "@desktopStatusLate": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopStatusRun": "run {clock}",
+  "@desktopStatusRun": {
+    "placeholders": {
+      "clock": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopStatusSwitching": "switching {clock}",
+  "@desktopStatusSwitching": {
+    "placeholders": {
+      "clock": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopStatusLlamaStopped": "llama-server stopped",
+  "desktopStatusSlotBusy": "slot busy",
+  "desktopStatusSlotIdle": "slot idle"
 }

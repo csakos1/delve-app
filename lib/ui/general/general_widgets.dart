@@ -1031,11 +1031,16 @@ class GeneralListRow extends StatelessWidget {
     required this.chat,
     required this.modelName,
     required this.onTap,
+    this.background,
   });
 
   final GeneralChatRow chat;
   final String modelName;
   final VoidCallback onTap;
+
+  /// The row's surface (the desktop's list column and its selected row);
+  /// null: the page colour.
+  final Color? background;
 
   @override
   Widget build(BuildContext context) {
@@ -1044,7 +1049,7 @@ class GeneralListRow extends StatelessWidget {
     final d = context.delve;
     final title = chat.title?.trim();
     return Material(
-      color: cs.surface,
+      color: background ?? cs.surface,
       child: InkWell(
         onTap: onTap,
         highlightColor: cs.surfaceContainerLow,

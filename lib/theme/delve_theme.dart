@@ -5,6 +5,7 @@ import 'delve_text.dart';
 import 'delve_tokens.dart';
 
 export 'delve_colors.dart';
+export 'delve_desktop.dart';
 export 'delve_text.dart';
 export 'delve_tokens.dart';
 

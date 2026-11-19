@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../api/models/models.dart';
+import '../../app/layout.dart';
 import '../../app/news.dart';
 import '../../app/platform.dart';
 import '../../app/router.dart';
@@ -233,7 +234,7 @@ class _NewsSettingsScreenState extends ConsumerState<NewsSettingsScreen> {
           onSwitch: (v) => unawaited(
             _save('source.${s.id}', v, () => _config.setSourceEnabled(s.id, v)),
           ),
-          onTap: () => context.push(Routes.newsFeed(s.id)),
+          onTap: () => context.open(Routes.newsFeed(s.id)),
         ),
       if (shown.length < feeds.length)
         InkWell(

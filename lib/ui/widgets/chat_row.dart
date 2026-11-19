@@ -12,10 +12,19 @@ import 'page_scaffolds.dart';
 /// run / approval marker – no message preview. Used by Chats and Archived
 /// chats.
 class ChatRow extends StatelessWidget {
-  const ChatRow({super.key, required this.item, required this.onTap});
+  const ChatRow({
+    super.key,
+    required this.item,
+    required this.onTap,
+    this.background,
+  });
 
   final ChatListItem item;
   final VoidCallback onTap;
+
+  /// The row's surface (the desktop's list column and its selected row);
+  /// null: the page colour.
+  final Color? background;
 
   /// Title shown for a conversation: the agent's title, else the first user
   /// message, else [fallback].
@@ -37,7 +46,7 @@ class ChatRow extends StatelessWidget {
     final pct = c.contextPct;
 
     return Material(
-      color: cs.surface,
+      color: background ?? cs.surface,
       child: InkWell(
         onTap: onTap,
         highlightColor: cs.surfaceContainerLow,

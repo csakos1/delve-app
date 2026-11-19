@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../api/models/models.dart';
+import '../../app/layout.dart';
 import '../../app/news.dart';
 import '../../app/router.dart';
 import '../../l10n/app_localizations.dart';
@@ -119,7 +119,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
             IconButton(
               key: const Key('news.settings'),
               tooltip: l.newsSettingsTitle,
-              onPressed: () => context.push(Routes.newsSettings),
+              onPressed: () => context.open(Routes.newsSettings),
               icon: const SymbolIcon(DelveIcons.settings),
             ),
         ],
@@ -195,7 +195,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
             body: l.newsEmptyTopicsOffBody,
             action: (
               l.newsSettingsOpen,
-              () => context.push(Routes.newsSettings),
+              () => context.open(Routes.newsSettings),
             ),
           ),
         ),

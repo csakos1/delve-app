@@ -1,0 +1,109 @@
+{
+  "$note": "A copy of delve_tokens.json → desktop (design system, round 11b \"27 Desktop – Workbench\"): the parts the app uses. Refresh it from the design artifact when the design changes.",
+  "window": {
+    "minWidth": 720,
+    "minHeight": 560,
+    "phoneLayoutBelow": 720
+  },
+  "breakpoints": {
+    "listOverlayBelow": 900,
+    "inspectorOverlayBelow": 1232,
+    "listNarrowBelow": 1340,
+    "dashboardOneColumnBelow": 820,
+    "dashboardTwoColumnsBelow": 1100,
+    "wide": 1920,
+    "inspectorTwoTabsFrom": 2200,
+    "statusBarDropRunBelow": 1100
+  },
+  "panes": {
+    "rail": {
+      "width": 52
+    },
+    "list": {
+      "min": 240,
+      "default": 300,
+      "defaultNews": 360,
+      "defaultWide": 340,
+      "max": 420
+    },
+    "content": {
+      "min": 600,
+      "readingColumn": 720,
+      "readingColumnWide": 760,
+      "detailColumn": 680,
+      "gutter": 20
+    },
+    "inspector": {
+      "min": 300,
+      "default": 340,
+      "max": 480
+    },
+    "header": 48,
+    "dividerGrab": 6,
+    "dividerLine": 2,
+    "dividerHoverDelayMs": 150
+  },
+  "statusBar": {
+    "height": 24,
+    "paddingH": 12,
+    "segmentGap": 14,
+    "dot": 7,
+    "icon": 13
+  },
+  "rail": {
+    "item": {
+      "width": 40,
+      "height": 34,
+      "radius": 10,
+      "icon": 20,
+      "gap": 2
+    },
+    "groupDivider": {
+      "width": 24,
+      "height": 1,
+      "margin": 6
+    },
+    "markSlot": 34,
+    "mark": 20,
+    "dot": 8,
+    "tooltipDelayMs": 500
+  },
+  "density": {
+    "rowTwoLine": 52,
+    "rowOneLine": 32,
+    "rowRadius": 8,
+    "button": {
+      "height": 32,
+      "radius": 8,
+      "paddingH": 12
+    },
+    "iconButton": {
+      "size": 28,
+      "radius": 6,
+      "icon": 18
+    },
+    "card": {
+      "radius": 14
+    },
+    "keyCap": {
+      "height": 18,
+      "radius": 4,
+      "fontSize": 10.5
+    }
+  },
+  "layers": {
+    "menu": {
+      "radius": 10
+    },
+    "dialog": {
+      "radius": 16
+    },
+    "tooltip": {
+      "radius": 6
+    }
+  },
+  "durations": {
+    "hoverMs": 100,
+    "tooltipDelayMs": 500
+  }
+}

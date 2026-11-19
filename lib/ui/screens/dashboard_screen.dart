@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../api/models/models.dart';
 import '../../app/dashboard.dart';
+import '../../app/layout.dart';
 import '../../app/news.dart';
 import '../../app/router.dart';
 import '../../app/system.dart';
@@ -479,7 +479,7 @@ class SystemCard extends ConsumerWidget {
             if (sw.state != 'switching')
               SwitchFailedLine(
                 info: info,
-                onTap: () => context.push(Routes.system),
+                onTap: () => context.open(Routes.system),
               )
             else if (info.queue.queued > 0)
               SwitchLine(
@@ -735,7 +735,7 @@ class WatchesCard extends ConsumerWidget {
           children: [
             InkWell(
               key: const Key('dashboard.watches.open'),
-              onTap: () => context.push(Routes.watches),
+              onTap: () => context.open(Routes.watches),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
                   minHeight: DelveTokens.touchTarget,

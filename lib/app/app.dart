@@ -12,17 +12,62 @@ import '../push/push_host.dart';
 import '../share/share_host.dart';
 import '../sync/sync_lifecycle.dart';
 import '../theme/delve_theme.dart';
+import 'desktop_router.dart';
+import 'layout.dart';
 import 'router.dart';
 
-class DelveApp extends ConsumerWidget {
+/// The app: the phone layout, or on a computer with a window of 720 dp and
+/// more the desktop layout (L2) with its own router and denser theme. A
+/// resize across 720 dp swaps the two and keeps the place.
+class DelveApp extends ConsumerStatefulWidget {
   const DelveApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = buildDelveTheme();
+  ConsumerState<DelveApp> createState() => _DelveAppState();
+}
+
+class _DelveAppState extends ConsumerState<DelveApp>
+    with WidgetsBindingObserver {
+  final ThemeData _theme = buildDelveTheme();
+  late final ThemeData _desktopTheme = delveDesktopTheme(_theme);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (mounted) ref.read(desktopLayoutProvider.notifier).update(windowWidth());
+  }
+
+  /// The other layout's router takes over where this one was.
+  void _swap(bool desktop) {
+    final from = ref.read(
+      desktop ? phoneRouterProvider : desktopRouterProvider,
+    );
+    final to = ref.read(desktop ? desktopRouterProvider : phoneRouterProvider);
+    final at = from.routerDelegate.currentConfiguration.uri.toString();
+    to.go(desktop ? desktopLocation(at) : phoneLocation(at));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // notification mirroring follows the session (an unpair wipes the Android
     // side's copy of the token) whether or not its page is ever opened
     ref.listen(mirrorProvider, (_, _) {});
+    ref.listen<bool>(desktopLayoutProvider, (was, now) {
+      if (was != null && was != now) _swap(now);
+    });
+    final desktop = ref.watch(desktopLayoutProvider);
+    final theme = desktop ? _desktopTheme : _theme;
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/chat_list.dart';
+import '../../app/layout.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../data/db/database.dart';
@@ -25,8 +26,15 @@ import '../widgets/status_ui.dart';
 
 /// 02 Chats: the conversation list (02a), swipe to archive (02b), empty
 /// (02c), reconnecting banner (02d) and the first-load skeleton (20a).
+///
+/// In the desktop layout it is the Chats list column (L2a): the open chat's
+/// row is selected, New chat is a header button (no FAB), Approvals has its
+/// own rail item, and Archived is the foot row.
 class ChatsScreen extends ConsumerStatefulWidget {
-  const ChatsScreen({super.key});
+  const ChatsScreen({super.key, this.selected});
+
+  /// The desktop's open chat: `c:<id>`, `g:<id>` or `new` (null: none).
+  final String? selected;
 
   @override
   ConsumerState<ChatsScreen> createState() => _ChatsScreenState();
@@ -139,6 +147,13 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final cs = context.colors;
+    final desktop = DesktopLayout.of(context);
+    Color? rowColour(String key) => !desktop
+        ? null
+        : widget.selected == key
+        ? cs.surfaceContainerHigh
+        : cs.surfaceContainerLow;
     final items = ref.watch(chatListProvider(false)).value;
     final status =
         ref.watch(connectionStatusProvider).value ?? ConnectionStatus.initial;
@@ -219,7 +234,7 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
         ),
       );
     } else if (empty) {
-      body = _EmptyState(onNewChat: () => context.push(Routes.newChat));
+      body = _EmptyState(onNewChat: () => context.open(Routes.newChat));
     } else if (shown.isEmpty) {
       body = Center(
         child: Padding(
@@ -240,7 +255,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
         child: ListView.builder(
           key: const Key('chats.list'),
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 96), // clear of the FAB
+          // clear of the FAB (none on the desktop)
+          padding: EdgeInsets.only(bottom: desktop ? DelveTokens.space2 : 96),
           itemCount: shown.length + (more ? 1 : 0),
           itemBuilder: (context, i) {
             if (i == shown.length) {
@@ -263,7 +279,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
                 child: GeneralListRow(
                   chat: g,
                   modelName: modelShortName(g.modelId, models[g.modelId]),
-                  onTap: () => context.push(Routes.generalChat(g.id)),
+                  background: rowColour('g:${g.id}'),
+                  onTap: () => context.open(Routes.generalChat(g.id)),
                 ),
               );
             }
@@ -279,7 +296,8 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
               ),
               child: ChatRow(
                 item: item,
-                onTap: () => context.push(Routes.chat(id)),
+                background: rowColour('c:$id'),
+                onTap: () => context.open(Routes.chat(id)),
               ),
             );
           },
@@ -288,9 +306,11 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
     }
 
     return Scaffold(
+      backgroundColor: desktop ? cs.surfaceContainerLow : null,
       body: TopLevelPage(
         title: l.navChats,
         tintOnScroll: true,
+        background: desktop ? cs.surfaceContainerLow : null,
         actions: [
           IconButton(
             key: const Key('chats.search'),
@@ -298,7 +318,15 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
             onPressed: empty || skeleton ? null : _toggleSearch,
             icon: SymbolIcon(_searching ? DelveIcons.close : DelveIcons.search),
           ),
-          _ApprovalsButton(pending: pending),
+          if (desktop)
+            IconButton(
+              key: const Key('chats.new'),
+              tooltip: l.newChat,
+              onPressed: () => context.open(Routes.newChat),
+              icon: const SymbolIcon(DelveIcons.edit),
+            )
+          else
+            _ApprovalsButton(pending: pending),
         ],
         // the progress line, the search field, the chips and the banner stay
         // put: in the header, which tints while the list scrolls
@@ -338,9 +366,17 @@ class _ChatsScreenState extends ConsumerState<ChatsScreen> {
               _RetryBanner(status: status, generalWorks: hasKey),
           ],
         ),
-        child: body,
+        child: desktop
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: body),
+                  const _ArchivedRow(),
+                ],
+              )
+            : body,
       ),
-      floatingActionButton: empty
+      floatingActionButton: empty || desktop
           ? null
           : FloatingActionButton.extended(
               onPressed: () => context.push(Routes.newChat),
@@ -392,7 +428,54 @@ class _RetryBanner extends StatelessWidget {
         icon: view.icon,
         text: generalWorks ? '${view.text} ${l.chatsGeneralWorks}' : view.text,
         actionLabel: l.chatsDetails,
-        onAction: () => context.push(Routes.connectionLog),
+        onAction: () => context.open(Routes.connectionLog),
+      ),
+    );
+  }
+}
+
+/// The desktop list column's foot (L2a): Archived chats (a filter of the
+/// list from L2b on).
+class _ArchivedRow extends StatelessWidget {
+  const _ArchivedRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final cs = context.colors;
+    return Material(
+      color: cs.surfaceContainerLow,
+      child: InkWell(
+        key: const Key('chats.archived'),
+        onTap: () => context.open(Routes.archived),
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space4),
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: cs.outlineVariant,
+                width: DelveTokens.hairline,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              SymbolIcon(
+                DelveIcons.archive,
+                size: DelveTokens.iconSm,
+                color: cs.onSurfaceVariant,
+              ),
+              const SizedBox(width: DelveTokens.space2),
+              Text(
+                l.moreArchived,
+                style: DelveDesktopText.control.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

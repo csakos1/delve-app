@@ -68,9 +68,14 @@ class ChatScreen extends ConsumerStatefulWidget {
     required this.conversationId,
     this.firstClientMsgId,
     this.draft,
+    this.kind,
   });
 
   final String? conversationId;
+
+  /// A new chat's kind chosen before it opened (the desktop's Ctrl+N /
+  /// Ctrl+Shift+N); null: the remembered choice.
+  final ChatKind? kind;
 
   /// A new chat's starting text and hint (New watch, Change in chat).
   final NewChatDraft? draft;
@@ -121,6 +126,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _kind = widget.kind;
     _text = TextEditingController(text: widget.draft?.text ?? '');
     _attachments = ComposerAttachments(
       api: () => mounted ? ref.read(attachmentApiProvider) : null,
@@ -745,7 +751,7 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     key: const Key('chat.topBar'),
     backgroundColor: context.colors.surface,
     notificationPredicate: (_) => false,
-    leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
+    leading: pageBackButton(context),
     title: Text(
       title,
       key: const Key('chat.title'),

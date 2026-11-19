@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../api/models/models.dart';
+import '../../app/layout.dart';
 import '../../app/news.dart';
 import '../../app/router.dart';
 import '../../l10n/app_localizations.dart';
@@ -494,7 +494,7 @@ class NewsStoryRow extends ConsumerWidget {
 
 /// Opens the reading view of a story.
 void openNewsStory(BuildContext context, int id) =>
-    unawaited(context.push(Routes.newsStory(id)));
+    context.open(Routes.newsStory(id));
 
 /// What the long-press menu offers.
 enum _MenuAction { more, less, hide, save, copy }
@@ -648,7 +648,7 @@ class NewsCard extends ConsumerWidget {
           children: [
             InkWell(
               key: const Key('dashboard.news.open'),
-              onTap: () => context.push(Routes.news),
+              onTap: () => context.open(Routes.news),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
                   minHeight: DelveTokens.touchTarget,
@@ -672,7 +672,7 @@ class NewsCard extends ConsumerWidget {
             if (digest.weekly case final w? when w.count > 0)
               InkWell(
                 key: const Key('dashboard.news.weekly'),
-                onTap: () => context.push(Routes.newsWeekly),
+                onTap: () => context.open(Routes.newsWeekly),
                 child: Container(
                   constraints: const BoxConstraints(minHeight: 48),
                   decoration: BoxDecoration(border: Border(bottom: rule)),
@@ -749,7 +749,7 @@ class NewsCard extends ConsumerWidget {
             if (digest.failing > 0)
               InkWell(
                 key: const Key('dashboard.news.failing'),
-                onTap: () => context.push(Routes.newsSettings),
+                onTap: () => context.open(Routes.newsSettings),
                 child: Container(
                   margin: const EdgeInsets.only(top: DelveTokens.space2),
                   constraints: const BoxConstraints(minHeight: 40),

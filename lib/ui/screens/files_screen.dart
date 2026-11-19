@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/layout.dart';
 import '../../app/router.dart';
 import '../../attachments/picker.dart';
 import '../../files/device_files.dart';
@@ -241,13 +242,11 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
           ]
         : const <RemoteEntry>[];
     final at = images.indexWhere((x) => x.path == e.path);
-    unawaited(
-      context.push(
-        Routes.filePreview,
-        extra: at < 0
-            ? FilePreviewArgs([e], edit: edit)
-            : FilePreviewArgs(images, index: at),
-      ),
+    context.open(
+      Routes.filePreview,
+      extra: at < 0
+          ? FilePreviewArgs([e], edit: edit)
+          : FilePreviewArgs(images, index: at),
     );
   }
 
@@ -832,7 +831,7 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
         unawaited(_newFolder());
       case 'trash':
         _terminal.lock.keepAlive();
-        unawaited(context.push(Routes.filesTrash));
+        context.open(Routes.filesTrash);
       case final String c when c.startsWith('sort.'):
         final key = SortKey.values.byName(c.substring(5));
         if (key != _service.sort) _service.sortBy(key);

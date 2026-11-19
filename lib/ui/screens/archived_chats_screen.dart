@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../app/chat_list.dart';
+import '../../app/layout.dart';
 import '../../app/router.dart';
 import '../../data/db/database.dart';
 import '../../general/general_database.dart';
@@ -209,7 +209,7 @@ class _ArchivedChatsScreenState extends ConsumerState<ArchivedChatsScreen> {
                 child: GeneralListRow(
                   chat: g,
                   modelName: modelShortName(g.modelId, models[g.modelId]),
-                  onTap: () => context.push(Routes.generalChat(g.id)),
+                  onTap: () => context.open(Routes.generalChat(g.id)),
                 ),
               );
             }
@@ -224,7 +224,7 @@ class _ArchivedChatsScreenState extends ConsumerState<ArchivedChatsScreen> {
               ),
               child: ChatRow(
                 item: item,
-                onTap: () => context.push(Routes.chat(id)),
+                onTap: () => context.open(Routes.chat(id)),
               ),
             );
           },

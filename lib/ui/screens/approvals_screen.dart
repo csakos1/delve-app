@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../api/protocol.dart';
 import '../../app/approvals.dart';
+import '../../app/layout.dart';
 import '../../app/router.dart';
 import '../../app/session.dart';
 import '../../data/db/database.dart';
@@ -70,8 +70,7 @@ class _ApprovalsScreenState extends ConsumerState<ApprovalsScreen> {
     }
   }
 
-  void _openChat(ApprovalRow a) =>
-      unawaited(context.push(Routes.chat(a.conversationId)));
+  void _openChat(ApprovalRow a) => context.open(Routes.chat(a.conversationId));
 
   @override
   Widget build(BuildContext context) {

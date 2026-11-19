@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../app/layout.dart';
 import '../../app/platform.dart';
 import '../../app/router.dart';
 import '../../attachments/composer_attachments.dart';
@@ -150,7 +150,7 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
     final id = _chatId;
     switch (a) {
       case GeneralErrorAction.openSettings:
-        unawaited(context.push(Routes.generalSettings));
+        context.open(Routes.generalSettings);
       case GeneralErrorAction.retry:
         if (id != null) {
           unawaited(
@@ -317,7 +317,7 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
     final messenger = ScaffoldMessenger.of(context);
     await service.archive(chat.id);
     if (!mounted) return;
-    unawaited(Navigator.of(context).maybePop());
+    leavePage(context, fallback: Routes.chats);
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -359,7 +359,7 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
     final messenger = ScaffoldMessenger.of(context);
     await ref.read(generalChatServiceProvider).deleteChat(chat.id);
     if (!mounted) return;
-    unawaited(Navigator.of(context).maybePop());
+    leavePage(context, fallback: Routes.chats);
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(l.generalDeleted)));
@@ -467,7 +467,7 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
         // the page colour, as the agent chat's bar
         backgroundColor: context.colors.surface,
         notificationPredicate: (_) => false,
-        leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
+        leading: pageBackButton(context),
         title: Text(
           shownTitle,
           key: const Key('general.title'),
@@ -585,7 +585,7 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
               ),
             ),
           if (noKey)
-            _NoKey(onAdd: () => context.push(Routes.generalSettings))
+            _NoKey(onAdd: () => context.open(Routes.generalSettings))
           else
             Composer(
               controller: _text,

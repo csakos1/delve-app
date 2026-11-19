@@ -5382,4 +5382,80 @@ class AppLocalizationsEn extends AppLocalizations {
   String notifyNewsSaveFailed(String error) {
     return 'Couldn\'t save: $error';
   }
+
+  @override
+  String desktopKeyArea(String digit) {
+    return 'Ctrl+$digit';
+  }
+
+  @override
+  String get desktopKeySettings => 'Ctrl+,';
+
+  @override
+  String get desktopKeyNewChat => 'Ctrl+N';
+
+  @override
+  String get desktopInspectorToggle => 'Inspector (Ctrl+I)';
+
+  @override
+  String get desktopInspectorClose => 'Close the inspector';
+
+  @override
+  String get desktopChatsEmpty => 'No chat open';
+
+  @override
+  String get desktopChatsEmptySub =>
+      'Pick one from the list or start a new one';
+
+  @override
+  String get desktopStatusConnected => 'Connected';
+
+  @override
+  String get desktopStatusReconnecting => 'Reconnecting…';
+
+  @override
+  String desktopStatusOfflineSince(String time) {
+    return 'Offline · last seen $time';
+  }
+
+  @override
+  String desktopStatusApprovals(int count, String clock) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count approvals · $clock',
+      one: '1 approval · $clock',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String desktopStatusLate(int count, String time) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count late approvals · until $time',
+      one: '1 late approval · until $time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String desktopStatusRun(String clock) {
+    return 'run $clock';
+  }
+
+  @override
+  String desktopStatusSwitching(String clock) {
+    return 'switching $clock';
+  }
+
+  @override
+  String get desktopStatusLlamaStopped => 'llama-server stopped';
+
+  @override
+  String get desktopStatusSlotBusy => 'slot busy';
+
+  @override
+  String get desktopStatusSlotIdle => 'slot idle';
 }

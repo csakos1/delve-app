@@ -8378,6 +8378,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t save: {error}'**
   String notifyNewsSaveFailed(String error);
+
+  /// No description provided for @desktopKeyArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Ctrl+{digit}'**
+  String desktopKeyArea(String digit);
+
+  /// No description provided for @desktopKeySettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Ctrl+,'**
+  String get desktopKeySettings;
+
+  /// No description provided for @desktopKeyNewChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Ctrl+N'**
+  String get desktopKeyNewChat;
+
+  /// No description provided for @desktopInspectorToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspector (Ctrl+I)'**
+  String get desktopInspectorToggle;
+
+  /// No description provided for @desktopInspectorClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close the inspector'**
+  String get desktopInspectorClose;
+
+  /// No description provided for @desktopChatsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No chat open'**
+  String get desktopChatsEmpty;
+
+  /// No description provided for @desktopChatsEmptySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one from the list or start a new one'**
+  String get desktopChatsEmptySub;
+
+  /// No description provided for @desktopStatusConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get desktopStatusConnected;
+
+  /// No description provided for @desktopStatusReconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting…'**
+  String get desktopStatusReconnecting;
+
+  /// No description provided for @desktopStatusOfflineSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · last seen {time}'**
+  String desktopStatusOfflineSince(String time);
+
+  /// No description provided for @desktopStatusApprovals.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 approval · {clock}} other{{count} approvals · {clock}}}'**
+  String desktopStatusApprovals(int count, String clock);
+
+  /// No description provided for @desktopStatusLate.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 late approval · until {time}} other{{count} late approvals · until {time}}}'**
+  String desktopStatusLate(int count, String time);
+
+  /// No description provided for @desktopStatusRun.
+  ///
+  /// In en, this message translates to:
+  /// **'run {clock}'**
+  String desktopStatusRun(String clock);
+
+  /// No description provided for @desktopStatusSwitching.
+  ///
+  /// In en, this message translates to:
+  /// **'switching {clock}'**
+  String desktopStatusSwitching(String clock);
+
+  /// No description provided for @desktopStatusLlamaStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'llama-server stopped'**
+  String get desktopStatusLlamaStopped;
+
+  /// No description provided for @desktopStatusSlotBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'slot busy'**
+  String get desktopStatusSlotBusy;
+
+  /// No description provided for @desktopStatusSlotIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'slot idle'**
+  String get desktopStatusSlotIdle;
 }
 
 class _AppLocalizationsDelegate

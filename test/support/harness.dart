@@ -206,7 +206,16 @@ void setDesignSize(WidgetTester tester) {
   addTearDown(tester.view.reset);
 }
 
-/// Pumps the whole app; [paired] starts with stored credentials.
+/// A desktop window of [size] dp (device pixel ratio 1), e.g. the design's
+/// 1440 × 900 frame for the desktop layout (L2).
+void setWindowSize(WidgetTester tester, Size size) {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+}
+
+/// Pumps the whole app; [paired] starts with stored credentials; [window]
+/// sizes the window instead of the design's phone.
 Future<TestEnv> pumpDelve(
   WidgetTester tester, {
   bool paired = true,
@@ -221,6 +230,7 @@ Future<TestEnv> pumpDelve(
   PlatformCaps? caps,
   Future<void> Function(TestEnv env)? before,
   bool settle = true,
+  Size? window,
 }) async {
   final env = TestEnv(
     credentials: paired ? pairedCredentials() : null,
@@ -236,6 +246,7 @@ Future<TestEnv> pumpDelve(
   );
   addTearDown(env.dispose);
   setDesignSize(tester);
+  if (window != null) setWindowSize(tester, window);
   if (before != null) await tester.runAsync(() => before(env));
   await tester.pumpWidget(env.app(const DelveApp()));
   if (settle) {

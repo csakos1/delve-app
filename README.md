@@ -432,8 +432,17 @@ flutter build linux --release
 build/linux/x64/release/bundle/delve
 ```
 
+From a window of 720 dp the desktop app uses the desktop layout (design "27 Desktop –
+Workbench"; below 720 the phone layout, unchanged): a rail of areas, the area's panes (list
+column · content · inspector, `lib/ui/desktop/panes.dart`) and a status bar. It has a router
+of its own (`lib/app/desktop_router.dart`) with the phone's paths (`Routes`); `routerProvider`
+is the one in use and a resize across 720 swaps them, keeping the place. Shared screens ask
+`DesktopLayout.of(context)`; `context.open(…)` pushes on the phone and goes on the desktop.
+Keys: Ctrl+2…0 areas, Ctrl+N / Ctrl+Shift+N new Agent / General chat, Ctrl+, Settings,
+Ctrl+B list, Ctrl+I inspector, Esc an overlay pane.
+
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
-`pumpDelve` for the desktop.
+`pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.
 
 ### Push (Firebase)
 

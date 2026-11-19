@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../app/layout.dart';
 import '../../app/platform.dart';
 import '../../app/router.dart';
 import '../../l10n/app_localizations.dart';
@@ -95,7 +95,7 @@ class MoreScreen extends ConsumerWidget {
                   size: DelveTokens.iconMd,
                   color: context.delve.textMuted,
                 ),
-                onTap: () => context.push(page.route),
+                onTap: () => context.open(page.route),
               ),
         ],
       ),

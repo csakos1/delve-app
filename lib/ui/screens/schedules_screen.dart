@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../api/models/models.dart';
+import '../../app/layout.dart';
 import '../../app/router.dart';
 import '../../app/schedules.dart';
 import '../../l10n/app_localizations.dart';
@@ -87,14 +87,14 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
     final now = DateTime.now();
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
+        leading: pageBackButton(context),
         title: Text(l.moreSchedules),
       ),
       floatingActionButton: items == null
           ? null
           : FloatingActionButton.extended(
               key: const Key('schedules.new'),
-              onPressed: () => context.push(Routes.newSchedule),
+              onPressed: () => context.open(Routes.newSchedule),
               icon: const SymbolIcon(DelveIcons.add),
               label: Text(l.schedulesNew),
             ),
@@ -136,7 +136,7 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
                   running: _running.contains(s.id),
                   onToggle: (on) => _toggle(s, on),
                   onRunNow: () => _runNow(s),
-                  onTap: () => context.push(Routes.editSchedule(s.id)),
+                  onTap: () => context.open(Routes.editSchedule(s.id)),
                 ),
               ],
               if (!list.any((s) => s.kind == 'prompt'))

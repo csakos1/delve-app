@@ -36,6 +36,8 @@ import '../ui/screens/trash_screen.dart';
 import '../ui/screens/watch_detail_screen.dart';
 import '../ui/screens/watches_screen.dart';
 import '../ui/shell/app_shell.dart';
+import 'desktop_router.dart';
+import 'layout.dart';
 import 'session.dart';
 
 /// Route paths. Top-level screens live in the shell (bottom nav: Chats ·
@@ -115,7 +117,6 @@ abstract final class Routes {
 }
 
 /// Where the session state sends the user; null = stay.
-@visibleForTesting
 String? sessionRedirect(SessionState session, String location) {
   final target = switch (session) {
     SessionLoading() => Routes.splash,
@@ -341,8 +342,9 @@ GoRouter buildRouter({
   );
 }
 
-/// The app's router, driven by the session state.
-final routerProvider = Provider<GoRouter>((ref) {
+/// The phone layout's router (the bottom navigation), driven by the session
+/// state.
+final phoneRouterProvider = Provider<GoRouter>((ref) {
   final session = ValueNotifier<SessionState>(ref.read(sessionProvider));
   ref.listen(sessionProvider, (_, next) => session.value = next);
   final router = buildRouter(session: session);
@@ -352,3 +354,12 @@ final routerProvider = Provider<GoRouter>((ref) {
   });
   return router;
 });
+
+/// The router of the layout in use: the phone's, or on a computer 720 dp and
+/// wider the desktop's (L2). Both take the same [Routes]; the hosts
+/// (notifications, shares, transfers) read this one when they navigate.
+final routerProvider = Provider<GoRouter>(
+  (ref) => ref.watch(desktopLayoutProvider)
+      ? ref.watch(desktopRouterProvider)
+      : ref.watch(phoneRouterProvider),
+);

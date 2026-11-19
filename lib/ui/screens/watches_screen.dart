@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../api/models/models.dart';
+import '../../app/layout.dart';
 import '../../app/router.dart';
 import '../../app/watches.dart';
 import '../../l10n/app_localizations.dart';
@@ -17,13 +17,11 @@ import 'chat_screen.dart' show NewChatDraft;
 
 /// Opens a new chat for a watch: [draft] fills the composer; without it the
 /// watch hint and its examples show (design 21g).
-void startWatchChat(BuildContext context, {String? draft}) => unawaited(
-  context.push(
-    Routes.newChat,
-    extra: draft == null
-        ? const NewChatDraft(watchHint: true)
-        : NewChatDraft(text: draft),
-  ),
+void startWatchChat(BuildContext context, {String? draft}) => context.open(
+  Routes.newChat,
+  extra: draft == null
+      ? const NewChatDraft(watchHint: true)
+      : NewChatDraft(text: draft),
 );
 
 /// 21a Watches: what the agent watches, each with its state and new hits;
@@ -105,7 +103,7 @@ class _WatchesScreenState extends ConsumerState<WatchesScreen> {
                 for (final w in list)
                   WatchRow(
                     watch: w,
-                    onTap: () => context.push(Routes.watch(w.slug)),
+                    onTap: () => context.open(Routes.watch(w.slug)),
                   ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(

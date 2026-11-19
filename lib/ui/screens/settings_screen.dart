@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../api/api_error.dart';
 import '../../api/models/models.dart';
+import '../../app/layout.dart';
 import '../../app/news.dart';
 import '../../app/platform.dart';
 import '../../app/router.dart';
@@ -495,7 +495,7 @@ class _ConnectionRow extends ConsumerWidget {
     final view = ConnectionView.of(l, status);
     return InkWell(
       key: const Key('settings.connection'),
-      onTap: () => context.push(Routes.connectionLog),
+      onTap: () => context.open(Routes.connectionLog),
       child: _Item(
         icon: DelveIcons.log,
         title: l.settingsConnection,
@@ -534,7 +534,7 @@ class _TerminalRowState extends ConsumerState<_TerminalRow> {
       listenable: _service,
       builder: (context, _) => InkWell(
         key: const Key('settings.terminal'),
-        onTap: () => context.push(Routes.terminalSettings),
+        onTap: () => context.open(Routes.terminalSettings),
         child: _Item(
           icon: DelveIcons.terminal,
           title: l.settingsTerminal,
@@ -569,7 +569,7 @@ class _GeneralRow extends ConsumerWidget {
     );
     return InkWell(
       key: const Key('settings.general'),
-      onTap: () => context.push(Routes.generalSettings),
+      onTap: () => context.open(Routes.generalSettings),
       child: _Item(
         icon: DelveIcons.cloud,
         title: l.settingsGeneral,

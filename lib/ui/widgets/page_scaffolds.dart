@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../app/layout.dart';
 import '../../theme/delve_theme.dart';
 
 /// Top-level screen (inside the bottom-nav shell): a Jost headline instead of
@@ -15,12 +16,17 @@ class TopLevelPage extends StatefulWidget {
     this.tintOnScroll = false,
     this.bar,
     this.below,
+    this.background,
   });
 
   final String title;
   final Widget child;
   final List<Widget> actions;
   final bool tintOnScroll;
+
+  /// The header's colour at rest (the desktop's list column); null: the page
+  /// colour.
+  final Color? background;
 
   /// Replaces the title and actions (Files' selection mode, 23d): on
   /// surface-2, the status bar included.
@@ -70,7 +76,7 @@ class _TopLevelPageState extends State<TopLevelPage> {
             curve: DelveTokens.shortCurve,
             color: _scrolled || widget.bar != null
                 ? cs.surfaceContainer
-                : cs.surface,
+                : widget.background ?? cs.surface,
             padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -127,7 +133,7 @@ class SubPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
+        leading: pageBackButton(context),
         title: Text(title),
         actions: actions,
       ),
@@ -199,10 +205,20 @@ class PageColourBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) => AppBar(
     backgroundColor: context.colors.surface,
     notificationPredicate: (_) => false,
-    leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
+    leading: pageBackButton(context),
     title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
     actions: actions,
   );
+}
+
+/// A sub-page bar's back arrow. On the phone every sub-page is pushed, so
+/// it always shows; in the desktop layout an area's first page has nowhere
+/// to go back to, and the arrow shows only over a page of the same area.
+Widget? pageBackButton(BuildContext context) {
+  if (DesktopLayout.of(context) && !Navigator.of(context).canPop()) {
+    return null;
+  }
+  return BackButton(onPressed: () => Navigator.of(context).maybePop());
 }
 
 /// Rounded Material Symbol with the design's fill rule (1 = active/status).
@@ -328,6 +344,9 @@ abstract final class DelveIcons {
   static const IconData remove = Symbols.remove_rounded;
   static const IconData tab = Symbols.tab_rounded;
   static const IconData tabClose = Symbols.tab_close_rounded;
+
+  /// The desktop inspector's toggle (L2).
+  static const IconData inspector = Symbols.view_sidebar_rounded;
   static const IconData rename = Symbols.edit_rounded;
   static const IconData kill = Symbols.delete_forever_rounded;
   static const IconData cloud = Symbols.cloud_rounded;

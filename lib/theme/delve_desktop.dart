@@ -1,0 +1,332 @@
+import 'package:flutter/material.dart';
+
+import 'delve_colors.dart';
+import 'delve_text.dart';
+import 'delve_tokens.dart';
+
+/// Window classes of the desktop layout (design 27 Workbench). One rule
+/// makes them: the content pane is never narrower than
+/// [DelveDesktop.contentMin]; the list gives up width first, then the
+/// inspector becomes an overlay, then the list too.
+enum DelveWindowClass {
+  /// Below 720: the phone layout.
+  phone,
+
+  /// 720 – 899: list and inspector are overlays.
+  compact,
+
+  /// 900 – 1231: the inspector is an overlay.
+  medium,
+
+  /// 1232 – 1339: the list narrows while the inspector is open.
+  half,
+
+  /// 1340 – 1919.
+  regular,
+
+  /// 1920 and wider.
+  wide,
+}
+
+/// Desktop layout constants (dp at text scale 1.0). Source: the design
+/// system's `delve_tokens.json → desktop` (round 11b, "27 Desktop –
+/// Workbench"); `test/desktop_test.dart` checks them against
+/// `test/fixtures/design/delve_desktop_tokens.json`. Nothing here changes a
+/// phone value.
+abstract final class DelveDesktop {
+  static const double windowMinWidth = 720;
+  static const double windowMinHeight = 560;
+
+  // breakpoints (window width)
+  static const double listOverlayBelow = 900;
+  static const double inspectorOverlayBelow = 1232;
+  static const double listNarrowBelow = 1340;
+  static const double dashboardOneColumnBelow = 820;
+  static const double dashboardTwoColumnsBelow = 1100;
+  static const double statusBarDropRunBelow = 1100;
+  static const double wide = 1920;
+
+  // panes
+  static const double railWidth = 52;
+  static const double listMin = 240;
+  static const double listDefault = 300;
+  static const double listDefaultNews = 360;
+  static const double listDefaultWide = 340;
+  static const double listMax = 420;
+  static const double contentMin = 600;
+  static const double readingColumn = 720;
+  static const double readingColumnWide = 760;
+  static const double detailColumn = 680;
+  static const double inspectorMin = 300;
+  static const double inspectorDefault = 340;
+  static const double inspectorMax = 480;
+  static const double paneHeader = 48;
+  static const double statusBarHeight = 24;
+  static const double dividerGrab = 6;
+  static const double dividerLine = 2;
+  static const Duration dividerHoverDelay = Duration(milliseconds: 150);
+
+  // status bar
+  static const double statusBarPadding = 12;
+  static const double statusBarGap = 14;
+  static const double statusBarDot = 7;
+  static const double statusBarIcon = 13;
+
+  // rail
+  static const double railItemWidth = 40;
+  static const double railItemHeight = 34;
+  static const double railItemRadius = 10;
+  static const double railIcon = 20;
+  static const double railItemGap = 2;
+  static const double railDividerWidth = 24;
+  static const double railDividerMargin = 6;
+  static const double railMarkSlot = 34;
+  static const double railMark = 20;
+  static const double railDot = 8;
+
+  // density
+  static const double rowTwoLine = 52;
+  static const double rowOneLine = 32;
+  static const double rowRadius = 8;
+  static const double buttonHeight = 32;
+  static const double buttonRadius = 8;
+  static const double iconButton = 28;
+  static const double iconButtonRadius = 6;
+  static const double iconButtonIcon = 18;
+  static const double cardRadius = 14;
+  static const double menuRadius = 10;
+  static const double dialogRadius = 16;
+  static const double keyCapHeight = 18;
+  static const double keyCapRadius = 4;
+  static const double tooltipRadius = 6;
+
+  // motion
+  static const Duration hover = Duration(milliseconds: 100);
+  static const Duration tooltipDelay = Duration(milliseconds: 500);
+
+  static DelveWindowClass classOf(double width) {
+    if (width < windowMinWidth) return DelveWindowClass.phone;
+    if (width < listOverlayBelow) return DelveWindowClass.compact;
+    if (width < inspectorOverlayBelow) return DelveWindowClass.medium;
+    if (width < listNarrowBelow) return DelveWindowClass.half;
+    if (width < wide) return DelveWindowClass.regular;
+    return DelveWindowClass.wide;
+  }
+
+  /// The width of a docked list column: the remembered one; while an
+  /// inspector is docked below [listNarrowBelow] the minimum (half of a
+  /// 2560 monitor: 52 + 240 + 638 + 340), and wider no more than leaves the
+  /// content its [contentMin].
+  static double listWidth(
+    double window, {
+    required double remembered,
+    required bool inspectorDocked,
+    double inspector = inspectorDefault,
+  }) {
+    if (!inspectorDocked) return remembered;
+    if (window < listNarrowBelow) return listMin;
+    final room = window - railWidth - inspector - contentMin;
+    return room.clamp(listMin, remembered).toDouble();
+  }
+
+  /// Hover: one surface step up from the surface the element sits on.
+  static Color hoverOn(ColorScheme cs, Color surface) {
+    final steps = <Color>[
+      cs.surface,
+      cs.surfaceContainerLow,
+      cs.surfaceContainer,
+      cs.surfaceContainerHigh,
+      cs.surfaceContainerHighest,
+    ];
+    final i = steps.indexOf(surface);
+    return i < 0 || i == steps.length - 1 ? steps.last : steps[i + 1];
+  }
+}
+
+/// Desktop-only text styles. The phone [TextTheme] is untouched: message
+/// text, [DelveText.mono] and [DelveText.monoSmall] are used as they are.
+abstract final class DelveDesktopText {
+  static const TextStyle paneTitle = TextStyle(
+    fontFamily: DelveFonts.display,
+    fontFamilyFallback: DelveFonts.displayFallback,
+    fontSize: 16,
+    height: 22 / 16,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.1,
+  );
+  static const TextStyle rowTitle = TextStyle(
+    fontFamily: DelveFonts.text,
+    fontSize: 13,
+    height: 18 / 13,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.1,
+  );
+  static const TextStyle rowSecondary = TextStyle(
+    fontFamily: DelveFonts.text,
+    fontSize: 12.5,
+    height: 17 / 12.5,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0,
+  );
+  static const TextStyle meta = TextStyle(
+    fontFamily: DelveFonts.text,
+    fontSize: 11.5,
+    height: 16 / 11.5,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.2,
+  );
+  static const TextStyle control = TextStyle(
+    fontFamily: DelveFonts.text,
+    fontSize: 13,
+    height: 18 / 13,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.1,
+  );
+  static const TextStyle keyCap = TextStyle(
+    fontFamily: DelveFonts.mono,
+    fontSize: 10.5,
+    height: 16 / 10.5,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0,
+  );
+}
+
+/// [base] (the phone theme) with desktop control sizes: colours, text roles
+/// and extensions stay; heights, radii and paddings of controls change, hover
+/// is a surface step, there is no ripple and scrollbars always show.
+ThemeData delveDesktopTheme(ThemeData base) {
+  final cs = base.colorScheme;
+  final dc = base.extension<DelveColors>()!;
+  final shape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(DelveDesktop.buttonRadius),
+  );
+  const size = Size(48, DelveDesktop.buttonHeight);
+  const pad = EdgeInsets.symmetric(horizontal: 12);
+  final r8 = BorderRadius.circular(DelveDesktop.buttonRadius);
+  return base.copyWith(
+    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    visualDensity: VisualDensity.compact,
+    splashFactory: NoSplash.splashFactory,
+    filledButtonTheme: FilledButtonThemeData(
+      style: base.filledButtonTheme.style!.copyWith(
+        minimumSize: const WidgetStatePropertyAll<Size>(size),
+        padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(pad),
+        shape: WidgetStatePropertyAll<OutlinedBorder>(shape),
+        textStyle: const WidgetStatePropertyAll<TextStyle>(
+          DelveDesktopText.control,
+        ),
+        overlayColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.pressed)
+              ? Colors.black.withValues(alpha: 0.12)
+              : s.contains(WidgetState.hovered)
+              ? Colors.white.withValues(alpha: DelveTokens.stateHover)
+              : null,
+        ),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: base.outlinedButtonTheme.style!.copyWith(
+        minimumSize: const WidgetStatePropertyAll<Size>(size),
+        padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(pad),
+        shape: WidgetStatePropertyAll<OutlinedBorder>(shape),
+        textStyle: const WidgetStatePropertyAll<TextStyle>(
+          DelveDesktopText.control,
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: base.textButtonTheme.style!.copyWith(
+        minimumSize: const WidgetStatePropertyAll<Size>(
+          Size(32, DelveDesktop.buttonHeight),
+        ),
+        padding: const WidgetStatePropertyAll<EdgeInsetsGeometry>(
+          EdgeInsets.symmetric(horizontal: 8),
+        ),
+        shape: WidgetStatePropertyAll<OutlinedBorder>(shape),
+        textStyle: const WidgetStatePropertyAll<TextStyle>(
+          DelveDesktopText.control,
+        ),
+      ),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        minimumSize: const Size.square(DelveDesktop.iconButton),
+        padding: EdgeInsets.zero,
+        iconSize: DelveDesktop.iconButtonIcon,
+        foregroundColor: cs.onSurfaceVariant,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DelveDesktop.iconButtonRadius),
+        ),
+      ),
+    ),
+    inputDecorationTheme: base.inputDecorationTheme.copyWith(
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      border: OutlineInputBorder(
+        borderRadius: r8,
+        borderSide: BorderSide(color: cs.outline),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: r8,
+        borderSide: BorderSide(color: cs.outline),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: r8,
+        borderSide: BorderSide(color: cs.primary, width: DelveTokens.focusRing),
+      ),
+    ),
+    cardTheme: base.cardTheme.copyWith(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DelveDesktop.cardRadius),
+      ),
+    ),
+    dialogTheme: base.dialogTheme.copyWith(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DelveDesktop.dialogRadius),
+      ),
+    ),
+    popupMenuTheme: PopupMenuThemeData(
+      color: cs.surfaceContainerHigh,
+      surfaceTintColor: Colors.transparent,
+      elevation: DelveTokens.materialElevation2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DelveDesktop.menuRadius),
+      ),
+      textStyle: base.textTheme.bodyMedium!.copyWith(fontSize: 13),
+    ),
+    tooltipTheme: TooltipThemeData(
+      waitDuration: DelveDesktop.tooltipDelay,
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(DelveDesktop.tooltipRadius),
+        boxShadow: DelveTokens.elevation2,
+      ),
+      textStyle: base.textTheme.labelMedium!.copyWith(color: cs.onSurface),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+    ),
+    scrollbarTheme: ScrollbarThemeData(
+      thumbVisibility: const WidgetStatePropertyAll<bool>(true),
+      thickness: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.hovered) ? 8 : 6,
+      ),
+      radius: const Radius.circular(3),
+      crossAxisMargin: 3,
+      thumbColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.hovered)
+            ? cs.outline
+            : cs.surfaceContainerHighest,
+      ),
+    ),
+    listTileTheme: base.listTileTheme.copyWith(
+      dense: true,
+      minVerticalPadding: 4,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+    ),
+    snackBarTheme: base.snackBarTheme.copyWith(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DelveDesktop.menuRadius),
+      ),
+    ),
+    extensions: <ThemeExtension<dynamic>>[dc],
+  );
+}

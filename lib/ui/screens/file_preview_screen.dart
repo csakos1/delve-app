@@ -116,7 +116,7 @@ class _FilePreviewScreenState extends ConsumerState<FilePreviewScreen> {
       appBar: AppBar(
         backgroundColor: background,
         notificationPredicate: (_) => false,
-        leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
+        leading: pageBackButton(context),
         titleSpacing: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

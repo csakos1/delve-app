@@ -453,9 +453,7 @@ class _TextFileScreenState extends ConsumerState<TextFileScreen> {
         appBar: AppBar(
           backgroundColor: cs.surface,
           notificationPredicate: (_) => false,
-          leading: BackButton(
-            onPressed: () => Navigator.of(context).maybePop(),
-          ),
+          leading: pageBackButton(context),
           titleSpacing: 0,
           title: _title(l),
           actions: _editing ? _editActions(l) : _viewActions(l),
