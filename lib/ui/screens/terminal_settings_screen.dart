@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../app/layout.dart';
 import '../../app/platform.dart';
 import '../../l10n/app_localizations.dart';
 import '../../terminal/secrets.dart';
@@ -12,6 +13,7 @@ import '../../terminal/terminal_providers.dart';
 import '../../terminal/terminal_service.dart';
 import '../../terminal/terminal_theme.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/layers.dart' show showDesktopDialog;
 import '../widgets/page_scaffolds.dart';
 import '../widgets/terminal_ui.dart';
 
@@ -68,37 +70,52 @@ class _TerminalSettingsScreenState
     final key = _service.key;
     if (key == null) return;
     final l = AppLocalizations.of(context);
+    final desktop = DesktopLayout.of(context);
+    Widget body(BuildContext ctx) => SingleChildScrollView(
+      key: const Key('terminalSettings.keyLines'),
+      padding: desktop
+          ? const EdgeInsets.all(20)
+          : const EdgeInsets.fromLTRB(
+              DelveTokens.space4,
+              DelveTokens.space2,
+              DelveTokens.space4,
+              DelveTokens.space6,
+            ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l.termPhoneKey,
+            style: desktop ? ctx.text.titleMedium : ctx.text.titleLarge,
+          ),
+          const SizedBox(height: DelveTokens.space3),
+          KeyWell(
+            label: l.termKeyLine,
+            text: key.authorizedKeysLine,
+            onCopy: () => _copy(ctx, key.authorizedKeysLine),
+          ),
+          const SizedBox(height: DelveTokens.space3),
+          KeyWell(
+            label: l.termKeyCommand,
+            text: key.installCommand,
+            onCopy: () => _copy(ctx, key.installCommand),
+          ),
+        ],
+      ),
+    );
+    if (desktop) {
+      // the desktop: a dialog, not a sheet (L2d3b)
+      await showDesktopDialog<void>(
+        context,
+        width: DelveDesktop.previewDialogWidth,
+        builder: body,
+      );
+      return;
+    }
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) => SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            DelveTokens.space4,
-            DelveTokens.space2,
-            DelveTokens.space4,
-            DelveTokens.space6,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(l.termPhoneKey, style: ctx.text.titleLarge),
-              const SizedBox(height: DelveTokens.space3),
-              KeyWell(
-                label: l.termKeyLine,
-                text: key.authorizedKeysLine,
-                onCopy: () => _copy(ctx, key.authorizedKeysLine),
-              ),
-              const SizedBox(height: DelveTokens.space3),
-              KeyWell(
-                label: l.termKeyCommand,
-                text: key.installCommand,
-                onCopy: () => _copy(ctx, key.installCommand),
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (ctx) => SafeArea(child: body(ctx)),
     );
   }
 
@@ -174,6 +191,7 @@ class _TerminalSettingsScreenState
     final caps = ref.watch(platformCapsProvider);
     return SubPage(
       title: l.termTitle,
+      desktopPage: true,
       child: ListenableBuilder(
         listenable: _service,
         builder: (context, _) {

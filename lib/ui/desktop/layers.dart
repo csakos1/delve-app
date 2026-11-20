@@ -144,6 +144,7 @@ Future<bool> showDesktopConfirm(
 Future<T?> showDesktopDialog<T>(
   BuildContext context, {
   double width = DelveDesktop.dialogWidth,
+  bool takeFocus = true,
   required WidgetBuilder builder,
 }) => showDialog<T>(
   context: context,
@@ -157,8 +158,11 @@ Future<T?> showDesktopDialog<T>(
     clipBehavior: Clip.antiAlias,
     child: SizedBox(
       width: width,
-      // the focus comes in, so Esc closes it whatever it holds
-      child: Focus(autofocus: true, child: Builder(builder: builder)),
+      // the focus comes in, so Esc closes it whatever it holds; a content
+      // with a field of its own takes it itself ([takeFocus] false)
+      child: takeFocus
+          ? Focus(autofocus: true, child: Builder(builder: builder))
+          : Builder(builder: builder),
     ),
   ),
 );

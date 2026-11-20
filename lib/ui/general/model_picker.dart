@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/layout.dart';
 import '../../general/general_database.dart';
 import '../../general/general_providers.dart';
 import '../../general/model_catalog.dart';
 import '../../general/openrouter_errors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/layers.dart' show showDesktopDialog;
 import '../format.dart';
 import '../widgets/page_scaffolds.dart';
 import 'general_format.dart';
@@ -16,29 +18,57 @@ import 'general_format.dart';
 /// The model picker (24d): favourites in their order, then every model A–Z
 /// by name; search in the name and the id; a star per row. Returns the
 /// picked model's id (null: closed). Models without a strict zero-retention
-/// provider are listed but cannot be picked.
+/// provider are listed but cannot be picked. In the desktop layout a dialog
+/// of the popover's size (General chat settings, L2d3b; the chat hangs it on
+/// its model chip itself).
 Future<String?> showModelPicker(
   BuildContext context, {
   required String? current,
   required String subtitle,
-}) => showModalBottomSheet<String>(
-  context: context,
-  isScrollControlled: true,
-  useSafeArea: true,
-  showDragHandle: true,
-  backgroundColor: context.colors.surfaceContainerHigh,
-  shape: const RoundedRectangleBorder(
-    borderRadius: BorderRadius.vertical(top: Radius.circular(DelveTokens.rxl)),
-  ),
-  builder: (_) => DraggableScrollableSheet(
-    expand: false,
-    initialChildSize: 0.92,
-    minChildSize: 0.5,
-    maxChildSize: 0.92,
-    builder: (context, scroll) =>
-        ModelPickerSheet(current: current, subtitle: subtitle, scroll: scroll),
-  ),
-);
+}) {
+  if (DesktopLayout.of(context)) {
+    return showDesktopDialog<String>(
+      context,
+      width: DelveDesktop.modelPickerWidth,
+      // the search field takes the focus
+      takeFocus: false,
+      builder: (_) => SizedBox(
+        height: DelveDesktop.modelPickerHeight,
+        child: Padding(
+          padding: const EdgeInsets.only(top: DelveTokens.space3),
+          child: ModelPickerSheet(
+            current: current,
+            subtitle: subtitle,
+            autofocus: true,
+          ),
+        ),
+      ),
+    );
+  }
+  return showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    backgroundColor: context.colors.surfaceContainerHigh,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(DelveTokens.rxl),
+      ),
+    ),
+    builder: (_) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.92,
+      minChildSize: 0.5,
+      maxChildSize: 0.92,
+      builder: (context, scroll) => ModelPickerSheet(
+        current: current,
+        subtitle: subtitle,
+        scroll: scroll,
+      ),
+    ),
+  );
+}
 
 class ModelPickerSheet extends ConsumerStatefulWidget {
   const ModelPickerSheet({

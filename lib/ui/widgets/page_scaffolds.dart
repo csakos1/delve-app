@@ -3,6 +3,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../app/layout.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_page.dart' show DesktopSubPage;
 
 /// Top-level screen (inside the bottom-nav shell): a Jost headline instead of
 /// an app bar. With [tintOnScroll], the header (status bar included) turns
@@ -148,14 +149,22 @@ class SubPage extends StatelessWidget {
     required this.title,
     required this.child,
     this.actions = const [],
+    this.desktopPage = false,
   });
 
   final String title;
   final Widget child;
   final List<Widget> actions;
 
+  /// In the desktop layout it is a page of the content pane – the 48 px
+  /// header, no app bar ([DesktopSubPage], L2d3b).
+  final bool desktopPage;
+
   @override
   Widget build(BuildContext context) {
+    if (desktopPage && DesktopLayout.of(context)) {
+      return DesktopSubPage(title: title, actions: actions, child: child);
+    }
     return Scaffold(
       appBar: AppBar(
         leading: pageBackButton(context),

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../app/layout.dart';
 import '../../app/platform.dart';
 import '../../attachments/picker.dart';
 import '../../files/device_files.dart';
@@ -19,6 +20,7 @@ import '../../general/openrouter_client.dart';
 import '../../general/openrouter_errors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_page.dart' show DesktopSubPage;
 import '../general/general_format.dart';
 import '../general/model_picker.dart';
 import '../widgets/page_scaffolds.dart';
@@ -395,8 +397,8 @@ class _GeneralSettingsScreenState extends ConsumerState<GeneralSettingsScreen> {
     final cs = context.colors;
     final muted = context.delve.textMuted;
 
-    return Scaffold(
-      appBar: PageColourBar(title: l.settingsGeneral),
+    return _GeneralSettingsPage(
+      title: l.settingsGeneral,
       body: UnderBarFade(
         child: ListView(
           key: const Key('generalSettings.list'),
@@ -647,6 +649,24 @@ const Duration promptSaveDelay = Duration(milliseconds: 500);
 const _zipMime = 'application/zip';
 
 enum _Transfer { exporting, importing }
+
+/// The page's frame: the phone's page-colour bar over [body]; in the
+/// desktop layout a page of the content pane – the 48 px header, the 680 px
+/// column, no app bar (L2d3b, N504).
+class _GeneralSettingsPage extends StatelessWidget {
+  const _GeneralSettingsPage({required this.title, required this.body});
+
+  final String title;
+  final Widget body;
+
+  @override
+  Widget build(BuildContext context) => DesktopLayout.of(context)
+      ? DesktopSubPage(title: title, child: body)
+      : Scaffold(
+          appBar: PageColourBar(title: title),
+          body: body,
+        );
+}
 
 /// The spinner of a running export or import.
 class _Busy extends StatelessWidget {

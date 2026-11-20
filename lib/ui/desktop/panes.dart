@@ -520,6 +520,7 @@ class PaneHeader extends StatelessWidget {
     required this.title,
     this.actions = const [],
     this.inspectorToggle = false,
+    this.leading,
   });
 
   final String title;
@@ -528,13 +529,17 @@ class PaneHeader extends StatelessWidget {
   /// Ends with the [InspectorToggle] (only where the page has an inspector).
   final bool inspectorToggle;
 
+  /// Before the title: a sub-page's back arrow (L2d3b).
+  final Widget? leading;
+
   @override
   Widget build(BuildContext context) => SizedBox(
     height: DelveDesktop.paneHeader,
     child: Padding(
-      padding: const EdgeInsets.only(left: 16, right: 10),
+      padding: EdgeInsets.only(left: leading == null ? 16 : 8, right: 10),
       child: Row(
         children: [
+          if (leading case final w?) ...[w, const SizedBox(width: 6)],
           Expanded(
             child: Text(
               title,

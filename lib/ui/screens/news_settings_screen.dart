@@ -1136,6 +1136,10 @@ class _NewsFeedScreenState extends ConsumerState<NewsFeedScreen> {
     } else {
       body = _detail(context, l, config, s);
     }
+    // the desktop (L2d3b, N481): a page of the content, no app bar
+    if (DesktopLayout.of(context)) {
+      return DesktopSubPage(title: l.newsFeedTitle, child: body);
+    }
     return Scaffold(
       appBar: PageColourBar(title: l.newsFeedTitle),
       body: UnderBarFade(child: body),

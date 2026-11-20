@@ -1,20 +1,25 @@
 import 'package:delve/app/platform.dart';
+import 'package:delve/app/router.dart';
 import 'package:delve/data/db/store.dart';
 import 'package:delve/theme/delve_theme.dart';
 import 'package:delve/ui/desktop/desktop_shell.dart';
 import 'package:delve/ui/desktop/intake.dart' show focusInTextField;
 import 'package:delve/ui/desktop/palette.dart';
 import 'package:delve/ui/desktop/pane_focus.dart';
+import 'package:delve/ui/desktop/panes.dart' show PaneHeader;
 import 'package:delve/ui/desktop/shortcut_sheet.dart';
 import 'package:delve/ui/screens/approvals_screen.dart' show ApprovalDetail;
 import 'package:delve/ui/screens/chat_screen.dart';
 import 'package:delve/ui/screens/chats_screen.dart';
+import 'package:delve/ui/screens/connection_log_screen.dart';
+import 'package:delve/ui/screens/general_settings_screen.dart';
 import 'package:delve/ui/screens/system_screen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 import 'approvals_screen_test.dart' show approval, seedChats;
 import 'chat_screen_test.dart' show liveStatus, seedFinished;
@@ -550,6 +555,47 @@ void main() {
       await _frames(t, 12);
       expect(find.byKey(const Key('desktop.popover')), findsNothing);
       expect(find.text('Thinking · High'), findsOneWidget);
+    });
+  });
+
+  group('sub-pages of the content (L2d3b)', () {
+    Future<void> go(WidgetTester t, String location) async {
+      GoRouter.of(t.element(find.byType(DesktopShell))).go(location);
+      await _frames(t, 10);
+    }
+
+    /// [page] is a page of the content pane: the 48 px header, the detail
+    /// column, no app bar.
+    void expectPage(WidgetTester t, Type page) {
+      expect(find.byType(page), findsOneWidget);
+      Finder inPage(Finder what) =>
+          find.descendant(of: find.byType(page), matching: what);
+      expect(inPage(find.byType(AppBar)), findsNothing);
+      expect(inPage(find.byType(PaneHeader)), findsOneWidget);
+      expect(
+        t.getSize(inPage(find.byType(PaneHeader))).height,
+        DelveDesktop.paneHeader,
+      );
+      expect(
+        t.getSize(inPage(find.byKey(const Key('page.column')))).width,
+        lessThanOrEqualTo(
+          DelveDesktop.detailColumn + 2 * DelveDesktop.contentGutter,
+        ),
+      );
+    }
+
+    testWidgets('the connection log (N504)', (t) async {
+      await _desktop(t);
+      await go(t, Routes.connectionLog);
+      expectPage(t, ConnectionLogScreen);
+      expect(find.byKey(const Key('log.status')), findsOneWidget);
+    });
+
+    testWidgets('General chat settings (N504)', (t) async {
+      await _desktop(t);
+      await go(t, Routes.generalSettings);
+      expectPage(t, GeneralSettingsScreen);
+      expect(find.byKey(const Key('generalSettings.list')), findsOneWidget);
     });
   });
 }

@@ -114,6 +114,7 @@ class DesktopPage extends StatelessWidget {
     required this.child,
     this.actions = const [],
     this.inspectorToggle = false,
+    this.back = false,
   });
 
   final String title;
@@ -124,19 +125,74 @@ class DesktopPage extends StatelessWidget {
   /// area has an inspector).
   final bool inspectorToggle;
 
+  /// The header starts with a back arrow while the area has a page under
+  /// this one (a sub-page: the connection log over Settings · Server).
+  final bool back;
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: context.colors.surface,
-    body: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        PaneHeader(
-          title: title,
-          actions: actions,
-          inspectorToggle: inspectorToggle,
+  Widget build(BuildContext context) {
+    final canPop = back && Navigator.of(context).canPop();
+    return Scaffold(
+      backgroundColor: context.colors.surface,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          PaneHeader(
+            title: title,
+            actions: actions,
+            inspectorToggle: inspectorToggle,
+            leading: canPop
+                ? IconButton(
+                    key: const Key('page.back'),
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).backButtonTooltip,
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    icon: const SymbolIcon(
+                      DelveIcons.arrowBack,
+                      size: DelveDesktop.iconButtonIcon,
+                    ),
+                  )
+                : null,
+          ),
+          Expanded(child: child),
+        ],
+      ),
+    );
+  }
+}
+
+/// What is a pushed sub-page on the phone, as a page of the desktop's
+/// content (L2d3b – the connection log, Terminal and General chat settings,
+/// a News feed): the 48 px header with the title (and a back arrow to the
+/// page under it), no app bar; [child] – the phone's body – in the 680 px
+/// detail column, centred.
+class DesktopSubPage extends StatelessWidget {
+  const DesktopSubPage({
+    super.key,
+    required this.title,
+    required this.child,
+    this.actions = const [],
+  });
+
+  final String title;
+  final Widget child;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) => DesktopPage(
+    title: title,
+    actions: actions,
+    back: true,
+    child: Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        key: const Key('page.column'),
+        constraints: const BoxConstraints(
+          maxWidth: DelveDesktop.detailColumn + 2 * DelveDesktop.contentGutter,
         ),
-        Expanded(child: child),
-      ],
+        child: child,
+      ),
     ),
   );
 }

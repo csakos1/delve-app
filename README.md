@@ -532,6 +532,11 @@ on a right click of the Thinking pill, the schedule editor's chat picker) or is 
 (`showDesktopDialog`: a file's details, the About me previews; a General model that reads no
 images offers another model in the confirmation dialog); a terminal tab's right-click menu is
 the desktop's context menu, and the Terminal menu has no “Sessions” (they are the list column).
+Sub-pages (`DesktopSubPage`, L2d3b): what the phone pushes over Settings – the connection log,
+Terminal settings, General chat settings – and a News feed's page are pages of the content
+here: the 48 px header (a back arrow while the area has a page under it), the phone's body in
+the 680 px column, no app bar; the phone key's lines and the settings' model pickers are
+dialogs.
 Focus and keys (`pane_focus.dart`): every pane has its own focus point (`PaneFocus`). F6 /
 Shift+F6 go round the list, the content, the dock (when open) and the inspector, the pane
 drawing the 2 px accent ring after a key; a click on a row gives its pane the focus without

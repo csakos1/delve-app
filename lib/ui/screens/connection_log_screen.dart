@@ -30,6 +30,7 @@ class ConnectionLogScreen extends ConsumerWidget {
 
     return SubPage(
       title: l.logTitle,
+      desktopPage: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
