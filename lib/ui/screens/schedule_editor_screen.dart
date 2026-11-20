@@ -15,6 +15,7 @@ import '../../app/schedules.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../desktop/desktop_page.dart' show DesktopPageBody;
+import '../desktop/intake.dart' show EditorScope;
 import '../desktop/layers.dart' show showDesktopConfirm;
 import '../desktop/panes.dart' show KeyCap, PaneHeader;
 import '../format.dart';
@@ -418,7 +419,10 @@ class _ScheduleEditorScreenState extends ConsumerState<ScheduleEditorScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final missing = widget.scheduleId != null && _original == null;
-    if (DesktopLayout.of(context)) return _desktop(l, missing);
+    // the list's keys stay out of the editor (N515)
+    if (DesktopLayout.of(context)) {
+      return EditorScope(child: _desktop(l, missing));
+    }
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(

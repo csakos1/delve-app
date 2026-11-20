@@ -145,6 +145,24 @@ abstract final class DelveDesktop {
   static const double thinkingPill = 28;
   static const double composerBottom = 14;
 
+  // the dock panel (Components “Panes”, “Dock panel”, 27W-2i)
+  static const double dockMin = 160;
+  static const double dockDefault = 262;
+
+  /// The dock's highest, a share of the content pane's height.
+  static const double dockMaxShare = 0.6;
+  static const double dockTabRow = 34;
+  static const double dockHandleWidth = 36;
+  static const double dockHandleHeight = 4;
+  static const double dockIcon = 16;
+
+  /// JetBrains Mono 12.5 / 16 in the dock (13 / 17 in the Terminal area).
+  static const double dockFontSize = 12.5;
+  static const EdgeInsets dockPadding = EdgeInsets.symmetric(
+    vertical: 6,
+    horizontal: 10,
+  );
+
   // motion
   static const Duration hover = Duration(milliseconds: 100);
   static const Duration tooltipDelay = Duration(milliseconds: 500);

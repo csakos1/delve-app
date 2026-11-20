@@ -12,6 +12,7 @@ import '../../theme/delve_theme.dart';
 import 'areas.dart';
 import 'chat_inspector.dart';
 import 'desktop_page.dart';
+import 'dock.dart';
 import 'intake.dart';
 import 'panes.dart';
 import 'rail.dart';
@@ -59,6 +60,11 @@ class _RefreshIntent extends Intent {
   const _RefreshIntent();
 }
 
+/// Ctrl+` (the key under Esc): the dock panel (L2c4b).
+class _DockIntent extends Intent {
+  const _DockIntent();
+}
+
 /// Ctrl+R: the open page's refresh (L2c), where it has one.
 class _RefreshAction extends Action<_RefreshIntent> {
   _RefreshAction(this._slot);
@@ -84,7 +90,7 @@ class _ListKeyIntent extends Intent {
 }
 
 /// The list's keys: only outside text fields (they type there, and Ctrl+Z
-/// undoes typing).
+/// undoes typing), editors (N515) and the dock (the terminal's keys).
 class _ListKeyAction extends Action<_ListKeyIntent> {
   _ListKeyAction(this._slot);
 
@@ -92,7 +98,10 @@ class _ListKeyAction extends Action<_ListKeyIntent> {
 
   @override
   bool isEnabled(_ListKeyIntent intent) =>
-      _slot.current != null && !focusInTextField();
+      _slot.current != null &&
+      !focusInTextField() &&
+      !focusInEditor() &&
+      !focusInDock();
 
   @override
   Object? invoke(_ListKeyIntent intent) {
@@ -121,7 +130,8 @@ class _ChatKeyIntent extends Intent {
 }
 
 /// The open chat's keys: enabled only while a chat is open (Ctrl+V also
-/// not in a text field, which pastes its own way).
+/// not in a text field, which pastes its own way), and never while the
+/// focus is in the dock – there the keys are the terminal's (NL13).
 class _ChatKeyAction extends Action<_ChatKeyIntent> {
   _ChatKeyAction(this._slot);
 
@@ -130,6 +140,7 @@ class _ChatKeyAction extends Action<_ChatKeyIntent> {
   @override
   bool isEnabled(_ChatKeyIntent intent) =>
       _slot.current != null &&
+      !focusInDock() &&
       (intent.key != _ChatKey.paste || !focusInTextField());
 
   @override
@@ -157,8 +168,9 @@ class _ChatKeyAction extends Action<_ChatKeyIntent> {
 /// open overlay pane; Ctrl+F the list's search, Ctrl+U a chat's Usage,
 /// Ctrl+] the inspector's next tab, Ctrl+R the open page's refresh; in an
 /// open chat Ctrl+O attaches a file,
-/// Ctrl+V an image, Ctrl+. stops the run, Ctrl+T switches Thinking. No title
-/// bar: the compositor draws the window.
+/// Ctrl+V an image, Ctrl+. stops the run, Ctrl+T switches Thinking; Ctrl+`
+/// the dock (with Terminal on; in the Terminal area it sends the tab to the
+/// dock). No title bar: the compositor draws the window.
 class DesktopShell extends ConsumerWidget {
   const DesktopShell({super.key, required this.location, required this.child});
 
@@ -311,25 +323,41 @@ class DesktopShell extends ConsumerWidget {
               () => area != null && layouts.closeOverlays(area),
               () => area != null && _hasOverlay(ref, area, width()),
             ),
+            _DockIntent: CallbackAction<_DockIntent>(
+              onInvoke: (_) {
+                if (!ref.read(desktopToolsProvider)) return null;
+                if (area == DesktopArea.terminal.name) {
+                  dockTerminal(context, ref);
+                } else {
+                  ref.read(dockProvider.notifier).keyToggle();
+                }
+                return null;
+              },
+            ),
           },
-          child: Focus(
-            autofocus: true,
-            child: Material(
-              color: context.colors.surface,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        DesktopRail(location: location),
-                        Expanded(child: child),
-                      ],
+          // closer to the focus than the area keys: on a Hungarian layout
+          // the key under Esc is also Ctrl+0
+          child: Shortcuts(
+            shortcuts: const {DockKeyActivator(): _DockIntent()},
+            child: Focus(
+              autofocus: true,
+              child: Material(
+                color: context.colors.surface,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          DesktopRail(location: location),
+                          Expanded(child: child),
+                        ],
+                      ),
                     ),
-                  ),
-                  const DesktopStatusBar(),
-                ],
+                    const DesktopStatusBar(),
+                  ],
+                ),
               ),
             ),
           ),

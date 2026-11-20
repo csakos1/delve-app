@@ -309,6 +309,27 @@ bool focusInTextField() {
   return focus.findAncestorStateOfType<EditableTextState>() != null;
 }
 
+/// An editor in the content (the schedule editor, About me's section and
+/// file editors): its own focus point for Ctrl+S / Esc is not a text field,
+/// but the list's keys (J / K, E, Ctrl+Z) must not leave it – the edit
+/// would be lost (N515).
+class EditorScope extends StatelessWidget {
+  const EditorScope({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => child;
+}
+
+/// The focus is inside an [EditorScope].
+bool focusInEditor() {
+  final focus = FocusManager.instance.primaryFocus?.context;
+  if (focus == null) return false;
+  return focus.widget is EditorScope ||
+      focus.findAncestorWidgetOfExactType<EditorScope>() != null;
+}
+
 // --- drag and drop ------------------------------------------------------------
 
 /// Files dropped on a chat (design 27W-14g): while files are dragged over

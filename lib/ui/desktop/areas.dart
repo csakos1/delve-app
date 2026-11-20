@@ -98,11 +98,18 @@ enum DesktopArea {
 /// every location it shows; nothing listens.
 class DesktopPlaces {
   final Map<DesktopArea, String> _last = {};
+  String? _outsideTerminal;
 
   void remember(String location) {
     final area = DesktopArea.of(location);
-    if (area != null) _last[area] = location;
+    if (area == null) return;
+    _last[area] = location;
+    if (area != DesktopArea.terminal) _outsideTerminal = location;
   }
+
+  /// Where the Terminal area's `dock_to_bottom` goes: the place shown last
+  /// outside it (L2c4b).
+  String outsideTerminal() => _outsideTerminal ?? DesktopArea.chats.route;
 
   /// Where [area] opens from [location]: the place it was left; from inside
   /// it, its first page (Chats stays: the open chat is a selection, not a

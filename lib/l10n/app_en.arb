@@ -4338,5 +4338,10 @@
     }
   },
   "desktopApprovalWhy": "Why the agent asks",
-  "desktopApprovalGone": "This approval is not stored on this device any more."
+  "desktopApprovalGone": "This approval is not stored on this device any more.",
+  "desktopDockToBottom": "Move to the dock (Ctrl+`)",
+  "desktopDockOpenInFull": "Open in the Terminal area",
+  "desktopDockClose": "Close the dock (Ctrl+`)",
+  "desktopDockNotReady": "The terminal is set up in the Terminal area.",
+  "desktopDockOpenTerminal": "Open Terminal"
 }

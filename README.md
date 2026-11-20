@@ -501,6 +501,19 @@ the list column (New session first; a click opens or brings forward its tab, rig
 Rename and Kill), the tabs and the terminal the content – no extra keys row; the wheel scrolls
 (tmux's wheel steps, or the scrollback), a mouse drag selects cells, Ctrl+Shift+C copies and
 Ctrl+V pastes (xterm's own keys).
+The dock (`lib/ui/desktop/dock.dart`, with Terminal on): the same tabs under the content of any
+area – the list column and the inspector keep their height (pages without them, such as the
+Dashboard, are `DesktopPanes` with the content alone). Ctrl+` (the key under Esc, whatever the
+layout makes of it) opens it with the focus in it, takes the focus into it, and from inside
+closes it; Shift+Esc gives the focus back without closing (Esc stays the terminal's). A 34 px
+tab row (right-click: the tab's menu; `+`; “ssh host · tmux · cols × rows”; `open_in_full` to
+the Terminal area; close), the terminal at 12.5; the edge drags the height (160 – 60 % of the
+content, double-click 262), kept with the panes in `desktop.json`. The Terminal area's
+`dock_to_bottom` (and Ctrl+` there) sends the tab to the dock under the area left last. The
+connection, the scrollback and a selection are the `TerminalService`'s, so the dock under
+another area shows the tab as it was. While the focus is in the dock its keys are the
+terminal's: the chat's and the list's keys stand back; an editor in the content (a schedule,
+About me) keeps the list's J / K / E / Ctrl+Z out too (`EditorScope`).
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.

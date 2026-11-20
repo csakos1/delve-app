@@ -8966,6 +8966,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This approval is not stored on this device any more.'**
   String get desktopApprovalGone;
+
+  /// No description provided for @desktopDockToBottom.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to the dock (Ctrl+`)'**
+  String get desktopDockToBottom;
+
+  /// No description provided for @desktopDockOpenInFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in the Terminal area'**
+  String get desktopDockOpenInFull;
+
+  /// No description provided for @desktopDockClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close the dock (Ctrl+`)'**
+  String get desktopDockClose;
+
+  /// No description provided for @desktopDockNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'The terminal is set up in the Terminal area.'**
+  String get desktopDockNotReady;
+
+  /// No description provided for @desktopDockOpenTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Terminal'**
+  String get desktopDockOpenTerminal;
 }
 
 class _AppLocalizationsDelegate

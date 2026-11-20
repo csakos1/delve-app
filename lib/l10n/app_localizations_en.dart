@@ -5753,4 +5753,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get desktopApprovalGone =>
       'This approval is not stored on this device any more.';
+
+  @override
+  String get desktopDockToBottom => 'Move to the dock (Ctrl+`)';
+
+  @override
+  String get desktopDockOpenInFull => 'Open in the Terminal area';
+
+  @override
+  String get desktopDockClose => 'Close the dock (Ctrl+`)';
+
+  @override
+  String get desktopDockNotReady =>
+      'The terminal is set up in the Terminal area.';
+
+  @override
+  String get desktopDockOpenTerminal => 'Open Terminal';
 }

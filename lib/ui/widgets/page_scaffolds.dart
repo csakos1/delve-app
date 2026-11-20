@@ -432,4 +432,6 @@ abstract final class DelveIcons {
 
   /// A link that leaves the card (the approval's chat, desktop, L2c).
   static const IconData arrowOutward = Symbols.arrow_outward_rounded;
+  static const IconData dockToBottom = Symbols.dock_to_bottom_rounded;
+  static const IconData openInFull = Symbols.open_in_full_rounded;
 }

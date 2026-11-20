@@ -20,6 +20,7 @@ import '../../terminal/terminal_tabs.dart';
 import '../../terminal/terminal_theme.dart';
 import '../../terminal/terminal_trace.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/dock.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import '../widgets/terminal_scroll.dart';
@@ -29,9 +30,14 @@ import '../widgets/terminal_ui.dart';
 
 /// 22 Terminal tab: setup (22d/22e), the tabs – each a tmux session – with
 /// the state line (22a, 22c), the sessions sheet (22g), the biometric lock
-/// (22f).
+/// (22f). [dock]: the desktop's dock panel (27W-2i, L2c4b) – the same tabs
+/// under another area's content: a 34 px tab row, the terminal at 12.5,
+/// no autofocus (it takes the focus on Ctrl+` or a click), and setup or
+/// the lock only as a line that leads to the Terminal area.
 class TerminalScreen extends ConsumerStatefulWidget {
-  const TerminalScreen({super.key});
+  const TerminalScreen({super.key, this.dock = false});
+
+  final bool dock;
 
   @override
   ConsumerState<TerminalScreen> createState() => _TerminalScreenState();
@@ -89,11 +95,39 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
   /// Where the long press that started the selection went down.
   Offset? _pressAt;
 
+  /// The dock's controller (only in the dock).
+  DockController? _dock;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     unawaited(_service.start());
+    if (widget.dock) {
+      final dock = ref.read(dockProvider.notifier);
+      _dock = dock;
+      dock.focusRequests.addListener(_dockFocus);
+      // opened by Ctrl+` (or dock_to_bottom): the focus comes in now
+      if (dock.takeFocusRequest()) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _showKeyboard());
+      }
+    }
+  }
+
+  void _dockFocus() {
+    if (_dock?.takeFocusRequest() ?? false) _showKeyboard();
+  }
+
+  /// In the dock, Shift+Esc gives the focus back to the pane above (the
+  /// dock stays open); Esc itself is the terminal's (vim, less).
+  KeyEventResult _dockKey(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.escape &&
+        HardwareKeyboard.instance.isShiftPressed) {
+      _dock?.returnFocus();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
   }
 
   @override
@@ -145,6 +179,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
 
   @override
   void dispose() {
+    _dock?.focusRequests.removeListener(_dockFocus);
     WidgetsBinding.instance.removeObserver(this);
     _chipTimer?.cancel();
     _settle?.cancel();
@@ -455,10 +490,19 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
           });
           final setupDone =
               service.config.verified || c?.phase == TermPhase.live;
-          if (c != null &&
+          final setup =
+              c != null &&
               (!setupDone ||
                   c.phase == TermPhase.denied ||
-                  c.phase == TermPhase.verifying)) {
+                  c.phase == TermPhase.verifying);
+          if (widget.dock) {
+            // setup and the lock live in the Terminal area
+            if (setup || service.lock.locked) {
+              return DockNotReady(onOpen: () => undockTerminal(context, ref));
+            }
+            return _dockSession(service);
+          }
+          if (setup) {
             return _Setup(service: service);
           }
           if (service.lock.locked) {
@@ -496,9 +540,63 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
         icon: const SymbolIcon(DelveIcons.add, size: 22),
         onPressed: _newTab,
       ),
+      // the desktop's Terminal area: the tab goes to the dock (L2c4b)
+      if (DesktopLayout.of(context))
+        IconButton(
+          key: const Key('terminal.dock'),
+          tooltip: AppLocalizations.of(context).desktopDockToBottom,
+          icon: const SymbolIcon(DelveIcons.dockToBottom, size: 22),
+          onPressed: () => dockTerminal(context, ref),
+        ),
       _Menu(service: service, onSessions: _sessions),
     ],
   );
+
+  /// The dock (27W-2i): its tab row, the state line while not connected,
+  /// the terminal at 12.5 with 6 / 10 padding.
+  Widget _dockSession(TerminalService service) {
+    final tab = service.current;
+    final c = tab?.connection;
+    void focusSoon() =>
+        WidgetsBinding.instance.addPostFrameCallback((_) => _showKeyboard());
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DockTabRow(
+          service: service,
+          onSelect: (i) {
+            service.select(i);
+            focusSoon();
+          },
+          onNew: () => unawaited(service.newTab().then((_) => focusSoon())),
+          onOpenInFull: () => undockTerminal(context, ref),
+          onClose: () => ref.read(dockProvider.notifier).hide(),
+        ),
+        if (tab == null || c == null)
+          Expanded(
+            child: _NoTabs(
+              onNew: () => unawaited(service.newTab().then((_) => focusSoon())),
+              onSessions: _sessions,
+            ),
+          )
+        else ...[
+          TerminalStateLine(connection: c),
+          Expanded(
+            child: ColoredBox(
+              key: const Key('dock.body'),
+              color: delveTerminalTheme.background,
+              child: c.phase == TermPhase.refused
+                  ? HostKeyChangedPanel(connection: c)
+                  : KeyedSubtree(
+                      key: ValueKey('dock.view.${tab.id}'),
+                      child: _view(service, tab),
+                    ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 
   Widget _session(BuildContext context, TerminalService service) {
     final tab = service.current;
@@ -617,6 +715,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
     final c = tab.connection;
     final v = _viewOf(tab);
     final desktop = DesktopLayout.of(context);
+    final dock = widget.dock;
+    final fontSize = dock ? DelveDesktop.dockFontSize : service.fontSize;
     return ColoredBox(
       color: delveTerminalTheme.background,
       child: AnimatedOpacity(
@@ -634,8 +734,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
                 onTap: _tap,
                 onLongPressStart: _selectStart,
                 onLongPressMove: _selectMove,
-                fontSize: service.fontSize,
-                onFontSize: _pinchFont,
+                fontSize: fontSize,
+                // the dock keeps its own size (Settings → Terminal is the
+                // Terminal area's)
+                onFontSize: dock ? null : _pinchFont,
                 mouse: desktop,
                 onDragSelectStart: _dragStart,
                 onDragSelectMove: _dragMove,
@@ -649,9 +751,14 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
                     focusNode: _focus,
                     scrollController: v.scroll,
                     theme: delveTerminalViewTheme,
-                    textStyle: delveTerminalStyle(service.fontSize),
-                    padding: const EdgeInsets.all(DelveTokens.terminalPadding),
-                    autofocus: true,
+                    textStyle: delveTerminalStyle(fontSize),
+                    padding: dock
+                        ? DelveDesktop.dockPadding
+                        : const EdgeInsets.all(DelveTokens.terminalPadding),
+                    // the dock is built under every area: it must not take
+                    // the focus from the page (Ctrl+` or a click does)
+                    autofocus: !dock,
+                    onKeyEvent: dock ? _dockKey : null,
                     deleteDetection: true,
                     // the scroll layer sends the wheel (xterm's own report
                     // is Shift+wheel, and arrow keys would page the shell
@@ -669,7 +776,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
                 onCopy: () => unawaited(_copySelection()),
                 onSendToChat: _sendSelection,
                 onPaste: () => unawaited(_pasteClipboard()),
-                textStyle: delveTerminalStyle(service.fontSize),
+                textStyle: delveTerminalStyle(fontSize),
                 focusNode: _focus,
               ),
             ),

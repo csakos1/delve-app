@@ -11,6 +11,7 @@ import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
 import 'desktop_prefs.dart';
+import 'dock.dart';
 
 /// One area's panes as the reader left them: the widths and whether the
 /// list and the inspector are open. Docked panes keep this; the overlays of
@@ -241,7 +242,10 @@ class PaneScope extends InheritedWidget {
 /// (design 27). The content is never narrower than 600: the list narrows
 /// first (to 240), below 1232 the inspector is an overlay, below 900 the
 /// list too. Docked panes are resizable at their edge (double-click: the
-/// default width); the widths are kept per [area].
+/// default width); the widths are kept per [area]. The dock panel opens
+/// under the content ([DockedContent]); a page without a list or an
+/// inspector (Dashboard, System …) is a [DesktopPanes] with its content
+/// alone, so that the dock has one place in every area.
 class DesktopPanes extends ConsumerWidget {
   const DesktopPanes({
     super.key,
@@ -290,7 +294,13 @@ class DesktopPanes extends ConsumerWidget {
               const Key('pane.list'),
             ),
           ),
-        Expanded(child: pane(content, cs.surface, const Key('pane.content'))),
+        // the dock (Terminal) goes under the content only (L2c4b)
+        Expanded(
+          child: DockedContent(
+            area: area,
+            child: pane(content, cs.surface, const Key('pane.content')),
+          ),
+        ),
         if (at.inspectorDocked)
           SizedBox(
             width: at.inspectorWidth,

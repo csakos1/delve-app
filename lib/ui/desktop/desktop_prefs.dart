@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'dock.dart';
 import 'panes.dart';
 
 /// Where the desktop's own settings live (decision 1142 of the L plan): one
@@ -96,7 +97,7 @@ class DesktopPrefs {
   final bool loaded;
 
   /// Keep each area's list and inspector widths, and whether they are open,
-  /// across starts.
+  /// and the dock's height and whether it is open, across starts.
   final bool rememberPanes;
 
   /// An area's inspector starts open.
@@ -152,6 +153,9 @@ Map<String, PaneLayout> panesFromJson(Object? json) {
 class DesktopPrefsController extends Notifier<DesktopPrefs> {
   /// The panes the file keeps (empty while Remember pane widths is off).
   Map<String, PaneLayout> _panes = const {};
+
+  /// The dock's height and open / closed, kept with the panes (L2c4b).
+  DockState? _dock;
   bool _writing = false;
   bool _dirty = false;
 
@@ -183,12 +187,18 @@ class DesktopPrefsController extends Notifier<DesktopPrefs> {
     if (prefs.rememberPanes) {
       _panes = panesFromJson(json['panes']);
       ref.read(paneLayoutsProvider.notifier).restore(_panes);
+      final dock = dockFromJson(json['dock']);
+      if (dock != null) {
+        _dock = dock;
+        ref.read(dockProvider.notifier).restore(dock);
+      }
     }
   }
 
   void setRememberPanes({required bool on}) {
     state = state.copyWith(rememberPanes: on);
     _panes = on ? ref.read(paneLayoutsProvider) : const {};
+    _dock = on ? ref.read(dockProvider) : null;
     _save();
   }
 
@@ -212,11 +222,19 @@ class DesktopPrefsController extends Notifier<DesktopPrefs> {
     _save();
   }
 
+  /// The dock changed: kept like the panes.
+  void dockChanged(DockState dock) {
+    if (!state.loaded || !state.rememberPanes) return;
+    _dock = dock;
+    _save();
+  }
+
   Map<String, Object?> _json() => {
     'remember_panes': state.rememberPanes,
     'inspector_by_default': state.inspectorByDefault,
     'text_scale': state.textScale.name,
     if (state.rememberPanes) 'panes': panesToJson(_panes),
+    if (state.rememberPanes && _dock != null) 'dock': dockToJson(_dock!),
   };
 
   /// One write at a time; changes while it runs (a drag) are written once

@@ -22,6 +22,7 @@ import 'package:delve/ui/desktop/desktop_page.dart';
 import 'package:delve/ui/desktop/desktop_prefs.dart';
 import 'package:delve/ui/desktop/desktop_row.dart' show DesktopRowFrame;
 import 'package:delve/ui/desktop/desktop_shell.dart';
+import 'package:delve/ui/desktop/dock.dart';
 import 'package:delve/ui/desktop/intake.dart';
 import 'package:delve/ui/desktop/list_area.dart' show SectionRow;
 import 'package:delve/ui/desktop/news_area.dart';
@@ -2330,6 +2331,216 @@ void main() {
     });
   });
 
+  group('The dock (L2c4b)', () {
+    Future<void> frames(WidgetTester t, [int n = 10]) async {
+      for (var i = 0; i < n; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+    }
+
+    /// The desktop on the Dashboard; Terminal set up and ([tools]) on.
+    Future<TestEnv> desktop(
+      WidgetTester t, {
+      bool tools = true,
+      String? file,
+    }) async {
+      final fakes = TerminalFakes();
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        settle: false,
+        terminal: fakes,
+        before: (env) async {
+          await fakes.setUpDone();
+          if (tools) await fakes.store.write(kDesktopToolsKey, '1');
+          env.desktopPrefs.text = file;
+        },
+      );
+      await frames(t);
+      await _ctrlNow(t, LogicalKeyboardKey.digit4);
+      await frames(t, 20);
+      return env;
+    }
+
+    /// Ctrl and the key under Esc ([logical]: what the layout makes of it).
+    Future<void> dockKey(
+      WidgetTester t, {
+      LogicalKeyboardKey logical = LogicalKeyboardKey.backquote,
+    }) async {
+      await t.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await t.sendKeyEvent(logical, physicalKey: PhysicalKeyboardKey.backquote);
+      await t.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await frames(t, 20);
+    }
+
+    Future<void> shiftEsc(WidgetTester t) async {
+      await t.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await frames(t, 5);
+    }
+
+    ProviderContainer container(WidgetTester t) =>
+        ProviderScope.containerOf(t.element(find.byType(DesktopShell)));
+
+    double height(WidgetTester t, String key) =>
+        t.getSize(find.byKey(Key(key))).height;
+
+    test('the dock as the file keeps it', () {
+      const dock = DockState(open: true, height: 300);
+      expect(dockFromJson(jsonDecode(jsonEncode(dockToJson(dock)))), dock);
+      expect(dockFromJson({'open': true, 'height': 20})!.height, 160);
+      expect(dockFromJson('broken'), isNull);
+    });
+
+    testWidgets('Ctrl+` opens the dock under the content, with the focus in '
+        'it; the list column keeps its height', (t) async {
+      await desktop(t);
+      expect(find.byType(TerminalDock), findsNothing);
+      await dockKey(t);
+      expect(find.byType(TerminalDock), findsOneWidget);
+      expect(find.byType(DashboardScreen), findsOneWidget);
+      expect(height(t, 'dock'), DelveDesktop.dockDefault);
+      expect(find.byKey(const Key('dock.tabs')), findsOneWidget);
+      expect(height(t, 'dock.tabs'), DelveDesktop.dockTabRow);
+      expect(find.byKey(const ValueKey('dock.tab.delve-1')), findsOneWidget);
+      expect(focusInDock(), isTrue);
+
+      // another area: the dock stays, under the content only
+      await _ctrlNow(t, LogicalKeyboardKey.digit2);
+      await frames(t, 20);
+      expect(find.byType(TerminalDock), findsOneWidget);
+      expect(
+        height(t, 'pane.list'),
+        height(t, 'pane.content') + DelveDesktop.dockDefault,
+      );
+    });
+
+    testWidgets('without Terminal there is no dock: Ctrl+` does nothing', (
+      t,
+    ) async {
+      // not even one the file kept open
+      await desktop(t, tools: false, file: '{"dock": {"open": true}}');
+      expect(find.byType(TerminalDock), findsNothing);
+      await dockKey(t);
+      expect(find.byType(TerminalDock), findsNothing);
+      expect(find.byType(DashboardScreen), findsOneWidget);
+    });
+
+    testWidgets('the key under Esc on a Hungarian layout (0) is the dock, '
+        'not Files', (t) async {
+      await desktop(t);
+      await dockKey(t, logical: LogicalKeyboardKey.digit0);
+      expect(find.byType(TerminalDock), findsOneWidget);
+      expect(find.byType(DashboardScreen), findsOneWidget);
+    });
+
+    testWidgets('Shift+Esc gives the focus back and the dock stays; Ctrl+` '
+        'takes it again, and from the dock closes it', (t) async {
+      await desktop(t);
+      await dockKey(t);
+      expect(focusInDock(), isTrue);
+      await shiftEsc(t);
+      expect(focusInDock(), isFalse);
+      expect(find.byType(TerminalDock), findsOneWidget);
+      await dockKey(t);
+      expect(focusInDock(), isTrue);
+      expect(find.byType(TerminalDock), findsOneWidget);
+      await dockKey(t);
+      expect(find.byType(TerminalDock), findsNothing);
+      expect(focusInDock(), isFalse);
+    });
+
+    testWidgets('the edge drags the height; it is kept in desktop.json and '
+        'the dock opens again as it was', (t) async {
+      final env = await desktop(t);
+      await dockKey(t);
+      await t.drag(find.byKey(const Key('dock.handle')), const Offset(0, -100));
+      await frames(t);
+      expect(height(t, 'dock'), closeTo(DelveDesktop.dockDefault + 100, 1));
+      // never above 60 % of the content
+      await t.drag(find.byKey(const Key('dock.handle')), const Offset(0, -800));
+      await frames(t);
+      final whole = height(t, 'pane.content') + height(t, 'dock');
+      expect(height(t, 'dock'), closeTo(whole * DelveDesktop.dockMaxShare, 1));
+      final kept =
+          (jsonDecode(env.desktopPrefs.text!) as Map<String, Object?>)['dock']
+              as Map<String, Object?>?;
+      expect(kept?['open'], isTrue);
+      expect(kept?['height'], greaterThan(DelveDesktop.dockDefault));
+    });
+
+    testWidgets('a dock the file kept open shows at start', (t) async {
+      await desktop(t, file: '{"dock": {"open": true, "height": 300}}');
+      expect(find.byType(TerminalDock), findsOneWidget);
+      expect(height(t, 'dock'), 300);
+      // it does not take the focus from the page
+      expect(focusInDock(), isFalse);
+    });
+
+    testWidgets('the same tab under every area: the connection stays '
+        '(N450)', (t) async {
+      await desktop(t);
+      await dockKey(t);
+      final service = container(t).read(terminalServiceProvider);
+      final tab = service.current!;
+      expect(tab.connection.live, isTrue);
+      await _ctrlNow(t, LogicalKeyboardKey.digit5);
+      await frames(t, 20);
+      await _ctrlNow(t, LogicalKeyboardKey.digit2);
+      await frames(t, 20);
+      expect(find.byType(TerminalDock), findsOneWidget);
+      expect(service.current, same(tab));
+      expect(tab.connection.live, isTrue);
+    });
+
+    testWidgets('dock_to_bottom in the Terminal area sends the tab under the '
+        'area left last; open_in_full brings it back', (t) async {
+      await desktop(t);
+      await _ctrlNow(t, LogicalKeyboardKey.digit9);
+      await frames(t, 20);
+      expect(find.byType(TerminalArea), findsOneWidget);
+      expect(find.byType(TerminalDock), findsNothing);
+      await t.tap(find.byKey(const Key('terminal.dock')));
+      await frames(t, 20);
+      expect(find.byType(DashboardScreen), findsOneWidget);
+      expect(find.byType(TerminalDock), findsOneWidget);
+      expect(focusInDock(), isTrue);
+
+      await t.tap(find.byKey(const Key('dock.openInFull')));
+      await frames(t, 20);
+      expect(find.byType(TerminalArea), findsOneWidget);
+      expect(find.byType(TerminalDock), findsNothing);
+      expect(container(t).read(dockProvider).open, isFalse);
+    });
+
+    testWidgets('Ctrl+` in the Terminal area sends the tab to the dock', (
+      t,
+    ) async {
+      await desktop(t);
+      await _ctrlNow(t, LogicalKeyboardKey.digit9);
+      await frames(t, 20);
+      await dockKey(t);
+      expect(find.byType(TerminalArea), findsNothing);
+      expect(find.byType(DashboardScreen), findsOneWidget);
+      expect(find.byType(TerminalDock), findsOneWidget);
+    });
+
+    testWidgets("close hides the dock; its tab's session keeps running", (
+      t,
+    ) async {
+      await desktop(t);
+      await dockKey(t);
+      final service = container(t).read(terminalServiceProvider);
+      final tabs = service.tabs.length;
+      await t.tap(find.byKey(const Key('dock.close')));
+      await frames(t);
+      expect(find.byType(TerminalDock), findsNothing);
+      expect(service.tabs.length, tabs);
+    });
+  });
+
   group('Schedules on the desktop (L2c2b2)', () {
     final briefId = FakeServer.sample('schedule')['id']! as String;
     final promptId = FakeServer.sample('schedule_prompt')['id']! as String;
@@ -2503,6 +2714,19 @@ void main() {
       await t.tap(find.byKey(const Key('schedule.cancel')));
       await t.pumpAndSettle();
       expect(find.byKey(const Key('schedules.placeholder')), findsOneWidget);
+    });
+
+    testWidgets('J in the editor does not leave it (N515)', (t) async {
+      await schedules(t);
+      await openPrompt(t);
+      await t.tap(find.byKey(const Key('schedule.page.edit')));
+      await t.pumpAndSettle();
+      expect(focusInEditor(), isTrue);
+      await t.sendKeyEvent(LogicalKeyboardKey.keyJ);
+      await t.sendKeyEvent(LogicalKeyboardKey.keyK);
+      await t.pumpAndSettle();
+      expect(find.byType(ScheduleEditorScreen), findsOneWidget);
+      expect(find.byKey(ValueKey('schedule.page.$briefId')), findsNothing);
     });
 
     testWidgets('J / K step through the schedules', (t) async {

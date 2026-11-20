@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 
 import '../ui/desktop/about_area.dart';
 import '../ui/desktop/approvals_area.dart';
+import '../ui/desktop/areas.dart';
 import '../ui/desktop/chats_area.dart';
 import '../ui/desktop/desktop_shell.dart';
 import '../ui/desktop/news_area.dart';
+import '../ui/desktop/panes.dart';
 import '../ui/desktop/schedules_area.dart';
 import '../ui/desktop/settings_area.dart';
 import '../ui/desktop/terminal_area.dart';
@@ -45,6 +47,11 @@ import 'session.dart';
 /// The page of an area's first screen: no transition (the rail switches).
 Page<void> _flat(GoRouterState state, Widget child) =>
     NoTransitionPage<void>(key: state.pageKey, child: child);
+
+/// A page without a list column or an inspector (Dashboard, System …) in
+/// the panes of [area] all the same: the dock (L2c4b) opens under it.
+Widget _alone(String area, Widget page) =>
+    DesktopPanes(area: area, content: page);
 
 /// The desktop layout's router (L2a): the phone's paths ([Routes]), placed
 /// in the desktop shell instead of the bottom navigation. Each area's first
@@ -205,7 +212,10 @@ GoRouter buildDesktopRouter({
           ),
           GoRoute(
             path: Routes.dashboard,
-            pageBuilder: (_, state) => _flat(state, const DashboardScreen()),
+            pageBuilder: (_, state) => _flat(
+              state,
+              _alone(DesktopArea.dashboard.name, const DashboardScreen()),
+            ),
           ),
           ShellRoute(
             navigatorKey: terminalKey,
@@ -222,16 +232,25 @@ GoRouter buildDesktopRouter({
           ),
           GoRoute(
             path: Routes.files,
-            pageBuilder: (_, state) => _flat(state, const FilesScreen()),
+            pageBuilder: (_, state) => _flat(
+              state,
+              _alone(DesktopArea.files.name, const FilesScreen()),
+            ),
             routes: [
               GoRoute(
                 path: 'preview',
                 redirect: (_, state) =>
                     previewArgsOf(state.extra) == null ? Routes.files : null,
-                builder: (_, state) =>
-                    FilePreviewScreen(args: previewArgsOf(state.extra)!),
+                builder: (_, state) => _alone(
+                  DesktopArea.files.name,
+                  FilePreviewScreen(args: previewArgsOf(state.extra)!),
+                ),
               ),
-              GoRoute(path: 'trash', builder: (_, _) => const TrashScreen()),
+              GoRoute(
+                path: 'trash',
+                builder: (_, _) =>
+                    _alone(DesktopArea.files.name, const TrashScreen()),
+              ),
             ],
           ),
           // News settings: the sections in the list column (L2c2)
@@ -436,7 +455,13 @@ GoRouter buildDesktopRouter({
             else
               GoRoute(
                 path: page.route,
-                pageBuilder: (_, state) => _flat(state, morePage(page, state)),
+                pageBuilder: (_, state) => _flat(
+                  state,
+                  _alone(
+                    DesktopArea.of(page.route)?.name ?? page.name,
+                    morePage(page, state),
+                  ),
+                ),
               ),
           // after the pages under it: More itself is the phone's
           GoRoute(path: Routes.more, redirect: (_, _) => Routes.dashboard),

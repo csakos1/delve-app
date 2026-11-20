@@ -11,6 +11,7 @@ import '../../l10n/app_localizations.dart';
 import '../../persona/persona_controller.dart';
 import '../../theme/delve_theme.dart';
 import '../desktop/desktop_page.dart' show DesktopPage, DesktopPageBody;
+import '../desktop/intake.dart' show EditorScope;
 import '../desktop/layers.dart' show showDesktopConfirm;
 import '../desktop/list_area.dart' show SectionRow;
 import '../desktop/panes.dart' show KeyCap, PaneHeader;
@@ -976,7 +977,8 @@ class _EditorPageState extends State<_EditorPage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     if (widget.onDone != null && DesktopLayout.of(context)) {
-      return _desktop(l);
+      // the list's keys stay out of the editor (N515)
+      return EditorScope(child: _desktop(l));
     }
     return Scaffold(
       appBar: AppBar(
