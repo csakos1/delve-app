@@ -4103,6 +4103,99 @@
   },
   "desktopKeySettings": "Ctrl+,",
   "desktopKeyNewChat": "Ctrl+N",
+  "railSearch": "Search",
+  "paletteHint": "Search chats, news, pages and actions",
+  "paletteNow": "Now",
+  "paletteGoTo": "Go to",
+  "paletteRecent": "Recent chats",
+  "paletteChats": "Chats",
+  "palettePages": "Pages",
+  "paletteActions": "Actions",
+  "paletteArchived": "Archived",
+  "paletteNewAgent": "New Agent chat",
+  "paletteNewGeneral": "New General chat",
+  "paletteRefresh": "Refresh this page",
+  "paletteMove": "Move",
+  "paletteOpen": "Open",
+  "shortcutsTitle": "Keyboard shortcuts",
+  "shortcutsGo": "Go to",
+  "shortcutsPalette": "Command palette",
+  "shortcutsSheet": "This list",
+  "shortcutsPanes": "Panes and lists",
+  "shortcutsList": "Show or hide the list column",
+  "shortcutsInspector": "Show or hide the inspector",
+  "shortcutsNextTab": "Next inspector tab",
+  "shortcutsUsage": "Usage of the open chat",
+  "shortcutsFind": "Search the list or the chat",
+  "shortcutsRefresh": "Refresh",
+  "shortcutsRows": "Next / previous row",
+  "shortcutsArchive": "Archive the open chat",
+  "shortcutsUndo": "Undo the archive",
+  "shortcutsOverlay": "Close an overlay pane",
+  "shortcutsDock": "Terminal dock",
+  "shortcutsDockToggle": "Open the dock, focus it, close it",
+  "shortcutsDockBack": "Give the focus back",
+  "shortcutsChat": "Chat",
+  "shortcutsSend": "Send",
+  "shortcutsNewLine": "New line",
+  "shortcutsAttach": "Attach a file",
+  "shortcutsPasteImage": "Paste an image or files",
+  "shortcutsStop": "Stop the run",
+  "shortcutsThinking": "Thinking on / off",
+  "shortcutsApprovals": "Approvals",
+  "shortcutsAllow": "Allow once (a focused approval)",
+  "shortcutsDeny": "Deny (a focused approval)",
+  "shortcutsEditors": "Editors",
+  "shortcutsSave": "Save",
+  "shortcutsCancel": "Cancel",
+  "shortcutsOpen": "Open",
+  "shortcutsFolderUp": "Up a folder",
+  "shortcutsSelectAll": "Select all",
+  "shortcutsClip": "Copy · cut · paste",
+  "shortcutsRename": "Rename",
+  "shortcutsTrash": "Move to the trash",
+  "shortcutsDelete": "Delete permanently",
+  "shortcutsUpload": "Upload",
+  "paletteEmpty": "Nothing matches “{query}”",
+  "@paletteEmpty": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "paletteRun": "Running {time}",
+  "@paletteRun": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "paletteApprovalWaits": "Agent waits {time}",
+  "@paletteApprovalWaits": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "paletteApprovalLate": "Approvable until {time}",
+  "@paletteApprovalLate": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "paletteSettingsPage": "Settings · {section}",
+  "@paletteSettingsPage": {
+    "placeholders": {
+      "section": {
+        "type": "String"
+      }
+    }
+  },
   "desktopInspectorToggle": "Inspector (Ctrl+I)",
   "desktopInspectorClose": "Close the inspector",
   "desktopChatsEmpty": "No chat open",

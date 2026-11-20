@@ -514,6 +514,16 @@ connection, the scrollback and a selection are the `TerminalService`'s, so the d
 another area shows the tab as it was. While the focus is in the dock its keys are the
 terminal's: the chat's and the list's keys stand back; an editor in the content (a schedule,
 About me) keeps the list's J / K / E / Ctrl+Z out too (`EditorScope`).
+The layers (`palette.dart`, `shortcut_sheet.dart`): Ctrl+K (or the rail's Search) opens the
+command palette – 660 wide, 84 from the top, on the scrim. Empty it lists Now (the approvals
+that can be answered and the live runs – an approval is opened from here, never answered),
+Go to (every area, as it was left), Recent chats and Actions; typing (accents ignored, the
+words marked) gives Now · Chats (archived too) · News (the stories the app holds) · Pages
+(the areas, the Settings sections, News settings, Archived, the connection log) · Actions.
+↑ / ↓ move, Enter runs, Esc or Ctrl+K closes. ? (outside text fields, editors and terminals)
+opens the shortcut sheet: three columns of the keys that work now (`shortcutColumns`;
+Terminal and Files only with the tools on). The rail's tooltips open 8 px to its right after
+500 ms, with the key in a key cap (`RailTooltip`).
 Files (`lib/ui/desktop/files_area.dart`, with Files on): Home, Downloads, Documents, the file
 system and the trash in the list column, the transfers at its foot; the folder as a table in the
 content (breadcrumb header with Upload, New folder, refresh and the menu; Name · Size · Modified,

@@ -8397,6 +8397,354 @@ abstract class AppLocalizations {
   /// **'Ctrl+N'**
   String get desktopKeyNewChat;
 
+  /// No description provided for @railSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get railSearch;
+
+  /// No description provided for @paletteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search chats, news, pages and actions'**
+  String get paletteHint;
+
+  /// No description provided for @paletteNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get paletteNow;
+
+  /// No description provided for @paletteGoTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to'**
+  String get paletteGoTo;
+
+  /// No description provided for @paletteRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent chats'**
+  String get paletteRecent;
+
+  /// No description provided for @paletteChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get paletteChats;
+
+  /// No description provided for @palettePages.
+  ///
+  /// In en, this message translates to:
+  /// **'Pages'**
+  String get palettePages;
+
+  /// No description provided for @paletteActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get paletteActions;
+
+  /// No description provided for @paletteArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get paletteArchived;
+
+  /// No description provided for @paletteNewAgent.
+  ///
+  /// In en, this message translates to:
+  /// **'New Agent chat'**
+  String get paletteNewAgent;
+
+  /// No description provided for @paletteNewGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'New General chat'**
+  String get paletteNewGeneral;
+
+  /// No description provided for @paletteRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh this page'**
+  String get paletteRefresh;
+
+  /// No description provided for @paletteMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get paletteMove;
+
+  /// No description provided for @paletteOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get paletteOpen;
+
+  /// No description provided for @shortcutsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts'**
+  String get shortcutsTitle;
+
+  /// No description provided for @shortcutsGo.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to'**
+  String get shortcutsGo;
+
+  /// No description provided for @shortcutsPalette.
+  ///
+  /// In en, this message translates to:
+  /// **'Command palette'**
+  String get shortcutsPalette;
+
+  /// No description provided for @shortcutsSheet.
+  ///
+  /// In en, this message translates to:
+  /// **'This list'**
+  String get shortcutsSheet;
+
+  /// No description provided for @shortcutsPanes.
+  ///
+  /// In en, this message translates to:
+  /// **'Panes and lists'**
+  String get shortcutsPanes;
+
+  /// No description provided for @shortcutsList.
+  ///
+  /// In en, this message translates to:
+  /// **'Show or hide the list column'**
+  String get shortcutsList;
+
+  /// No description provided for @shortcutsInspector.
+  ///
+  /// In en, this message translates to:
+  /// **'Show or hide the inspector'**
+  String get shortcutsInspector;
+
+  /// No description provided for @shortcutsNextTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Next inspector tab'**
+  String get shortcutsNextTab;
+
+  /// No description provided for @shortcutsUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage of the open chat'**
+  String get shortcutsUsage;
+
+  /// No description provided for @shortcutsFind.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the list or the chat'**
+  String get shortcutsFind;
+
+  /// No description provided for @shortcutsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get shortcutsRefresh;
+
+  /// No description provided for @shortcutsRows.
+  ///
+  /// In en, this message translates to:
+  /// **'Next / previous row'**
+  String get shortcutsRows;
+
+  /// No description provided for @shortcutsArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive the open chat'**
+  String get shortcutsArchive;
+
+  /// No description provided for @shortcutsUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo the archive'**
+  String get shortcutsUndo;
+
+  /// No description provided for @shortcutsOverlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Close an overlay pane'**
+  String get shortcutsOverlay;
+
+  /// No description provided for @shortcutsDock.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal dock'**
+  String get shortcutsDock;
+
+  /// No description provided for @shortcutsDockToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the dock, focus it, close it'**
+  String get shortcutsDockToggle;
+
+  /// No description provided for @shortcutsDockBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the focus back'**
+  String get shortcutsDockBack;
+
+  /// No description provided for @shortcutsChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get shortcutsChat;
+
+  /// No description provided for @shortcutsSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get shortcutsSend;
+
+  /// No description provided for @shortcutsNewLine.
+  ///
+  /// In en, this message translates to:
+  /// **'New line'**
+  String get shortcutsNewLine;
+
+  /// No description provided for @shortcutsAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach a file'**
+  String get shortcutsAttach;
+
+  /// No description provided for @shortcutsPasteImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste an image or files'**
+  String get shortcutsPasteImage;
+
+  /// No description provided for @shortcutsStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the run'**
+  String get shortcutsStop;
+
+  /// No description provided for @shortcutsThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking on / off'**
+  String get shortcutsThinking;
+
+  /// No description provided for @shortcutsApprovals.
+  ///
+  /// In en, this message translates to:
+  /// **'Approvals'**
+  String get shortcutsApprovals;
+
+  /// No description provided for @shortcutsAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow once (a focused approval)'**
+  String get shortcutsAllow;
+
+  /// No description provided for @shortcutsDeny.
+  ///
+  /// In en, this message translates to:
+  /// **'Deny (a focused approval)'**
+  String get shortcutsDeny;
+
+  /// No description provided for @shortcutsEditors.
+  ///
+  /// In en, this message translates to:
+  /// **'Editors'**
+  String get shortcutsEditors;
+
+  /// No description provided for @shortcutsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get shortcutsSave;
+
+  /// No description provided for @shortcutsCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get shortcutsCancel;
+
+  /// No description provided for @shortcutsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get shortcutsOpen;
+
+  /// No description provided for @shortcutsFolderUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Up a folder'**
+  String get shortcutsFolderUp;
+
+  /// No description provided for @shortcutsSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get shortcutsSelectAll;
+
+  /// No description provided for @shortcutsClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy · cut · paste'**
+  String get shortcutsClip;
+
+  /// No description provided for @shortcutsRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get shortcutsRename;
+
+  /// No description provided for @shortcutsTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to the trash'**
+  String get shortcutsTrash;
+
+  /// No description provided for @shortcutsDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently'**
+  String get shortcutsDelete;
+
+  /// No description provided for @shortcutsUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get shortcutsUpload;
+
+  /// No description provided for @paletteEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches “{query}”'**
+  String paletteEmpty(String query);
+
+  /// No description provided for @paletteRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Running {time}'**
+  String paletteRun(String time);
+
+  /// No description provided for @paletteApprovalWaits.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent waits {time}'**
+  String paletteApprovalWaits(String time);
+
+  /// No description provided for @paletteApprovalLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Approvable until {time}'**
+  String paletteApprovalLate(String time);
+
+  /// No description provided for @paletteSettingsPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings · {section}'**
+  String paletteSettingsPage(String section);
+
   /// No description provided for @desktopInspectorToggle.
   ///
   /// In en, this message translates to:

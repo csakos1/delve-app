@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:xterm/xterm.dart' show TerminalView;
 
 import '../../app/layout.dart';
 import '../../app/platform.dart';
@@ -15,8 +16,10 @@ import 'desktop_page.dart';
 import 'dock.dart';
 import 'files_area.dart' show fileInspectorTabProvider;
 import 'intake.dart';
+import 'palette.dart';
 import 'panes.dart';
 import 'rail.dart';
+import 'shortcut_sheet.dart';
 import 'status_bar.dart';
 
 /// Where Ctrl+N goes: a new chat of [kind] (`agent` or `general`).
@@ -64,6 +67,43 @@ class _RefreshIntent extends Intent {
 /// Ctrl+` (the key under Esc): the dock panel (L2c4b).
 class _DockIntent extends Intent {
   const _DockIntent();
+}
+
+/// Ctrl+K: the command palette (L2d1).
+class _PaletteIntent extends Intent {
+  const _PaletteIntent();
+}
+
+/// ?: the shortcut sheet (L2d1).
+class _SheetIntent extends Intent {
+  const _SheetIntent();
+}
+
+/// ? types itself in a text field and in a terminal (the Terminal area's
+/// or the dock's); an editor keeps it out too.
+class _SheetAction extends Action<_SheetIntent> {
+  _SheetAction(this._open);
+
+  final VoidCallback _open;
+
+  @override
+  bool isEnabled(_SheetIntent intent) =>
+      !focusInTextField() && !focusInEditor() && !_focusInTerminal();
+
+  @override
+  Object? invoke(_SheetIntent intent) {
+    _open();
+    return null;
+  }
+}
+
+/// The focus is in a terminal: the Terminal area's or the dock's.
+bool _focusInTerminal() {
+  final c = FocusManager.instance.primaryFocus?.context;
+  if (c == null) return false;
+  return c.widget is TerminalView ||
+      c.findAncestorWidgetOfExactType<TerminalView>() != null ||
+      focusInDock();
 }
 
 /// Ctrl+R: the open page's refresh (L2c), where it has one.
@@ -167,7 +207,8 @@ class _ChatKeyAction extends Action<_ChatKeyIntent> {
 /// Ctrl+2…0 the areas, Ctrl+N / Ctrl+Shift+N a new Agent / General chat,
 /// Ctrl+, Settings, Ctrl+B the list column, Ctrl+I the inspector, Esc an
 /// open overlay pane; Ctrl+F the list's search, Ctrl+U a chat's Usage,
-/// Ctrl+] the inspector's next tab, Ctrl+R the open page's refresh; in an
+/// Ctrl+] the inspector's next tab, Ctrl+R the open page's refresh, Ctrl+K
+/// the command palette, ? the shortcut sheet (outside text fields); in an
 /// open chat Ctrl+O attaches a file,
 /// Ctrl+V an image, Ctrl+. stops the run, Ctrl+T switches Thinking; Ctrl+`
 /// the dock (with Terminal on; in the Terminal area it sends the tab to the
@@ -205,6 +246,9 @@ class DesktopShell extends ConsumerWidget {
         const _NextTabIntent(),
     const SingleActivator(LogicalKeyboardKey.keyR, control: true):
         const _RefreshIntent(),
+    const SingleActivator(LogicalKeyboardKey.keyK, control: true):
+        const _PaletteIntent(),
+    const CharacterActivator('?'): const _SheetIntent(),
     const SingleActivator(LogicalKeyboardKey.keyO, control: true):
         const _ChatKeyIntent(_ChatKey.attach),
     const SingleActivator(LogicalKeyboardKey.keyV, control: true):
@@ -327,6 +371,15 @@ class DesktopShell extends ConsumerWidget {
             _CloseOverlayIntent: _CloseOverlayAction(
               () => area != null && layouts.closeOverlays(area),
               () => area != null && _hasOverlay(ref, area, width()),
+            ),
+            _PaletteIntent: CallbackAction<_PaletteIntent>(
+              onInvoke: (_) {
+                unawaited(showCommandPalette(context, location: location));
+                return null;
+              },
+            ),
+            _SheetIntent: _SheetAction(
+              () => unawaited(showShortcutSheet(context)),
             ),
             _DockIntent: CallbackAction<_DockIntent>(
               onInvoke: (_) {

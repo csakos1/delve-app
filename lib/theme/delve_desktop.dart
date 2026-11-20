@@ -118,6 +118,25 @@ abstract final class DelveDesktop {
   static const double keyCapRadius = 4;
   static const double tooltipRadius = 6;
 
+  /// The rail's tooltip: 8 px to the right of the rail.
+  static const double railTooltipGap = 8;
+
+  // the command palette (Ctrl+K, 27W-14a / 14b)
+  static const double paletteWidth = 660;
+  static const double paletteTop = 84;
+  static const double paletteRadius = 16;
+  static const double paletteField = 52;
+  static const double paletteRow = 38;
+  static const double paletteEyebrow = 26;
+  static const double paletteFoot = 36;
+
+  /// Recent chats in the empty palette.
+  static const int paletteRecent = 5;
+
+  // the shortcut sheet (?, 27W-14c)
+  static const double shortcutSheetWidth = 940;
+  static const double shortcutRow = 28;
+
   /// The local models picker as a popover (System, Dashboard, status bar).
   static const double localModelsWidth = 400;
   static const double localModelsHeight = 520;

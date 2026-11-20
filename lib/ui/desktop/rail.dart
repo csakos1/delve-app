@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,12 +11,15 @@ import '../../theme/delve_theme.dart';
 import '../widgets/delve_mark.dart';
 import '../widgets/page_scaffolds.dart';
 import 'areas.dart';
+import 'palette.dart';
 import 'panes.dart';
+import 'shortcut_sheet.dart' show DesktopKeys;
 
 /// The desktop's navigation (design 27): a 52 px `surface-2` column with
-/// the Delve mark, the areas in their groups and, after a spacer, About me
-/// and Settings. Terminal and Files only with the desktop tools; Approvals
-/// carries the phone's warn dot while an approval can still be answered.
+/// the Delve mark, the areas in their groups and, after a spacer, Search
+/// (the palette), About me and Settings. Terminal and Files only with the
+/// desktop tools; Approvals carries the phone's warn dot while an approval
+/// can still be answered.
 class DesktopRail extends ConsumerWidget {
   const DesktopRail({super.key, required this.location});
 
@@ -23,6 +28,7 @@ class DesktopRail extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final cs = context.colors;
     final tools = ref.watch(desktopToolsProvider);
     final pending = ref.watch(answerableApprovalCountProvider).value ?? 0;
@@ -37,7 +43,10 @@ class DesktopRail extends ConsumerWidget {
 
     final places = ref.read(desktopPlacesProvider);
     Widget item(DesktopArea a) => _RailItem(
-      area: a,
+      name: a.name,
+      icon: a.icon,
+      title: a.title(l),
+      keys: a.keys(l),
       selected: a == selected,
       dot: a == DesktopArea.approvals && pending > 0,
       pending: pending,
@@ -77,6 +86,15 @@ class DesktopRail extends ConsumerWidget {
                 ),
               ),
             ),
+            // Search is the palette (Ctrl+K, L2d1)
+            _RailItem(
+              name: 'search',
+              icon: DelveIcons.search,
+              title: l.railSearch,
+              keys: DesktopKeys.palette,
+              onTap: () =>
+                  unawaited(showCommandPalette(context, location: location)),
+            ),
             for (final a in DesktopArea.foot) item(a),
             const SizedBox(height: DelveDesktop.railDividerMargin),
           ],
@@ -100,18 +118,26 @@ class _GroupDivider extends StatelessWidget {
   );
 }
 
-/// One area: 40 × 34, radius 10, icon 20; hover `surface-3`, selected
-/// `accent-container` with the accent icon filled; a tooltip with the key.
+/// One item: 40 × 34, radius 10, icon 20; hover `surface-3`, selected
+/// `accent-container` with the accent icon filled; after 500 ms a tooltip
+/// with the key, 8 px to the right of the rail.
 class _RailItem extends StatefulWidget {
   const _RailItem({
-    required this.area,
-    required this.selected,
-    required this.dot,
-    required this.pending,
+    required this.name,
+    required this.icon,
+    required this.title,
     required this.onTap,
+    this.keys,
+    this.selected = false,
+    this.dot = false,
+    this.pending = 0,
   });
 
-  final DesktopArea area;
+  /// Its key is `rail.<name>`.
+  final String name;
+  final IconData icon;
+  final String title;
+  final String? keys;
   final bool selected;
   final bool dot;
   final int pending;
@@ -128,9 +154,6 @@ class _RailItemState extends State<_RailItem> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final cs = context.colors;
-    final a = widget.area;
-    final title = a.title(l);
-    final keys = a.keys(l);
     final background = widget.selected
         ? cs.primaryContainer
         : _hover
@@ -142,7 +165,7 @@ class _RailItemState extends State<_RailItem> {
         ? cs.onSurface
         : cs.onSurfaceVariant;
     Widget icon = SymbolIcon(
-      a.icon,
+      widget.icon,
       size: DelveDesktop.railIcon,
       filled: widget.selected,
       color: color,
@@ -156,30 +179,15 @@ class _RailItemState extends State<_RailItem> {
       );
     }
     final semantics = widget.dot
-        ? '$title, ${l.approvalsBadge(widget.pending)}'
-        : title;
+        ? '${widget.title}, ${l.approvalsBadge(widget.pending)}'
+        : widget.title;
     return Padding(
       padding: const EdgeInsets.symmetric(
         vertical: DelveDesktop.railItemGap / 2,
       ),
-      child: Tooltip(
-        excludeFromSemantics: true,
-        richMessage: WidgetSpan(
-          alignment: PlaceholderAlignment.middle,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                style: context.text.labelMedium!.copyWith(color: cs.onSurface),
-              ),
-              if (keys != null) ...[
-                const SizedBox(width: DelveTokens.space2),
-                KeyCap(keys),
-              ],
-            ],
-          ),
-        ),
+      child: RailTooltip(
+        title: widget.title,
+        keys: widget.keys,
         child: Semantics(
           button: true,
           selected: widget.selected,
@@ -190,7 +198,7 @@ class _RailItemState extends State<_RailItem> {
             onEnter: (_) => setState(() => _hover = true),
             onExit: (_) => setState(() => _hover = false),
             child: GestureDetector(
-              key: Key('rail.${a.name}'),
+              key: Key('rail.${widget.name}'),
               behavior: HitTestBehavior.opaque,
               onTap: widget.onTap,
               child: AnimatedContainer(
@@ -208,6 +216,109 @@ class _RailItemState extends State<_RailItem> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The rail's tooltip (Components “Rail”, N437): after 500 ms of hover,
+/// `surface-4`, radius 6, padding 5 / 8, `labelMedium` and the key in a key
+/// cap, elevation-2, 8 px to the right of the rail and centred on the item
+/// – a Material tooltip only opens above or below.
+class RailTooltip extends StatefulWidget {
+  const RailTooltip({
+    super.key,
+    required this.title,
+    required this.child,
+    this.keys,
+  });
+
+  final String title;
+  final String? keys;
+  final Widget child;
+
+  @override
+  State<RailTooltip> createState() => _RailTooltipState();
+}
+
+class _RailTooltipState extends State<RailTooltip> {
+  final _link = LayerLink();
+  final _portal = OverlayPortalController();
+  Timer? _wait;
+
+  @override
+  void dispose() {
+    _wait?.cancel();
+    super.dispose();
+  }
+
+  void _enter() {
+    _wait?.cancel();
+    _wait = Timer(DelveDesktop.tooltipDelay, () {
+      if (mounted) _portal.show();
+    });
+  }
+
+  void _hide() {
+    _wait?.cancel();
+    _wait = null;
+    if (_portal.isShowing) _portal.hide();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    // from the item's right edge to the rail's, then the gap
+    const dx =
+        (DelveDesktop.railWidth - DelveDesktop.railItemWidth) / 2 +
+        DelveDesktop.railTooltipGap;
+    return CompositedTransformTarget(
+      link: _link,
+      child: OverlayPortal(
+        controller: _portal,
+        overlayChildBuilder: (context) => Align(
+          alignment: Alignment.topLeft,
+          child: CompositedTransformFollower(
+            link: _link,
+            showWhenUnlinked: false,
+            targetAnchor: Alignment.centerRight,
+            followerAnchor: Alignment.centerLeft,
+            offset: const Offset(dx, 0),
+            child: IgnorePointer(
+              child: Container(
+                key: const Key('rail.tooltip'),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(
+                    DelveDesktop.tooltipRadius,
+                  ),
+                  boxShadow: DelveTokens.elevation2,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: context.text.labelMedium!.copyWith(
+                        color: cs.onSurface,
+                      ),
+                    ),
+                    if (widget.keys case final keys?) ...[
+                      const SizedBox(width: DelveTokens.space2),
+                      KeyCap(keys),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        child: MouseRegion(
+          onEnter: (_) => _enter(),
+          onExit: (_) => _hide(),
+          child: Listener(onPointerDown: (_) => _hide(), child: widget.child),
         ),
       ),
     );

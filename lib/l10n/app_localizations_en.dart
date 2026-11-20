@@ -5395,6 +5395,190 @@ class AppLocalizationsEn extends AppLocalizations {
   String get desktopKeyNewChat => 'Ctrl+N';
 
   @override
+  String get railSearch => 'Search';
+
+  @override
+  String get paletteHint => 'Search chats, news, pages and actions';
+
+  @override
+  String get paletteNow => 'Now';
+
+  @override
+  String get paletteGoTo => 'Go to';
+
+  @override
+  String get paletteRecent => 'Recent chats';
+
+  @override
+  String get paletteChats => 'Chats';
+
+  @override
+  String get palettePages => 'Pages';
+
+  @override
+  String get paletteActions => 'Actions';
+
+  @override
+  String get paletteArchived => 'Archived';
+
+  @override
+  String get paletteNewAgent => 'New Agent chat';
+
+  @override
+  String get paletteNewGeneral => 'New General chat';
+
+  @override
+  String get paletteRefresh => 'Refresh this page';
+
+  @override
+  String get paletteMove => 'Move';
+
+  @override
+  String get paletteOpen => 'Open';
+
+  @override
+  String get shortcutsTitle => 'Keyboard shortcuts';
+
+  @override
+  String get shortcutsGo => 'Go to';
+
+  @override
+  String get shortcutsPalette => 'Command palette';
+
+  @override
+  String get shortcutsSheet => 'This list';
+
+  @override
+  String get shortcutsPanes => 'Panes and lists';
+
+  @override
+  String get shortcutsList => 'Show or hide the list column';
+
+  @override
+  String get shortcutsInspector => 'Show or hide the inspector';
+
+  @override
+  String get shortcutsNextTab => 'Next inspector tab';
+
+  @override
+  String get shortcutsUsage => 'Usage of the open chat';
+
+  @override
+  String get shortcutsFind => 'Search the list or the chat';
+
+  @override
+  String get shortcutsRefresh => 'Refresh';
+
+  @override
+  String get shortcutsRows => 'Next / previous row';
+
+  @override
+  String get shortcutsArchive => 'Archive the open chat';
+
+  @override
+  String get shortcutsUndo => 'Undo the archive';
+
+  @override
+  String get shortcutsOverlay => 'Close an overlay pane';
+
+  @override
+  String get shortcutsDock => 'Terminal dock';
+
+  @override
+  String get shortcutsDockToggle => 'Open the dock, focus it, close it';
+
+  @override
+  String get shortcutsDockBack => 'Give the focus back';
+
+  @override
+  String get shortcutsChat => 'Chat';
+
+  @override
+  String get shortcutsSend => 'Send';
+
+  @override
+  String get shortcutsNewLine => 'New line';
+
+  @override
+  String get shortcutsAttach => 'Attach a file';
+
+  @override
+  String get shortcutsPasteImage => 'Paste an image or files';
+
+  @override
+  String get shortcutsStop => 'Stop the run';
+
+  @override
+  String get shortcutsThinking => 'Thinking on / off';
+
+  @override
+  String get shortcutsApprovals => 'Approvals';
+
+  @override
+  String get shortcutsAllow => 'Allow once (a focused approval)';
+
+  @override
+  String get shortcutsDeny => 'Deny (a focused approval)';
+
+  @override
+  String get shortcutsEditors => 'Editors';
+
+  @override
+  String get shortcutsSave => 'Save';
+
+  @override
+  String get shortcutsCancel => 'Cancel';
+
+  @override
+  String get shortcutsOpen => 'Open';
+
+  @override
+  String get shortcutsFolderUp => 'Up a folder';
+
+  @override
+  String get shortcutsSelectAll => 'Select all';
+
+  @override
+  String get shortcutsClip => 'Copy · cut · paste';
+
+  @override
+  String get shortcutsRename => 'Rename';
+
+  @override
+  String get shortcutsTrash => 'Move to the trash';
+
+  @override
+  String get shortcutsDelete => 'Delete permanently';
+
+  @override
+  String get shortcutsUpload => 'Upload';
+
+  @override
+  String paletteEmpty(String query) {
+    return 'Nothing matches “$query”';
+  }
+
+  @override
+  String paletteRun(String time) {
+    return 'Running $time';
+  }
+
+  @override
+  String paletteApprovalWaits(String time) {
+    return 'Agent waits $time';
+  }
+
+  @override
+  String paletteApprovalLate(String time) {
+    return 'Approvable until $time';
+  }
+
+  @override
+  String paletteSettingsPage(String section) {
+    return 'Settings · $section';
+  }
+
+  @override
   String get desktopInspectorToggle => 'Inspector (Ctrl+I)';
 
   @override

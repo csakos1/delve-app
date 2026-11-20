@@ -346,6 +346,7 @@ abstract final class DelveIcons {
   static const IconData log = Symbols.receipt_long_rounded;
   static const IconData history = Symbols.history_rounded;
   static const IconData search = Symbols.search_rounded;
+  static const IconData keyboard = Symbols.keyboard_rounded;
   static const IconData close = Symbols.close_rounded;
   static const IconData archive = Symbols.archive_rounded;
   static const IconData unarchive = Symbols.unarchive_rounded;
