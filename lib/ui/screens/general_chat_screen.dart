@@ -716,31 +716,33 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
                   fadeKey: const Key('general.fade'),
                   child: items.isEmpty
                       ? (noKey ? const SizedBox.shrink() : _Intro(model: name))
-                      : ListView.separated(
-                          key: const Key('general.list'),
-                          reverse: true,
-                          padding: const EdgeInsets.fromLTRB(
-                            DelveTokens.space4,
-                            UnderBarFade.height,
-                            DelveTokens.space4,
-                            DelveTokens.space4,
+                      : DesktopSelectable(
+                          child: ListView.separated(
+                            key: const Key('general.list'),
+                            reverse: true,
+                            padding: const EdgeInsets.fromLTRB(
+                              DelveTokens.space4,
+                              UnderBarFade.height,
+                              DelveTokens.space4,
+                              DelveTokens.space4,
+                            ),
+                            // while searching every item is built (Ctrl+F)
+                            cacheExtent: finding ? 100000 : null,
+                            itemCount: items.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: DelveTokens.space4),
+                            itemBuilder: (_, i) {
+                              final at = items.length - 1 - i;
+                              final item = items[at];
+                              final key = item.key;
+                              if (!desktop || key == null) return item;
+                              return FindMark(
+                                key: _scroller.keyOf(key),
+                                current: finding && at == current,
+                                child: item,
+                              );
+                            },
                           ),
-                          // while searching every item is built (Ctrl+F)
-                          cacheExtent: finding ? 100000 : null,
-                          itemCount: items.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: DelveTokens.space4),
-                          itemBuilder: (_, i) {
-                            final at = items.length - 1 - i;
-                            final item = items[at];
-                            final key = item.key;
-                            if (!desktop || key == null) return item;
-                            return FindMark(
-                              key: _scroller.keyOf(key),
-                              current: finding && at == current,
-                              child: item,
-                            );
-                          },
                         ),
                 ),
               ),

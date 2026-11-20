@@ -51,7 +51,7 @@ Future<T?> showDesktopPopover<T>(
               shadowColor: Colors.black,
               borderRadius: BorderRadius.circular(DelveDesktop.popoverRadius),
               clipBehavior: Clip.antiAlias,
-              child: Builder(builder: builder),
+              child: LayerMark(child: Builder(builder: builder)),
             ),
           ),
         ],
@@ -134,4 +134,37 @@ Future<bool> showDesktopConfirm(
     },
   );
   return ok ?? false;
+}
+
+/// A layer drawn over the shell that leaves the focus where it was (a
+/// context menu, a popover): while one is on screen the shell's pane keys –
+/// Esc, Enter, F6, Shift+F10 – stand back, and Esc is the layer's (L2d2).
+/// Counted while mounted, so a layer gone with its tree is gone here too.
+class LayerMark extends StatefulWidget {
+  const LayerMark({super.key, required this.child});
+
+  final Widget child;
+
+  /// Marked layers on screen.
+  static int open = 0;
+
+  @override
+  State<LayerMark> createState() => _LayerMarkState();
+}
+
+class _LayerMarkState extends State<LayerMark> {
+  @override
+  void initState() {
+    super.initState();
+    LayerMark.open++;
+  }
+
+  @override
+  void dispose() {
+    LayerMark.open--;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

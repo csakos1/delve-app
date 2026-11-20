@@ -163,33 +163,30 @@ class _ToolStepCardState extends State<ToolStepCard> {
     final output = stepResultText(step);
 
     // the desktop: right click – Copy command, Copy output, Show in inspector
-    return GestureDetector(
-      onSecondaryTapUp: desktopMenuOn(
-        context,
-        () => [
-          if (command != null && command.isNotEmpty)
-            DesktopMenuItem(
-              key: const Key('step.menu.copyCommand'),
-              icon: DelveIcons.copy,
-              label: l.desktopMenuCopyCommand,
-              onSelected: () => _copy(command),
-            ),
-          if (output != null && output.isNotEmpty)
-            DesktopMenuItem(
-              key: const Key('step.menu.copyOutput'),
-              icon: DelveIcons.copy,
-              label: l.desktopMenuCopyOutput,
-              onSelected: () => _copy(output),
-            ),
-          if (widget.onInspect case final inspect?)
-            DesktopMenuItem(
-              key: const Key('step.menu.inspect'),
-              icon: DelveIcons.inspector,
-              label: l.desktopMenuShowInInspector,
-              onSelected: inspect,
-            ),
-        ],
-      ),
+    return DesktopMenuRegion(
+      items: () => [
+        if (command != null && command.isNotEmpty)
+          DesktopMenuItem(
+            key: const Key('step.menu.copyCommand'),
+            icon: DelveIcons.copy,
+            label: l.desktopMenuCopyCommand,
+            onSelected: () => _copy(command),
+          ),
+        if (output != null && output.isNotEmpty)
+          DesktopMenuItem(
+            key: const Key('step.menu.copyOutput'),
+            icon: DelveIcons.copy,
+            label: l.desktopMenuCopyOutput,
+            onSelected: () => _copy(output),
+          ),
+        if (widget.onInspect case final inspect?)
+          DesktopMenuItem(
+            key: const Key('step.menu.inspect'),
+            icon: DelveIcons.inspector,
+            label: l.desktopMenuShowInInspector,
+            onSelected: inspect,
+          ),
+      ],
       child: _card(
         context,
         look,

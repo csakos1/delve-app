@@ -559,6 +559,8 @@ class _DesktopHitRowState extends ConsumerState<DesktopHitRow> {
       selected: widget.selected,
       onContent: true,
       onTap: _tap,
+      // Enter on the selected hit opens its link (N496)
+      onOpen: _open,
       menu: [
         DesktopMenuItem(
           key: const Key('watch.item.menu.open'),

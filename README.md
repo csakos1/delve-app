@@ -524,6 +524,14 @@ words marked) gives Now · Chats (archived too) · News (the stories the app hol
 opens the shortcut sheet: three columns of the keys that work now (`shortcutColumns`;
 Terminal and Files only with the tools on). The rail's tooltips open 8 px to its right after
 500 ms, with the key in a key cap (`RailTooltip`).
+Focus and keys (`pane_focus.dart`): every pane has its own focus point (`PaneFocus`). F6 /
+Shift+F6 go round the list, the content, the dock (when open) and the inspector, the pane
+drawing the 2 px accent ring after a key; a click on a row gives its pane the focus without
+it. Enter on a pane runs the selected row's own Enter (a watch's hit: its link), else from the
+list goes into the content – at the composer when it has one (`PaneEntry`); Esc from the
+content goes back to the list. Shift+F10 (or the menu key) opens the selected row's menu
+(`SelectedRows`; the Files table its cursor row's). The chat is one `SelectionArea` on the
+desktop (`DesktopSelectable`): text is selected across messages and Ctrl+C copies it.
 Files (`lib/ui/desktop/files_area.dart`, with Files on): Home, Downloads, Documents, the file
 system and the trash in the list column, the transfers at its foot; the folder as a table in the
 content (breadcrumb header with Upload, New folder, refresh and the menu; Name · Size · Modified,

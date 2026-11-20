@@ -7,6 +7,7 @@ import '../../app/layout.dart';
 import '../../attachments/composer_attachments.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/pane_focus.dart' show PaneEntry;
 import '../widgets/page_scaffolds.dart';
 import 'attachments.dart';
 
@@ -95,6 +96,8 @@ class _ComposerState extends State<Composer> {
     if (widget.controller == null) _own = TextEditingController();
     _controller.addListener(_changed);
     widget.attachments?.addListener(_changed);
+    // Enter from the desktop's list comes here (L2d2)
+    PaneEntry.register(this, _focus);
     // a requested focus, not `autofocus`: the desktop shell holds the focus
     // already, and autofocus only takes an empty scope
     if (widget.autofocus) {
@@ -129,6 +132,7 @@ class _ComposerState extends State<Composer> {
 
   @override
   void dispose() {
+    PaneEntry.unregister(this);
     widget.attachments?.removeListener(_changed);
     widget.controller?.removeListener(_changed);
     _own?.dispose();

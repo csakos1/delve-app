@@ -1226,6 +1226,28 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
     if (i != null) _reveal(i);
   }
 
+  /// Shift+F10: the menu of the cursor row (or the first selected one),
+  /// under the row, as a right-click opens it. False: nothing selected.
+  bool _menuKey(List<RemoteEntry> entries) {
+    final picked = _picked;
+    if (picked.isEmpty) return false;
+    final cursor = _pick.cursor;
+    final on = cursor != null && picked.contains(cursor);
+    final i = entries.indexWhere(
+      (e) => on ? e.path == cursor : picked.contains(e.path),
+    );
+    if (i < 0) return false;
+    _reveal(i);
+    if (!_tableScroll.hasClients) return false;
+    final pos = _tableScroll.position;
+    final box = pos.context.storageContext.findRenderObject() as RenderBox?;
+    if (box == null) return false;
+    // the list's top padding is 2
+    final y = 2 + (i + 1) * DelveDesktop.filesRow - pos.pixels;
+    _rowMenu(entries[i], box.localToGlobal(Offset(16, y)));
+    return true;
+  }
+
   /// Scrolls the table so row [i] is in view.
   void _reveal(int i) {
     if (!_tableScroll.hasClients) return;
@@ -1324,6 +1346,13 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
     }
     // the operations (L2c4c2): only once per press
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    // Shift+F10 / the menu key: the row's menu, as a right-click (L2d2)
+    if ((key == LogicalKeyboardKey.f10 && keys.isShiftPressed) ||
+        key == LogicalKeyboardKey.contextMenu) {
+      return _menuKey(entries)
+          ? KeyEventResult.handled
+          : KeyEventResult.ignored;
+    }
     final ctrl = keys.isControlPressed || keys.isMetaPressed;
     final items = _selection;
     if (ctrl && !keys.isShiftPressed && key == LogicalKeyboardKey.keyC) {

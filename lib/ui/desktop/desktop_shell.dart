@@ -13,10 +13,13 @@ import '../../theme/delve_theme.dart';
 import 'areas.dart';
 import 'chat_inspector.dart';
 import 'desktop_page.dart';
+import 'desktop_row.dart' show SelectedRows;
 import 'dock.dart';
 import 'files_area.dart' show fileInspectorTabProvider;
 import 'intake.dart';
+import 'layers.dart' show LayerMark;
 import 'palette.dart';
+import 'pane_focus.dart';
 import 'panes.dart';
 import 'rail.dart';
 import 'shortcut_sheet.dart';
@@ -93,6 +96,108 @@ class _SheetAction extends Action<_SheetIntent> {
   @override
   Object? invoke(_SheetIntent intent) {
     _open();
+    return null;
+  }
+}
+
+/// F6 / Shift+F6: the next / previous pane (L2d2).
+class _PaneIntent extends Intent {
+  const _PaneIntent(this.by);
+  final int by;
+}
+
+/// Enter on a pane (L2d2).
+class _EnterIntent extends Intent {
+  const _EnterIntent();
+}
+
+/// Shift+F10 / the menu key: the selected row's menu (L2d2).
+class _RowMenuIntent extends Intent {
+  const _RowMenuIntent();
+}
+
+/// The shell's own focus point: what holds the focus when nothing else
+/// does.
+const _shellFocusKey = Key('desktop.focus');
+
+/// Nothing in particular has the focus: the shell, a pane itself or a
+/// page's route scope (a field or a button keeps its own Enter).
+bool _focusOnShellOrPane() {
+  if (PaneFocus.onPane()) return true;
+  final f = FocusManager.instance.primaryFocus;
+  // a route's scope: the page itself, after a menu of its navigator closed
+  if (f is FocusScopeNode) return true;
+  return f?.context?.widget.key == _shellFocusKey;
+}
+
+/// A context menu or a popover is open over the shell (the focus stays
+/// below it): Esc is the layer's, the pane keys wait.
+bool _layerUp() => LayerMark.open > 0;
+
+/// The panes in F6 order: the list, the content, the dock (open, outside
+/// the Terminal area), the inspector; from the shell F6 starts at the first.
+void _cyclePanes(WidgetRef ref, String? area, int by) {
+  final dock =
+      ref.read(desktopToolsProvider) &&
+      ref.read(dockProvider).open &&
+      area != DesktopArea.terminal.name;
+  final stops = <Object>[
+    for (final role in PaneRole.values) ...[
+      if (PaneFocus.has(role)) role,
+      if (role == PaneRole.content && dock) 'dock',
+    ],
+  ];
+  if (stops.isEmpty) return;
+  final Object? now = focusInDock() ? 'dock' : PaneFocus.focused();
+  final at = stops.indexOf(now ?? '');
+  final next = at < 0
+      ? (by > 0 ? 0 : stops.length - 1)
+      : (at + by) % stops.length;
+  final stop = stops[next];
+  if (stop is PaneRole) {
+    PaneFocus.focus(stop);
+  } else {
+    ref.read(dockProvider.notifier).show(focus: true);
+  }
+}
+
+/// Enter on a pane: the selected row's own Enter (a hit's link) if it has
+/// one; from the list (or the shell) into the content – at the composer if
+/// the content has one.
+class _EnterAction extends Action<_EnterIntent> {
+  VoidCallback? _what() {
+    if (_layerUp() || !_focusOnShellOrPane()) return null;
+    final role = PaneFocus.focused() ?? PaneFocus.last ?? PaneRole.list;
+    final open = SelectedRows.openIn(role);
+    if (open != null) return open;
+    if (role == PaneRole.list && PaneFocus.has(PaneRole.content)) {
+      return enterContent;
+    }
+    return null;
+  }
+
+  @override
+  bool isEnabled(_EnterIntent intent) => _what() != null;
+
+  @override
+  Object? invoke(_EnterIntent intent) {
+    _what()?.call();
+    return null;
+  }
+}
+
+/// Shift+F10: the menu of the selected row in the focused pane (the list
+/// when no pane has the focus); a text field keeps its own.
+class _RowMenuAction extends Action<_RowMenuIntent> {
+  PaneRole get _role => PaneFocus.focused() ?? PaneFocus.last ?? PaneRole.list;
+
+  @override
+  bool isEnabled(_RowMenuIntent intent) =>
+      !_layerUp() && !focusInTextField() && SelectedRows.hasMenuIn(_role);
+
+  @override
+  Object? invoke(_RowMenuIntent intent) {
+    SelectedRows.showMenuIn(_role);
     return null;
   }
 }
@@ -249,6 +354,15 @@ class DesktopShell extends ConsumerWidget {
     const SingleActivator(LogicalKeyboardKey.keyK, control: true):
         const _PaletteIntent(),
     const CharacterActivator('?'): const _SheetIntent(),
+    const SingleActivator(LogicalKeyboardKey.f6): const _PaneIntent(1),
+    const SingleActivator(LogicalKeyboardKey.f6, shift: true):
+        const _PaneIntent(-1),
+    const SingleActivator(LogicalKeyboardKey.enter): const _EnterIntent(),
+    const SingleActivator(LogicalKeyboardKey.numpadEnter): const _EnterIntent(),
+    const SingleActivator(LogicalKeyboardKey.f10, shift: true):
+        const _RowMenuIntent(),
+    const SingleActivator(LogicalKeyboardKey.contextMenu):
+        const _RowMenuIntent(),
     const SingleActivator(LogicalKeyboardKey.keyO, control: true):
         const _ChatKeyIntent(_ChatKey.attach),
     const SingleActivator(LogicalKeyboardKey.keyV, control: true):
@@ -369,9 +483,27 @@ class DesktopShell extends ConsumerWidget {
             _RefreshIntent: _RefreshAction(ref.read(pageCommandSlotProvider)),
             _ListKeyIntent: _ListKeyAction(ref.read(listCommandSlotProvider)),
             _CloseOverlayIntent: _CloseOverlayAction(
-              () => area != null && layouts.closeOverlays(area),
-              () => area != null && _hasOverlay(ref, area, width()),
+              () {
+                if (area != null && _hasOverlay(ref, area, width())) {
+                  return layouts.closeOverlays(area);
+                }
+                // from the content back to the list (L2d2)
+                return PaneFocus.focus(PaneRole.list);
+              },
+              () =>
+                  !_layerUp() &&
+                  ((area != null && _hasOverlay(ref, area, width())) ||
+                      (PaneFocus.focused() == PaneRole.content &&
+                          PaneFocus.has(PaneRole.list))),
             ),
+            _PaneIntent: CallbackAction<_PaneIntent>(
+              onInvoke: (i) {
+                if (!_layerUp()) _cyclePanes(ref, area, i.by);
+                return null;
+              },
+            ),
+            _EnterIntent: _EnterAction(),
+            _RowMenuIntent: _RowMenuAction(),
             _PaletteIntent: CallbackAction<_PaletteIntent>(
               onInvoke: (_) {
                 unawaited(showCommandPalette(context, location: location));
@@ -398,6 +530,7 @@ class DesktopShell extends ConsumerWidget {
           child: Shortcuts(
             shortcuts: const {DockKeyActivator(): _DockIntent()},
             child: Focus(
+              key: _shellFocusKey,
               autofocus: true,
               child: Material(
                 color: context.colors.surface,
@@ -432,8 +565,9 @@ class DesktopShell extends ConsumerWidget {
   }
 }
 
-/// Esc closes an overlay pane; with none open the key goes on (a dialog's
-/// or a text field's own Esc).
+/// Esc closes an overlay pane; with none open, from the content it goes
+/// back to the list (L2d2); otherwise the key goes on (a dialog's or a text
+/// field's own Esc).
 class _CloseOverlayAction extends Action<_CloseOverlayIntent> {
   _CloseOverlayAction(this._close, this._enabled);
 

@@ -330,6 +330,26 @@ bool focusInEditor() {
       focus.findAncestorWidgetOfExactType<EditorScope>() != null;
 }
 
+/// The chat's messages in the desktop layout (NL12, L2d2): one selection
+/// area, so text is selected with the mouse across messages and Ctrl+C
+/// copies it; the phone keeps its long press. [DelveMarkdown] leaves its
+/// own selectable text off inside it.
+class DesktopSelectable extends StatelessWidget {
+  const DesktopSelectable({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => DesktopLayout.of(context)
+      ? SelectionArea(
+          key: const Key('chat.selection'),
+          // the messages' own menus show on a right click (Copy, Show run)
+          contextMenuBuilder: (_, _) => const SizedBox.shrink(),
+          child: child,
+        )
+      : child;
+}
+
 // --- drag and drop ------------------------------------------------------------
 
 /// Files dropped on a chat (design 27W-14g): while files are dragged over

@@ -12,6 +12,7 @@ import '../../theme/delve_theme.dart';
 import '../widgets/page_scaffolds.dart';
 import 'desktop_prefs.dart';
 import 'dock.dart';
+import 'pane_focus.dart';
 
 /// One area's panes as the reader left them: the widths and whether the
 /// list and the inspector are open. Docked panes keep this; the overlays of
@@ -279,8 +280,11 @@ class DesktopPanes extends ConsumerWidget {
       hasInspector: inspector != null,
     );
 
-    Widget pane(Widget child, Color color, Key key) =>
-        ColoredBox(key: key, color: color, child: child);
+    // each pane has its own focus point: F6, Enter, Esc (L2d2)
+    Widget pane(Widget child, Color color, Key key, PaneRole role) => PaneFocus(
+      role: role,
+      child: ColoredBox(key: key, color: color, child: child),
+    );
 
     final row = Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -292,13 +296,19 @@ class DesktopPanes extends ConsumerWidget {
               ScaffoldMessenger(child: list!),
               cs.surfaceContainerLow,
               const Key('pane.list'),
+              PaneRole.list,
             ),
           ),
         // the dock (Terminal) goes under the content only (L2c4b)
         Expanded(
           child: DockedContent(
             area: area,
-            child: pane(content, cs.surface, const Key('pane.content')),
+            child: pane(
+              content,
+              cs.surface,
+              const Key('pane.content'),
+              PaneRole.content,
+            ),
           ),
         ),
         if (at.inspectorDocked)
@@ -308,6 +318,7 @@ class DesktopPanes extends ConsumerWidget {
               inspector!,
               cs.surfaceContainerLow,
               const Key('pane.inspector'),
+              PaneRole.inspector,
             ),
           ),
       ],
@@ -393,6 +404,7 @@ class DesktopPanes extends ConsumerWidget {
                       ScaffoldMessenger(child: list!),
                       cs.surfaceContainerLow,
                       const Key('pane.list.overlay'),
+                      PaneRole.list,
                     ),
                   ),
                 ),
@@ -407,6 +419,7 @@ class DesktopPanes extends ConsumerWidget {
                       inspector!,
                       cs.surfaceContainerLow,
                       const Key('pane.inspector.overlay'),
+                      PaneRole.inspector,
                     ),
                   ),
                 ),

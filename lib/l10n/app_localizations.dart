@@ -8568,8 +8568,26 @@ abstract class AppLocalizations {
   /// No description provided for @shortcutsOverlay.
   ///
   /// In en, this message translates to:
-  /// **'Close an overlay pane'**
+  /// **'Close an overlay pane · back to the list'**
   String get shortcutsOverlay;
+
+  /// No description provided for @shortcutsEnterRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the row, or into the content'**
+  String get shortcutsEnterRow;
+
+  /// No description provided for @shortcutsPane.
+  ///
+  /// In en, this message translates to:
+  /// **'Next / previous pane'**
+  String get shortcutsPane;
+
+  /// No description provided for @shortcutsRowMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu of the selected row'**
+  String get shortcutsRowMenu;
 
   /// No description provided for @shortcutsDock.
   ///

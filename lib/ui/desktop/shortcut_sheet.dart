@@ -47,6 +47,9 @@ abstract final class DesktopKeys {
   static const trash = 'Del';
   static const delete = 'Shift+Del';
   static const move = '↑ ↓';
+  static const pane = 'F6';
+  static const paneBack = 'Shift+F6';
+  static const rowMenu = 'Shift+F10';
 }
 
 /// One line of the shortcut sheet: what it does and its keys (each its
@@ -95,6 +98,12 @@ List<List<ShortcutGroup>> shortcutColumns(
         ShortcutLine(l.shortcutsFind, const [DesktopKeys.find]),
         ShortcutLine(l.shortcutsRefresh, const [DesktopKeys.refresh]),
         ShortcutLine(l.shortcutsRows, const ['J', 'K', '↓', '↑']),
+        ShortcutLine(l.shortcutsEnterRow, const [DesktopKeys.enter]),
+        ShortcutLine(l.shortcutsPane, const [
+          DesktopKeys.pane,
+          DesktopKeys.paneBack,
+        ]),
+        ShortcutLine(l.shortcutsRowMenu, const [DesktopKeys.rowMenu]),
         ShortcutLine(l.shortcutsArchive, const [DesktopKeys.archive]),
         ShortcutLine(l.shortcutsUndo, const [DesktopKeys.undo]),
         ShortcutLine(l.shortcutsOverlay, const [DesktopKeys.esc]),

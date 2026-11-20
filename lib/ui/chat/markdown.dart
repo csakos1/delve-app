@@ -82,7 +82,9 @@ class DelveMarkdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return MarkdownBody(
       data: data,
-      selectable: true,
+      // in the desktop's selection area the area selects (one selection
+      // across messages); elsewhere each block its own
+      selectable: SelectionContainer.maybeOf(context) == null,
       styleSheet: styleSheet(context),
       onTapLink: (text, href, title) {
         if (href == null) return;

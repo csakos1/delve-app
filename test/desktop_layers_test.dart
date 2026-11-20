@@ -4,6 +4,7 @@ import 'package:delve/theme/delve_theme.dart';
 import 'package:delve/ui/desktop/desktop_shell.dart';
 import 'package:delve/ui/desktop/intake.dart' show focusInTextField;
 import 'package:delve/ui/desktop/palette.dart';
+import 'package:delve/ui/desktop/pane_focus.dart';
 import 'package:delve/ui/desktop/shortcut_sheet.dart';
 import 'package:delve/ui/screens/approvals_screen.dart' show ApprovalDetail;
 import 'package:delve/ui/screens/chat_screen.dart';
@@ -12,9 +13,11 @@ import 'package:delve/ui/screens/system_screen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'approvals_screen_test.dart' show approval, seedChats;
+import 'chat_screen_test.dart' show seedFinished;
 import 'news_test.dart' show newsJson;
 import 'support/fake_server.dart' show FakeServer;
 import 'support/harness.dart';
@@ -327,6 +330,103 @@ void main() {
       final about = t.getRect(find.byKey(const Key('rail.about')));
       expect(search.bottom, lessThanOrEqualTo(about.top));
       expect(find.byType(DesktopShell), findsOneWidget);
+    });
+  });
+
+  group('panes and keys (L2d2)', () {
+    Future<void> openChat(WidgetTester t, {PlatformCaps? caps}) async {
+      await pumpDelve(
+        t,
+        caps: caps ?? _linux,
+        window: _frame,
+        before: seedFinished,
+      );
+      await t.tap(find.byKey(const Key('chats.row')));
+      await t.pumpAndSettle();
+    }
+
+    Future<void> shifted(WidgetTester t, LogicalKeyboardKey key) async {
+      await t.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await t.sendKeyEvent(key);
+      await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await _frames(t, 4);
+    }
+
+    Future<void> onList(WidgetTester t) async {
+      PaneFocus.focus(PaneRole.list, ring: false);
+      await _frames(t, 2);
+    }
+
+    testWidgets('a click on a row gives its pane the focus, without the '
+        'ring', (t) async {
+      await openChat(t);
+      // the row was clicked: the list has the focus (unless the chat took
+      // it for its composer)
+      expect(PaneFocus.focused(), isNotNull);
+      expect(find.byKey(const Key('pane.focus.list')), findsNothing);
+    });
+
+    testWidgets('F6 / Shift+F6 go round the list, the content and the '
+        'inspector, with the ring', (t) async {
+      await openChat(t);
+      await onList(t);
+      expect(PaneFocus.focused(), PaneRole.list);
+      expect(find.byKey(const Key('pane.focus.list')), findsNothing);
+
+      await _key(t, LogicalKeyboardKey.f6);
+      expect(PaneFocus.focused(), PaneRole.content);
+      expect(find.byKey(const Key('pane.focus.content')), findsOneWidget);
+      await _key(t, LogicalKeyboardKey.f6);
+      expect(PaneFocus.focused(), PaneRole.inspector);
+      expect(find.byKey(const Key('pane.focus.content')), findsNothing);
+      await _key(t, LogicalKeyboardKey.f6);
+      expect(PaneFocus.focused(), PaneRole.list);
+      await shifted(t, LogicalKeyboardKey.f6);
+      expect(PaneFocus.focused(), PaneRole.inspector);
+    });
+
+    testWidgets('Enter from the list goes to the composer; Esc from the '
+        'content back to the list', (t) async {
+      await openChat(t);
+      await onList(t);
+      await _key(t, LogicalKeyboardKey.enter);
+      expect(PaneFocus.focused(), PaneRole.content);
+      expect(focusInTextField(), isTrue);
+      await _key(t, LogicalKeyboardKey.escape);
+      expect(PaneFocus.focused(), PaneRole.list);
+      expect(find.byKey(const Key('pane.focus.list')), findsOneWidget);
+    });
+
+    testWidgets('Shift+F10 opens the selected row\'s menu', (t) async {
+      await openChat(t);
+      await onList(t);
+      expect(find.byKey(const Key('chats.menu.archive')), findsNothing);
+      await shifted(t, LogicalKeyboardKey.f10);
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('chats.menu.archive')), findsOneWidget);
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('chats.menu.archive')), findsNothing);
+    });
+
+    testWidgets('the chat is one selection area on the desktop (NL12)', (
+      t,
+    ) async {
+      await openChat(t);
+      expect(find.byKey(const Key('chat.selection')), findsOneWidget);
+      // inside it the markdown does not make its own selectable text
+      expect(
+        t.widget<MarkdownBody>(find.byType(MarkdownBody).first).selectable,
+        isFalse,
+      );
+    });
+
+    testWidgets('the sheet lists F6, Enter on a row and Shift+F10', (t) async {
+      await _desktop(t);
+      await _question(t);
+      expect(find.text(DesktopKeys.pane), findsOneWidget);
+      expect(find.text(DesktopKeys.paneBack), findsOneWidget);
+      expect(find.text(DesktopKeys.rowMenu), findsOneWidget);
     });
   });
 }

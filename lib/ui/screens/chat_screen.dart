@@ -785,29 +785,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               Expanded(
                 child: UnderBarFade(
                   fadeKey: const Key('chat.fade'),
-                  child: ListView.separated(
-                    key: const Key('chat.list'),
-                    reverse: true,
-                    padding: _listPadding,
-                    // while searching every item is built, so a match far up
-                    // can be scrolled to
-                    cacheExtent: finding ? 100000 : null,
-                    itemCount: items.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: DelveTokens.space3),
-                    // reversed: the newest item sits at the bottom, next to the
-                    // composer, and stays there while text streams in
-                    itemBuilder: (_, i) {
-                      final at = items.length - 1 - i;
-                      final item = items[at];
-                      final key = item.key;
-                      if (!desktop || key == null) return item;
-                      return FindMark(
-                        key: _scroller.keyOf(key),
-                        current: finding && at == current,
-                        child: item,
-                      );
-                    },
+                  child: DesktopSelectable(
+                    child: ListView.separated(
+                      key: const Key('chat.list'),
+                      reverse: true,
+                      padding: _listPadding,
+                      // while searching every item is built, so a match far up
+                      // can be scrolled to
+                      cacheExtent: finding ? 100000 : null,
+                      itemCount: items.length,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: DelveTokens.space3),
+                      // reversed: the newest item sits at the bottom, next to the
+                      // composer, and stays there while text streams in
+                      itemBuilder: (_, i) {
+                        final at = items.length - 1 - i;
+                        final item = items[at];
+                        final key = item.key;
+                        if (!desktop || key == null) return item;
+                        return FindMark(
+                          key: _scroller.keyOf(key),
+                          current: finding && at == current,
+                          child: item,
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),

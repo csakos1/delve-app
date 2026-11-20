@@ -70,9 +70,8 @@ class UserBubble extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: GestureDetector(
                 onLongPress: () => _copyWithNote(context, text),
-                onSecondaryTapUp: desktopMenuOn(
-                  context,
-                  () => [
+                child: DesktopMenuRegion(
+                  items: () => [
                     DesktopMenuItem(
                       key: const Key('msg.menu.copy'),
                       icon: DelveIcons.copy,
@@ -80,22 +79,22 @@ class UserBubble extends StatelessWidget {
                       onSelected: () => _copyWithNote(context, text),
                     ),
                   ],
-                ),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainer,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(DelveTokens.rlg),
-                      topRight: Radius.circular(DelveTokens.rlg),
-                      bottomLeft: Radius.circular(DelveTokens.rlg),
-                      bottomRight: Radius.circular(4),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
                     ),
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainer,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(DelveTokens.rlg),
+                        topRight: Radius.circular(DelveTokens.rlg),
+                        bottomLeft: Radius.circular(DelveTokens.rlg),
+                        bottomRight: Radius.circular(4),
+                      ),
+                    ),
+                    child: Text(text, style: context.text.bodyLarge),
                   ),
-                  child: Text(text, style: context.text.bodyLarge),
                 ),
               ),
             ),
@@ -371,9 +370,8 @@ class RunBlock extends StatelessWidget {
           node: nodeColor,
           child: GestureDetector(
             onLongPress: () => _copyWithNote(context, message.content),
-            onSecondaryTapUp: desktopMenuOn(
-              context,
-              () => [
+            child: DesktopMenuRegion(
+              items: () => [
                 DesktopMenuItem(
                   key: const Key('msg.menu.copy'),
                   icon: DelveIcons.copy,
@@ -388,8 +386,8 @@ class RunBlock extends StatelessWidget {
                     onSelected: () => inspect(null),
                   ),
               ],
+              child: DelveMarkdown(data: text),
             ),
-            child: DelveMarkdown(data: text),
           ),
         )
       else if (isActive && steps.isEmpty && interim.isEmpty && !thinkingNow)

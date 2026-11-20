@@ -5479,7 +5479,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutsUndo => 'Undo the archive';
 
   @override
-  String get shortcutsOverlay => 'Close an overlay pane';
+  String get shortcutsOverlay => 'Close an overlay pane · back to the list';
+
+  @override
+  String get shortcutsEnterRow => 'Open the row, or into the content';
+
+  @override
+  String get shortcutsPane => 'Next / previous pane';
+
+  @override
+  String get shortcutsRowMenu => 'Menu of the selected row';
 
   @override
   String get shortcutsDock => 'Terminal dock';

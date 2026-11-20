@@ -29,6 +29,7 @@ import 'package:delve/ui/desktop/files_area.dart';
 import 'package:delve/ui/desktop/intake.dart';
 import 'package:delve/ui/desktop/list_area.dart' show SectionRow;
 import 'package:delve/ui/desktop/news_area.dart';
+import 'package:delve/ui/desktop/pane_focus.dart';
 import 'package:delve/ui/desktop/panes.dart';
 import 'package:delve/ui/desktop/schedules_area.dart';
 import 'package:delve/ui/desktop/settings_area.dart';
@@ -1798,6 +1799,28 @@ void main() {
       expect(find.byKey(const Key('pane.inspector.toggle')), findsOneWidget);
       expect(env.links.opened, isEmpty);
       await t.tap(find.byKey(const Key('inspector.hit.open')));
+      await t.pumpAndSettle();
+      expect(env.links.opened.single.path, '/apro/x17/friss.html');
+    });
+
+    testWidgets('a click on a hit gives the content the focus: Enter opens '
+        'its link, Shift+F10 its menu (L2d2, N496)', (t) async {
+      final env = await watches(t);
+      await open(t, 'RTX 4070 Super ≤180k');
+      await t.tap(
+        find.text('Gigabyte RTX 4070 Super Gaming OC 12G – garanciális'),
+      );
+      await t.pumpAndSettle();
+      expect(PaneFocus.focused(), PaneRole.content);
+      await t.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await t.sendKeyEvent(LogicalKeyboardKey.f10);
+      await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('watch.item.menu.open')), findsOneWidget);
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await t.pumpAndSettle();
+      expect(env.links.opened, isEmpty);
+      await t.sendKeyEvent(LogicalKeyboardKey.enter);
       await t.pumpAndSettle();
       expect(env.links.opened.single.path, '/apro/x17/friss.html');
     });
