@@ -16,6 +16,7 @@ import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
 import '../widgets/model_ui.dart';
 import '../widgets/page_scaffolds.dart';
+import 'approvals_card.dart' show answerableNow;
 
 /// How often the status bar asks for the machine's state (the socket's
 /// `system.updated` only comes on changes; VRAM and temperature drift).
@@ -102,6 +103,17 @@ class _DesktopStatusBarState extends ConsumerState<DesktopStatusBar> {
     }
   }
 
+  /// The approvals segment: the newest approval that can still be answered
+  /// (27W-3), the list when there is none.
+  void _openNewest(ApprovalInbox? inbox, DateTime now) {
+    final newest = answerableNow(inbox, now).firstOrNull;
+    context.go(
+      newest == null
+          ? Routes.approvals
+          : Routes.approval(newest.approval.requestId),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -138,7 +150,7 @@ class _DesktopStatusBarState extends ConsumerState<DesktopStatusBar> {
             pending.length + late.length,
             clockText(pending.first.approval.hermesDeadline.difference(now)),
           ),
-          onTap: () => context.go(Routes.approvals),
+          onTap: () => _openNewest(inbox, now),
         )
       else if (late.isNotEmpty)
         _Segment(
@@ -149,7 +161,7 @@ class _DesktopStatusBarState extends ConsumerState<DesktopStatusBar> {
             late.length,
             DateFormat('HH:mm').format(late.first.approval.expiresAt.toLocal()),
           ),
-          onTap: () => context.go(Routes.approvals),
+          onTap: () => _openNewest(inbox, now),
         ),
     ];
 

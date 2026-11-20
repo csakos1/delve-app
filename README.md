@@ -490,6 +490,12 @@ About me (`about_area.dart`): the core's sections and the topic files (marked Cl
 go to the General chats), Add, and what is sent are the list column (`?item=`); a section or a
 file opens in its editor in the content (Save: Ctrl+S, Delete with the desktop dialog), what is
 sent as a page.
+Approvals (`approvals_area.dart`): the whole history – Pending, Expired in agent, Recent – as rows
+in the list column (the command in full, the countdown or the outcome and who; J / K), the open
+approval in the content (its class, the chat it came from, the command with Copy, the state,
+Allow once · Deny · Allow for session; Ctrl+Enter / Ctrl+Backspace, why the agent asks) and its
+chat's run in the inspector. The status bar's approvals segment opens the newest one that can
+still be answered.
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.

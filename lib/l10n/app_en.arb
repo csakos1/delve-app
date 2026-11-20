@@ -4324,5 +4324,19 @@
   "settingsTextSizeSub": "Only the text grows; panes and icons keep their size",
   "settingsTextSizeSystem": "System",
   "desktopPersonaOverview": "Overview",
-  "desktopPersonaSaved": "Saved"
+  "desktopPersonaSaved": "Saved",
+  "desktopApprovalsEmpty": "No approval open",
+  "desktopApprovalsEmptySub": "Pick one from the list",
+  "desktopApprovalWaitingWord": "Waiting",
+  "desktopApprovalLateWord": "Late",
+  "desktopApprovalUntil": "approvable until {time}",
+  "@desktopApprovalUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopApprovalWhy": "Why the agent asks",
+  "desktopApprovalGone": "This approval is not stored on this device any more."
 }

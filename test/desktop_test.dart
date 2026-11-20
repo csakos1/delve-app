@@ -11,6 +11,7 @@ import 'package:delve/l10n/app_localizations.dart';
 import 'package:delve/theme/delve_theme.dart';
 import 'package:delve/ui/chat/chat_items.dart' show UserBubble;
 import 'package:delve/ui/desktop/about_area.dart';
+import 'package:delve/ui/desktop/approvals_area.dart';
 import 'package:delve/ui/desktop/areas.dart';
 import 'package:delve/ui/desktop/chat_find.dart';
 import 'package:delve/ui/desktop/chat_inspector.dart';
@@ -2119,6 +2120,133 @@ void main() {
       await t.tap(find.byKey(const Key('persona.nav.agent')));
       await t.pumpAndSettle();
       expect(find.byKey(const Key('persona.sent.agent')), findsOneWidget);
+    });
+  });
+
+  group('Approvals on the desktop (L2c3c)', () {
+    Future<void> frames(WidgetTester t, [int n = 10]) async {
+      for (var i = 0; i < n; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+    }
+
+    Future<TestEnv> approvals(WidgetTester t) async {
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        status: liveStatus,
+        settle: false,
+        before: (env) async {
+          await seedChats(env);
+          for (final a in [
+            approval('apr_1', 'pending'),
+            approval(
+              'apr_2',
+              'expired_in_hermes',
+              left: const Duration(minutes: -2),
+            ),
+            approval(
+              'apr_3',
+              'approved_once',
+              decidedBy: 'pixel',
+              choice: 'once',
+              answeredAgo: const Duration(minutes: 5),
+            ),
+          ]) {
+            await env.db.putApproval(a);
+          }
+        },
+      );
+      await frames(t);
+      return env;
+    }
+
+    void answers(TestEnv env, String id, String status, String choice) =>
+        env.server.on(
+          'POST',
+          '/api/v1/approvals/$id',
+          (r) => FakeReply(
+            200,
+            approval(
+              id,
+              status,
+              decidedBy: 'pixel',
+              choice: choice,
+              answeredAgo: Duration.zero,
+            ).toJson(),
+          ),
+        );
+
+    ApprovalDetail detail(WidgetTester t) =>
+        t.widget<ApprovalDetail>(find.byType(ApprovalDetail));
+
+    test('the approval of a location', () {
+      expect(selectedApproval(Routes.approvals), isNull);
+      expect(selectedApproval(Routes.approval('apr_1')), 'apr_1');
+      expect(selectedApproval(Routes.chat('c_1')), isNull);
+    });
+
+    testWidgets('the whole history in the list column; an approval in the '
+        'content, its run in the inspector; Ctrl+Enter allows once', (t) async {
+      final env = await approvals(t);
+      await _ctrlNow(t, LogicalKeyboardKey.digit3);
+      await frames(t);
+      expect(find.byType(ApprovalsArea), findsOneWidget);
+      expect(find.byKey(const Key('approvals.placeholder')), findsOneWidget);
+      for (final id in ['apr_1', 'apr_2', 'apr_3']) {
+        expect(find.byKey(ValueKey('approval.row.$id')), findsOneWidget);
+      }
+
+      await t.tap(find.byKey(const ValueKey('approval.row.apr_1')));
+      await frames(t);
+      expect(find.byType(ApprovalDetail), findsOneWidget);
+      expect(find.byKey(const Key('approval.detail.once')), findsOneWidget);
+      expect(find.byKey(const Key('inspector.chat')), findsOneWidget);
+      expect(find.text('Ctrl+Enter'), findsOneWidget);
+
+      answers(env, 'apr_1', 'approved_once', 'once');
+      await _ctrlNow(t, LogicalKeyboardKey.enter);
+      await frames(t, 5);
+      expect(env.server.requests.last.data, {'choice': 'once'});
+      expect(find.byKey(const Key('approval.detail.once')), findsNothing);
+      expect(
+        find.byKey(const Key('dashboard.approval.outcome')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('an answered one: the outcome and who, no buttons', (t) async {
+      await approvals(t);
+      await _ctrlNow(t, LogicalKeyboardKey.digit3);
+      await frames(t);
+      await t.tap(find.byKey(const ValueKey('approval.row.apr_3')));
+      await frames(t);
+      expect(find.byKey(const Key('approval.detail.once')), findsNothing);
+      expect(
+        find.byKey(const Key('dashboard.approval.outcome')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the status bar opens the newest approval that can be '
+        'answered', (t) async {
+      await approvals(t);
+      await t.tap(find.byKey(const Key('status.approvals')));
+      await frames(t);
+      expect(detail(t).requestId, 'apr_1');
+    });
+
+    testWidgets('J / K step through the rows', (t) async {
+      await approvals(t);
+      await _ctrlNow(t, LogicalKeyboardKey.digit3);
+      await frames(t);
+      await t.sendKeyEvent(LogicalKeyboardKey.keyJ);
+      await frames(t);
+      expect(detail(t).requestId, 'apr_1');
+      await t.sendKeyEvent(LogicalKeyboardKey.keyJ);
+      await frames(t);
+      expect(detail(t).requestId, 'apr_2');
     });
   });
 

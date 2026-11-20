@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../ui/desktop/about_area.dart';
+import '../ui/desktop/approvals_area.dart';
 import '../ui/desktop/chats_area.dart';
 import '../ui/desktop/desktop_shell.dart';
 import '../ui/desktop/news_area.dart';
@@ -68,6 +69,9 @@ GoRouter buildDesktopRouter({
   );
   final settingsKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.settings');
   final aboutKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.about');
+  final approvalsKey = GlobalKey<NavigatorState>(
+    debugLabel: 'desktop.approvals',
+  );
 
   Widget morePage(MorePage page, GoRouterState state) => switch (page) {
     MorePage.settings => const SettingsScreen(),
@@ -107,9 +111,35 @@ GoRouter buildDesktopRouter({
         ),
         routes: [
           // before the Chats shell: '/chats/approvals' is an area of its own
-          GoRoute(
-            path: Routes.approvals,
-            pageBuilder: (_, state) => _flat(state, const ApprovalsScreen()),
+          ShellRoute(
+            navigatorKey: approvalsKey,
+            pageBuilder: (context, state, child) => NoTransitionPage<void>(
+              key: state.pageKey,
+              child: ApprovalsArea(
+                location: state.uri.toString(),
+                content: child,
+              ),
+            ),
+            routes: [
+              GoRoute(
+                path: Routes.approvals,
+                pageBuilder: (_, state) =>
+                    _flat(state, const ApprovalsPlaceholder()),
+              ),
+              GoRoute(
+                path: '${Routes.approvals}/:id',
+                pageBuilder: (_, state) {
+                  final id = state.pathParameters['id']!;
+                  return _flat(
+                    state,
+                    ApprovalDetail(
+                      key: ValueKey('approval.$id'),
+                      requestId: id,
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
           ShellRoute(
             navigatorKey: chatsKey,

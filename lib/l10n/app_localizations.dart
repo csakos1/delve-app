@@ -8924,6 +8924,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved'**
   String get desktopPersonaSaved;
+
+  /// No description provided for @desktopApprovalsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No approval open'**
+  String get desktopApprovalsEmpty;
+
+  /// No description provided for @desktopApprovalsEmptySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one from the list'**
+  String get desktopApprovalsEmptySub;
+
+  /// No description provided for @desktopApprovalWaitingWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get desktopApprovalWaitingWord;
+
+  /// No description provided for @desktopApprovalLateWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Late'**
+  String get desktopApprovalLateWord;
+
+  /// No description provided for @desktopApprovalUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'approvable until {time}'**
+  String desktopApprovalUntil(String time);
+
+  /// No description provided for @desktopApprovalWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Why the agent asks'**
+  String get desktopApprovalWhy;
+
+  /// No description provided for @desktopApprovalGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This approval is not stored on this device any more.'**
+  String get desktopApprovalGone;
 }
 
 class _AppLocalizationsDelegate

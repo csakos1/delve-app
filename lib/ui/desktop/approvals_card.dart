@@ -395,7 +395,7 @@ class _RowState extends State<_Row> {
           runSpacing: DelveTokens.space1,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            _ChatLink(
+            ApprovalChatLink(
               key: ValueKey('dashboard.approval.chat.${a.requestId}'),
               title: widget.item.chatTitle ?? l.chatTitle,
               onTap: () => context.open(Routes.chat(a.conversationId)),
@@ -434,11 +434,11 @@ class _RowState extends State<_Row> {
       ],
     );
     final right = widget.leaving
-        ? _Outcome(approval: a, self: widget.self)
+        ? ApprovalOutcomeLine(approval: a, self: widget.self)
         : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _State(approval: a, now: widget.now),
+              ApprovalStateLine(approval: a, now: widget.now),
               if (widget.failed case final reason?) ...[
                 const SizedBox(height: 6),
                 Row(
@@ -607,8 +607,8 @@ class _RowState extends State<_Row> {
 }
 
 /// The chat's title as a link: `titleSmall` + `arrow_outward` 14.
-class _ChatLink extends StatelessWidget {
-  const _ChatLink({super.key, required this.title, required this.onTap});
+class ApprovalChatLink extends StatelessWidget {
+  const ApprovalChatLink({super.key, required this.title, required this.onTap});
 
   final String title;
   final VoidCallback onTap;
@@ -665,8 +665,12 @@ class _ClassChip extends StatelessWidget {
 /// Waiting: the ring and “Agent waits m:ss” (alert in the last minute), then
 /// both deadlines muted. Late: “Agent stopped waiting at … · approvable
 /// until …” in info.
-class _State extends StatelessWidget {
-  const _State({required this.approval, required this.now});
+class ApprovalStateLine extends StatelessWidget {
+  const ApprovalStateLine({
+    super.key,
+    required this.approval,
+    required this.now,
+  });
 
   final ApprovalRow approval;
   final DateTime now;
@@ -744,8 +748,12 @@ class _State extends StatelessWidget {
 /// How the row ended: the status chip and who / when (“You · this device ·
 /// HH:mm” for this device's answer); an approval whose window closed reads
 /// Expired.
-class _Outcome extends StatelessWidget {
-  const _Outcome({required this.approval, required this.self});
+class ApprovalOutcomeLine extends StatelessWidget {
+  const ApprovalOutcomeLine({
+    super.key,
+    required this.approval,
+    required this.self,
+  });
 
   final ApprovalRow approval;
   final String? self;

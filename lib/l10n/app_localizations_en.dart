@@ -5729,4 +5729,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopPersonaSaved => 'Saved';
+
+  @override
+  String get desktopApprovalsEmpty => 'No approval open';
+
+  @override
+  String get desktopApprovalsEmptySub => 'Pick one from the list';
+
+  @override
+  String get desktopApprovalWaitingWord => 'Waiting';
+
+  @override
+  String get desktopApprovalLateWord => 'Late';
+
+  @override
+  String desktopApprovalUntil(String time) {
+    return 'approvable until $time';
+  }
+
+  @override
+  String get desktopApprovalWhy => 'Why the agent asks';
+
+  @override
+  String get desktopApprovalGone =>
+      'This approval is not stored on this device any more.';
 }

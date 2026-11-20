@@ -62,6 +62,10 @@ abstract final class Routes {
 
   /// 11 Approvals: from the Chats header (and notifications), back to Chats.
   static const approvals = '/chats/approvals';
+
+  /// The desktop's Approvals with one approval in the content (L2c3c).
+  static String approval(String requestId) =>
+      '$approvals/${Uri.encodeComponent(requestId)}';
   static const newChat = '/chats/new';
   static String chat(String id) => '/chats/c/${Uri.encodeComponent(id)}';
 
