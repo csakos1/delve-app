@@ -532,6 +532,11 @@ on a right click of the Thinking pill, the schedule editor's chat picker) or is 
 (`showDesktopDialog`: a file's details, the About me previews; a General model that reads no
 images offers another model in the confirmation dialog); a terminal tab's right-click menu is
 the desktop's context menu, and the Terminal menu has no “Sessions” (they are the list column).
+The in-app approval notice (`approval_notice.dart`, L2d4): an approval that arrives while the
+window is in front and its chat, Approvals or the Dashboard is not the open page shows at the
+bottom right of the area (380 wide, 16 from the edge and the status bar): the chat as a link,
+the command in full, the countdown, Allow once / Deny. It stays until answered (the outcome
+for 1.5 s), closed or opened; one at a time – a second one only counts in the status bar.
 Sub-pages (`DesktopSubPage`, L2d3b): what the phone pushes over Settings – the connection log,
 Terminal settings, General chat settings – and a News feed's page are pages of the content
 here: the 48 px header (a back arrow while the area has a page under it), the phone's body in

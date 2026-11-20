@@ -10,6 +10,7 @@ import '../../app/layout.dart';
 import '../../app/platform.dart';
 import '../../app/router.dart';
 import '../../theme/delve_theme.dart';
+import 'approval_notice.dart';
 import 'areas.dart';
 import 'chat_inspector.dart';
 import 'desktop_page.dart';
@@ -556,7 +557,20 @@ class DesktopShell extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           DesktopRail(location: location),
-                          Expanded(child: child),
+                          // the in-app approval notice over the area, at
+                          // its bottom right (L2d4)
+                          Expanded(
+                            child: Stack(
+                              children: [
+                                Positioned.fill(child: child),
+                                Positioned(
+                                  right: DelveDesktop.noticeInset,
+                                  bottom: DelveDesktop.noticeInset,
+                                  child: ApprovalNotice(location: location),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),

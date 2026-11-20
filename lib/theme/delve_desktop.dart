@@ -160,6 +160,12 @@ abstract final class DelveDesktop {
   static const double approvalsRight = 372;
   static const double approvalsRightCompact = 300;
   static const int approvalsMaxRows = 3;
+
+  /// The in-app approval notice (27W-14i): its width, its distance from the
+  /// content's right edge and from the status bar, the tallest command.
+  static const double noticeWidth = 380;
+  static const double noticeInset = 16;
+  static const double noticeCommandMax = 160;
   static const double approvalsShowAll = 36;
   static const double approvalsWellRadius = 8;
 

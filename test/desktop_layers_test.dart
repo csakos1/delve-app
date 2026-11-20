@@ -26,7 +26,7 @@ import 'chat_screen_test.dart' show liveStatus, seedFinished;
 import 'general_ui_test.dart' show seedModels;
 import 'news_test.dart' show newsJson;
 import 'support/fake_openrouter.dart' show testOpenRouterKey;
-import 'support/fake_server.dart' show FakeServer;
+import 'support/fake_server.dart' show FakeReply, FakeServer;
 import 'support/harness.dart';
 import 'support/terminal_fakes.dart';
 
@@ -596,6 +596,102 @@ void main() {
       await go(t, Routes.generalSettings);
       expectPage(t, GeneralSettingsScreen);
       expect(find.byKey(const Key('generalSettings.list')), findsOneWidget);
+    });
+  });
+
+  group('the in-app approval notice (L2d4)', () {
+    final notice = find.byKey(const Key('approval.notice'));
+
+    /// The desktop on Chats, connected; apr_1 waits already.
+    Future<TestEnv> start(WidgetTester t) async {
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        status: liveStatus,
+        settle: false,
+        before: (env) async {
+          await seedChats(env);
+          await env.db.putApproval(approval('apr_1', 'pending'));
+        },
+      );
+      await _frames(t);
+      return env;
+    }
+
+    /// A new approval arrives.
+    Future<void> arrive(WidgetTester t, TestEnv env, String id) async {
+      await t.runAsync(() => env.db.putApproval(approval(id, 'pending')));
+      await _frames(t, 6);
+    }
+
+    testWidgets('an approval that arrives over another page shows at the '
+        'bottom right, one at a time; Allow once answers it, the outcome '
+        'shows, then it goes', (t) async {
+      final env = await start(t);
+      // what waited at the start is not announced
+      expect(notice, findsNothing);
+
+      await arrive(t, env, 'apr_2');
+      expect(notice, findsOneWidget);
+      expect(t.getSize(notice).width, DelveDesktop.noticeWidth);
+      final corner = t.getBottomRight(notice);
+      expect(corner.dx, _frame.width - DelveDesktop.noticeInset);
+      expect(
+        corner.dy,
+        _frame.height - DelveDesktop.statusBarHeight - DelveDesktop.noticeInset,
+      );
+      expect(
+        find.descendant(
+          of: notice,
+          matching: find.byKey(const Key('approval.notice.command')),
+        ),
+        findsOneWidget,
+      );
+
+      // a second one does not stack
+      await arrive(t, env, 'apr_3');
+      expect(notice, findsOneWidget);
+
+      env.server.on(
+        'POST',
+        '/api/v1/approvals/apr_2',
+        (r) => FakeReply(
+          200,
+          approval(
+            'apr_2',
+            'approved_once',
+            decidedBy: 'pixel',
+            choice: 'once',
+            answeredAgo: Duration.zero,
+          ).toJson(),
+        ),
+      );
+      await t.tap(find.byKey(const Key('approval.notice.once')));
+      await _frames(t, 5);
+      expect(env.server.requests.last.data, {'choice': 'once'});
+      expect(
+        find.descendant(of: notice, matching: find.text('Approved')),
+        findsOneWidget,
+      );
+      await _frames(t, 40);
+      expect(notice, findsNothing);
+    });
+
+    testWidgets('its close button hides it; where the page shows the '
+        'approval itself (the Dashboard) there is none', (t) async {
+      final env = await start(t);
+      await arrive(t, env, 'apr_2');
+      expect(notice, findsOneWidget);
+      await t.tap(find.byKey(const Key('approval.notice.close')));
+      await _frames(t, 4);
+      expect(notice, findsNothing);
+
+      await _ctrl(t, LogicalKeyboardKey.digit4);
+      await _frames(t, 10);
+      await arrive(t, env, 'apr_3');
+      expect(find.byKey(const Key('dashboard.approvals')), findsOneWidget);
+      expect(notice, findsNothing);
     });
   });
 }
