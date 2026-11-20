@@ -30,7 +30,7 @@ import 'desktop_shell.dart' show newChatLocation;
 import 'dock.dart';
 import 'panes.dart';
 import 'shortcut_sheet.dart';
-import 'status_bar.dart' show clockText;
+import 'status_bar.dart' show canPickModel, clockText, openModelPicker;
 
 /// The palette's groups, in the order they show (Components “Layers”):
 /// empty – Now · Go to · Recent chats · Actions; typing – Now · Chats ·
@@ -733,6 +733,15 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
               dock.show(focus: true);
             }
           },
+        ),
+      if (canPickModel(ref))
+        PaletteEntry(
+          id: 'action.model',
+          group: PaletteGroup.actions,
+          icon: DelveIcons.modelSwitch,
+          title: l.paletteSwitchModel,
+          keys: DesktopKeys.model,
+          run: () => openModelPicker(ref),
         ),
       PaletteEntry(
         id: 'action.shortcuts',

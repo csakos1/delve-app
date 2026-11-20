@@ -16,7 +16,7 @@ import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../desktop/desktop_page.dart' show DesktopPageBody;
 import '../desktop/intake.dart' show EditorScope;
-import '../desktop/layers.dart' show showDesktopConfirm;
+import '../desktop/layers.dart' show showDesktopConfirm, showDesktopPopover;
 import '../desktop/panes.dart' show KeyCap, PaneHeader;
 import '../format.dart';
 import '../schedule_text.dart';
@@ -175,17 +175,35 @@ class _ScheduleEditorScreenState extends ConsumerState<ScheduleEditorScreen> {
     });
   }
 
+  /// The fixed chat's button: the desktop's picker hangs on it (L2d3).
+  final GlobalKey _pickKey = GlobalKey(debugLabel: 'schedule.pickChat');
+
   Future<void> _pickChat() async {
-    final picked = await showModalBottomSheet<(String, String)>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (_) => const _ChatPicker(),
-    );
+    final anchor = _pickKey.currentContext;
+    final (String, String)? picked;
+    if (anchor != null && DesktopLayout.of(context)) {
+      picked = await showDesktopPopover<(String, String)>(
+        anchor,
+        size: const Size(
+          DelveDesktop.chatPickerWidth,
+          DelveDesktop.chatPickerHeight,
+        ),
+        builder: (_) => const _ChatPicker(embedded: true),
+      );
+    } else {
+      picked = await showModalBottomSheet<(String, String)>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (_) => const _ChatPicker(),
+      );
+    }
     if (picked == null || !mounted) return;
+    // a variable assigned in a branch is not promoted inside a closure
+    final chat = picked;
     setState(() {
-      _conversationId = picked.$1;
-      _conversationTitle = picked.$2;
+      _conversationId = chat.$1;
+      _conversationTitle = chat.$2;
       _fixed = true;
       _errors.remove('chat');
     });
@@ -634,11 +652,14 @@ class _ScheduleEditorScreenState extends ConsumerState<ScheduleEditorScreen> {
                   ? null
                   : TextStyle(color: context.delve.alertFg),
             ),
-            secondary: IconButton(
-              key: const Key('schedule.pickChat'),
-              tooltip: l.schedPickChat,
-              onPressed: _pickChat,
-              icon: const SymbolIcon(DelveIcons.forum),
+            secondary: KeyedSubtree(
+              key: _pickKey,
+              child: IconButton(
+                key: const Key('schedule.pickChat'),
+                tooltip: l.schedPickChat,
+                onPressed: _pickChat,
+                icon: const SymbolIcon(DelveIcons.forum),
+              ),
             ),
           ),
         ],
@@ -733,7 +754,10 @@ class _Summary extends StatelessWidget {
 
 /// Bottom sheet: the active chats; answers `(id, title)`.
 class _ChatPicker extends ConsumerWidget {
-  const _ChatPicker();
+  const _ChatPicker({this.embedded = false});
+
+  /// In the desktop's popover: the title at its top padding.
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -745,14 +769,23 @@ class _ChatPicker extends ConsumerWidget {
           maxHeight: MediaQuery.sizeOf(context).height * 0.7,
         ),
         child: Column(
+          key: const Key('schedule.chatPicker'),
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: DelveTokens.space4,
+              padding: EdgeInsets.fromLTRB(
+                embedded ? DelveTokens.space3 : DelveTokens.space4,
+                embedded ? DelveTokens.space3 : 0,
+                DelveTokens.space4,
+                0,
               ),
-              child: Text(l.schedPickChat, style: context.text.titleMedium),
+              child: Text(
+                l.schedPickChat,
+                style: embedded
+                    ? context.text.titleSmall
+                    : context.text.titleMedium,
+              ),
             ),
             const SizedBox(height: DelveTokens.space2),
             if (chats == null)

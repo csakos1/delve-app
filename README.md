@@ -524,6 +524,14 @@ words marked) gives Now · Chats (archived too) · News (the stories the app hol
 opens the shortcut sheet: three columns of the keys that work now (`shortcutColumns`;
 Terminal and Files only with the tools on). The rail's tooltips open 8 px to its right after
 500 ms, with the key in a key cap (`RailTooltip`).
+Popovers and dialogs (`layers.dart`, L2d3): Ctrl+M (and the palette's “Switch the local
+model”) opens the local model picker over the status bar's model – ↓ / ↑ go round the presets
+that can be loaded, starting from the loaded one, Enter picks, Esc closes. What is a bottom
+sheet on the phone hangs under its control here (`showDesktopPopover`: the General effort list
+on a right click of the Thinking pill, the schedule editor's chat picker) or is a dialog
+(`showDesktopDialog`: a file's details, the About me previews; a General model that reads no
+images offers another model in the confirmation dialog); a terminal tab's right-click menu is
+the desktop's context menu, and the Terminal menu has no “Sessions” (they are the list column).
 Focus and keys (`pane_focus.dart`): every pane has its own focus point (`PaneFocus`). F6 /
 Shift+F6 go round the list, the content, the dock (when open) and the inspector, the pane
 drawing the 2 px accent ring after a key; a click on a row gives its pane the focus without

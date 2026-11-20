@@ -17,14 +17,17 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'approvals_screen_test.dart' show approval, seedChats;
-import 'chat_screen_test.dart' show seedFinished;
+import 'chat_screen_test.dart' show liveStatus, seedFinished;
+import 'general_ui_test.dart' show seedModels;
 import 'news_test.dart' show newsJson;
+import 'support/fake_openrouter.dart' show testOpenRouterKey;
 import 'support/fake_server.dart' show FakeServer;
 import 'support/harness.dart';
 import 'support/terminal_fakes.dart';
 
 /// The desktop's layers (L2d): the command palette, the shortcut sheet and
-/// the rail's tooltip (L2d1).
+/// the rail's tooltip (L2d1); the panes' focus and keys (L2d2); popovers
+/// and what the phone's sheets are here (L2d3).
 final _linux = PlatformCaps.linux(host: 'archlinux');
 const _frame = Size(1440, 900);
 
@@ -427,6 +430,126 @@ void main() {
       expect(find.text(DesktopKeys.pane), findsOneWidget);
       expect(find.text(DesktopKeys.paneBack), findsOneWidget);
       expect(find.text(DesktopKeys.rowMenu), findsOneWidget);
+    });
+  });
+
+  group('popovers and sheets (L2d3)', () {
+    Finder cursor(String preset) => find.byKey(Key('model.row.$preset.cursor'));
+
+    /// Connected: the status bar shows llama-server's model.
+    Future<void> live(WidgetTester t) async {
+      await pumpDelve(t, caps: _linux, window: _frame, status: liveStatus);
+      await _frames(t, 4);
+      expect(find.byKey(const Key('status.model')), findsOneWidget);
+    }
+
+    testWidgets('Ctrl+M opens the local models over the status bar; the '
+        'arrows go round the presets that can be loaded, from the loaded '
+        'one; Esc closes', (t) async {
+      await live(t);
+      await _ctrl(t, LogicalKeyboardKey.keyM);
+      expect(find.byKey(const Key('desktop.popover')), findsOneWidget);
+      expect(find.text('Local models'), findsOneWidget);
+      // over the status bar, not under it
+      expect(
+        t.getBottomLeft(find.byKey(const Key('desktop.popover'))).dy,
+        lessThan(t.getTopLeft(find.byKey(const Key('status.model'))).dy),
+      );
+      // no ring until an arrow
+      expect(cursor('qwen38-27b-iq4xs'), findsNothing);
+      expect(cursor('qwen38-27b-q6k'), findsNothing);
+      await _key(t, LogicalKeyboardKey.arrowDown);
+      expect(cursor('qwen38-27b-q6k'), findsOneWidget);
+      await _key(t, LogicalKeyboardKey.arrowUp);
+      expect(cursor('qwen38-27b-iq4xs'), findsOneWidget);
+      expect(cursor('qwen38-27b-q6k'), findsNothing);
+      // round the end: the two that cannot be loaded are passed over
+      await _key(t, LogicalKeyboardKey.arrowUp);
+      expect(cursor('reasoner-32b'), findsOneWidget);
+      await _key(t, LogicalKeyboardKey.escape);
+      await _frames(t, 12);
+      expect(find.byKey(const Key('desktop.popover')), findsNothing);
+    });
+
+    testWidgets('Enter picks the preset under the arrows: the switch asks '
+        'first', (t) async {
+      await live(t);
+      await _ctrl(t, LogicalKeyboardKey.keyM);
+      // Enter without an arrow picks nothing
+      await _key(t, LogicalKeyboardKey.enter);
+      expect(find.byKey(const Key('desktop.popover')), findsOneWidget);
+      await _key(t, LogicalKeyboardKey.arrowDown);
+      await _key(t, LogicalKeyboardKey.enter);
+      await _frames(t, 12);
+      expect(find.byKey(const Key('desktop.popover')), findsNothing);
+      expect(find.byKey(const Key('model.confirm.ok')), findsOneWidget);
+      expect(find.byKey(const Key('model.confirm.facts')), findsOneWidget);
+    });
+
+    testWidgets('the palette\'s “Switch the local model” opens the same '
+        'popover', (t) async {
+      await live(t);
+      await _ctrl(t, LogicalKeyboardKey.keyK);
+      await t.enterText(find.byKey(const Key('palette.field')), 'local model');
+      await _frames(t, 4);
+      expect(_row('action.model'), findsOneWidget);
+      await t.tap(_row('action.model'));
+      await _frames(t, 12);
+      expect(find.byKey(const Key('palette')), findsNothing);
+      expect(find.byKey(const Key('desktop.popover')), findsOneWidget);
+      expect(find.text('Local models'), findsOneWidget);
+    });
+
+    testWidgets('not connected: no model to pick – Ctrl+M does nothing, the '
+        'palette does not offer it; the sheet lists the key', (t) async {
+      await _desktop(t);
+      expect(find.byKey(const Key('status.model')), findsNothing);
+      await _ctrl(t, LogicalKeyboardKey.keyM);
+      expect(find.byKey(const Key('desktop.popover')), findsNothing);
+      await _ctrl(t, LogicalKeyboardKey.keyK);
+      await t.enterText(find.byKey(const Key('palette.field')), 'local model');
+      await _frames(t, 4);
+      expect(_row('action.model'), findsNothing);
+      await _key(t, LogicalKeyboardKey.escape);
+      await _frames(t, 12);
+      await _question(t);
+      expect(find.text(DesktopKeys.model), findsOneWidget);
+    });
+
+    testWidgets('General: a right click on the Thinking pill opens the '
+        'efforts as a popover (N469)', (t) async {
+      await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        generalKey: testOpenRouterKey,
+        before: seedModels,
+      );
+      // Ctrl+Shift+N: a new General chat
+      await t.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await t.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await t.sendKeyEvent(LogicalKeyboardKey.keyN);
+      await t.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await t.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await _frames(t, 20);
+      expect(find.byKey(const Key('general.thinking')), findsOneWidget);
+
+      await t.tap(
+        find.byKey(const Key('general.thinking')),
+        buttons: kSecondaryMouseButton,
+      );
+      await _frames(t, 12);
+      expect(find.byKey(const Key('desktop.popover')), findsOneWidget);
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(
+        t.getSize(find.byKey(const Key('desktop.popover'))).width,
+        DelveDesktop.effortWidth,
+      );
+      expect(find.text('Model default (Max)'), findsOneWidget);
+      await t.tap(find.byKey(const Key('effort.high')));
+      await _frames(t, 12);
+      expect(find.byKey(const Key('desktop.popover')), findsNothing);
+      expect(find.text('Thinking · High'), findsOneWidget);
     });
   });
 }

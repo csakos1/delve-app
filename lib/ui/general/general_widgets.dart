@@ -14,6 +14,7 @@ import '../chat/markdown.dart';
 import '../chat/thinking_block.dart';
 import '../chat/usage.dart' show DashedRing, contextWarnPct;
 import '../desktop/desktop_row.dart';
+import '../desktop/layers.dart' show showDesktopPopover;
 import '../format.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
@@ -159,7 +160,8 @@ class ModelChip extends StatelessWidget {
 
 /// The General composer's Thinking pill. ON: accent fill; OFF: outline.
 /// [locked] (the model always thinks): primaryContainer with a lock, not a
-/// switch – a tap explains it. Long press picks the effort ([onLongPress]).
+/// switch – a tap explains it. Long press – on the desktop a right click –
+/// picks the effort ([onLongPress]).
 class GeneralThinkingPill extends StatefulWidget {
   const GeneralThinkingPill({
     super.key,
@@ -230,6 +232,8 @@ class _GeneralThinkingPillState extends State<GeneralThinkingPill> {
               ? null
               : () => onChanged(!widget.on),
           onLongPress: widget.onLongPress,
+          // the desktop's way to the effort: a right click (L2d3)
+          onSecondaryTap: widget.onLongPress,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: DelveTokens.space3),
             child: Row(
@@ -292,38 +296,87 @@ class _GeneralThinkingPillState extends State<GeneralThinkingPill> {
 typedef EffortChoice = ({String? effort});
 
 /// The thinking effort of the next message: the model's default or one of
-/// its efforts (strongest first). Null: dismissed.
+/// its efforts (strongest first). Null: dismissed. In the desktop layout a
+/// popover under (or over) [anchor] – the Thinking pill (L2d3).
 Future<EffortChoice?> showEffortSheet(
   BuildContext context, {
   required String model,
   required List<String> efforts,
   required String? defaultEffort,
   required String? current,
-}) => showModalBottomSheet<EffortChoice>(
-  context: context,
-  showDragHandle: true,
-  backgroundColor: context.colors.surfaceContainerHigh,
-  builder: (context) {
+  BuildContext? anchor,
+}) {
+  if (anchor != null && DesktopLayout.of(context)) {
+    return showDesktopPopover<EffortChoice>(
+      anchor,
+      size: Size(
+        DelveDesktop.effortWidth,
+        DelveDesktop.effortHead + DelveDesktop.effortRow * (efforts.length + 1),
+      ),
+      builder: (_) => _EffortList(
+        model: model,
+        efforts: efforts,
+        defaultEffort: defaultEffort,
+        current: current,
+        embedded: true,
+      ),
+    );
+  }
+  return showModalBottomSheet<EffortChoice>(
+    context: context,
+    showDragHandle: true,
+    backgroundColor: context.colors.surfaceContainerHigh,
+    builder: (_) => SafeArea(
+      child: _EffortList(
+        model: model,
+        efforts: efforts,
+        defaultEffort: defaultEffort,
+        current: current,
+      ),
+    ),
+  );
+}
+
+/// The efforts as rows, the chosen one tinted and checked. [embedded]: in
+/// the desktop's popover – its own top padding, rows 36.
+class _EffortList extends StatelessWidget {
+  const _EffortList({
+    required this.model,
+    required this.efforts,
+    required this.defaultEffort,
+    required this.current,
+    this.embedded = false,
+  });
+
+  final String model;
+  final List<String> efforts;
+  final String? defaultEffort;
+  final String? current;
+  final bool embedded;
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final cs = context.colors;
     final selected = current != null && efforts.contains(current)
         ? current
         : null;
+    final byDefault = defaultEffort;
     Widget row(String? effort, String label) {
       final on = effort == selected;
       return ListTile(
         key: Key('effort.${effort ?? 'default'}'),
+        minTileHeight: embedded ? DelveDesktop.effortRow : null,
         tileColor: on ? cs.primaryContainer : null,
         title: Text(
           label,
-          style: context.text.bodyLarge!.copyWith(
-            color: on ? cs.onPrimaryContainer : null,
-          ),
+          style: (embedded ? context.text.bodyMedium! : context.text.bodyLarge!)
+              .copyWith(color: on ? cs.onPrimaryContainer : null),
         ),
         trailing: on
             ? SymbolIcon(
                 DelveIcons.check,
-                size: 22,
+                size: embedded ? 18 : 22,
                 color: cs.onPrimaryContainer,
               )
             : null,
@@ -331,46 +384,52 @@ Future<EffortChoice?> showEffortSheet(
       );
     }
 
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DelveTokens.space6,
-                0,
-                DelveTokens.space6,
-                DelveTokens.space3,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l.generalEffortTitle, style: context.text.titleLarge),
-                  Text(
-                    l.generalEffortSub(model),
-                    style: context.text.labelMedium!.copyWith(
-                      color: context.delve.textMuted,
-                    ),
+    final side = embedded ? DelveTokens.space3 : DelveTokens.space6;
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              side,
+              embedded ? DelveTokens.space3 : 0,
+              side,
+              embedded ? DelveTokens.space2 : DelveTokens.space3,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.generalEffortTitle,
+                  style: embedded
+                      ? context.text.titleSmall
+                      : context.text.titleLarge,
+                ),
+                Text(
+                  l.generalEffortSub(model),
+                  maxLines: embedded ? 1 : null,
+                  overflow: embedded ? TextOverflow.ellipsis : null,
+                  style: context.text.labelMedium!.copyWith(
+                    color: context.delve.textMuted,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            row(
-              null,
-              defaultEffort == null
-                  ? l.generalEffortDefaultPlain
-                  : l.generalEffortDefault(effortLabel(l, defaultEffort)),
-            ),
-            for (final e in efforts) row(e, effortLabel(l, e)),
-            const SizedBox(height: DelveTokens.space2),
-          ],
-        ),
+          ),
+          row(
+            null,
+            byDefault == null
+                ? l.generalEffortDefaultPlain
+                : l.generalEffortDefault(effortLabel(l, byDefault)),
+          ),
+          for (final e in efforts) row(e, effortLabel(l, e)),
+          const SizedBox(height: DelveTokens.space2),
+        ],
       ),
     );
-  },
-);
+  }
+}
 
 /// “Switched to GLM 5.3 · 21:12”, centred between two hairlines.
 class SwitchMarker extends StatelessWidget {

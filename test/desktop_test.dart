@@ -2444,6 +2444,26 @@ void main() {
       );
     });
 
+    testWidgets('a right click on a dock tab opens the desktop\'s menu '
+        '(L2d3, N533)', (t) async {
+      await desktop(t);
+      await dockKey(t);
+      await t.tap(
+        find.byKey(const ValueKey('dock.tab.delve-1')),
+        buttons: kSecondaryMouseButton,
+      );
+      await frames(t, 10);
+      expect(find.byKey(const Key('terminal.tabMenu.rename')), findsOneWidget);
+      expect(find.byKey(const Key('terminal.tabMenu.close')), findsOneWidget);
+      expect(find.byKey(const Key('terminal.tabMenu.kill')), findsOneWidget);
+      // the desktop's menu: no state line and divider on top (the phone's)
+      expect(find.byType(PopupMenuDivider), findsNothing);
+      await t.sendKeyEvent(LogicalKeyboardKey.escape);
+      await frames(t, 10);
+      expect(find.byKey(const Key('terminal.tabMenu.rename')), findsNothing);
+      expect(find.byType(TerminalDock), findsOneWidget);
+    });
+
     testWidgets('without Terminal there is no dock: Ctrl+` does nothing', (
       t,
     ) async {

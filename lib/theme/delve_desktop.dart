@@ -114,6 +114,18 @@ abstract final class DelveDesktop {
   /// The General model picker as a popover (27W-14f).
   static const double modelPickerWidth = 380;
   static const double modelPickerHeight = 520;
+
+  /// The General effort popover (L2d3): its title block and its rows.
+  static const double effortWidth = 280;
+  static const double effortHead = 70;
+  static const double effortRow = 36;
+
+  /// A text preview in a dialog (About me: what a chat starts with).
+  static const double previewDialogWidth = 680;
+
+  /// The schedule editor's chat picker, a popover on its button.
+  static const double chatPickerWidth = 360;
+  static const double chatPickerHeight = 420;
   static const double keyCapHeight = 18;
   static const double keyCapRadius = 4;
   static const double tooltipRadius = 6;

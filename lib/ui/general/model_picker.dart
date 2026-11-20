@@ -46,11 +46,16 @@ class ModelPickerSheet extends ConsumerStatefulWidget {
     required this.current,
     required this.subtitle,
     this.scroll,
+    this.autofocus = false,
   });
 
   final String? current;
   final String subtitle;
   final ScrollController? scroll;
+
+  /// The search field takes the focus (the desktop's popover: type at
+  /// once).
+  final bool autofocus;
 
   @override
   ConsumerState<ModelPickerSheet> createState() => _ModelPickerSheetState();
@@ -264,6 +269,7 @@ class _ModelPickerSheetState extends ConsumerState<ModelPickerSheet> {
             child: TextField(
               key: const Key('picker.search'),
               controller: _search,
+              autofocus: widget.autofocus,
               textInputAction: TextInputAction.search,
               onChanged: (_) => setState(() {}),
               style: context.text.bodyLarge,

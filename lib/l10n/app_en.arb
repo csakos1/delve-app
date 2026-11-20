@@ -3087,6 +3087,7 @@
     }
   },
   "generalSwitchModel": "Switch model",
+  "generalNoImageBody": "Pick a model that reads images to attach one.",
   "generalImage": "Image {index}",
   "@generalImage": {
     "placeholders": {
@@ -4115,6 +4116,7 @@
   "paletteNewAgent": "New Agent chat",
   "paletteNewGeneral": "New General chat",
   "paletteRefresh": "Refresh this page",
+  "paletteSwitchModel": "Switch the local model",
   "paletteMove": "Move",
   "paletteOpen": "Open",
   "shortcutsTitle": "Keyboard shortcuts",

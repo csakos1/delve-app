@@ -12,7 +12,7 @@ import '../../persona/persona_controller.dart';
 import '../../theme/delve_theme.dart';
 import '../desktop/desktop_page.dart' show DesktopPage, DesktopPageBody;
 import '../desktop/intake.dart' show EditorScope;
-import '../desktop/layers.dart' show showDesktopConfirm;
+import '../desktop/layers.dart' show showDesktopConfirm, showDesktopDialog;
 import '../desktop/list_area.dart' show SectionRow;
 import '../desktop/panes.dart' show KeyCap, PaneHeader;
 import '../format.dart';
@@ -126,6 +126,36 @@ class _PersonaScreenState extends ConsumerState<PersonaScreen> {
 
   void _preview(String title, String text) {
     final l = AppLocalizations.of(context);
+    if (DesktopLayout.of(context)) {
+      // the desktop: a dialog as wide as a page (L2d3)
+      unawaited(
+        showDesktopDialog<void>(
+          context,
+          width: DelveDesktop.previewDialogWidth,
+          builder: (context) => ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+            ),
+            child: ListView(
+              key: const Key('persona.preview'),
+              shrinkWrap: true,
+              padding: const EdgeInsets.all(20),
+              children: [
+                Text(title, style: context.text.titleMedium),
+                const SizedBox(height: DelveTokens.space3),
+                SelectableText(
+                  text.isEmpty ? l.personaPreviewEmpty : text,
+                  style: DelveText.monoSmall.copyWith(
+                    color: context.colors.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      return;
+    }
     unawaited(
       showModalBottomSheet<void>(
         context: context,

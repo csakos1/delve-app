@@ -422,7 +422,7 @@ Future<String?> showLocalModels(BuildContext context, SystemInfo info) {
 
 /// The presets in the desktop's order, those that cannot be loaded last. It
 /// follows the system view while it is open.
-class LocalModelsSheet extends ConsumerWidget {
+class LocalModelsSheet extends ConsumerStatefulWidget {
   const LocalModelsSheet({
     super.key,
     required this.info,
@@ -433,11 +433,83 @@ class LocalModelsSheet extends ConsumerWidget {
   final SystemInfo info;
 
   /// In the desktop's popover: no close button (Esc or a click outside),
-  /// the title at the popover's top padding.
+  /// the title at the popover's top padding; ↓ / ↑ move over the presets
+  /// that can be loaded, Enter picks (L2d3).
   final bool embedded;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LocalModelsSheet> createState() => _LocalModelsSheetState();
+}
+
+class _LocalModelsSheetState extends ConsumerState<LocalModelsSheet> {
+  /// The preset the arrows stand on; null until an arrow is pressed.
+  String? _cursor;
+
+  final Map<String, GlobalKey> _rowKeys = {};
+
+  /// ↓ / ↑: the next / previous preset that can be loaded, round the list;
+  /// the first press starts from the loaded one.
+  void _move(List<LlamaModel> rows, int by) {
+    final names = [
+      for (final m in rows)
+        if (m.usable) m.name,
+    ];
+    if (names.isEmpty) return;
+    final cursor = _cursor;
+    var at = cursor == null ? -1 : names.indexOf(cursor);
+    if (at < 0) {
+      for (final m in rows) {
+        if (m.active && m.usable) at = names.indexOf(m.name);
+      }
+      if (at < 0) at = by > 0 ? -1 : 0;
+    }
+    final next = names[(at + by) % names.length];
+    setState(() => _cursor = next);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final c = _rowKeys[next]?.currentContext;
+      if (c == null || !c.mounted) return;
+      unawaited(
+        Scrollable.ensureVisible(
+          c,
+          alignmentPolicy: by > 0
+              ? ScrollPositionAlignmentPolicy.keepVisibleAtEnd
+              : ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+        ),
+      );
+    });
+  }
+
+  /// The popover's keys; Enter only with a preset under the arrows (a row
+  /// reached with Tab keeps its own).
+  KeyEventResult _onKey(KeyEvent event, List<LlamaModel> rows) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.arrowDown) {
+      _move(rows, 1);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowUp) {
+      _move(rows, -1);
+      return KeyEventResult.handled;
+    }
+    final cursor = _cursor;
+    if (cursor != null &&
+        (key == LogicalKeyboardKey.enter ||
+            key == LogicalKeyboardKey.numpadEnter)) {
+      for (final m in rows) {
+        if (m.name == cursor && m.usable) {
+          Navigator.of(context).pop(m.active ? null : m.name);
+          return KeyEventResult.handled;
+        }
+      }
+    }
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final info = widget.info;
+    final embedded = widget.embedded;
     final l = AppLocalizations.of(context);
     final cs = context.colors;
     final muted = context.delve.textMuted;
@@ -450,7 +522,7 @@ class LocalModelsSheet extends ConsumerWidget {
         if (!m.usable) m,
     ];
     final footer = l.modelPickerFooter('\u0000').split('\u0000');
-    return ConstrainedBox(
+    final body = ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.85,
       ),
@@ -505,13 +577,17 @@ class LocalModelsSheet extends ConsumerWidget {
               padding: EdgeInsets.zero,
               children: [
                 for (final m in rows)
-                  LocalModelRow(
-                    model: m,
-                    onTap: m.usable
-                        ? () => Navigator.of(
-                            context,
-                          ).pop(m.active ? null : m.name)
-                        : null,
+                  KeyedSubtree(
+                    key: _rowKeys.putIfAbsent(m.name, GlobalKey.new),
+                    child: LocalModelRow(
+                      model: m,
+                      cursor: embedded && m.name == _cursor,
+                      onTap: m.usable
+                          ? () => Navigator.of(
+                              context,
+                            ).pop(m.active ? null : m.name)
+                          : null,
+                    ),
                   ),
               ],
             ),
@@ -545,6 +621,12 @@ class LocalModelsSheet extends ConsumerWidget {
         ],
       ),
     );
+    if (!embedded) return body;
+    return Focus(
+      autofocus: true,
+      onKeyEvent: (_, event) => _onKey(event, rows),
+      child: body,
+    );
   }
 }
 
@@ -552,8 +634,17 @@ class LocalModelsSheet extends ConsumerWidget {
 /// the two capability markers, then its note or - when it cannot be loaded -
 /// the reason. The loaded one is tinted and checked.
 class LocalModelRow extends StatelessWidget {
-  const LocalModelRow({super.key, required this.model, this.onTap});
+  const LocalModelRow({
+    super.key,
+    required this.model,
+    this.onTap,
+    this.cursor = false,
+  });
   final LlamaModel model;
+
+  /// The arrows stand on it (the desktop's popover): the 2 px accent ring,
+  /// inside the row.
+  final bool cursor;
 
   /// null: the preset cannot be loaded.
   final VoidCallback? onTap;
@@ -581,8 +672,17 @@ class LocalModelRow extends StatelessWidget {
           onTap: onTap,
           splashFactory: NoSplash.splashFactory,
           highlightColor: cs.surfaceContainerHighest,
-          child: ConstrainedBox(
+          child: Container(
+            key: cursor ? Key('model.row.${m.name}.cursor') : null,
             constraints: const BoxConstraints(minHeight: 72),
+            foregroundDecoration: cursor
+                ? BoxDecoration(
+                    border: Border.all(
+                      color: cs.primary,
+                      width: DelveTokens.focusRing,
+                    ),
+                  )
+                : null,
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: DelveTokens.space5,

@@ -50,6 +50,7 @@ abstract final class DesktopKeys {
   static const pane = 'F6';
   static const paneBack = 'Shift+F6';
   static const rowMenu = 'Shift+F10';
+  static const model = 'Ctrl+M';
 }
 
 /// One line of the shortcut sheet: what it does and its keys (each its
@@ -86,6 +87,7 @@ List<List<ShortcutGroup>> shortcutColumns(
         ShortcutLine(l.shortcutsPalette, const [DesktopKeys.palette]),
         ...areas,
         ShortcutLine(l.moreSettings, const [DesktopKeys.settings]),
+        ShortcutLine(l.paletteSwitchModel, const [DesktopKeys.model]),
         ShortcutLine(l.shortcutsSheet, const [DesktopKeys.sheet]),
       ]),
     ],

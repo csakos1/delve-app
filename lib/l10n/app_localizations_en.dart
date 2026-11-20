@@ -3976,6 +3976,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get generalSwitchModel => 'Switch model';
 
   @override
+  String get generalNoImageBody =>
+      'Pick a model that reads images to attach one.';
+
+  @override
   String generalImage(int index) {
     return 'Image $index';
   }
@@ -5429,6 +5433,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paletteRefresh => 'Refresh this page';
+
+  @override
+  String get paletteSwitchModel => 'Switch the local model';
 
   @override
   String get paletteMove => 'Move';

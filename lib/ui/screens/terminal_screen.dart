@@ -21,6 +21,7 @@ import '../../terminal/terminal_theme.dart';
 import '../../terminal/terminal_trace.dart';
 import '../../theme/delve_theme.dart';
 import '../desktop/dock.dart';
+import '../desktop/pane_focus.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import '../widgets/terminal_scroll.dart';
@@ -220,6 +221,16 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
 
   void _sessions() {
     final router = GoRouter.of(context);
+    if (DesktopLayout.of(context)) {
+      // the desktop has no sheet: the sessions are the Terminal area's
+      // list column (L2d3)
+      if (widget.dock) {
+        router.go(Routes.terminal);
+      } else {
+        PaneFocus.focus(PaneRole.list);
+      }
+      return;
+    }
     unawaited(
       showTerminalSessions(
         context,
@@ -817,6 +828,7 @@ class _Menu extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final c = service.current?.connection;
     final router = GoRouter.of(context);
+    final desktop = DesktopLayout.of(context);
     final box = context.findRenderObject()! as RenderBox;
     final overlay =
         Overlay.of(context).context.findRenderObject()! as RenderBox;
@@ -831,11 +843,15 @@ class _Menu extends StatelessWidget {
       context: context,
       position: position,
       items: [
-        PopupMenuItem(
-          key: const Key('terminal.menu.sessions'),
-          value: 'sessions',
-          child: Text(l.termMenuSessions(service.config.host.split('.').first)),
-        ),
+        // the desktop lists the sessions in the list column
+        if (!desktop)
+          PopupMenuItem(
+            key: const Key('terminal.menu.sessions'),
+            value: 'sessions',
+            child: Text(
+              l.termMenuSessions(service.config.host.split('.').first),
+            ),
+          ),
         PopupMenuItem(value: 'settings', child: Text(l.termMenuSettings)),
         PopupMenuItem(
           key: const Key('terminal.menu.trace'),

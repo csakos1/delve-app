@@ -6220,6 +6220,12 @@ abstract class AppLocalizations {
   /// **'Switch model'**
   String get generalSwitchModel;
 
+  /// No description provided for @generalNoImageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a model that reads images to attach one.'**
+  String get generalNoImageBody;
+
   /// No description provided for @generalImage.
   ///
   /// In en, this message translates to:
@@ -8468,6 +8474,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refresh this page'**
   String get paletteRefresh;
+
+  /// No description provided for @paletteSwitchModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch the local model'**
+  String get paletteSwitchModel;
 
   /// No description provided for @paletteMove.
   ///

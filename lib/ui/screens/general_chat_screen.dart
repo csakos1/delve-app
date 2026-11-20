@@ -75,6 +75,9 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
   /// The model chip: the desktop's model picker opens under it.
   final GlobalKey _chipKey = GlobalKey(debugLabel: 'general.modelChip');
 
+  /// The Thinking pill: the desktop's effort popover hangs on it (L2d3).
+  final GlobalKey _pillKey = GlobalKey(debugLabel: 'general.pill');
+
   @override
   void initState() {
     super.initState();
@@ -221,7 +224,11 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
           DelveDesktop.modelPickerWidth,
           DelveDesktop.modelPickerHeight,
         ),
-        builder: (_) => ModelPickerSheet(current: current, subtitle: subtitle),
+        builder: (_) => ModelPickerSheet(
+          current: current,
+          subtitle: subtitle,
+          autofocus: true,
+        ),
       );
     } else {
       picked = await showModelPicker(
@@ -276,6 +283,7 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
       efforts: spec.choosableEfforts,
       defaultEffort: spec.defaultEffort,
       current: current,
+      anchor: _pillKey.currentContext ?? _chipKey.currentContext,
     );
     if (choice == null || !mounted) return;
     final id = _chatId;
@@ -299,17 +307,28 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
       return;
     }
     final readsImages = model?.readsImages ?? false;
-    // the desktop: the file dialog at once (the sheet stays for a model
-    // without images: it offers another model)
+    // the desktop: the file dialog at once; a model without images gets
+    // the sheet's words in a dialog that offers another model (L2d3)
     final desktop = DesktopLayout.of(context);
     _dropIdleFocus();
-    final choice = desktop && readsImages
-        ? _AddChoice.files
-        : await _showAddSheet(
-            context,
-            model: modelShortName(modelId, model),
-            readsImages: readsImages,
-          );
+    final _AddChoice? choice;
+    if (!desktop) {
+      choice = await _showAddSheet(
+        context,
+        model: modelShortName(modelId, model),
+        readsImages: readsImages,
+      );
+    } else if (readsImages) {
+      choice = _AddChoice.files;
+    } else {
+      final other = await showDesktopConfirm(
+        context,
+        title: l.generalNoImageInput(modelShortName(modelId, model)),
+        body: l.generalNoImageBody,
+        action: l.generalSwitchModel,
+      );
+      choice = other ? _AddChoice.switchModel : null;
+    }
     if (choice == null || !mounted) return;
     if (choice == _AddChoice.switchModel) {
       final chat = _chatId == null
@@ -578,6 +597,7 @@ class _GeneralChatScreenState extends ConsumerState<GeneralChatScreen> {
     final pill = spec == null || !spec.supported
         ? null
         : GeneralThinkingPill(
+            key: _pillKey,
             on: on || locked,
             locked: locked,
             label: validEffort != null && (on || locked)

@@ -258,7 +258,8 @@ String tabTooltip(AppLocalizations l, TerminalTab tab) {
 }
 
 /// The tab's menu under it: the tooltip line, Rename, Close tab, Kill
-/// session… (design 22).
+/// session… (design 22). In the desktop layout the desktop's context menu
+/// (27W-14d) with the same three (L2d3, N533).
 Future<void> showTabMenu(
   BuildContext context, {
   required TerminalService service,
@@ -267,6 +268,32 @@ Future<void> showTabMenu(
 }) async {
   final l = AppLocalizations.of(context);
   final d = context.delve;
+  if (DesktopLayout.of(context)) {
+    void run(String choice) =>
+        unawaited(_tabChoice(context, service, tab, choice));
+    await showDesktopMenu(context, at.bottomLeft, [
+      DesktopMenuItem(
+        key: const Key('terminal.tabMenu.rename'),
+        icon: DelveIcons.rename,
+        label: l.termTabRename,
+        onSelected: () => run('rename'),
+      ),
+      DesktopMenuItem(
+        key: const Key('terminal.tabMenu.close'),
+        icon: DelveIcons.tabClose,
+        label: l.termTabClose,
+        onSelected: () => run('close'),
+      ),
+      DesktopMenuItem(
+        key: const Key('terminal.tabMenu.kill'),
+        icon: DelveIcons.kill,
+        label: l.termTabKill,
+        destructive: true,
+        onSelected: () => run('kill'),
+      ),
+    ]);
+    return;
+  }
   final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
   final choice = await showMenu<String>(
     context: context,
@@ -305,7 +332,17 @@ Future<void> showTabMenu(
       ),
     ],
   );
-  if (!context.mounted) return;
+  if (choice == null || !context.mounted) return;
+  await _tabChoice(context, service, tab, choice);
+}
+
+/// What the tab's menu does.
+Future<void> _tabChoice(
+  BuildContext context,
+  TerminalService service,
+  TerminalTab tab,
+  String choice,
+) async {
   switch (choice) {
     case 'rename':
       final name = await askSessionName(context, tab.session);

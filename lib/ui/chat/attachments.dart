@@ -11,6 +11,7 @@ import '../../attachments/composer_attachments.dart';
 import '../../attachments/picker.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/layers.dart' show showDesktopDialog;
 import '../format.dart';
 import '../widgets/page_scaffolds.dart';
 
@@ -500,18 +501,26 @@ class AttachmentViewer extends ConsumerWidget {
   }
 }
 
-/// A file's details: name, type, size, and "Send again".
+/// A file's details: name, type, size, and "Send again". A sheet on the
+/// phone, a dialog in the desktop layout (L2d3).
 Future<void> showFileSheet(
   BuildContext context,
   Attachment attachment, {
   VoidCallback? onSendAgain,
-}) => showModalBottomSheet<void>(
-  context: context,
-  showDragHandle: true,
-  builder: (context) {
-    final l = AppLocalizations.of(context);
-    final d = context.delve;
-    return SafeArea(
+}) {
+  if (DesktopLayout.of(context)) {
+    return showDesktopDialog<void>(
+      context,
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: _FileDetails(attachment: attachment, onSendAgain: onSendAgain),
+      ),
+    );
+  }
+  return showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (_) => SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           DelveTokens.space6,
@@ -519,36 +528,53 @@ Future<void> showFileSheet(
           DelveTokens.space6,
           DelveTokens.space4,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(attachment.filename, style: context.text.titleMedium),
-            const SizedBox(height: DelveTokens.space1),
-            Text(
-              attachment.available
-                  ? '${attachment.mime} · ${byteSize(attachment.sizeBytes)}'
-                  : l.attachGone,
-              style: context.text.bodySmall!.copyWith(color: d.textMuted),
-            ),
-            if (onSendAgain != null) ...[
-              const SizedBox(height: DelveTokens.space4),
-              FilledButton.tonalIcon(
-                key: const Key('file.sendAgain'),
-                icon: const SymbolIcon(DelveIcons.sendAgain, size: 18),
-                label: Text(l.attachSendAgain),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  onSendAgain();
-                },
-              ),
-            ],
-          ],
-        ),
+        child: _FileDetails(attachment: attachment, onSendAgain: onSendAgain),
       ),
+    ),
+  );
+}
+
+class _FileDetails extends StatelessWidget {
+  const _FileDetails({required this.attachment, this.onSendAgain});
+
+  final Attachment attachment;
+  final VoidCallback? onSendAgain;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final again = onSendAgain;
+    return Column(
+      key: const Key('file.details'),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(attachment.filename, style: context.text.titleMedium),
+        const SizedBox(height: DelveTokens.space1),
+        Text(
+          attachment.available
+              ? '${attachment.mime} · ${byteSize(attachment.sizeBytes)}'
+              : l.attachGone,
+          style: context.text.bodySmall!.copyWith(
+            color: context.delve.textMuted,
+          ),
+        ),
+        if (again != null) ...[
+          const SizedBox(height: DelveTokens.space4),
+          FilledButton.tonalIcon(
+            key: const Key('file.sendAgain'),
+            icon: const SymbolIcon(DelveIcons.sendAgain, size: 18),
+            label: Text(l.attachSendAgain),
+            onPressed: () {
+              Navigator.of(context).pop();
+              again();
+            },
+          ),
+        ],
+      ],
     );
-  },
-);
+  }
+}
 
 /// Where a new attachment comes from (the composer's "+").
 enum AttachSource { photos, camera, file }

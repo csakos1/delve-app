@@ -136,6 +136,33 @@ Future<bool> showDesktopConfirm(
   return ok ?? false;
 }
 
+/// A dialog with content of its own (27 “Layers”: dialog) – what is a
+/// bottom sheet on the phone and has no control to hang under (a file's
+/// details, a preview): centred, [width] wide, `surface-3`, radius 16, on
+/// the 64 % scrim; Esc or a click outside closes it. Returns what the
+/// content pops with.
+Future<T?> showDesktopDialog<T>(
+  BuildContext context, {
+  double width = DelveDesktop.dialogWidth,
+  required WidgetBuilder builder,
+}) => showDialog<T>(
+  context: context,
+  barrierColor: Colors.black.withValues(alpha: 0.64),
+  builder: (context) => Dialog(
+    key: const Key('desktop.dialog'),
+    backgroundColor: context.colors.surfaceContainerHigh,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(DelveDesktop.dialogRadius),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: SizedBox(
+      width: width,
+      // the focus comes in, so Esc closes it whatever it holds
+      child: Focus(autofocus: true, child: Builder(builder: builder)),
+    ),
+  ),
+);
+
 /// A layer drawn over the shell that leaves the focus where it was (a
 /// context menu, a popover): while one is on screen the shell's pane keys –
 /// Esc, Enter, F6, Shift+F10 – stand back, and Esc is the layer's (L2d2).

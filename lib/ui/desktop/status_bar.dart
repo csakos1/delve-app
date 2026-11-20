@@ -17,6 +17,7 @@ import '../../theme/delve_theme.dart';
 import '../widgets/model_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import 'approvals_card.dart' show answerableNow;
+import 'layers.dart' show LayerMark;
 
 /// How often the status bar asks for the machine's state (the socket's
 /// `system.updated` only comes on changes; VRAM and temperature drift).
@@ -59,6 +60,34 @@ String? hottestText(List<GpuInfo>? gpus) {
 /// (run, model, slot, VRAM, hottest GPU). Segments are absent rather than
 /// zero; offline hides the machine instead of showing stale values. Every
 /// segment is a button.
+/// The status bar's model segment: what Ctrl+M and the palette's “Switch
+/// the local model” hang the picker on (L2d3).
+final GlobalKey statusModelAnchor = GlobalKey(debugLabel: 'status.model');
+
+/// The local model can be picked from the keys now: the status bar shows
+/// llama-server's model (or that it is stopped), no switch or other action
+/// runs, the desktop's helper answers – the Model row's own rule – and no
+/// menu or popover is up.
+bool canPickModel(WidgetRef ref) {
+  if (statusModelAnchor.currentContext == null || LayerMark.open > 0) {
+    return false;
+  }
+  final view = ref.read(systemProvider);
+  final info = view.info;
+  return info != null &&
+      !info.llama.switching &&
+      view.busy == null &&
+      info.helper.ok;
+}
+
+/// Opens the local model picker over the status bar's model (27W-6b), as a
+/// click on it does. False: it cannot be picked now ([canPickModel]).
+bool openModelPicker(WidgetRef ref) {
+  if (!canPickModel(ref)) return false;
+  unawaited(changeModel(statusModelAnchor.currentContext!, ref));
+  return true;
+}
+
 class DesktopStatusBar extends ConsumerStatefulWidget {
   const DesktopStatusBar({super.key});
 
@@ -190,18 +219,24 @@ class _DesktopStatusBarState extends ConsumerState<DesktopStatusBar> {
               onTap: () => context.go(Routes.system),
             )
           else if (llama.status == 'stopped')
-            _Segment(
-              key: const Key('status.model'),
-              text: l.desktopStatusLlamaStopped,
-              onTap: () => context.go(Routes.system),
+            KeyedSubtree(
+              key: statusModelAnchor,
+              child: _Segment(
+                key: const Key('status.model'),
+                text: l.desktopStatusLlamaStopped,
+                onTap: () => context.go(Routes.system),
+              ),
             )
           else if (llama.modelLine case final model?) ...[
             // the model picker as a popover over the segment (27W-6b)
-            Builder(
-              builder: (anchor) => _Segment(
-                key: const Key('status.model'),
-                text: model,
-                onTap: () => unawaited(changeModel(anchor, ref)),
+            KeyedSubtree(
+              key: statusModelAnchor,
+              child: Builder(
+                builder: (anchor) => _Segment(
+                  key: const Key('status.model'),
+                  text: model,
+                  onTap: () => unawaited(changeModel(anchor, ref)),
+                ),
               ),
             ),
             if (llama.slots != null)

@@ -82,6 +82,11 @@ class _SheetIntent extends Intent {
   const _SheetIntent();
 }
 
+/// Ctrl+M: the local model picker (L2d3).
+class _ModelIntent extends Intent {
+  const _ModelIntent();
+}
+
 /// ? types itself in a text field and in a terminal (the Terminal area's
 /// or the dock's); an editor keeps it out too.
 class _SheetAction extends Action<_SheetIntent> {
@@ -313,7 +318,8 @@ class _ChatKeyAction extends Action<_ChatKeyIntent> {
 /// Ctrl+, Settings, Ctrl+B the list column, Ctrl+I the inspector, Esc an
 /// open overlay pane; Ctrl+F the list's search, Ctrl+U a chat's Usage,
 /// Ctrl+] the inspector's next tab, Ctrl+R the open page's refresh, Ctrl+K
-/// the command palette, ? the shortcut sheet (outside text fields); in an
+/// the command palette, ? the shortcut sheet (outside text fields), Ctrl+M
+/// the local model picker over the status bar's model; in an
 /// open chat Ctrl+O attaches a file,
 /// Ctrl+V an image, Ctrl+. stops the run, Ctrl+T switches Thinking; Ctrl+`
 /// the dock (with Terminal on; in the Terminal area it sends the tab to the
@@ -354,6 +360,8 @@ class DesktopShell extends ConsumerWidget {
     const SingleActivator(LogicalKeyboardKey.keyK, control: true):
         const _PaletteIntent(),
     const CharacterActivator('?'): const _SheetIntent(),
+    const SingleActivator(LogicalKeyboardKey.keyM, control: true):
+        const _ModelIntent(),
     const SingleActivator(LogicalKeyboardKey.f6): const _PaneIntent(1),
     const SingleActivator(LogicalKeyboardKey.f6, shift: true):
         const _PaneIntent(-1),
@@ -512,6 +520,12 @@ class DesktopShell extends ConsumerWidget {
             ),
             _SheetIntent: _SheetAction(
               () => unawaited(showShortcutSheet(context)),
+            ),
+            _ModelIntent: CallbackAction<_ModelIntent>(
+              onInvoke: (_) {
+                openModelPicker(ref);
+                return null;
+              },
             ),
             _DockIntent: CallbackAction<_DockIntent>(
               onInvoke: (_) {
