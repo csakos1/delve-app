@@ -156,7 +156,7 @@ final fileInspectorTabProvider =
 /// Desktop tools on): the places and the transfers in the list column, the
 /// folder as a table in the content (or a file's preview pushed over it),
 /// Preview / Info in the inspector.
-class FilesArea extends ConsumerWidget {
+class FilesArea extends ConsumerStatefulWidget {
   const FilesArea({super.key, required this.content, required this.navigator});
 
   final Widget content;
@@ -166,12 +166,33 @@ class FilesArea extends ConsumerWidget {
   final GlobalKey<NavigatorState> navigator;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => ListArea(
+  ConsumerState<FilesArea> createState() => _FilesAreaState();
+}
+
+class _FilesAreaState extends ConsumerState<FilesArea> {
+  late final FilesService _service;
+
+  @override
+  void initState() {
+    super.initState();
+    // read now: dispose must not be the first to touch ref
+    _service = ref.read(filesServiceProvider);
+  }
+
+  @override
+  void dispose() {
+    // the inspector's image previews leave with the area (NL23)
+    unawaited(_service.clearPreviews());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ListArea(
     area: DesktopArea.files.name,
     // the content is never empty (the folder, or why it is not there)
     selected: 'files',
-    list: FilesPlacesPane(navigator: navigator),
-    content: content,
+    list: FilesPlacesPane(navigator: widget.navigator),
+    content: widget.content,
     inspector: const FileInspector(),
   );
 }

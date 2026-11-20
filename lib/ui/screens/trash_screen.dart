@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/layout.dart';
 import '../../files/files_providers.dart';
 import '../../files/files_service.dart';
 import '../../files/remote_fs.dart';
@@ -10,6 +12,8 @@ import '../../l10n/app_localizations.dart';
 import '../../terminal/terminal_providers.dart';
 import '../../terminal/terminal_service.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_row.dart' show DesktopMenuItem, showDesktopMenu;
+import '../desktop/panes.dart' show InspectorToggle;
 import '../widgets/files_dialogs.dart';
 import '../widgets/files_ui.dart';
 import '../widgets/page_scaffolds.dart';
@@ -164,6 +168,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final items = _items;
+    if (DesktopLayout.of(context)) return _desktop(context, l, items);
     return SubPage(
       title: l.filesTrash,
       actions: [
@@ -232,6 +237,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
     final now = DateTime.now();
     final home = _service.home;
     final d = context.delve;
+    final desktop = DesktopLayout.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -262,10 +268,12 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
             child: ListView.builder(
               key: const Key('trash.list'),
               itemCount: items.length,
-              itemExtent: 72,
+              itemExtent: desktop ? DelveDesktop.filesRow : 72,
+              padding: desktop ? const EdgeInsets.only(top: 2) : null,
               itemBuilder: (context, i) {
                 final item = items[i];
                 final folder = tildePath(parentPath(item.original), home);
+                if (desktop) return _desktopRow(context, l, item, folder, now);
                 final meta = [
                   if (item.deleted != null)
                     l.trashDeletedAt(fileTime(item.deleted!, now)),
@@ -343,6 +351,173 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // ------------------------------------------------------ the desktop
+
+  /// The trash in the Files area's content (L2c4c2): a 48 px header with
+  /// back, the count and Empty trash; the items as 32 px rows (name ·
+  /// where it was · deleted · size · Restore), right-click: Restore to … ·
+  /// Delete permanently. Esc goes back to the folder.
+  Widget _desktop(
+    BuildContext context,
+    AppLocalizations l,
+    List<TrashItem>? items,
+  ) {
+    final back = pageBackButton(context);
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): () =>
+            unawaited(Navigator.of(context).maybePop()),
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          backgroundColor: context.colors.surface,
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: DelveDesktop.paneHeader,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: back == null ? 16 : 4,
+                    right: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      ?back,
+                      Expanded(
+                        child: Text(
+                          l.filesTrash,
+                          style: DelveDesktopText.paneTitle.copyWith(
+                            color: context.colors.onSurface,
+                          ),
+                        ),
+                      ),
+                      FilledButton.tonal(
+                        key: const Key('trash.empty'),
+                        onPressed: _busy || (items?.isEmpty ?? true)
+                            ? null
+                            : () => unawaited(_empty()),
+                        child: Text(l.trashEmpty),
+                      ),
+                      const SizedBox(width: 4),
+                      const InspectorToggle(),
+                    ],
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListenableBuilder(
+                  listenable: _terminal,
+                  builder: (context, _) => _body(context, l),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _desktopRow(
+    BuildContext context,
+    AppLocalizations l,
+    TrashItem item,
+    String folder,
+    DateTime now,
+  ) {
+    final cs = context.colors;
+    final d = context.delve;
+    final meta = DelveDesktopText.rowSecondary.copyWith(
+      color: d.textMuted,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final name = item.entry.name;
+    final e = item.entry;
+    return Padding(
+      key: ValueKey('trash.item.$name'),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0.5),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onSecondaryTapUp: (t) => unawaited(
+          showDesktopMenu(context, t.globalPosition, [
+            DesktopMenuItem(
+              key: const Key('trash.menu.restore'),
+              icon: FileIcons.restore,
+              label: l.trashRestoreTo(folder),
+              onSelected: () => unawaited(_restore(item)),
+            ),
+            DesktopMenuItem(
+              key: Key('trash.delete.$name'),
+              icon: FileIcons.deleteForever,
+              label: l.filesActDeleteForever,
+              destructive: true,
+              onSelected: () => unawaited(_delete(item)),
+            ),
+          ]),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: Row(
+            children: [
+              SymbolIcon(
+                fileIcon(fileTypeOf(e)),
+                size: 16,
+                filled: e.isDir,
+                color: cs.onSurfaceVariant,
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: MiddleEllipsis(
+                  item.name,
+                  style: DelveDesktopText.rowSecondary.copyWith(
+                    color: cs.onSurface,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: DelveDesktop.trashFolderColumn,
+                child: Text(
+                  folder,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: DelveText.monoSmall.copyWith(color: d.textMuted),
+                ),
+              ),
+              SizedBox(
+                width: DelveDesktop.filesDateColumn,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: Text(
+                    item.deleted == null ? '' : fileTime(item.deleted!, now),
+                    maxLines: 1,
+                    style: meta,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: DelveDesktop.filesSizeColumn,
+                child: Text(
+                  !e.isDir && e.size != null ? sizeText(e.size!) : '',
+                  textAlign: TextAlign.end,
+                  maxLines: 1,
+                  style: meta,
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                key: Key('trash.restore.$name'),
+                tooltip: l.trashRestore,
+                onPressed: () => unawaited(_restore(item)),
+                icon: const SymbolIcon(FileIcons.restore, size: 16),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

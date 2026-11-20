@@ -526,6 +526,14 @@ J / K and ↓ / ↑ step, Shift+↓ / ↑ widen, Enter opens, Backspace goes up,
 Esc clears. The inspector: Preview (an image, the start of a text file, or Open) · Info (Ctrl+]),
 for several items or none their count / the folder's file system. In the preview page Esc goes
 back and ← / → page through a folder's images.
+The operations (L2c4c2), with the focus in the table: Ctrl+C / Ctrl+X put the selection on the
+clip (it stays selected), Ctrl+V pastes the clip here – or, without one, uploads what the
+desktop's clipboard holds (files copied in a file manager, an image); F2 renames, Del moves to the
+trash (Undo), Shift+Del deletes for good after asking, Ctrl+O uploads. Files dropped on the folder
+are uploaded into it (folders are left out). Upload goes straight to the file dialog; the paste
+bar keeps to 560 px. The trash opens over the folder as 32 px rows (where it was, deleted, size,
+Restore; right-click: Restore to … · Delete permanently) with Empty trash in the header; Esc goes
+back. The inspector's image previews are cleared when the area is left.
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.

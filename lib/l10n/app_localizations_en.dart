@@ -5823,6 +5823,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String desktopFilesDropTo(String folder) {
+    return 'Drop to upload to $folder';
+  }
+
+  @override
+  String desktopFilesDropSkipped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count folders were left out: only files are uploaded.',
+      one: 'A folder was left out: only files are uploaded.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String desktopFileFiles(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

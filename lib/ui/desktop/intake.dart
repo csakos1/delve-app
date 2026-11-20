@@ -342,12 +342,18 @@ class DesktopDropZone extends StatefulWidget {
     required this.onPaths,
     required this.child,
     this.enabled = true,
+    this.title,
+    this.hint,
   });
 
   /// The dropped local paths (folders among them are skipped later).
   final void Function(List<String> paths) onPaths;
   final Widget child;
   final bool enabled;
+
+  /// The overlay's words (null: the chat's “Drop to attach” and its limit).
+  final String? title;
+  final String? hint;
 
   @override
   State<DesktopDropZone> createState() => _DesktopDropZoneState();
@@ -380,7 +386,11 @@ class _DesktopDropZoneState extends State<DesktopDropZone> {
         children: [
           widget.child,
           if (_over)
-            const Positioned.fill(child: IgnorePointer(child: _DropOverlay())),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: _DropOverlay(title: widget.title, hint: widget.hint),
+              ),
+            ),
         ],
       ),
     );
@@ -388,7 +398,10 @@ class _DesktopDropZoneState extends State<DesktopDropZone> {
 }
 
 class _DropOverlay extends StatelessWidget {
-  const _DropOverlay();
+  const _DropOverlay({this.title, this.hint});
+
+  final String? title;
+  final String? hint;
 
   static const double _radius = 16;
 
@@ -417,14 +430,14 @@ class _DropOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: DelveTokens.space2),
                 Text(
-                  l.desktopDropToAttach,
+                  title ?? l.desktopDropToAttach,
                   style: context.text.titleMedium!.copyWith(
                     color: cs.onPrimaryContainer,
                   ),
                 ),
                 const SizedBox(height: DelveTokens.space1),
                 Text(
-                  l.desktopDropHint(kMaxAttachments),
+                  hint ?? l.desktopDropHint(kMaxAttachments),
                   style: context.text.bodySmall!.copyWith(
                     color: cs.onPrimaryContainer,
                   ),

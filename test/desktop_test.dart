@@ -2758,6 +2758,151 @@ void main() {
     });
   });
 
+  group('Files operations on the desktop (L2c4c2)', () {
+    Future<void> frames(WidgetTester t, [int n = 10]) async {
+      for (var i = 0; i < n; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+    }
+
+    Future<TerminalFakes> files(WidgetTester t, {FakePicker? picker}) async {
+      final fakes = TerminalFakes();
+      await pumpDelve(
+        t,
+        attachments: picker == null
+            ? null
+            : AttachmentFakes(
+                api: FakeAttachmentApi(),
+                picker: picker,
+                prep: FakePrep(),
+              ),
+        caps: _linux,
+        window: _frame,
+        settle: false,
+        terminal: fakes,
+        before: (env) async {
+          await fakes.setUpDone();
+          await fakes.store.write(kDesktopToolsKey, '1');
+        },
+      );
+      await frames(t);
+      await _ctrlNow(t, LogicalKeyboardKey.digit0);
+      await frames(t, 30);
+      return fakes;
+    }
+
+    ProviderContainer container(WidgetTester t) =>
+        ProviderScope.containerOf(t.element(find.byType(DesktopShell)));
+
+    Finder row(String name) => find.byKey(Key('files.row.$name'));
+
+    Future<void> click(WidgetTester t, String name) async {
+      await t.tap(row(name));
+      await frames(t, 4);
+    }
+
+    Future<void> key(
+      WidgetTester t,
+      LogicalKeyboardKey key, {
+      LogicalKeyboardKey? holding,
+    }) async {
+      if (holding != null) await t.sendKeyDownEvent(holding);
+      await t.sendKeyEvent(key);
+      if (holding != null) await t.sendKeyUpEvent(holding);
+      await frames(t, 6);
+    }
+
+    testWidgets('Ctrl+X keeps the selection; Ctrl+V in another folder moves '
+        'it there', (t) async {
+      final fakes = await files(t);
+      await click(t, 'notes.txt');
+      await key(
+        t,
+        LogicalKeyboardKey.keyX,
+        holding: LogicalKeyboardKey.controlLeft,
+      );
+      expect(container(t).read(filesPickProvider).paths, {
+        '/home/user/notes.txt',
+      });
+      expect(find.byKey(const Key('files.pasteBar')), findsOneWidget);
+
+      await t.tap(find.byKey(const Key('files.place.documents')));
+      await frames(t, 6);
+      await click(t, 'hajos');
+      await key(
+        t,
+        LogicalKeyboardKey.keyV,
+        holding: LogicalKeyboardKey.controlLeft,
+      );
+      await frames(t, 20);
+      expect(row('notes.txt'), findsOneWidget);
+      expect(find.byKey(const Key('files.pasteBar')), findsNothing);
+      final fs = fakes.files.last!;
+      expect(fs.contents['/home/user/Documents/notes.txt'], hasLength(18));
+      expect(fs.contents['/home/user/notes.txt'], isNull);
+    });
+
+    testWidgets('F2 renames; Del moves to the trash; Shift+Del asks first', (
+      t,
+    ) async {
+      await files(t);
+      await click(t, 'notes.txt');
+      await key(t, LogicalKeyboardKey.f2);
+      expect(find.byKey(const Key('files.name.field')), findsOneWidget);
+      await t.enterText(find.byKey(const Key('files.name.field')), 'todo.txt');
+      await t.tap(find.byKey(const Key('files.name.ok')));
+      await frames(t);
+      expect(row('todo.txt'), findsOneWidget);
+
+      await click(t, 'todo.txt');
+      await key(t, LogicalKeyboardKey.delete);
+      expect(row('todo.txt'), findsNothing);
+      expect(find.byKey(const Key('files.trashed')), findsOneWidget);
+
+      await click(t, 'file2.log');
+      await key(
+        t,
+        LogicalKeyboardKey.delete,
+        holding: LogicalKeyboardKey.shiftLeft,
+      );
+      expect(find.byKey(const Key('files.deleteForever')), findsOneWidget);
+    });
+
+    testWidgets('the trash in the content: dense rows, Restore, Empty in '
+        'the header; Esc goes back', (t) async {
+      await files(t);
+      await click(t, 'notes.txt');
+      await key(t, LogicalKeyboardKey.delete);
+      await t.tap(find.byKey(const Key('files.place.trash')));
+      await frames(t, 20);
+      expect(find.byKey(const Key('trash.list')), findsOneWidget);
+      expect(find.byType(FilesArea), findsOneWidget);
+      expect(
+        t.getSize(find.byKey(const ValueKey('trash.item.notes.txt'))).height,
+        lessThanOrEqualTo(DelveDesktop.filesRow),
+      );
+      expect(find.byKey(const Key('trash.empty')), findsOneWidget);
+      await t.tap(find.byKey(const Key('trash.restore.notes.txt')));
+      await frames(t, 10);
+      expect(find.byKey(const Key('trash.item.notes.txt')), findsNothing);
+      await key(t, LogicalKeyboardKey.escape);
+      await frames(t, 10);
+      expect(find.byKey(const Key('trash.list')), findsNothing);
+      expect(row('notes.txt'), findsOneWidget);
+    });
+
+    testWidgets('Upload goes straight to the file dialog (no source sheet)', (
+      t,
+    ) async {
+      final picker = FakePicker();
+      await files(t, picker: picker);
+      await t.tap(find.byKey(const Key('files.upload')));
+      await frames(t, 4);
+      expect(find.byKey(const Key('files.upload.photos')), findsNothing);
+      expect(picker.asked, ['files 100']);
+    });
+  });
+
   group('Schedules on the desktop (L2c2b2)', () {
     final briefId = FakeServer.sample('schedule')['id']! as String;
     final promptId = FakeServer.sample('schedule_prompt')['id']! as String;

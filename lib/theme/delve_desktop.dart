@@ -170,6 +170,8 @@ abstract final class DelveDesktop {
   static const double filesDateColumn = 132;
   static const double filesFoot = 28;
   static const double filesTransfersMax = 240;
+  static const double filesPasteBarMax = 560;
+  static const double trashFolderColumn = 220;
 
   /// The inspector's preview waits this long after a selection (J / K
   /// through a folder does not fetch every file).

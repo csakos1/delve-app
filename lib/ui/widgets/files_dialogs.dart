@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../app/layout.dart';
 import '../../attachments/picker.dart';
 import '../../files/files_service.dart';
 import '../../files/remote_fs.dart';
@@ -688,11 +689,14 @@ Future<List<PickedAttachment>?> pickForUpload(
 }) async {
   final l = AppLocalizations.of(context);
   final messenger = ScaffoldMessenger.of(context);
-  final source = await showUploadSourceSheet(
-    context,
-    folder: folder,
-    path: path,
-  );
+  // the desktop has no photos or camera to choose from: the file dialog
+  final desktop = DesktopLayout.of(context);
+  final UploadSource? source;
+  if (desktop) {
+    source = UploadSource.files;
+  } else {
+    source = await showUploadSourceSheet(context, folder: folder, path: path);
+  }
   if (source == null) return null;
   try {
     final picked = switch (source) {

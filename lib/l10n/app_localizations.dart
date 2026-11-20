@@ -9081,6 +9081,18 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 folder} other{{count} folders}}'**
   String desktopFileFolders(int count);
 
+  /// No description provided for @desktopFilesDropTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop to upload to {folder}'**
+  String desktopFilesDropTo(String folder);
+
+  /// No description provided for @desktopFilesDropSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{A folder was left out: only files are uploaded.} other{{count} folders were left out: only files are uploaded.}}'**
+  String desktopFilesDropSkipped(int count);
+
   /// No description provided for @desktopFileFiles.
   ///
   /// In en, this message translates to:

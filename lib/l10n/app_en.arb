@@ -4372,6 +4372,22 @@
       }
     }
   },
+  "desktopFilesDropTo": "Drop to upload to {folder}",
+  "@desktopFilesDropTo": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopFilesDropSkipped": "{count, plural, =1{A folder was left out: only files are uploaded.} other{{count} folders were left out: only files are uploaded.}}",
+  "@desktopFilesDropSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "desktopFileFiles": "{count, plural, =1{1 file} other{{count} files}}",
   "@desktopFileFiles": {
     "placeholders": {

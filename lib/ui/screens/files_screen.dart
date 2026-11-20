@@ -22,7 +22,14 @@ import '../desktop/desktop_page.dart';
 import '../desktop/desktop_row.dart' show DesktopMenuItem, showDesktopMenu;
 import '../desktop/files_area.dart';
 import '../desktop/intake.dart'
-    show ListCommandSlot, ListCommands, listCommandSlotProvider;
+    show
+        DesktopDropZone,
+        ListCommandSlot,
+        ListCommands,
+        desktopPasteboardProvider,
+        listCommandSlotProvider,
+        pickedFromPath,
+        pickedOfPaste;
 import '../desktop/panes.dart' show InspectorToggle;
 import '../widgets/files_dialogs.dart';
 import '../widgets/files_ui.dart';
@@ -304,7 +311,8 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
   void _clip(List<RemoteEntry> items, {required bool cut}) {
     if (items.isEmpty) return;
     _service.setClip(items, cut: cut);
-    _endSelection();
+    // the desktop keeps the selection, as a file manager does
+    if (!_desktop) _endSelection();
   }
 
   void _downloadAll(List<RemoteEntry> items) {
@@ -1314,7 +1322,73 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
       _step(key == LogicalKeyboardKey.arrowDown ? 1 : -1, extend: true);
       return KeyEventResult.handled;
     }
+    // the operations (L2c4c2): only once per press
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    final ctrl = keys.isControlPressed || keys.isMetaPressed;
+    final items = _selection;
+    if (ctrl && !keys.isShiftPressed && key == LogicalKeyboardKey.keyC) {
+      if (items.isEmpty) return KeyEventResult.ignored;
+      _clip(items, cut: false);
+      return KeyEventResult.handled;
+    }
+    if (ctrl && key == LogicalKeyboardKey.keyX) {
+      if (items.isEmpty || !_canWrite) return KeyEventResult.ignored;
+      _clip(items, cut: true);
+      return KeyEventResult.handled;
+    }
+    if (ctrl && key == LogicalKeyboardKey.keyV) {
+      unawaited(_pasteKey());
+      return KeyEventResult.handled;
+    }
+    if (ctrl && key == LogicalKeyboardKey.keyO) {
+      if (_canWrite) unawaited(_upload());
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.f2) {
+      final one = _onePicked;
+      if (one == null || !_canWrite) return KeyEventResult.ignored;
+      unawaited(_rename(one));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.delete) {
+      if (items.isEmpty || !_canWrite) return KeyEventResult.ignored;
+      // Shift+Del: past the trash (it asks first)
+      unawaited(
+        keys.isShiftPressed ? _deleteAllForever(items) : _trashAll(items),
+      );
+      return KeyEventResult.handled;
+    }
     return KeyEventResult.ignored;
+  }
+
+  /// Ctrl+V: the clip (Copy / Move) here; without one, what the desktop's
+  /// clipboard holds – files copied in a file manager, or an image – is
+  /// uploaded here.
+  Future<void> _pasteKey() async {
+    final dir = _service.path;
+    if (dir == null || !_canWrite) return;
+    if (_service.clip != null) {
+      if (_service.pasteProblem(dir) == null) await _paste();
+      return;
+    }
+    final content = await ref.read(desktopPasteboardProvider).read();
+    if (!mounted) return;
+    final picked = pickedOfPaste(content);
+    if (picked == null || picked.isEmpty) return;
+    await uploadAsking(context, _service, dir, picked);
+  }
+
+  /// Files dropped on the folder: uploaded into it (folders are skipped,
+  /// and the snackbar says so).
+  void _dropped(List<String> paths) {
+    final dir = _service.path;
+    if (dir == null || !_canWrite) return;
+    final l = AppLocalizations.of(context);
+    final picked = [for (final p in paths) ?pickedFromPath(p)];
+    final skipped = paths.length - picked.length;
+    if (skipped > 0) _snack(l.desktopFilesDropSkipped(skipped));
+    if (picked.isEmpty) return;
+    unawaited(uploadAsking(context, _service, dir, picked));
   }
 
   /// Right-click: the row (or, on a selected row, the selection) and what
@@ -1543,26 +1617,43 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
           else
             const SizedBox(height: 2),
           Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: AnimatedOpacity(
-                    duration: DelveTokens.short,
-                    opacity: s.phase == FilesPhase.offline ? 0.5 : 1,
-                    child: IgnorePointer(
-                      ignoring: s.phase == FilesPhase.offline,
-                      child: _list(context, l),
+            // files from the desktop's file manager: uploaded here
+            child: DesktopDropZone(
+              enabled: _canWrite,
+              title: path == null
+                  ? null
+                  : l.desktopFilesDropTo(_folderName(path)),
+              hint: path == null ? null : tildePath(path, s.home),
+              onPaths: _dropped,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: AnimatedOpacity(
+                      duration: DelveTokens.short,
+                      opacity: s.phase == FilesPhase.offline ? 0.5 : 1,
+                      child: IgnorePointer(
+                        ignoring: s.phase == FilesPhase.offline,
+                        child: _list(context, l),
+                      ),
                     ),
                   ),
-                ),
-                if (clip != null)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: _pasteBar(l, clip),
-                  ),
-              ],
+                  if (clip != null)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      // the phone's bar, kept to a readable width
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: DelveDesktop.filesPasteBarMax,
+                          ),
+                          child: _pasteBar(l, clip),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
           if (s.entries != null || s.mountHere != null)
