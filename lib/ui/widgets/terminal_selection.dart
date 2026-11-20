@@ -30,6 +30,24 @@ bool selectWordAt(
   return selection.selection != null;
 }
 
+/// The desktop's drag (L2c4a): the cells from [global] to [to], no word
+/// snapping. False when nothing is selected.
+bool selectCellsAt(
+  TerminalViewState? view,
+  TerminalController selection,
+  Offset global,
+  Offset to,
+) {
+  if (view == null) return false;
+  final render = view.renderTerminal;
+  selection.clearSelection();
+  render.selectCharacters(
+    render.globalToLocal(global),
+    render.globalToLocal(to),
+  );
+  return selection.selection != null;
+}
+
 /// The last selected cell of [range] (its end is exclusive).
 CellOffset _lastCell(BufferRange range, int width) {
   final end = range.end;

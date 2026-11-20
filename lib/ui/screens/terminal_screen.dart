@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xterm/xterm.dart';
 
+import '../../app/layout.dart';
 import '../../app/router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../share/share_channel.dart';
@@ -263,6 +264,19 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
     selectWordAt(_front?.viewKey.currentState, c.selection, from, global);
   }
 
+  /// The desktop: a mouse drag selects the cells it passes (L2c4a).
+  void _dragStart(Offset global) {
+    _pressAt = global;
+    _conn?.clearSelection();
+  }
+
+  void _dragMove(Offset global) {
+    final from = _pressAt;
+    final c = _conn;
+    if (from == null || c == null) return;
+    selectCellsAt(_front?.viewKey.currentState, c.selection, from, global);
+  }
+
   Future<void> _copySelection() async {
     final c = _conn;
     if (c == null) return;
@@ -503,6 +517,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
       );
     }
     final c = tab.connection;
+    if (DesktopLayout.of(context)) return _desktop(service, tab);
     final live = math
         .max(0, MediaQuery.viewInsetsOf(context).bottom - _gap)
         .toDouble();
@@ -571,9 +586,37 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
     );
   }
 
+  /// The desktop (27W-12): the tab row, the state line and the terminal on
+  /// `surface-lowest`; no extra keys and no on-screen keyboard to make room
+  /// for. The wheel scrolls, a drag selects (Ctrl+Shift+C copies it).
+  Widget _desktop(TerminalService service, TerminalTab tab) {
+    final c = tab.connection;
+    _imeUp = false;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _tabBar(service),
+        TerminalStateLine(connection: c),
+        Expanded(
+          child: ColoredBox(
+            key: const Key('terminal.body'),
+            color: delveTerminalTheme.background,
+            child: c.phase == TermPhase.refused
+                ? HostKeyChangedPanel(connection: c)
+                : KeyedSubtree(
+                    key: ValueKey('terminal.view.${tab.id}'),
+                    child: _view(service, tab),
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _view(TerminalService service, TerminalTab tab) {
     final c = tab.connection;
     final v = _viewOf(tab);
+    final desktop = DesktopLayout.of(context);
     return ColoredBox(
       color: delveTerminalTheme.background,
       child: AnimatedOpacity(
@@ -593,6 +636,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen>
                 onLongPressMove: _selectMove,
                 fontSize: service.fontSize,
                 onFontSize: _pinchFont,
+                mouse: desktop,
+                onDragSelectStart: _dragStart,
+                onDragSelectMove: _dragMove,
                 // every touch is the layer's: xterm's own long press opened
                 // the keyboard and clicked into tmux (T2a phone test)
                 child: IgnorePointer(

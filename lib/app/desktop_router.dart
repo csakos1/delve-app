@@ -10,6 +10,7 @@ import '../ui/desktop/desktop_shell.dart';
 import '../ui/desktop/news_area.dart';
 import '../ui/desktop/schedules_area.dart';
 import '../ui/desktop/settings_area.dart';
+import '../ui/desktop/terminal_area.dart';
 import '../ui/desktop/watches_area.dart';
 import '../ui/general/general_widgets.dart' show ChatKind;
 import '../ui/screens/approvals_screen.dart';
@@ -69,6 +70,7 @@ GoRouter buildDesktopRouter({
   );
   final settingsKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.settings');
   final aboutKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.about');
+  final terminalKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.terminal');
   final approvalsKey = GlobalKey<NavigatorState>(
     debugLabel: 'desktop.approvals',
   );
@@ -205,9 +207,18 @@ GoRouter buildDesktopRouter({
             path: Routes.dashboard,
             pageBuilder: (_, state) => _flat(state, const DashboardScreen()),
           ),
-          GoRoute(
-            path: Routes.terminal,
-            pageBuilder: (_, state) => _flat(state, const TerminalScreen()),
+          ShellRoute(
+            navigatorKey: terminalKey,
+            pageBuilder: (context, state, child) => NoTransitionPage<void>(
+              key: state.pageKey,
+              child: TerminalArea(content: child),
+            ),
+            routes: [
+              GoRoute(
+                path: Routes.terminal,
+                pageBuilder: (_, state) => _flat(state, const TerminalScreen()),
+              ),
+            ],
           ),
           GoRoute(
             path: Routes.files,

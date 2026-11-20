@@ -8,6 +8,8 @@ import 'package:delve/app/router.dart';
 import 'package:delve/data/db/store.dart';
 import 'package:delve/general/general_database.dart';
 import 'package:delve/l10n/app_localizations.dart';
+import 'package:delve/terminal/terminal_providers.dart';
+import 'package:delve/terminal/terminal_service.dart';
 import 'package:delve/theme/delve_theme.dart';
 import 'package:delve/ui/chat/chat_items.dart' show UserBubble;
 import 'package:delve/ui/desktop/about_area.dart';
@@ -18,6 +20,7 @@ import 'package:delve/ui/desktop/chat_inspector.dart';
 import 'package:delve/ui/desktop/chats_area.dart';
 import 'package:delve/ui/desktop/desktop_page.dart';
 import 'package:delve/ui/desktop/desktop_prefs.dart';
+import 'package:delve/ui/desktop/desktop_row.dart' show DesktopRowFrame;
 import 'package:delve/ui/desktop/desktop_shell.dart';
 import 'package:delve/ui/desktop/intake.dart';
 import 'package:delve/ui/desktop/list_area.dart' show SectionRow;
@@ -26,6 +29,7 @@ import 'package:delve/ui/desktop/panes.dart';
 import 'package:delve/ui/desktop/schedules_area.dart';
 import 'package:delve/ui/desktop/settings_area.dart';
 import 'package:delve/ui/desktop/status_bar.dart';
+import 'package:delve/ui/desktop/terminal_area.dart';
 import 'package:delve/ui/desktop/watches_area.dart';
 import 'package:delve/ui/general/general_widgets.dart' show DelveFilterChip;
 import 'package:delve/ui/screens/approvals_screen.dart';
@@ -43,6 +47,7 @@ import 'package:delve/ui/screens/settings_screen.dart';
 import 'package:delve/ui/screens/system_screen.dart';
 import 'package:delve/ui/screens/watch_detail_screen.dart';
 import 'package:delve/ui/screens/watches_screen.dart';
+import 'package:delve/ui/widgets/terminal_ui.dart' show ExtraKeys;
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -59,6 +64,7 @@ import 'news_test.dart' show newsJson, storyJson;
 import 'support/fake_openrouter.dart' show testOpenRouterKey;
 import 'support/fake_server.dart' show FakeReply, FakeServer;
 import 'support/harness.dart';
+import 'support/terminal_fakes.dart';
 import 'watches_test.dart' show fourWatches, itemJson;
 
 final _linux = PlatformCaps.linux(host: 'archlinux');
@@ -2247,6 +2253,80 @@ void main() {
       await t.sendKeyEvent(LogicalKeyboardKey.keyJ);
       await frames(t);
       expect(detail(t).requestId, 'apr_2');
+    });
+  });
+
+  group('Terminal on the desktop (L2c4a)', () {
+    Future<void> frames(WidgetTester t, [int n = 10]) async {
+      for (var i = 0; i < n; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+    }
+
+    /// The desktop with Terminal on and set up; tmux has a session `build`.
+    Future<(TestEnv, TerminalFakes)> terminal(WidgetTester t) async {
+      final fakes = TerminalFakes();
+      fakes.dialer.tmux.sessions.add(
+        FakeSession('build', attached: 1, windows: 2),
+      );
+      final env = await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        settle: false,
+        terminal: fakes,
+        before: (_) async {
+          await fakes.setUpDone();
+          await fakes.store.write(kDesktopToolsKey, '1');
+        },
+      );
+      await frames(t);
+      await _ctrlNow(t, LogicalKeyboardKey.digit9);
+      await frames(t, 20);
+      return (env, fakes);
+    }
+
+    TerminalService service(WidgetTester t) => ProviderScope.containerOf(
+      t.element(find.byType(DesktopShell)),
+    ).read(terminalServiceProvider);
+
+    testWidgets('the sessions in the list column, the terminal in the '
+        'content, no extra keys', (t) async {
+      await terminal(t);
+      expect(find.byType(TerminalArea), findsOneWidget);
+      expect(find.byKey(const Key('terminal.sessionsPane')), findsOneWidget);
+      expect(find.byKey(const Key('terminal.sessions.new')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('terminal.session.build')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('terminal.body')), findsOneWidget);
+      expect(find.byType(ExtraKeys), findsNothing);
+    });
+
+    testWidgets('a session from the list opens in a tab and is selected', (
+      t,
+    ) async {
+      await terminal(t);
+      await t.tap(find.byKey(const ValueKey('terminal.session.build')));
+      await frames(t, 20);
+      expect(service(t).current?.session, 'build');
+      expect(
+        t
+            .widget<DesktopRowFrame>(
+              find.byKey(const ValueKey('terminal.session.build')),
+            )
+            .selected,
+        isTrue,
+      );
+    });
+
+    testWidgets('New session opens a new tab', (t) async {
+      await terminal(t);
+      final before = service(t).tabs.length;
+      await t.tap(find.byKey(const Key('terminal.sessions.new')));
+      await frames(t, 20);
+      expect(service(t).tabs.length, before + 1);
     });
   });
 

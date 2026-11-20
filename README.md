@@ -496,6 +496,11 @@ approval in the content (its class, the chat it came from, the command with Copy
 Allow once · Deny · Allow for session; Ctrl+Enter / Ctrl+Backspace, why the agent asks) and its
 chat's run in the inspector. The status bar's approvals segment opens the newest one that can
 still be answered.
+Terminal (with Settings → Desktop tools on; `terminal_area.dart`): the machine's tmux sessions are
+the list column (New session first; a click opens or brings forward its tab, right-click has
+Rename and Kill), the tabs and the terminal the content – no extra keys row; the wheel scrolls
+(tmux's wheel steps, or the scrollback), a mouse drag selects cells, Ctrl+Shift+C copies and
+Ctrl+V pastes (xterm's own keys).
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.

@@ -38,6 +38,9 @@ class TerminalScrollLayer extends StatefulWidget {
     this.onLongPressMove,
     this.fontSize = kTerminalFontSize,
     this.onFontSize,
+    this.mouse = false,
+    this.onDragSelectStart,
+    this.onDragSelectMove,
   });
 
   final TerminalConnection connection;
@@ -58,6 +61,13 @@ class TerminalScrollLayer extends StatefulWidget {
   /// The font size now, and a new one from a pinch (whole sp, in range).
   final double fontSize;
   final ValueChanged<double>? onFontSize;
+
+  /// The desktop (L2c4a): the wheel scrolls (as a drag would) and a drag
+  /// selects text ([onDragSelectStart], [onDragSelectMove]) instead of
+  /// scrolling.
+  final bool mouse;
+  final void Function(Offset global)? onDragSelectStart;
+  final void Function(Offset global)? onDragSelectMove;
 
   @override
   State<TerminalScrollLayer> createState() => _TerminalScrollLayerState();
@@ -213,6 +223,14 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
       },
       onPointerUp: _up,
       onPointerCancel: _up,
+      onPointerSignal: widget.mouse
+          ? (e) {
+              if (e is! PointerScrollEvent) return;
+              _stop();
+              // the wheel down shows newer output: a finger moving up
+              _move(-e.scrollDelta.dy);
+            }
+          : null,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTapUp: (d) {
@@ -227,34 +245,44 @@ class _TerminalScrollLayerState extends State<TerminalScrollLayer>
           if (_pinched) return;
           widget.onLongPressMove?.call(d.globalPosition);
         },
-        onVerticalDragStart: (d) {
-          _stop();
-          _steps.reset();
-          _at = d.localPosition;
-        },
-        onVerticalDragUpdate: (d) => _move(d.delta.dy),
-        onVerticalDragEnd: (d) {
-          if (_pinched) return;
-          final v = d.velocity.pixelsPerSecond.dy;
-          if (v.abs() < 300) return;
-          _flingUp = v > 0;
-          _flingInCopyMode = widget.connection.terminal.inCopyMode;
-          if (_flingAtEnd()) return;
-          _flingLast = 0;
-          _fling.value = 0;
-          unawaited(
-            _fling.animateWith(
-              FrictionSimulation(
-                0.05,
-                0,
-                v,
-                tolerance: Tolerance(
-                  velocity: _lineHeight * kFlingStopLinesPerSecond,
-                ),
-              ),
-            ),
-          );
-        },
+        onPanStart: widget.mouse
+            ? (d) => widget.onDragSelectStart?.call(d.globalPosition)
+            : null,
+        onPanUpdate: widget.mouse
+            ? (d) => widget.onDragSelectMove?.call(d.globalPosition)
+            : null,
+        onVerticalDragStart: widget.mouse
+            ? null
+            : (d) {
+                _stop();
+                _steps.reset();
+                _at = d.localPosition;
+              },
+        onVerticalDragUpdate: widget.mouse ? null : (d) => _move(d.delta.dy),
+        onVerticalDragEnd: widget.mouse
+            ? null
+            : (d) {
+                if (_pinched) return;
+                final v = d.velocity.pixelsPerSecond.dy;
+                if (v.abs() < 300) return;
+                _flingUp = v > 0;
+                _flingInCopyMode = widget.connection.terminal.inCopyMode;
+                if (_flingAtEnd()) return;
+                _flingLast = 0;
+                _fling.value = 0;
+                unawaited(
+                  _fling.animateWith(
+                    FrictionSimulation(
+                      0.05,
+                      0,
+                      v,
+                      tolerance: Tolerance(
+                        velocity: _lineHeight * kFlingStopLinesPerSecond,
+                      ),
+                    ),
+                  ),
+                );
+              },
         child: ScrollConfiguration(
           behavior: const _NoDragScroll(),
           child: widget.child,

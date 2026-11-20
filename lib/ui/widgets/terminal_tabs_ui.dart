@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../app/layout.dart';
+import '../../app/router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../terminal/ssh_link.dart';
 import '../../terminal/terminal_service.dart';
 import '../../terminal/terminal_tabs.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_row.dart';
 import '../format.dart';
 import 'page_scaffolds.dart';
 import 'status_ui.dart';
@@ -673,18 +676,278 @@ class _TerminalSessionsSheetState extends State<TerminalSessionsSheet> {
     return null;
   }
 
-  /// Attached here (a live tab) and/or on the desktop (the other clients).
-  String _status(AppLocalizations l, TmuxSession s) {
-    final here = _service.tabs
-        .where((t) => t.session == s.name && t.connection.live)
-        .length;
-    final elsewhere = s.attached - here > 0;
-    return switch ((here > 0, elsewhere)) {
-      (true, true) => l.termSessionAttachedBoth,
-      (true, false) => l.termSessionAttachedHere,
-      (false, true) => l.termSessionAttachedDesktop,
-      (false, false) => l.termSessionDetached,
-    };
+  String _status(AppLocalizations l, TmuxSession s) =>
+      tmuxSessionStatus(l, _service, s);
+}
+
+/// Attached here (a live tab) and/or on the desktop (the other clients).
+String tmuxSessionStatus(
+  AppLocalizations l,
+  TerminalService service,
+  TmuxSession s,
+) {
+  final here = service.tabs
+      .where((t) => t.session == s.name && t.connection.live)
+      .length;
+  final elsewhere = s.attached - here > 0;
+  return switch ((here > 0, elsewhere)) {
+    (true, true) => l.termSessionAttachedBoth,
+    (true, false) => l.termSessionAttachedHere,
+    (false, true) => l.termSessionAttachedDesktop,
+    (false, false) => l.termSessionDetached,
+  };
+}
+
+/// The desktop's list column of the Terminal area (27W-12): New session
+/// first, then the machine's tmux sessions as 52 px rows – the one in front
+/// selected, a tag on those open in a tab; a click opens (or brings
+/// forward) its tab, right-click has Rename and Kill. The list is read
+/// again when the tabs change and from the header's refresh.
+class TerminalSessionsPane extends StatefulWidget {
+  const TerminalSessionsPane({super.key, required this.service});
+
+  final TerminalService service;
+
+  @override
+  State<TerminalSessionsPane> createState() => _TerminalSessionsPaneState();
+}
+
+class _TerminalSessionsPaneState extends State<TerminalSessionsPane> {
+  List<TmuxSession>? _sessions;
+  Object? _problem;
+  bool _loading = false;
+
+  /// The tabs' sessions the list was read for.
+  String _seen = '';
+
+  TerminalService get _service => widget.service;
+
+  @override
+  void initState() {
+    super.initState();
+    _service.addListener(_changed);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _changed();
+    });
+  }
+
+  @override
+  void dispose() {
+    _service.removeListener(_changed);
+    super.dispose();
+  }
+
+  /// A tab opened, closed or renamed: the list again (not on every redraw
+  /// of a connection).
+  void _changed() {
+    if (!_service.ready) return;
+    final now = [for (final t in _service.tabs) t.session].join('\u0000');
+    if (now == _seen && _sessions != null) {
+      setState(() {}); // the selection follows the tab in front
+      return;
+    }
+    _seen = now;
+    unawaited(_load());
+  }
+
+  Future<void> _load({bool keepProblem = false}) async {
+    if (_loading) return;
+    setState(() => _loading = true);
+    try {
+      final list = await _service.listSessions();
+      if (!mounted) return;
+      setState(() {
+        _sessions = list;
+        _loading = false;
+        if (!keepProblem) _problem = null;
+      });
+    } on Object catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _problem = e;
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _act(Future<void> Function() run) async {
+    setState(() => _problem = null);
+    try {
+      await run();
+    } on Object catch (e) {
+      if (mounted) setState(() => _problem = e);
+    }
+    if (mounted) await _load(keepProblem: true);
+  }
+
+  Future<void> _rename(TmuxSession s) async {
+    final name = await askSessionName(context, s.name);
+    if (name == null || !mounted) return;
+    await _act(() => _service.renameSession(s.name, name));
+  }
+
+  Future<void> _kill(TmuxSession s) async {
+    if (!await confirmKillSession(context, s.name) || !mounted) return;
+    await _act(() => _service.killSession(s.name));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final cs = context.colors;
+    final d = context.delve;
+    final sessions = _sessions;
+    final front = _service.current?.session;
+    final open = {for (final t in _service.tabs) t.session};
+    return TopLevelPage(
+      key: const Key('terminal.sessionsPane'),
+      title: l.navTerminal,
+      background: cs.surfaceContainerLow,
+      actions: [
+        IconButton(
+          key: const Key('terminal.sessions.refresh'),
+          tooltip: l.desktopRefresh,
+          onPressed: () => unawaited(_load()),
+          icon: const SymbolIcon(
+            DelveIcons.refresh,
+            size: DelveDesktop.iconButtonIcon,
+          ),
+        ),
+        IconButton(
+          key: const Key('terminal.sessions.settings'),
+          tooltip: l.termMenuSettings,
+          onPressed: () => context.open(Routes.terminalSettings),
+          icon: const SymbolIcon(
+            DelveIcons.settings,
+            size: DelveDesktop.iconButtonIcon,
+          ),
+        ),
+      ],
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: DelveTokens.space4),
+        children: [
+          if (_loading)
+            const LinearProgressIndicator(minHeight: 2)
+          else
+            const SizedBox(height: 2),
+          DesktopRowFrame(
+            key: const Key('terminal.sessions.new'),
+            onTap: () => unawaited(_service.newTab()),
+            child: Row(
+              children: [
+                SymbolIcon(DelveIcons.add, size: 16, color: cs.primary),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.termSessionsNew,
+                        style: DelveDesktopText.rowTitle.copyWith(
+                          color: cs.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l.termSessionsNewSub,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: DelveDesktopText.rowSecondary.copyWith(
+                          color: d.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_problem case final p?)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+              child: StatusBanner(
+                key: const Key('terminal.sessions.problem'),
+                kind: StatusKind.alert,
+                icon: DelveIcons.warning,
+                text: tmuxProblemText(l, p),
+                actionLabel: l.retry,
+                onAction: () => unawaited(_load()),
+              ),
+            ),
+          if (sessions != null && sessions.isEmpty)
+            const _NoSessions()
+          else if (sessions != null)
+            for (final s in sessions)
+              DesktopRowFrame(
+                key: ValueKey('terminal.session.${s.name}'),
+                selected: s.name == front,
+                onTap: () => _service.openSession(s),
+                menu: [
+                  DesktopMenuItem(
+                    key: const Key('terminal.sessionMenu.rename'),
+                    icon: DelveIcons.rename,
+                    label: l.termTabRename,
+                    onSelected: () => unawaited(_rename(s)),
+                  ),
+                  DesktopMenuItem(
+                    key: const Key('terminal.sessionMenu.kill'),
+                    icon: DelveIcons.kill,
+                    label: l.termKill,
+                    destructive: true,
+                    onSelected: () => unawaited(_kill(s)),
+                  ),
+                ],
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1),
+                      child: SymbolIcon(
+                        open.contains(s.name)
+                            ? DelveIcons.tab
+                            : DelveIcons.terminal,
+                        size: 16,
+                        color: s.name == front
+                            ? cs.onSurface
+                            : cs.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            s.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: DelveText.mono.copyWith(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            [
+                              tmuxSessionStatus(l, _service, s),
+                              l.termSessionWindows(s.windows),
+                            ].join(' · '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: DelveDesktopText.rowSecondary.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+        ],
+      ),
+    );
   }
 }
 
