@@ -67,6 +67,7 @@ abstract final class FileIcons {
   static const IconData link = Symbols.link_rounded;
   static const IconData lock = Symbols.lock_rounded;
   static const IconData home = Symbols.home_rounded;
+  static const IconData root = Symbols.hard_drive_rounded;
   static const IconData download = Symbols.download_rounded;
   static const IconData documents = Symbols.description_rounded;
   static const IconData preview = Symbols.visibility_rounded;

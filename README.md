@@ -514,6 +514,18 @@ connection, the scrollback and a selection are the `TerminalService`'s, so the d
 another area shows the tab as it was. While the focus is in the dock its keys are the
 terminal's: the chat's and the list's keys stand back; an editor in the content (a schedule,
 About me) keeps the list's J / K / E / Ctrl+Z out too (`EditorScope`).
+Files (`lib/ui/desktop/files_area.dart`, with Files on): Home, Downloads, Documents, the file
+system and the trash in the list column, the transfers at its foot; the folder as a table in the
+content (breadcrumb header with Upload, New folder, refresh and the menu; Name · Size · Modified,
+a header click sorts; rows 32) and a foot line with the count. A click selects (Ctrl: in or out,
+Shift: a range – `filesPickProvider`, one folder's pick), a second click on the same row opens it
+(a folder in the table, a file in the preview page pushed over the folder, so its back and an
+editor's unsaved changes work as on the phone); right-click is the phone's actions sheet as a
+menu (on a selection: Download, Copy, Move, Copy paths, Trash). With the focus in the table:
+J / K and ↓ / ↑ step, Shift+↓ / ↑ widen, Enter opens, Backspace goes up, Ctrl+A selects all,
+Esc clears. The inspector: Preview (an image, the start of a text file, or Open) · Info (Ctrl+]),
+for several items or none their count / the folder's file system. In the preview page Esc goes
+back and ← / → page through a folder's images.
 
 Widget tests run as the phone; a test passes `caps: PlatformCaps.linux(host: …)` to
 `pumpDelve` for the desktop, and `window: Size(1440, 900)` for its desktop layout.

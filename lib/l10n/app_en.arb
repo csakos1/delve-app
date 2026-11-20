@@ -4343,5 +4343,41 @@
   "desktopDockOpenInFull": "Open in the Terminal area",
   "desktopDockClose": "Close the dock (Ctrl+`)",
   "desktopDockNotReady": "The terminal is set up in the Terminal area.",
-  "desktopDockOpenTerminal": "Open Terminal"
+  "desktopDockOpenTerminal": "Open Terminal",
+  "desktopFilesRoot": "File system",
+  "desktopFileInfo": "Info",
+  "desktopFileModified": "Modified",
+  "desktopFileNoPreview": "No preview for this kind of file.",
+  "desktopFileOpenWhole": "Open the whole file",
+  "desktopFilePreviewFailed": "Couldn't load the preview: {reason}",
+  "@desktopFilePreviewFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopFileItems": "Contents",
+  "desktopFilePermissions": "Permissions",
+  "desktopFileOwner": "Owner",
+  "desktopFileWhere": "Where",
+  "desktopFilePath": "Path",
+  "desktopFileLink": "Link to",
+  "desktopFileFilesystem": "File system",
+  "desktopFileFolders": "{count, plural, =1{1 folder} other{{count} folders}}",
+  "@desktopFileFolders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "desktopFileFiles": "{count, plural, =1{1 file} other{{count} files}}",
+  "@desktopFileFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

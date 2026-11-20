@@ -4,8 +4,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../app/layout.dart';
+import '../../app/router.dart';
 import '../../files/device_files.dart';
 import '../../files/files_providers.dart';
 import '../../files/files_service.dart';
@@ -42,6 +46,33 @@ FilePreviewArgs? previewArgsOf(Object? extra) => switch (extra) {
   final RemoteEntry e => FilePreviewArgs([e]),
   _ => null,
 };
+
+/// Opens [e] in the preview page (over the folder; a text file in the
+/// viewer, or with [edit] in the editor). An image opens with the folder's
+/// other images to page through, in the list's order.
+void openFilePreview(
+  BuildContext context,
+  FilesService service,
+  RemoteEntry e, {
+  bool edit = false,
+}) {
+  service.terminal.lock.keepAlive();
+  final images = previewKindOf(e) == PreviewKind.image
+      ? [
+          for (final x in service.entries ?? const <RemoteEntry>[])
+            if (previewKindOf(x) == PreviewKind.image) x,
+        ]
+      : const <RemoteEntry>[];
+  final at = images.indexWhere((x) => x.path == e.path);
+  unawaited(
+    context.push<void>(
+      Routes.filePreview,
+      extra: at < 0
+          ? FilePreviewArgs([e], edit: edit)
+          : FilePreviewArgs(images, index: at),
+    ),
+  );
+}
 
 /// Images are decoded at most this large (longest side, px): a phone photo
 /// in full would hold ~50 MB of pixels per page, and 8× zoom on a ~1300 px
@@ -111,7 +142,7 @@ class _FilePreviewScreenState extends ConsumerState<FilePreviewScreen> {
     final cs = context.colors;
     final dark = _gallery || _pdf;
     final background = dark ? const Color(0xFF0C0D0E) : cs.surface;
-    return Scaffold(
+    final page = Scaffold(
       backgroundColor: background,
       appBar: AppBar(
         backgroundColor: background,
@@ -169,6 +200,31 @@ class _FilePreviewScreenState extends ConsumerState<FilePreviewScreen> {
               onPage: (i) => setState(() => _pdfPage = i),
             )
           : _single(l),
+    );
+    if (!DesktopLayout.of(context)) return page;
+    // the desktop (L2c4c): Esc back to the folder, ← / → through the images
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): () =>
+            unawaited(Navigator.of(context).maybePop()),
+        if (_gallery) ...{
+          const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _turn(-1),
+          const SingleActivator(LogicalKeyboardKey.arrowRight): () => _turn(1),
+        },
+      },
+      child: Focus(autofocus: true, child: page),
+    );
+  }
+
+  void _turn(int by) {
+    final to = _index + by;
+    if (to < 0 || to >= _entries.length) return;
+    unawaited(
+      _pages.animateToPage(
+        to,
+        duration: DelveTokens.short,
+        curve: Curves.easeOut,
+      ),
     );
   }
 

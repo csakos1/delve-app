@@ -6,6 +6,8 @@ import 'package:delve/app/layout.dart';
 import 'package:delve/app/platform.dart';
 import 'package:delve/app/router.dart';
 import 'package:delve/data/db/store.dart';
+import 'package:delve/files/files_providers.dart';
+import 'package:delve/files/remote_fs.dart' show SortKey;
 import 'package:delve/general/general_database.dart';
 import 'package:delve/l10n/app_localizations.dart';
 import 'package:delve/terminal/terminal_providers.dart';
@@ -23,6 +25,7 @@ import 'package:delve/ui/desktop/desktop_prefs.dart';
 import 'package:delve/ui/desktop/desktop_row.dart' show DesktopRowFrame;
 import 'package:delve/ui/desktop/desktop_shell.dart';
 import 'package:delve/ui/desktop/dock.dart';
+import 'package:delve/ui/desktop/files_area.dart';
 import 'package:delve/ui/desktop/intake.dart';
 import 'package:delve/ui/desktop/list_area.dart' show SectionRow;
 import 'package:delve/ui/desktop/news_area.dart';
@@ -38,6 +41,7 @@ import 'package:delve/ui/screens/archived_chats_screen.dart';
 import 'package:delve/ui/screens/chat_screen.dart';
 import 'package:delve/ui/screens/chats_screen.dart';
 import 'package:delve/ui/screens/dashboard_screen.dart';
+import 'package:delve/ui/screens/file_preview_screen.dart';
 import 'package:delve/ui/screens/news_screen.dart';
 import 'package:delve/ui/screens/news_story_screen.dart';
 import 'package:delve/ui/screens/observability_screen.dart';
@@ -2538,6 +2542,219 @@ void main() {
       await frames(t);
       expect(find.byType(TerminalDock), findsNothing);
       expect(service.tabs.length, tabs);
+    });
+  });
+
+  group('Files on the desktop (L2c4c1)', () {
+    Future<void> frames(WidgetTester t, [int n = 10]) async {
+      for (var i = 0; i < n; i++) {
+        await t.pump(const Duration(milliseconds: 50));
+      }
+    }
+
+    /// The Files area (Terminal set up, Desktop tools on), the home folder.
+    Future<void> files(WidgetTester t) async {
+      final fakes = TerminalFakes();
+      await pumpDelve(
+        t,
+        caps: _linux,
+        window: _frame,
+        settle: false,
+        terminal: fakes,
+        before: (env) async {
+          await fakes.setUpDone();
+          await fakes.store.write(kDesktopToolsKey, '1');
+        },
+      );
+      await frames(t);
+      await _ctrlNow(t, LogicalKeyboardKey.digit0);
+      await frames(t, 30);
+    }
+
+    ProviderContainer container(WidgetTester t) =>
+        ProviderScope.containerOf(t.element(find.byType(DesktopShell)));
+
+    Set<String> picked(WidgetTester t) =>
+        container(t).read(filesPickProvider).paths;
+
+    Finder row(String name) => find.byKey(Key('files.row.$name'));
+
+    Future<void> click(
+      WidgetTester t,
+      String name, {
+      LogicalKeyboardKey? holding,
+    }) async {
+      if (holding != null) await t.sendKeyDownEvent(holding);
+      await t.tap(row(name));
+      if (holding != null) await t.sendKeyUpEvent(holding);
+      await frames(t, 4);
+    }
+
+    Future<void> key(
+      WidgetTester t,
+      LogicalKeyboardKey key, {
+      LogicalKeyboardKey? holding,
+    }) async {
+      if (holding != null) await t.sendKeyDownEvent(holding);
+      await t.sendKeyEvent(key);
+      if (holding != null) await t.sendKeyUpEvent(holding);
+      await frames(t, 6);
+    }
+
+    testWidgets('the places, the folder as a table, the folder in the '
+        'inspector', (t) async {
+      await files(t);
+      expect(find.byType(FilesArea), findsOneWidget);
+      expect(find.byKey(const Key('files.places')), findsOneWidget);
+      expect(
+        t
+            .widget<SectionRow>(find.byKey(const Key('files.place.home')))
+            .selected,
+        isTrue,
+      );
+      expect(find.byKey(const Key('files.table')), findsOneWidget);
+      expect(row('Documents'), findsOneWidget);
+      expect(row('notes.txt'), findsOneWidget);
+      expect(row('.zshrc'), findsNothing);
+      expect(find.byKey(const Key('files.info.pane.folder')), findsOneWidget);
+      expect(find.byKey(const Key('files.foot')), findsOneWidget);
+      // no phone parts: no FAB, no row menus
+      expect(find.byType(FloatingActionButton), findsNothing);
+      expect(find.byKey(const Key('files.menu.notes.txt')), findsNothing);
+    });
+
+    testWidgets('a click selects: Preview and Info in the inspector; a double '
+        'click opens a folder', (t) async {
+      await files(t);
+      await click(t, 'notes.txt');
+      expect(picked(t), {'/home/user/notes.txt'});
+      await frames(t, 10);
+      expect(find.byKey(const Key('files.preview.text')), findsOneWidget);
+      expect(find.textContaining('line one'), findsOneWidget);
+
+      await t.tap(find.byKey(const Key('files.inspector.tab.info')));
+      await frames(t, 2);
+      expect(find.byKey(const Key('files.info.size')), findsOneWidget);
+      expect(find.byKey(const Key('files.info.permissions')), findsOneWidget);
+
+      await t.tap(row('Documents'));
+      await t.pump(const Duration(milliseconds: 50));
+      await t.tap(row('Documents'));
+      await frames(t, 10);
+      expect(row('hajos'), findsOneWidget);
+      // a pick belongs to its folder
+      expect(
+        container(t).read(filesPickProvider).of('/home/user/Documents'),
+        isEmpty,
+      );
+    });
+
+    testWidgets('Ctrl+click and Shift+click pick several, Ctrl+A all, Esc '
+        'none', (t) async {
+      await files(t);
+      await click(t, 'Documents');
+      await click(t, 'notes.txt', holding: LogicalKeyboardKey.controlLeft);
+      expect(picked(t), {'/home/user/Documents', '/home/user/notes.txt'});
+      expect(find.byKey(const Key('files.info.pane.items')), findsOneWidget);
+      // the range runs from the last Ctrl+click (folders first, A–Z:
+      // delve-app, Documents, Downloads, file2.log, file10.log, notes.txt)
+      await click(t, 'Downloads', holding: LogicalKeyboardKey.shiftLeft);
+      expect(picked(t), hasLength(4));
+      await key(
+        t,
+        LogicalKeyboardKey.keyA,
+        holding: LogicalKeyboardKey.controlLeft,
+      );
+      expect(picked(t), hasLength(6));
+      await key(t, LogicalKeyboardKey.escape);
+      expect(picked(t), isEmpty);
+    });
+
+    testWidgets('J / K step through the rows, Enter opens, Backspace goes '
+        'up', (t) async {
+      await files(t);
+      await click(t, 'Documents');
+      await key(t, LogicalKeyboardKey.keyJ);
+      expect(picked(t), {'/home/user/Downloads'});
+      await key(t, LogicalKeyboardKey.keyK);
+      expect(picked(t), {'/home/user/Documents'});
+      await key(t, LogicalKeyboardKey.enter);
+      await frames(t, 6);
+      expect(row('hajos'), findsOneWidget);
+      await key(t, LogicalKeyboardKey.backspace);
+      await frames(t, 6);
+      expect(row('Documents'), findsOneWidget);
+    });
+
+    testWidgets('a column header sorts by it', (t) async {
+      await files(t);
+      await t.tap(find.byKey(const Key('files.col.size')));
+      await frames(t, 2);
+      expect(container(t).read(filesServiceProvider).sort, SortKey.size);
+    });
+
+    testWidgets("right-click: the row's menu; on a selection the "
+        "selection's", (t) async {
+      await files(t);
+      await t.tap(row('notes.txt'), buttons: kSecondaryButton);
+      await frames(t, 4);
+      expect(picked(t), {'/home/user/notes.txt'});
+      expect(find.byKey(const Key('files.act.rename')), findsOneWidget);
+      expect(find.byKey(const Key('files.act.copyPath')), findsOneWidget);
+      await key(t, LogicalKeyboardKey.escape);
+      expect(find.byKey(const Key('files.act.rename')), findsNothing);
+
+      await click(t, 'Documents', holding: LogicalKeyboardKey.controlLeft);
+      await t.tap(row('notes.txt'), buttons: kSecondaryButton);
+      await frames(t, 4);
+      expect(picked(t), hasLength(2));
+      expect(find.byKey(const Key('files.act.copyPath')), findsOneWidget);
+      expect(find.byKey(const Key('files.act.rename')), findsNothing);
+    });
+
+    testWidgets('a place opens its folder', (t) async {
+      await files(t);
+      await t.tap(find.byKey(const Key('files.place.documents')));
+      await frames(t, 6);
+      expect(row('hajos'), findsOneWidget);
+      expect(
+        t
+            .widget<SectionRow>(find.byKey(const Key('files.place.documents')))
+            .selected,
+        isTrue,
+      );
+    });
+
+    testWidgets('Enter on a text file: its preview over the folder; back '
+        'to the table', (t) async {
+      await files(t);
+      await click(t, 'notes.txt');
+      await key(t, LogicalKeyboardKey.enter);
+      await frames(t, 10);
+      expect(find.byType(FilePreviewScreen), findsOneWidget);
+      expect(find.byType(FilesArea), findsOneWidget);
+      await t.tap(find.byType(BackButton));
+      await frames(t, 10);
+      expect(find.byType(FilePreviewScreen), findsNothing);
+      expect(row('notes.txt'), findsOneWidget);
+    });
+
+    testWidgets('Ctrl+] switches the inspector tab', (t) async {
+      await files(t);
+      await click(t, 'notes.txt');
+      expect(
+        container(t).read(fileInspectorTabProvider),
+        FileInspectorTab.preview,
+      );
+      await key(
+        t,
+        LogicalKeyboardKey.bracketRight,
+        holding: LogicalKeyboardKey.controlLeft,
+      );
+      expect(
+        container(t).read(fileInspectorTabProvider),
+        FileInspectorTab.info,
+      );
     });
   });
 

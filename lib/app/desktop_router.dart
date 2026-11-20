@@ -8,6 +8,7 @@ import '../ui/desktop/approvals_area.dart';
 import '../ui/desktop/areas.dart';
 import '../ui/desktop/chats_area.dart';
 import '../ui/desktop/desktop_shell.dart';
+import '../ui/desktop/files_area.dart';
 import '../ui/desktop/news_area.dart';
 import '../ui/desktop/panes.dart';
 import '../ui/desktop/schedules_area.dart';
@@ -78,6 +79,7 @@ GoRouter buildDesktopRouter({
   final settingsKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.settings');
   final aboutKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.about');
   final terminalKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.terminal');
+  final filesKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.files');
   final approvalsKey = GlobalKey<NavigatorState>(
     debugLabel: 'desktop.approvals',
   );
@@ -230,26 +232,30 @@ GoRouter buildDesktopRouter({
               ),
             ],
           ),
-          GoRoute(
-            path: Routes.files,
-            pageBuilder: (_, state) => _flat(
-              state,
-              _alone(DesktopArea.files.name, const FilesScreen()),
+          ShellRoute(
+            navigatorKey: filesKey,
+            pageBuilder: (context, state, child) => NoTransitionPage<void>(
+              key: state.pageKey,
+              child: FilesArea(content: child, navigator: filesKey),
             ),
             routes: [
               GoRoute(
-                path: 'preview',
+                path: Routes.files,
+                pageBuilder: (_, state) => _flat(state, const FilesScreen()),
+              ),
+              // pushed over the folder (its back, an editor's changes)
+              GoRoute(
+                path: Routes.filePreview,
                 redirect: (_, state) =>
                     previewArgsOf(state.extra) == null ? Routes.files : null,
-                builder: (_, state) => _alone(
-                  DesktopArea.files.name,
+                pageBuilder: (_, state) => _flat(
+                  state,
                   FilePreviewScreen(args: previewArgsOf(state.extra)!),
                 ),
               ),
               GoRoute(
-                path: 'trash',
-                builder: (_, _) =>
-                    _alone(DesktopArea.files.name, const TrashScreen()),
+                path: Routes.filesTrash,
+                pageBuilder: (_, state) => _flat(state, const TrashScreen()),
               ),
             ],
           ),

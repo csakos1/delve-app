@@ -5769,4 +5769,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desktopDockOpenTerminal => 'Open Terminal';
+
+  @override
+  String get desktopFilesRoot => 'File system';
+
+  @override
+  String get desktopFileInfo => 'Info';
+
+  @override
+  String get desktopFileModified => 'Modified';
+
+  @override
+  String get desktopFileNoPreview => 'No preview for this kind of file.';
+
+  @override
+  String get desktopFileOpenWhole => 'Open the whole file';
+
+  @override
+  String desktopFilePreviewFailed(String reason) {
+    return 'Couldn\'t load the preview: $reason';
+  }
+
+  @override
+  String get desktopFileItems => 'Contents';
+
+  @override
+  String get desktopFilePermissions => 'Permissions';
+
+  @override
+  String get desktopFileOwner => 'Owner';
+
+  @override
+  String get desktopFileWhere => 'Where';
+
+  @override
+  String get desktopFilePath => 'Path';
+
+  @override
+  String get desktopFileLink => 'Link to';
+
+  @override
+  String get desktopFileFilesystem => 'File system';
+
+  @override
+  String desktopFileFolders(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count folders',
+      one: '1 folder',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String desktopFileFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
 }

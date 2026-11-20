@@ -13,6 +13,7 @@ import 'areas.dart';
 import 'chat_inspector.dart';
 import 'desktop_page.dart';
 import 'dock.dart';
+import 'files_area.dart' show fileInspectorTabProvider;
 import 'intake.dart';
 import 'panes.dart';
 import 'rail.dart';
@@ -312,7 +313,11 @@ class DesktopShell extends ConsumerWidget {
             ),
             _NextTabIntent: CallbackAction<_NextTabIntent>(
               onInvoke: (_) {
-                ref.read(chatInspectorTabProvider.notifier).next();
+                if (area == DesktopArea.files.name) {
+                  ref.read(fileInspectorTabProvider.notifier).next();
+                } else {
+                  ref.read(chatInspectorTabProvider.notifier).next();
+                }
                 return null;
               },
             ),

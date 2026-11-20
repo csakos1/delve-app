@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart' show kDoubleTapTimeout;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +18,12 @@ import '../../terminal/terminal_lock.dart';
 import '../../terminal/terminal_providers.dart';
 import '../../terminal/terminal_service.dart';
 import '../../theme/delve_theme.dart';
+import '../desktop/desktop_page.dart';
+import '../desktop/desktop_row.dart' show DesktopMenuItem, showDesktopMenu;
+import '../desktop/files_area.dart';
+import '../desktop/intake.dart'
+    show ListCommandSlot, ListCommands, listCommandSlotProvider;
+import '../desktop/panes.dart' show InspectorToggle;
 import '../widgets/files_dialogs.dart';
 import '../widgets/files_ui.dart';
 import '../widgets/page_scaffolds.dart';
@@ -29,6 +36,9 @@ import 'file_preview_screen.dart';
 /// download, preview; F2a: upload, new folder, rename, trash; F3: several
 /// items, Copy / Move → Paste, folder downloads; F3b: the transfers go on in
 /// the background, and their notification's Open shows the Transfers sheet).
+/// In the desktop layout (L2c4c, 27W-13) the folder is a table in the
+/// Files area's content: a click selects ([filesPickProvider]; Ctrl / Shift
+/// several), a double click or Enter opens, right-click: the row's menu.
 class FilesScreen extends ConsumerStatefulWidget {
   const FilesScreen({super.key});
 
@@ -53,11 +63,26 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
   String? _selectedIn;
   bool get _selecting => _selected.isNotEmpty;
 
+  // the desktop's table (L2c4c)
+  late final ListCommandSlot _keys;
+  late final PageCommandSlot _pageKeys;
+  final _tableFocus = FocusNode(debugLabel: 'files.table');
+  final _tableScroll = ScrollController(keepScrollOffset: false);
+  bool _desktop = false;
+  FilesPick _pick = const FilesPick();
+
+  /// The last click: a second one on the same row in time opens it.
+  String? _lastTap;
+  DateTime? _lastTapAt;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _finished = _service.finished.listen(_onFinished);
+    // read here, not lazily: dispose must not be the first to touch ref
+    _keys = ref.read(listCommandSlotProvider);
+    _pageKeys = ref.read(pageCommandSlotProvider);
   }
 
   @override
@@ -86,6 +111,10 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
 
   @override
   void dispose() {
+    _keys.unregister(this);
+    _pageKeys.unregister(this);
+    _tableFocus.dispose();
+    _tableScroll.dispose();
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_finished?.cancel());
     _tick?.cancel();
@@ -232,23 +261,11 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
   }
 
   /// An image opens with the folder's other images to swipe through (in the
-  /// list's order); a text file opens alone.
-  void _preview(RemoteEntry e, {bool edit = false}) {
-    _terminal.lock.keepAlive();
-    final images = previewKindOf(e) == PreviewKind.image
-        ? [
-            for (final x in _service.entries ?? const <RemoteEntry>[])
-              if (previewKindOf(x) == PreviewKind.image) x,
-          ]
-        : const <RemoteEntry>[];
-    final at = images.indexWhere((x) => x.path == e.path);
-    context.open(
-      Routes.filePreview,
-      extra: at < 0
-          ? FilePreviewArgs([e], edit: edit)
-          : FilePreviewArgs(images, index: at),
-    );
-  }
+  /// list's order); a text file opens alone. Pushed over the folder (on the
+  /// desktop too: its back and an editor's unsaved changes work as on the
+  /// phone).
+  void _preview(RemoteEntry e, {bool edit = false}) =>
+      openFilePreview(context, _service, e, edit: edit);
 
   void _download(RemoteEntry e) => _service.download(e);
 
@@ -263,15 +280,19 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
   }
 
   void _endSelection() {
+    ref.read(filesPickProvider.notifier).clear();
     if (_selected.isEmpty) return;
     setState(_selected.clear);
   }
 
-  /// The selected entries, in the list's order.
-  List<RemoteEntry> get _selection => [
-    for (final e in _service.entries ?? const <RemoteEntry>[])
-      if (_selected.contains(e.path)) e,
-  ];
+  /// The selected entries, in the list's order (the desktop: the table's).
+  List<RemoteEntry> get _selection {
+    final picked = _desktop ? _pick.of(_service.path) : _selected;
+    return [
+      for (final e in _service.entries ?? const <RemoteEntry>[])
+        if (picked.contains(e.path)) e,
+    ];
+  }
 
   void _selectAll() => setState(() {
     _selectedIn = _service.path;
@@ -831,7 +852,8 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
         unawaited(_newFolder());
       case 'trash':
         _terminal.lock.keepAlive();
-        context.open(Routes.filesTrash);
+        // over the folder (the desktop's Files area too)
+        unawaited(context.push<void>(Routes.filesTrash));
       case final String c when c.startsWith('sort.'):
         final key = SortKey.values.byName(c.substring(5));
         if (key != _service.sort) _service.sortBy(key);
@@ -922,42 +944,50 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
     return [?size, ?date].join(' · ');
   }
 
+  /// A state page (not set up, locked, refused): the phone's top-level page,
+  /// on the desktop the content's 48 px header.
+  Widget _page(AppLocalizations l, Widget child) => _desktop
+      ? DesktopPage(title: l.navFiles, inspectorToggle: true, child: child)
+      : TopLevelPage(title: l.navFiles, child: child);
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    _desktop = DesktopLayout.of(context);
+    _pick = ref.watch(filesPickProvider);
+    if (_desktop) _registerKeys();
     return Scaffold(
-      floatingActionButton: ListenableBuilder(
-        listenable: Listenable.merge([_service, _terminal]),
-        // an empty folder has its own Upload button
-        builder: (context, _) =>
-            _canWrite &&
-                _service.entries!.isNotEmpty &&
-                !_selecting &&
-                _service.clip == null
-            ? FloatingActionButton.extended(
-                key: const Key('files.upload'),
-                backgroundColor: context.colors.primary,
-                foregroundColor: context.colors.onPrimary,
-                onPressed: () => unawaited(_upload()),
-                icon: const SymbolIcon(FileIcons.upload),
-                label: Text(l.filesUpload),
-              )
-            : const SizedBox.shrink(),
-      ),
+      floatingActionButton: _desktop
+          ? null
+          : ListenableBuilder(
+              listenable: Listenable.merge([_service, _terminal]),
+              // an empty folder has its own Upload button
+              builder: (context, _) =>
+                  _canWrite &&
+                      _service.entries!.isNotEmpty &&
+                      !_selecting &&
+                      _service.clip == null
+                  ? FloatingActionButton.extended(
+                      key: const Key('files.upload'),
+                      backgroundColor: context.colors.primary,
+                      foregroundColor: context.colors.onPrimary,
+                      onPressed: () => unawaited(_upload()),
+                      icon: const SymbolIcon(FileIcons.upload),
+                      label: Text(l.filesUpload),
+                    )
+                  : const SizedBox.shrink(),
+            ),
       body: ListenableBuilder(
         listenable: Listenable.merge([_service, _terminal, _wanted]),
         builder: (context, _) {
           final s = _service;
           if (!_terminal.ready) {
-            return TopLevelPage(
-              title: l.navFiles,
-              child: const Center(child: CircularProgressIndicator()),
-            );
+            return _page(l, const Center(child: CircularProgressIndicator()));
           }
           if (s.phase == FilesPhase.notSetUp) {
-            return TopLevelPage(
-              title: l.navFiles,
-              child: FilesMessage(
+            return _page(
+              l,
+              FilesMessage(
                 key: const Key('files.notSetUp'),
                 icon: FileIcons.executable,
                 title: l.filesNotSetUpTitle,
@@ -979,9 +1009,9 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
                 if (mounted) unawaited(_unlock());
               });
             }
-            return TopLevelPage(
-              title: l.navFiles,
-              child: _Locked(
+            return _page(
+              l,
+              _Locked(
                 busy: _unlocking,
                 problem: _unlockProblem,
                 onUnlock: _unlock,
@@ -991,9 +1021,9 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
           if (s.phase == FilesPhase.hostKeyChanged ||
               s.phase == FilesPhase.denied) {
             final changed = s.phase == FilesPhase.hostKeyChanged;
-            return TopLevelPage(
-              title: l.navFiles,
-              child: FilesMessage(
+            return _page(
+              l,
+              FilesMessage(
                 key: Key(changed ? 'files.hostKeyChanged' : 'files.keyDenied'),
                 icon: changed ? DelveIcons.gppBad : DelveIcons.keyOff,
                 title: changed ? l.filesHostKeyTitle : l.filesKeyDeniedTitle,
@@ -1052,9 +1082,11 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || !_wanted.value) return;
         _wanted.value = false;
-        _transfers();
+        // the desktop shows the transfers in the list column
+        if (!_desktop) _transfers();
       });
     }
+    if (_desktop) return _desktopBrowser(context, l);
     // the selection belongs to one folder, and to what is still in it
     if (_selectedIn != path) {
       _selected.clear();
@@ -1132,6 +1164,478 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
                     child: _pasteBar(l, clip),
                   ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------ the desktop
+
+  /// J / K and ↓ / ↑ (the shell's list keys) step through the table; Ctrl+R
+  /// refreshes the folder.
+  void _registerKeys() {
+    _keys.register(
+      this,
+      ListCommands(
+        next: () => _step(1),
+        previous: () => _step(-1),
+        archive: () {},
+        undo: () {},
+      ),
+    );
+    _pageKeys.register(
+      this,
+      PageCommands(refresh: () => unawaited(_service.refresh())),
+    );
+  }
+
+  /// The selected rows of the folder on screen.
+  Set<String> get _picked {
+    final there = {
+      for (final e in _service.entries ?? const <RemoteEntry>[]) e.path,
+    };
+    return {
+      for (final p in _pick.of(_service.path))
+        if (there.contains(p)) p,
+    };
+  }
+
+  /// The one selected entry (null: none or several).
+  RemoteEntry? get _onePicked {
+    final items = _selection;
+    return items.length == 1 ? items.single : null;
+  }
+
+  void _step(int by, {bool extend = false}) {
+    final folder = _service.path;
+    final entries = _service.entries;
+    if (folder == null || entries == null) return;
+    final i = ref
+        .read(filesPickProvider.notifier)
+        .step(folder, entries, by, extend: extend);
+    if (i != null) _reveal(i);
+  }
+
+  /// Scrolls the table so row [i] is in view.
+  void _reveal(int i) {
+    if (!_tableScroll.hasClients) return;
+    final pos = _tableScroll.position;
+    final top = i * DelveDesktop.filesRow;
+    final bottom = top + DelveDesktop.filesRow;
+    if (top < pos.pixels) {
+      _tableScroll.jumpTo(top);
+    } else if (bottom > pos.pixels + pos.viewportDimension) {
+      _tableScroll.jumpTo(
+        (bottom - pos.viewportDimension).clamp(0, pos.maxScrollExtent),
+      );
+    }
+  }
+
+  /// A click: this row (Ctrl: in or out, Shift: the range); the same row
+  /// again within the double-click time opens it.
+  void _clickRow(RemoteEntry e, List<RemoteEntry> entries) {
+    final folder = _service.path;
+    if (folder == null) return;
+    _tableFocus.requestFocus();
+    _terminal.lock.keepAlive();
+    final picks = ref.read(filesPickProvider.notifier);
+    final keys = HardwareKeyboard.instance;
+    final now = DateTime.now();
+    final again =
+        _lastTap == e.path &&
+        _lastTapAt != null &&
+        now.difference(_lastTapAt!) < kDoubleTapTimeout;
+    _lastTap = e.path;
+    _lastTapAt = now;
+    if (keys.isControlPressed || keys.isMetaPressed) {
+      picks.toggle(folder, e.path);
+      return;
+    }
+    if (keys.isShiftPressed) {
+      picks.range(folder, entries, e.path);
+      return;
+    }
+    picks.only(folder, e.path);
+    if (again) {
+      _lastTap = null;
+      _openRow(e);
+    }
+  }
+
+  /// Double click / Enter: a folder opens in the table, a file in the
+  /// preview page; anything else stays selected (its Info is in the
+  /// inspector).
+  void _openRow(RemoteEntry e) {
+    if (e.isDir) {
+      unawaited(_service.enter(e));
+    } else if (previewKindOf(e) != PreviewKind.none) {
+      _preview(e);
+    }
+  }
+
+  /// The table's own keys (with the focus in it): Enter opens, Backspace
+  /// goes up, Ctrl+A selects all, Esc clears the selection, Shift+↓ / ↑
+  /// widens it.
+  KeyEventResult _tableKey(KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    final folder = _service.path;
+    final entries = _service.entries;
+    if (folder == null || entries == null) return KeyEventResult.ignored;
+    final keys = HardwareKeyboard.instance;
+    final key = event.logicalKey;
+    final picks = ref.read(filesPickProvider.notifier);
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      final one = _onePicked;
+      if (one == null) return KeyEventResult.ignored;
+      _openRow(one);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.backspace && event is KeyDownEvent) {
+      unawaited(_service.up());
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.keyA &&
+        (keys.isControlPressed || keys.isMetaPressed)) {
+      picks.all(folder, entries);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.escape && _picked.isNotEmpty) {
+      picks.clear();
+      return KeyEventResult.handled;
+    }
+    if (keys.isShiftPressed &&
+        (key == LogicalKeyboardKey.arrowDown ||
+            key == LogicalKeyboardKey.arrowUp)) {
+      _step(key == LogicalKeyboardKey.arrowDown ? 1 : -1, extend: true);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  /// Right-click: the row (or, on a selected row, the selection) and what
+  /// can be done with it – the phone's actions sheet as a menu.
+  void _rowMenu(RemoteEntry e, Offset at) {
+    final folder = _service.path;
+    if (folder == null) return;
+    _terminal.lock.keepAlive();
+    final l = AppLocalizations.of(context);
+    if (!_picked.contains(e.path)) {
+      ref.read(filesPickProvider.notifier).only(folder, e.path);
+    }
+    final items = [
+      for (final x in _service.entries ?? const <RemoteEntry>[])
+        if (x.path == e.path ||
+            (_picked.contains(e.path) && _picked.contains(x.path)))
+          x,
+    ];
+    DesktopMenuItem item(
+      String key,
+      IconData icon,
+      String label,
+      VoidCallback onTap, {
+      bool destructive = false,
+    }) => DesktopMenuItem(
+      key: Key('files.act.$key'),
+      icon: icon,
+      label: label,
+      onSelected: onTap,
+      destructive: destructive,
+    );
+    final List<DesktopMenuItem> menu;
+    if (items.length > 1) {
+      final trashable = items.any(_service.canTrash);
+      menu = [
+        item(
+          'download',
+          FileIcons.download,
+          l.filesActDownload,
+          () => _downloadAll(items),
+        ),
+        item(
+          'copy',
+          FileIcons.copy,
+          l.filesActCopy,
+          () => _clip(items, cut: false),
+        ),
+        item(
+          'move',
+          FileIcons.move,
+          l.filesActMove,
+          () => _clip(items, cut: true),
+        ),
+        item(
+          'copyPath',
+          FileIcons.copyPath,
+          l.filesCopyPaths,
+          () => unawaited(_copyPaths(items)),
+        ),
+        item(
+          trashable ? 'trash' : 'deleteForever',
+          trashable ? FileIcons.trash : FileIcons.deleteForever,
+          trashable ? l.filesActTrash : l.filesActDeleteForever,
+          () => unawaited(_trashAll(items)),
+          destructive: true,
+        ),
+      ];
+    } else {
+      final size = e.size;
+      final editable =
+          previewKindOf(e) == PreviewKind.text &&
+          !e.isDir &&
+          !(size != null && size > kEditMax) &&
+          listingWritable(e, _service.user);
+      menu = [
+        if (e.isDir)
+          item('open', FileIcons.folderOpen, l.filesActOpen, () {
+            unawaited(_service.enter(e));
+          }),
+        if (previewKindOf(e) != PreviewKind.none)
+          item(
+            'preview',
+            FileIcons.preview,
+            l.filesActPreview,
+            () => _preview(e),
+          ),
+        if (editable)
+          item(
+            'edit',
+            FileIcons.edit,
+            l.editorEdit,
+            () => _preview(e, edit: true),
+          ),
+        if (e.kind != EntryKind.other)
+          item(
+            'download',
+            FileIcons.download,
+            l.filesActDownload,
+            () => _download(e),
+          ),
+        if (e.isLink && !e.linkBroken)
+          item('target', FileIcons.goTo, l.filesActGoToTarget, () {
+            final target = normalizePath(e.link!, from: parentPath(e.path));
+            _open(e.isDir ? target : parentPath(target));
+          }),
+        item(
+          'rename',
+          FileIcons.rename,
+          l.filesRename,
+          () => unawaited(_rename(e)),
+        ),
+        item(
+          'copy',
+          FileIcons.copy,
+          l.filesActCopy,
+          () => _clip([e], cut: false),
+        ),
+        item(
+          'move',
+          FileIcons.move,
+          l.filesActMove,
+          () => _clip([e], cut: true),
+        ),
+        item(
+          'copyPath',
+          FileIcons.copyPath,
+          l.filesActCopyPath,
+          () => unawaited(_copyPath(e)),
+        ),
+        if (_service.canTrash(e))
+          item(
+            'trash',
+            FileIcons.trash,
+            l.filesActTrash,
+            () => unawaited(_toTrash(e)),
+            destructive: true,
+          )
+        else
+          item(
+            'deleteForever',
+            FileIcons.deleteForever,
+            l.filesActDeleteForever,
+            () => unawaited(_deleteForever(e)),
+            destructive: true,
+          ),
+      ];
+    }
+    unawaited(showDesktopMenu(context, at, menu));
+  }
+
+  /// The size column: a file's size, a folder's item count.
+  String _sizeCell(AppLocalizations l, RemoteEntry e) {
+    if (e.isLink && e.linkBroken) return '';
+    if (e.isDir) {
+      final n = _service.countOf(e);
+      return n == null ? '' : itemsText(l, n);
+    }
+    return e.size == null ? '' : sizeText(e.size!);
+  }
+
+  /// The folder on the desktop (27W-13): the breadcrumb header with Upload,
+  /// New folder, refresh, the menu and the inspector toggle; the table; a
+  /// foot line with the folder's (or the selection's) count.
+  Widget _desktopBrowser(BuildContext context, AppLocalizations l) {
+    final s = _service;
+    final path = s.path;
+    final clip = s.clip;
+    final cs = context.colors;
+    final picked = _picked;
+    Widget button(String key, IconData icon, String tip, VoidCallback? onTap) =>
+        IconButton(
+          key: Key('files.$key'),
+          tooltip: tip,
+          onPressed: onTap,
+          icon: SymbolIcon(icon, size: DelveDesktop.iconButtonIcon),
+        );
+    return Scaffold(
+      backgroundColor: cs.surface,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: DelveDesktop.paneHeader,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: path == null
+                        ? const SizedBox.shrink()
+                        : Breadcrumb(path: path, onOpen: _open),
+                  ),
+                  button(
+                    'upload',
+                    FileIcons.upload,
+                    l.filesUpload,
+                    _canWrite ? () => unawaited(_upload()) : null,
+                  ),
+                  button(
+                    'newFolder',
+                    FileIcons.newFolder,
+                    l.filesNewFolder,
+                    _canWrite ? () => unawaited(_newFolder()) : null,
+                  ),
+                  DesktopRefreshButton(
+                    buttonKey: const Key('files.refresh'),
+                    onPressed: () => unawaited(s.refresh()),
+                  ),
+                  Builder(
+                    builder: (anchor) => button(
+                      'menu',
+                      DelveIcons.moreVert,
+                      MaterialLocalizations.of(context).showMenuTooltip,
+                      () => unawaited(_menu(anchor)),
+                    ),
+                  ),
+                  const InspectorToggle(),
+                ],
+              ),
+            ),
+          ),
+          if (s.loading || s.phase == FilesPhase.connecting)
+            const LinearProgressIndicator(minHeight: 2)
+          else if (s.phase == FilesPhase.offline)
+            FilesStateLine(service: s)
+          else
+            const SizedBox(height: 2),
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: AnimatedOpacity(
+                    duration: DelveTokens.short,
+                    opacity: s.phase == FilesPhase.offline ? 0.5 : 1,
+                    child: IgnorePointer(
+                      ignoring: s.phase == FilesPhase.offline,
+                      child: _list(context, l),
+                    ),
+                  ),
+                ),
+                if (clip != null)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: _pasteBar(l, clip),
+                  ),
+              ],
+            ),
+          ),
+          if (s.entries != null || s.mountHere != null)
+            Container(
+              height: DelveDesktop.filesFoot,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                picked.isEmpty ? _headerText(l) : _selectionText(l),
+                key: const Key('files.foot'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: DelveDesktopText.meta.copyWith(
+                  color: context.delve.textMuted,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// The folder as a table (27W-13): header 30, rows 32; the focus in it
+  /// for the keys ([_tableKey]).
+  Widget _table(
+    BuildContext context,
+    AppLocalizations l,
+    List<RemoteEntry> entries,
+  ) {
+    final s = _service;
+    final now = DateTime.now();
+    final picked = _picked;
+    return Focus(
+      focusNode: _tableFocus,
+      onKeyEvent: (_, event) => _tableKey(event),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FilesTableHeader(
+            sort: s.sort,
+            ascending: s.ascending,
+            onSort: s.sortBy,
+          ),
+          Expanded(
+            // a new scroll position (at the top) for each folder
+            child: KeyedSubtree(
+              key: ValueKey(s.path),
+              child: Scrollbar(
+                controller: _tableScroll,
+                child: ListView.builder(
+                  key: const Key('files.table'),
+                  controller: _tableScroll,
+                  // room under the last row for the paste bar
+                  padding: const EdgeInsets.only(top: 2, bottom: 72),
+                  itemCount: entries.length,
+                  itemExtent: DelveDesktop.filesRow,
+                  itemBuilder: (context, i) {
+                    final e = entries[i];
+                    return FilesTableRow(
+                      entry: e,
+                      size: _sizeCell(l, e),
+                      modified: e.modified == null
+                          ? ''
+                          : fileTime(e.modified!, now),
+                      selected: picked.contains(e.path),
+                      locked:
+                          e.isDir && s.countKnown(e) && s.countOf(e) == null,
+                      onTap: () => _clickRow(e, entries),
+                      onMenu: (at) => _rowMenu(e, at),
+                    );
+                  },
+                ),
+              ),
             ),
           ),
         ],
@@ -1312,6 +1816,7 @@ class _FilesScreenState extends ConsumerState<FilesScreen>
         ],
       );
     }
+    if (_desktop) return _table(context, l, entries);
     final now = DateTime.now();
     // a new scroll position (at the top) for each folder
     return KeyedSubtree(

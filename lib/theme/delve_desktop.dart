@@ -163,6 +163,18 @@ abstract final class DelveDesktop {
     horizontal: 10,
   );
 
+  // Files (Components “Areas”, 27W-13)
+  static const double filesRow = 32;
+  static const double filesHeaderRow = 30;
+  static const double filesSizeColumn = 104;
+  static const double filesDateColumn = 132;
+  static const double filesFoot = 28;
+  static const double filesTransfersMax = 240;
+
+  /// The inspector's preview waits this long after a selection (J / K
+  /// through a folder does not fetch every file).
+  static const Duration filesPreviewDelay = Duration(milliseconds: 180);
+
   // motion
   static const Duration hover = Duration(milliseconds: 100);
   static const Duration tooltipDelay = Duration(milliseconds: 500);

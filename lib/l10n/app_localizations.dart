@@ -8996,6 +8996,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open Terminal'**
   String get desktopDockOpenTerminal;
+
+  /// No description provided for @desktopFilesRoot.
+  ///
+  /// In en, this message translates to:
+  /// **'File system'**
+  String get desktopFilesRoot;
+
+  /// No description provided for @desktopFileInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get desktopFileInfo;
+
+  /// No description provided for @desktopFileModified.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified'**
+  String get desktopFileModified;
+
+  /// No description provided for @desktopFileNoPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'No preview for this kind of file.'**
+  String get desktopFileNoPreview;
+
+  /// No description provided for @desktopFileOpenWhole.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the whole file'**
+  String get desktopFileOpenWhole;
+
+  /// No description provided for @desktopFilePreviewFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the preview: {reason}'**
+  String desktopFilePreviewFailed(String reason);
+
+  /// No description provided for @desktopFileItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Contents'**
+  String get desktopFileItems;
+
+  /// No description provided for @desktopFilePermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get desktopFilePermissions;
+
+  /// No description provided for @desktopFileOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get desktopFileOwner;
+
+  /// No description provided for @desktopFileWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Where'**
+  String get desktopFileWhere;
+
+  /// No description provided for @desktopFilePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get desktopFilePath;
+
+  /// No description provided for @desktopFileLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link to'**
+  String get desktopFileLink;
+
+  /// No description provided for @desktopFileFilesystem.
+  ///
+  /// In en, this message translates to:
+  /// **'File system'**
+  String get desktopFileFilesystem;
+
+  /// No description provided for @desktopFileFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 folder} other{{count} folders}}'**
+  String desktopFileFolders(int count);
+
+  /// No description provided for @desktopFileFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file} other{{count} files}}'**
+  String desktopFileFiles(int count);
 }
 
 class _AppLocalizationsDelegate
