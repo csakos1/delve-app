@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/inbox.dart';
 import '../../app/platform.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
@@ -71,14 +72,18 @@ class ShortcutGroup {
 }
 
 /// The sheet's three columns (27W-14c): only keys that work now – Terminal
-/// and Files with the desktop tools on.
+/// and Files with the desktop tools on, the Inbox (Ctrl+1; E and Ctrl+Z
+/// are its Done and Undo too) with a server that has it ([inbox]).
 List<List<ShortcutGroup>> shortcutColumns(
   AppLocalizations l, {
   required bool tools,
+  bool inbox = false,
 }) {
   final areas = [
     for (final a in DesktopArea.values)
-      if (a.digit != null && (!a.tool || tools))
+      if (a.digit != null &&
+          (!a.tool || tools) &&
+          (a != DesktopArea.inbox || inbox))
         ShortcutLine(a.title(l), [l.desktopKeyArea(a.digit!)]),
   ];
   return [
@@ -106,8 +111,13 @@ List<List<ShortcutGroup>> shortcutColumns(
           DesktopKeys.paneBack,
         ]),
         ShortcutLine(l.shortcutsRowMenu, const [DesktopKeys.rowMenu]),
-        ShortcutLine(l.shortcutsArchive, const [DesktopKeys.archive]),
-        ShortcutLine(l.shortcutsUndo, const [DesktopKeys.undo]),
+        ShortcutLine(
+          inbox ? l.shortcutsDoneOrArchive : l.shortcutsArchive,
+          const [DesktopKeys.archive],
+        ),
+        ShortcutLine(inbox ? l.shortcutsUndoDone : l.shortcutsUndo, const [
+          DesktopKeys.undo,
+        ]),
         ShortcutLine(l.shortcutsOverlay, const [DesktopKeys.esc]),
       ]),
       if (tools)
@@ -212,7 +222,11 @@ class ShortcutSheet extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final cs = context.colors;
     final window = MediaQuery.sizeOf(context);
-    final columns = shortcutColumns(l, tools: ref.watch(desktopToolsProvider));
+    final columns = shortcutColumns(
+      l,
+      tools: ref.watch(desktopToolsProvider),
+      inbox: ref.watch(inboxSupportedProvider),
+    );
     return Dialog(
       key: const Key('shortcuts'),
       backgroundColor: cs.surfaceContainerHigh,

@@ -642,6 +642,28 @@ class DelveApi {
     NewsSettings.fromJson,
   );
 
+  // --- inbox (I0, API 23) -------------------------------------------------
+
+  /// The Inbox: what needs the reader, newest first, and what was cleared
+  /// today.
+  Future<Inbox> inbox() async =>
+      _parse(await _json(ApiRoutes.inbox), Inbox.fromJson);
+
+  /// Clears the open item [id] (`<kind>:<ref>`); answers with the view after
+  /// it. 404 `inbox_item_not_found` (it left by itself), 409 `not_doneable`
+  /// (an approval is answered, not cleared).
+  Future<Inbox> inboxDone(String id) async => _parse(
+    await _json(ApiRoutes.inboxDone, body: {'id': id}),
+    Inbox.fromJson,
+  );
+
+  /// Takes a clearing back: the item shows again if it is still the case.
+  /// 404 `inbox_item_not_found` (it was not cleared).
+  Future<Inbox> inboxUndo(String id) async => _parse(
+    await _json(ApiRoutes.inboxUndo, body: {'id': id}),
+    Inbox.fromJson,
+  );
+
   // --- attachments (B6) ---------------------------------------------------
 
   /// Uploads one photo or file (the raw bytes, the type in `Content-Type`);

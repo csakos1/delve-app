@@ -832,11 +832,23 @@ class DesktopApprovalRow extends StatelessWidget {
 /// it came from, the command in a well with Copy, the state (the countdown,
 /// the late deadline, or the outcome and who), Allow once · Deny · Allow
 /// for session while it can be answered (Ctrl+Enter / Ctrl+Backspace), and
-/// why the agent asks.
+/// why the agent asks. The Inbox (L2e) shows the same page under its own
+/// header: [title] and [actions].
 class ApprovalDetail extends ConsumerStatefulWidget {
-  const ApprovalDetail({super.key, required this.requestId});
+  const ApprovalDetail({
+    super.key,
+    required this.requestId,
+    this.title,
+    this.actions = const [],
+  });
 
   final String requestId;
+
+  /// The header's title (null: the chat's).
+  final String? title;
+
+  /// The header's buttons, before the inspector toggle.
+  final List<Widget> actions;
 
   @override
   ConsumerState<ApprovalDetail> createState() => _ApprovalDetailState();
@@ -914,7 +926,8 @@ class _ApprovalDetailState extends ConsumerState<ApprovalDetail> {
     final item = _find(inbox, widget.requestId);
     if (item == null) {
       return DesktopPage(
-        title: l.navApprovals,
+        title: widget.title ?? l.navApprovals,
+        actions: widget.actions,
         child: inbox == null
             ? const SizedBox.shrink()
             : Padding(
@@ -957,7 +970,8 @@ class _ApprovalDetailState extends ConsumerState<ApprovalDetail> {
       ),
     );
     return DesktopPage(
-      title: item.chatTitle ?? l.chatTitle,
+      title: widget.title ?? item.chatTitle ?? l.chatTitle,
+      actions: widget.actions,
       inspectorToggle: true,
       child: CallbackShortcuts(
         bindings: {

@@ -26,17 +26,42 @@ TextStyle _reading(BuildContext context) =>
 /// with the why, the article text (or what became of it: Fetch text,
 /// queued, failed + Try again; a day of releases lists its tags), Open
 /// original and the small feedback icons. Save is in the top bar. Opening
-/// marks the story read.
+/// marks the story read. The desktop's Inbox (L2e) shows the same view
+/// under its own header ([title], [headerActions]) and counts a story as
+/// read only once it was on screen for [readAfter].
 class NewsStoryScreen extends ConsumerStatefulWidget {
-  const NewsStoryScreen({super.key, required this.id});
+  const NewsStoryScreen({
+    super.key,
+    required this.id,
+    this.title,
+    this.headerActions = const [],
+    this.readAfter,
+    this.beforeRead,
+  });
 
   final int id;
+
+  /// The desktop header's title (null: the topic's name).
+  final String? title;
+
+  /// The desktop header's buttons before the story's own.
+  final List<Widget> headerActions;
+
+  /// The story is marked read only after it was shown this long (null: when
+  /// it opens).
+  final Duration? readAfter;
+
+  /// Runs right before that late mark (the Inbox clears its item first).
+  final Future<void> Function()? beforeRead;
 
   @override
   ConsumerState<NewsStoryScreen> createState() => _NewsStoryScreenState();
 }
 
 class _NewsStoryScreenState extends ConsumerState<NewsStoryScreen> {
+  /// Runs out when the story was shown for [NewsStoryScreen.readAfter].
+  Timer? _shown;
+
   @override
   void initState() {
     super.initState();
@@ -45,11 +70,36 @@ class _NewsStoryScreenState extends ConsumerState<NewsStoryScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    _shown?.cancel();
+    super.dispose();
+  }
+
   Future<void> _load() async {
+    final wait = widget.readAfter;
     try {
-      await ref.read(newsStoryProvider(widget.id).notifier).load();
+      await ref
+          .read(newsStoryProvider(widget.id).notifier)
+          .load(read: wait == null);
     } on Object {
       // shown from NewsStoryView.error
+      return;
+    }
+    if (wait == null || !mounted) return;
+    _shown?.cancel();
+    _shown = Timer(wait, () => unawaited(_markShown()));
+  }
+
+  /// It was on screen long enough: read (after [NewsStoryScreen.beforeRead]).
+  Future<void> _markShown() async {
+    if (!mounted) return;
+    final story = ref.read(newsStoryProvider(widget.id).notifier);
+    try {
+      await widget.beforeRead?.call();
+      await story.markRead();
+    } on Object {
+      // it stays unread: the next opening tries again
     }
   }
 
@@ -145,10 +195,12 @@ class _NewsStoryScreenState extends ConsumerState<NewsStoryScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             PaneHeader(
-              title: item == null
-                  ? ''
-                  : ref.watch(newsProvider).topicName(item.topic),
-              actions: actions,
+              title:
+                  widget.title ??
+                  (item == null
+                      ? ''
+                      : ref.watch(newsProvider).topicName(item.topic)),
+              actions: [...widget.headerActions, ...actions],
               inspectorToggle: true,
             ),
             Expanded(child: ReadingColumn(child: content)),

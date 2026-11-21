@@ -333,15 +333,16 @@ class NewsStoryController extends Notifier<NewsStoryView> {
     _news.put(story.item);
   }
 
-  /// Loads the story and marks it read (once).
-  Future<void> load() async {
+  /// Loads the story and marks it read (once); with [read] false it stays
+  /// unread until [markRead] (the desktop's Inbox: after 2 s on screen).
+  Future<void> load({bool read = true}) async {
     final api = _api;
     if (api == null) return;
     try {
       var story = await api.newsStory(id);
       if (!ref.mounted) return;
       _set(story);
-      if (!story.item.read) {
+      if (read && !story.item.read) {
         story = await api.markNews(story.item.id, read: true);
         if (ref.mounted) _set(story);
       }
@@ -351,6 +352,16 @@ class NewsStoryController extends Notifier<NewsStoryView> {
       }
       rethrow;
     }
+  }
+
+  /// Marks the loaded story read, if it is not (after [load] with `read:
+  /// false`). Errors are rethrown.
+  Future<void> markRead() async {
+    final api = _api;
+    final shown = state.story;
+    if (api == null || shown == null || shown.item.read) return;
+    final story = await api.markNews(shown.item.id, read: true);
+    if (ref.mounted) _set(story);
   }
 
   Future<void> _reload() async {

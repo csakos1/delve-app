@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import '../../api/models/models.dart';
 import '../../app/approvals.dart';
 import '../../app/chat_list.dart';
+import '../../app/inbox.dart';
 import '../../app/news.dart';
 import '../../app/platform.dart';
 import '../../app/router.dart';
@@ -499,10 +500,11 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
   /// left; Observability and About me have no other key.
   List<PaletteEntry> _areas(AppLocalizations l, PaletteGroup group) {
     final tools = ref.watch(desktopToolsProvider);
+    final inbox = ref.watch(inboxSupportedProvider);
     final places = ref.read(desktopPlacesProvider);
     return [
       for (final a in DesktopArea.values)
-        if (!a.tool || tools)
+        if ((!a.tool || tools) && (a != DesktopArea.inbox || inbox))
           PaletteEntry(
             id: 'area.${a.name}',
             group: group,

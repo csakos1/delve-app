@@ -9476,6 +9476,312 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 file} other{{count} files}}'**
   String desktopFileFiles(int count);
+
+  /// No description provided for @navInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox'**
+  String get navInbox;
+
+  /// No description provided for @inboxOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 open} other{{count} open}}'**
+  String inboxOpen(int count);
+
+  /// No description provided for @inboxKindApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval'**
+  String get inboxKindApproval;
+
+  /// No description provided for @inboxKindLateApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Late approval'**
+  String get inboxKindLateApproval;
+
+  /// No description provided for @inboxKindWatchHit.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch hit'**
+  String get inboxKindWatchHit;
+
+  /// No description provided for @inboxKindFeedFailing.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed failing'**
+  String get inboxKindFeedFailing;
+
+  /// No description provided for @inboxKindSwitchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Model switch failed'**
+  String get inboxKindSwitchFailed;
+
+  /// No description provided for @inboxKindScheduleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule failed'**
+  String get inboxKindScheduleFailed;
+
+  /// No description provided for @inboxDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get inboxDone;
+
+  /// No description provided for @inboxCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared'**
+  String get inboxCleared;
+
+  /// No description provided for @inboxDoneFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t clear it: {reason}'**
+  String inboxDoneFailed(String reason);
+
+  /// No description provided for @inboxUndoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t bring it back: {reason}'**
+  String inboxUndoFailed(String reason);
+
+  /// No description provided for @inboxLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the Inbox: {reason}'**
+  String inboxLoadFailed(String reason);
+
+  /// No description provided for @inboxDoneToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Done today'**
+  String get inboxDoneToday;
+
+  /// No description provided for @inboxDoneCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 done today} other{{count} done today}}'**
+  String inboxDoneCount(int count);
+
+  /// No description provided for @inboxClearedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared {time}'**
+  String inboxClearedAt(String time);
+
+  /// No description provided for @inboxEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing needs you'**
+  String get inboxEmptyTitle;
+
+  /// No description provided for @inboxEmptySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Approvals, watch hits, must-reads and what failed show here'**
+  String get inboxEmptySub;
+
+  /// No description provided for @inboxEmptyDone.
+  ///
+  /// In en, this message translates to:
+  /// **'The last item was cleared at {time} · {done}'**
+  String inboxEmptyDone(String time, String done);
+
+  /// No description provided for @inboxLastCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Last item cleared at {time}'**
+  String inboxLastCleared(String time);
+
+  /// No description provided for @desktopInboxEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No item open'**
+  String get desktopInboxEmpty;
+
+  /// No description provided for @desktopInboxEmptySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one from the list'**
+  String get desktopInboxEmptySub;
+
+  /// No description provided for @inboxHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox · {index} of {count}'**
+  String inboxHeader(int index, int count);
+
+  /// No description provided for @inboxHeaderDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox · done today'**
+  String get inboxHeaderDone;
+
+  /// No description provided for @inboxPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous (K)'**
+  String get inboxPrevious;
+
+  /// No description provided for @inboxNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next (J)'**
+  String get inboxNext;
+
+  /// No description provided for @inboxGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This item is not in the Inbox any more.'**
+  String get inboxGone;
+
+  /// No description provided for @inboxHintMove.
+  ///
+  /// In en, this message translates to:
+  /// **'move'**
+  String get inboxHintMove;
+
+  /// No description provided for @inboxHintOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'open'**
+  String get inboxHintOpen;
+
+  /// No description provided for @inboxHintDone.
+  ///
+  /// In en, this message translates to:
+  /// **'done'**
+  String get inboxHintDone;
+
+  /// No description provided for @inboxHintUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'undo'**
+  String get inboxHintUndo;
+
+  /// No description provided for @inboxOpenWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Open watch'**
+  String get inboxOpenWatch;
+
+  /// No description provided for @inboxOpenInNews.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in News'**
+  String get inboxOpenInNews;
+
+  /// No description provided for @inboxOpenFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the feed'**
+  String get inboxOpenFeed;
+
+  /// No description provided for @inboxOpenSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Open System'**
+  String get inboxOpenSystem;
+
+  /// No description provided for @inboxOpenSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the schedule'**
+  String get inboxOpenSchedule;
+
+  /// No description provided for @inboxWatchTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch'**
+  String get inboxWatchTab;
+
+  /// No description provided for @inboxSwitchBack.
+  ///
+  /// In en, this message translates to:
+  /// **'back on {model}'**
+  String inboxSwitchBack(String model);
+
+  /// No description provided for @inboxSwitchDown.
+  ///
+  /// In en, this message translates to:
+  /// **'llama-server is down'**
+  String get inboxSwitchDown;
+
+  /// No description provided for @inboxScheduleMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'missed its time'**
+  String get inboxScheduleMissed;
+
+  /// No description provided for @inboxScheduleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'the last run failed'**
+  String get inboxScheduleFailed;
+
+  /// No description provided for @inboxScheduleMissedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Its time passed without a run: the desktop was off or the server was not running.'**
+  String get inboxScheduleMissedBody;
+
+  /// No description provided for @inboxScheduleFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Its last run failed.'**
+  String get inboxScheduleFailedBody;
+
+  /// No description provided for @inboxFactAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get inboxFactAddress;
+
+  /// No description provided for @inboxFactLastWorked.
+  ///
+  /// In en, this message translates to:
+  /// **'Last worked'**
+  String get inboxFactLastWorked;
+
+  /// No description provided for @inboxFactReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get inboxFactReason;
+
+  /// No description provided for @inboxFactWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'When'**
+  String get inboxFactWhen;
+
+  /// No description provided for @inboxFactAskedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Asked by'**
+  String get inboxFactAskedBy;
+
+  /// No description provided for @inboxFactNextRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Next run'**
+  String get inboxFactNextRun;
+
+  /// No description provided for @shortcutsDoneOrArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Done (Inbox) · archive the open chat'**
+  String get shortcutsDoneOrArchive;
+
+  /// No description provided for @shortcutsUndoDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo Done / the archive'**
+  String get shortcutsUndoDone;
 }
 
 class _AppLocalizationsDelegate

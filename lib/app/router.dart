@@ -60,6 +60,12 @@ abstract final class Routes {
   static const dashboard = '/dashboard';
   static const more = '/more';
 
+  /// The desktop's Inbox (L2e, API 23): what needs the reader; one item in
+  /// the content ([inboxItem], its id is `<kind>:<ref>`). The phone has
+  /// none.
+  static const inbox = '/inbox';
+  static String inboxItem(String id) => '$inbox/${Uri.encodeComponent(id)}';
+
   /// 11 Approvals: from the Chats header (and notifications), back to Chats.
   static const approvals = '/chats/approvals';
 

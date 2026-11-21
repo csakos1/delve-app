@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:xterm/xterm.dart' show TerminalView;
 
+import '../../app/inbox.dart';
 import '../../app/layout.dart';
 import '../../app/platform.dart';
 import '../../app/router.dart';
@@ -315,7 +316,8 @@ class _ChatKeyAction extends Action<_ChatKeyIntent> {
 
 /// The desktop layout (design 27 Workbench, L2a): the rail, the current
 /// area's page and the status bar under both. The window keys live here:
-/// Ctrl+2…0 the areas, Ctrl+N / Ctrl+Shift+N a new Agent / General chat,
+/// Ctrl+1…0 the areas (Ctrl+1 the Inbox, with a server that has it), Ctrl+N
+/// / Ctrl+Shift+N a new Agent / General chat,
 /// Ctrl+, Settings, Ctrl+B the list column, Ctrl+I the inspector, Esc an
 /// open overlay pane; Ctrl+F the list's search, Ctrl+U a chat's Usage,
 /// Ctrl+] the inspector's next tab, Ctrl+R the open page's refresh, Ctrl+K
@@ -416,6 +418,11 @@ class DesktopShell extends ConsumerWidget {
                 final target = DesktopArea.ofDigit(i.digit);
                 if (target == null) return null;
                 if (target.tool && !ref.read(desktopToolsProvider)) {
+                  return null;
+                }
+                // the Inbox only with a server that has it (API 23)
+                if (target == DesktopArea.inbox &&
+                    !ref.read(inboxSupportedProvider)) {
                   return null;
                 }
                 context.go(places.target(target, location));

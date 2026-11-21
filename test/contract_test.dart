@@ -93,6 +93,8 @@ void main() {
           'news_topic': (j) => NewsTopic.fromJson(j).toJson(),
           'news_source': (j) => NewsSource.fromJson(j).toJson(),
           'news_settings': (j) => NewsSettings.fromJson(j).toJson(),
+          'inbox_item': (j) => InboxItem.fromJson(j).toJson(),
+          'inbox': (j) => Inbox.fromJson(j).toJson(),
         };
 
     test('every contract shape has a model', () {
@@ -143,6 +145,69 @@ void main() {
       expect(src.lastItemAt, isNotNull);
       final t = NewsTopic.fromJson(obj(sampleShapes['news_topic']));
       expect((t.items24h, t.sources), (5, 7));
+    });
+
+    test('the Inbox keeps its values', () {
+      final inbox = Inbox.fromJson(obj(sampleShapes['inbox']));
+      expect((inbox.open, inbox.approvals), (6, 1));
+      expect(inbox.updatedAt!.isUtc, isTrue);
+      expect(inbox.items.map((i) => i.kind), [
+        InboxKind.approval,
+        InboxKind.switchFailed,
+        InboxKind.watchHit,
+        InboxKind.feedFailing,
+        InboxKind.mustRead,
+        InboxKind.scheduleFailed,
+      ]);
+      final a = inbox.items.first;
+      expect((a.id, a.subject), ('approval:apr_3c9d1e2f', 'apr_3c9d1e2f'));
+      expect((a.isApproval, a.doneable, a.isNotice), (true, false, false));
+      expect(a.approval!.command, a.title);
+      expect(a.source, 'Kernel and CPU count');
+      expect(
+        [a.hit, a.story, a.feed, a.llamaSwitch, a.schedule],
+        [null, null, null, null, null],
+      );
+      final sw = inbox.items[1];
+      expect(
+        (sw.llamaSwitch!.state, sw.title, sw.source),
+        ('failed', 'reasoner-32b', 'qwen38-27b-iq4xs'),
+      );
+      expect((sw.isNotice, sw.doneable), (true, true));
+      final hit = InboxItem.fromJson(obj(sampleShapes['inbox_item_hit']));
+      expect(
+        (hit.hit!.id, hit.hit!.slug, hit.source),
+        (17, 'rtx-4070-super-180k', 'RTX 4070 Super ≤180k'),
+      );
+      final story = InboxItem.fromJson(obj(sampleShapes['inbox_item_story']));
+      expect(
+        (story.story!.id, story.story!.mustRead, story.source),
+        (8121, true, 'Sail-World'),
+      );
+      final feed = InboxItem.fromJson(obj(sampleShapes['inbox_item_feed']));
+      expect((feed.feed!.errorsInRow, feed.source), (3, 'Sailing'));
+      final missed = InboxItem.fromJson(
+        obj(sampleShapes['inbox_item_schedule']),
+      );
+      expect(
+        (missed.schedule!.lastStatus, missed.schedule!.lastError),
+        ('failed', 'missed'),
+      );
+      // what was cleared today carries when
+      final done = inbox.done.single;
+      expect((done.id, done.doneAt!.isUtc), ('watch_hit:12', true));
+      expect(done.toJson().keys, contains('done_at'));
+      expect(a.toJson().keys, isNot(contains('done_at')));
+      expect(
+        (InboxItem.kindOf('watch_hit:17'), InboxItem.subjectOf('a:b:c')),
+        ('watch_hit', 'b:c'),
+      );
+      final ev = ServerEvent.fromData(
+        'inbox.updated',
+        1,
+        obj(sampleEvents['inbox.updated']),
+      );
+      expect((ev as InboxUpdated).open, 5);
     });
 
     test('nested approval of a tool step has the approval keys', () {

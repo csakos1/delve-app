@@ -96,6 +96,20 @@ abstract final class DelveDesktop {
   static const double railMarkNudge = 1.5;
   static const double railDot = 8;
 
+  /// The Inbox badge on the rail (Components “Rail”): 16 high, at least as
+  /// wide, radius 8, 10.5 / 600; top 0 / right −1 of the item.
+  static const double railBadge = 16;
+  static const double railBadgeFont = 10.5;
+
+  // the Inbox (Components “Inbox”, 27W-1)
+  static const double inboxIcon = 16;
+  static const double inboxIconGap = 9;
+  static const double inboxHintRow = 30;
+
+  /// A must-read counts as read (and leaves the Inbox) once it was on
+  /// screen this long.
+  static const Duration inboxReadAfter = Duration(seconds: 2);
+
   // density
   static const double rowTwoLine = 52;
   static const double rowOneLine = 32;

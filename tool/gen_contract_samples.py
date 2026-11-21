@@ -20,6 +20,7 @@ from pathlib import Path
 from delve.watches import item_out, watch_out
 from delve.db.models import NewsItem, NewsSource, NewsTopic
 from delve import news as nw
+from delve.inbox import item_out as inbox_item
 import math
 
 t0 = datetime(2026, 10, 19, 21, 39, 0, 123456, tzinfo=timezone.utc)
@@ -212,7 +213,44 @@ n_item = nw.item_out(n_story, 2)
 n_rel = nw.item_out(n_release)
 n_story_out = {**n_item, "others": [nw.other_out(n_other)], "text": n_story.text,
     "text_at": n_story.text_at.isoformat(), "text_now": False, "text_error": None}
+# I0: GET /api/v1/inbox - one item of every kind (the approval waits), a hit cleared today
+missed_sched = Schedule(id=uuid.UUID("9a3c5e7b-2d4f-4b6a-8c1e-0f2a4b6c8d1e"), kind="prompt",
+    name="Weekly disk report", cron="0 9 * * 1", prompt="Report the disk usage of / and /home.",
+    conversation_mode="new", conversation_id=None, thinking=False, enabled=True,
+    next_run_at=t0 + timedelta(days=6), last_run_at=t0 - timedelta(days=7), last_status="failed",
+    last_error="missed", created_at=t0 - timedelta(days=30), updated_at=t0 - timedelta(hours=12))
+cleared_hit = WatchItem(id=12, slug=watch.slug, item_id="ha:8229914", card_id="b" * 32,
+    title="ASUS Dual RTX 4070 Super EVO OC", url="https://hardverapro.hu/apro/asus_dual_rtx_4070_super/friss.html",
+    price="172 000 Ft", price_value=172000, location="Győr", posted="tegnap 18:40", excerpt=None,
+    reserved=False, verdict="match", reason="Garanciás, bányászatra nem utal semmi.", notify=True,
+    attempts=1, seen_at=t0 - timedelta(hours=27), judged_at=t0 - timedelta(hours=27),
+    notified_at=t0 - timedelta(hours=27), available_at=None)
+failed_switch = switch_out("failed", src="qwen38-27b-iq4xs", to="reasoner-32b", by="Pixel 9 Pro XL",
+    at=(t0 - timedelta(minutes=2)).isoformat(), error="exited", elapsed_s=34)
+in_approval = inbox_item("approval", appr.request_id, appr.created_at, title=appr.command,
+    source=conv.title, approval=approval_out(appr))
+in_hit = inbox_item("watch_hit", hit.id, hit.judged_at, title=hit.title, source=watch.name,
+    hit=item_out(hit))
+in_story = inbox_item("must_read", n_story.id, n_story.seen_at, title=n_story.title,
+    source=n_story.publisher, story=nw.item_out(n_story))
+in_feed = inbox_item("feed_failing", n_source.id, t0 - timedelta(minutes=25), title=n_source.url,
+    source=n_topic.name, feed=nw.source_out(n_source))
+in_switch = inbox_item("switch_failed", "llama", t0 - timedelta(minutes=2), title=failed_switch["to"],
+    source=failed_switch["from"], switch=failed_switch)
+in_schedule = inbox_item("schedule_failed", missed_sched.id, missed_sched.updated_at,
+    title=missed_sched.name, source=missed_sched.last_error, schedule=schedule_out(missed_sched))
+in_cleared = inbox_item("watch_hit", cleared_hit.id, cleared_hit.judged_at, title=cleared_hit.title,
+    source=watch.name, hit=item_out(cleared_hit))
 shapes = {
+    "inbox_item": in_approval,
+    "inbox_item_hit": in_hit,
+    "inbox_item_story": in_story,
+    "inbox_item_feed": in_feed,
+    "inbox_item_switch": in_switch,
+    "inbox_item_schedule": in_schedule,
+    "inbox": {"data": [in_approval, in_switch, in_hit, in_feed, in_story, in_schedule],
+              "done": [{**in_cleared, "done_at": (t0 - timedelta(minutes=50)).isoformat()}],
+              "open": 6, "approvals": 1, "updated_at": t0.isoformat()},
     "news_item": n_item,
     "news_item_release": n_rel,
     "news_release": n_release.releases[0],
@@ -249,8 +287,7 @@ shapes = {
     "gpu": system_running["gpus"][0],
     "hermes_issue": system_running["hermes"]["issues"][0],
     "llama_model": system_running["llama"]["models"][1],
-    "llama_switch": switch_out("failed", src="qwen38-27b-iq4xs", to="reasoner-32b", by="Pixel 9 Pro XL",
-        at=(t0 - timedelta(minutes=2)).isoformat(), error="exited", elapsed_s=34),
+    "llama_switch": failed_switch,
     "schedule": schedule_out(brief_sched),
     "schedule_prompt": schedule_out(prompt_sched),
     # API 22: GET /api/v1/schedules/{id}/runs
@@ -310,6 +347,7 @@ events = {
     "watch.updated": watch_out(watch, watch_counts),
     "watch.item": item_out(hit),
     "news.updated": {"new": 3, "texts": 1, "updated_at": t0.isoformat()},
+    "inbox.updated": {"open": 5, "updated_at": t0.isoformat()},
     "error": {"code": "thinking_route_not_applied", "ref_id": run.run_id, "message": "The thinking run did not use the thinking provider."},
 }
 for k, v in events.items():

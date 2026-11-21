@@ -7,8 +7,11 @@ import '../widgets/news_ui.dart';
 import '../widgets/page_scaffolds.dart';
 
 /// The areas of the desktop layout (design 27 Workbench), in rail order.
-/// The Inbox (Ctrl+1) and Search (the palette) come with L2e and L2d.
+/// The Inbox (Ctrl+1, L2e) is there only with a server that has it (API
+/// 23, `inboxSupportedProvider`): the rail, the palette, the shortcut sheet
+/// and Ctrl+1 leave it out otherwise.
 enum DesktopArea {
+  inbox(DelveIcons.inbox, Routes.inbox, digit: '1'),
   chats(DelveIcons.chats, Routes.chats, digit: '2'),
   approvals(DelveIcons.approvals, Routes.approvals, digit: '3'),
   dashboard(DelveIcons.dashboard, Routes.dashboard, digit: '4'),
@@ -39,7 +42,7 @@ enum DesktopArea {
   /// The rail's groups: needs you · talk · decide | look | the machine |
   /// the tools, then (after the spacer) the foot.
   static const List<List<DesktopArea>> groups = [
-    [chats, approvals],
+    [inbox, chats, approvals],
     [dashboard, news, watches, schedules],
     [system, observability],
     [terminal, files],
@@ -47,6 +50,7 @@ enum DesktopArea {
   static const List<DesktopArea> foot = [about, settings];
 
   String title(AppLocalizations l) => switch (this) {
+    inbox => l.navInbox,
     chats => l.navChats,
     approvals => l.navApprovals,
     dashboard => l.navDashboard,
@@ -103,7 +107,9 @@ class DesktopPlaces {
   void remember(String location) {
     final area = DesktopArea.of(location);
     if (area == null) return;
-    _last[area] = location;
+    // the Inbox opens on its list: what was open in it may have left, and
+    // opening a story is reading it
+    _last[area] = area == DesktopArea.inbox ? area.route : location;
     if (area != DesktopArea.terminal) _outsideTerminal = location;
   }
 

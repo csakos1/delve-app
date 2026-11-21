@@ -6048,4 +6048,191 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get navInbox => 'Inbox';
+
+  @override
+  String inboxOpen(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count open',
+      one: '1 open',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get inboxKindApproval => 'Approval';
+
+  @override
+  String get inboxKindLateApproval => 'Late approval';
+
+  @override
+  String get inboxKindWatchHit => 'Watch hit';
+
+  @override
+  String get inboxKindFeedFailing => 'Feed failing';
+
+  @override
+  String get inboxKindSwitchFailed => 'Model switch failed';
+
+  @override
+  String get inboxKindScheduleFailed => 'Schedule failed';
+
+  @override
+  String get inboxDone => 'Done';
+
+  @override
+  String get inboxCleared => 'Cleared';
+
+  @override
+  String inboxDoneFailed(String reason) {
+    return 'Couldn\'t clear it: $reason';
+  }
+
+  @override
+  String inboxUndoFailed(String reason) {
+    return 'Couldn\'t bring it back: $reason';
+  }
+
+  @override
+  String inboxLoadFailed(String reason) {
+    return 'Couldn\'t load the Inbox: $reason';
+  }
+
+  @override
+  String get inboxDoneToday => 'Done today';
+
+  @override
+  String inboxDoneCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count done today',
+      one: '1 done today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String inboxClearedAt(String time) {
+    return 'Cleared $time';
+  }
+
+  @override
+  String get inboxEmptyTitle => 'Nothing needs you';
+
+  @override
+  String get inboxEmptySub =>
+      'Approvals, watch hits, must-reads and what failed show here';
+
+  @override
+  String inboxEmptyDone(String time, String done) {
+    return 'The last item was cleared at $time · $done';
+  }
+
+  @override
+  String inboxLastCleared(String time) {
+    return 'Last item cleared at $time';
+  }
+
+  @override
+  String get desktopInboxEmpty => 'No item open';
+
+  @override
+  String get desktopInboxEmptySub => 'Pick one from the list';
+
+  @override
+  String inboxHeader(int index, int count) {
+    return 'Inbox · $index of $count';
+  }
+
+  @override
+  String get inboxHeaderDone => 'Inbox · done today';
+
+  @override
+  String get inboxPrevious => 'Previous (K)';
+
+  @override
+  String get inboxNext => 'Next (J)';
+
+  @override
+  String get inboxGone => 'This item is not in the Inbox any more.';
+
+  @override
+  String get inboxHintMove => 'move';
+
+  @override
+  String get inboxHintOpen => 'open';
+
+  @override
+  String get inboxHintDone => 'done';
+
+  @override
+  String get inboxHintUndo => 'undo';
+
+  @override
+  String get inboxOpenWatch => 'Open watch';
+
+  @override
+  String get inboxOpenInNews => 'Open in News';
+
+  @override
+  String get inboxOpenFeed => 'Open the feed';
+
+  @override
+  String get inboxOpenSystem => 'Open System';
+
+  @override
+  String get inboxOpenSchedule => 'Open the schedule';
+
+  @override
+  String get inboxWatchTab => 'Watch';
+
+  @override
+  String inboxSwitchBack(String model) {
+    return 'back on $model';
+  }
+
+  @override
+  String get inboxSwitchDown => 'llama-server is down';
+
+  @override
+  String get inboxScheduleMissed => 'missed its time';
+
+  @override
+  String get inboxScheduleFailed => 'the last run failed';
+
+  @override
+  String get inboxScheduleMissedBody =>
+      'Its time passed without a run: the desktop was off or the server was not running.';
+
+  @override
+  String get inboxScheduleFailedBody => 'Its last run failed.';
+
+  @override
+  String get inboxFactAddress => 'Address';
+
+  @override
+  String get inboxFactLastWorked => 'Last worked';
+
+  @override
+  String get inboxFactReason => 'Reason';
+
+  @override
+  String get inboxFactWhen => 'When';
+
+  @override
+  String get inboxFactAskedBy => 'Asked by';
+
+  @override
+  String get inboxFactNextRun => 'Next run';
+
+  @override
+  String get shortcutsDoneOrArchive => 'Done (Inbox) · archive the open chat';
+
+  @override
+  String get shortcutsUndoDone => 'Undo Done / the archive';
 }

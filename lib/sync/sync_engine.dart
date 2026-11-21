@@ -161,6 +161,11 @@ class SyncEngine {
   /// `news.updated` events (N2).
   Stream<NewsUpdated> get newsUpdates => _newsController.stream;
 
+  final _inboxController = StreamController<InboxUpdated>.broadcast();
+
+  /// `inbox.updated` events (I0): an item was cleared or brought back.
+  Stream<InboxUpdated> get inboxUpdates => _inboxController.stream;
+
   final _pushController = StreamController<Map<String, Object?>>.broadcast();
 
   /// `push` frames: a push's data on this socket (the desktop app, L3).
@@ -294,6 +299,7 @@ class SyncEngine {
     await _scheduleController.close();
     await _watchController.close();
     await _newsController.close();
+    await _inboxController.close();
     await _pushController.close();
   }
 
@@ -641,6 +647,9 @@ class SyncEngine {
           }
           for (final news in outcome.news) {
             _newsController.add(news);
+          }
+          for (final inbox in outcome.inbox) {
+            _inboxController.add(inbox);
           }
         }
         for (final err in outcome.errors) {

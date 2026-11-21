@@ -4493,5 +4493,132 @@
         "type": "int"
       }
     }
-  }
+  },
+  "navInbox": "Inbox",
+  "inboxOpen": "{count, plural, =1{1 open} other{{count} open}}",
+  "@inboxOpen": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inboxKindApproval": "Approval",
+  "inboxKindLateApproval": "Late approval",
+  "inboxKindWatchHit": "Watch hit",
+  "inboxKindFeedFailing": "Feed failing",
+  "inboxKindSwitchFailed": "Model switch failed",
+  "inboxKindScheduleFailed": "Schedule failed",
+  "inboxDone": "Done",
+  "inboxCleared": "Cleared",
+  "inboxDoneFailed": "Couldn't clear it: {reason}",
+  "@inboxDoneFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "inboxUndoFailed": "Couldn't bring it back: {reason}",
+  "@inboxUndoFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "inboxLoadFailed": "Couldn't load the Inbox: {reason}",
+  "@inboxLoadFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "inboxDoneToday": "Done today",
+  "inboxDoneCount": "{count, plural, =1{1 done today} other{{count} done today}}",
+  "@inboxDoneCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inboxClearedAt": "Cleared {time}",
+  "@inboxClearedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "inboxEmptyTitle": "Nothing needs you",
+  "inboxEmptySub": "Approvals, watch hits, must-reads and what failed show here",
+  "inboxEmptyDone": "The last item was cleared at {time} · {done}",
+  "@inboxEmptyDone": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "done": {
+        "type": "String"
+      }
+    }
+  },
+  "inboxLastCleared": "Last item cleared at {time}",
+  "@inboxLastCleared": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "desktopInboxEmpty": "No item open",
+  "desktopInboxEmptySub": "Pick one from the list",
+  "inboxHeader": "Inbox · {index} of {count}",
+  "@inboxHeader": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inboxHeaderDone": "Inbox · done today",
+  "inboxPrevious": "Previous (K)",
+  "inboxNext": "Next (J)",
+  "inboxGone": "This item is not in the Inbox any more.",
+  "inboxHintMove": "move",
+  "inboxHintOpen": "open",
+  "inboxHintDone": "done",
+  "inboxHintUndo": "undo",
+  "inboxOpenWatch": "Open watch",
+  "inboxOpenInNews": "Open in News",
+  "inboxOpenFeed": "Open the feed",
+  "inboxOpenSystem": "Open System",
+  "inboxOpenSchedule": "Open the schedule",
+  "inboxWatchTab": "Watch",
+  "inboxSwitchBack": "back on {model}",
+  "@inboxSwitchBack": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "inboxSwitchDown": "llama-server is down",
+  "inboxScheduleMissed": "missed its time",
+  "inboxScheduleFailed": "the last run failed",
+  "inboxScheduleMissedBody": "Its time passed without a run: the desktop was off or the server was not running.",
+  "inboxScheduleFailedBody": "Its last run failed.",
+  "inboxFactAddress": "Address",
+  "inboxFactLastWorked": "Last worked",
+  "inboxFactReason": "Reason",
+  "inboxFactWhen": "When",
+  "inboxFactAskedBy": "Asked by",
+  "inboxFactNextRun": "Next run",
+  "shortcutsDoneOrArchive": "Done (Inbox) · archive the open chat",
+  "shortcutsUndoDone": "Undo Done / the archive"
 }

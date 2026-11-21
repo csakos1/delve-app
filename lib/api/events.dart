@@ -128,6 +128,7 @@ sealed class ServerEvent extends IncomingFrame {
     'watch.updated',
     'watch.item',
     'news.updated',
+    'inbox.updated',
     'error',
   };
 
@@ -246,6 +247,7 @@ sealed class ServerEvent extends IncomingFrame {
       fresh: _int(d, 'new'),
       texts: _int(d, 'texts'),
     ),
+    'inbox.updated' => InboxUpdated(seq, open: _int(d, 'open')),
     'error' => ServerError(
       seq,
       code: _str(d, 'code'),
@@ -514,6 +516,15 @@ final class NewsUpdated extends ServerEvent {
   const NewsUpdated(super.seq, {required this.fresh, required this.texts});
   final int fresh;
   final int texts;
+}
+
+/// The Inbox (I0): an item was cleared or a clearing taken back, on any
+/// device; [open] items are left. What enters or leaves by itself comes
+/// with its own event (an approval, a watcher's listing, News, the system
+/// view, a schedule).
+final class InboxUpdated extends ServerEvent {
+  const InboxUpdated(super.seq, {required this.open});
+  final int open;
 }
 
 final class UnknownEvent extends ServerEvent {

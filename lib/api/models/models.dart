@@ -3,6 +3,7 @@ export 'approval.dart';
 export 'attachment.dart';
 export 'brief.dart';
 export 'conversation.dart';
+export 'inbox.dart';
 export 'message.dart';
 export 'mirror.dart';
 export 'news.dart';

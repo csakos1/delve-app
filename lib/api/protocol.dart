@@ -9,6 +9,10 @@ const int kMinApiRevision = 21; // 21: pushes on the socket (desktop app)
 /// an older server shows only the last run.
 const int kScheduleRunsRevision = 22;
 
+/// The revision that has the Inbox (`GET /inbox`, I0); with an older server
+/// the desktop shows no Inbox.
+const int kInboxRevision = 23;
+
 /// REST routes the app calls (method + path template); checked against the
 /// backend contract in `test/contract_test.dart`.
 abstract final class ApiRoutes {
@@ -99,6 +103,12 @@ abstract final class ApiRoutes {
   );
   static const newsSettings = ('GET', '/api/v1/news/settings');
   static const patchNewsSettings = ('PATCH', '/api/v1/news/settings');
+
+  /// The Inbox (I0, API 23): what needs the reader, clearing an item and
+  /// taking that back.
+  static const inbox = ('GET', '/api/v1/inbox');
+  static const inboxDone = ('POST', '/api/v1/inbox/done');
+  static const inboxUndo = ('POST', '/api/v1/inbox/undo');
   static const ws = ('WS', '/api/v1/ws');
 
   static const List<(String, String)> all = <(String, String)>[
@@ -159,6 +169,9 @@ abstract final class ApiRoutes {
     deleteNewsSource,
     newsSettings,
     patchNewsSettings,
+    inbox,
+    inboxDone,
+    inboxUndo,
     ws,
   ];
 

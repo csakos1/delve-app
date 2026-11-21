@@ -438,7 +438,7 @@ column · content · inspector, `lib/ui/desktop/panes.dart`) and a status bar. I
 of its own (`lib/app/desktop_router.dart`) with the phone's paths (`Routes`); `routerProvider`
 is the one in use and a resize across 720 swaps them, keeping the place. Shared screens ask
 `DesktopLayout.of(context)`; `context.open(…)` pushes on the phone and goes on the desktop.
-Keys: Ctrl+2…0 areas, Ctrl+N / Ctrl+Shift+N new Agent / General chat, Ctrl+, Settings,
+Keys: Ctrl+1…0 areas, Ctrl+N / Ctrl+Shift+N new Agent / General chat, Ctrl+, Settings,
 Ctrl+B list, Ctrl+I inspector, Ctrl+] its next tab, Ctrl+U a chat's Usage, Ctrl+F the list's
 search, Esc an overlay pane. Chats: desktop rows (hover Archive and menu, right-click menu), the
 chat in a 720 reading column under a 48 pane header, an agent chat's inspector (Run: steps,
@@ -542,6 +542,23 @@ Terminal settings, General chat settings – and a News feed's page are pages of
 here: the 48 px header (a back arrow while the area has a page under it), the phone's body in
 the 680 px column, no app bar; the phone key's lines and the settings' model pickers are
 dialogs.
+The Inbox (`inbox_area.dart`, `inbox_detail.dart`, `lib/app/inbox.dart`; L2e, backend API 23 –
+`kInboxRevision`; with an older server the rail, the palette, the shortcut sheet and Ctrl+1
+leave it out): the first rail item, with a badge of its open items (warn while one of them is
+an approval that can be answered). One list of what needs the reader, read from
+`GET /api/v1/inbox` and kept in memory (`inboxProvider`: read again on `inbox.updated`, on an
+approval, a watcher's listing, a News round, a failed model switch, a schedule's change, and
+once a minute): approvals, late approvals, watcher hits, must-reads, a feed failing three
+rounds, a failed model switch, a failed or missed schedule – three-line rows, newest first,
+then “Done today” (collapsed) and the keys at the foot. The content shows the open item under
+“Inbox · i of N” with previous / next and Done: an approval is the approval page (answered
+here, never cleared), a hit its listing (Open link clears it), a must-read the reading view
+(cleared, then marked read, once it was on screen for 2 s), a notice what failed with a link
+into its area; the inspector shows the approval's run, the hit's watch or the Story. J / K
+step, Enter goes into the content, E clears the open item and moves on, Ctrl+Z (or Undo on a
+row, in the content, in the list's snackbar) brings the last cleared one back – a story that
+was read comes back unread. An item that leaves while it is open stays on screen. The phone
+has no Inbox.
 Focus and keys (`pane_focus.dart`): every pane has its own focus point (`PaneFocus`). F6 /
 Shift+F6 go round the list, the content, the dock (when open) and the inspector, the pane
 drawing the 2 px accent ring after a key; a click on a row gives its pane the focus without

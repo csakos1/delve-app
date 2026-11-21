@@ -444,4 +444,8 @@ abstract final class DelveIcons {
   static const IconData arrowOutward = Symbols.arrow_outward_rounded;
   static const IconData dockToBottom = Symbols.dock_to_bottom_rounded;
   static const IconData openInFull = Symbols.open_in_full_rounded;
+
+  /// The desktop's Inbox (L2e): the rail item, Undo of a cleared item.
+  static const IconData inbox = Symbols.inbox_rounded;
+  static const IconData undo = Symbols.undo_rounded;
 }

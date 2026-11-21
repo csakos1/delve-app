@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/inbox.dart';
 import '../../app/platform.dart';
 import '../../app/providers.dart';
 import '../../l10n/app_localizations.dart';
@@ -19,7 +20,9 @@ import 'shortcut_sheet.dart' show DesktopKeys;
 /// the Delve mark, the areas in their groups and, after a spacer, Search
 /// (the palette), About me and Settings. Terminal and Files only with the
 /// desktop tools; Approvals carries the phone's warn dot while an approval
-/// can still be answered.
+/// can still be answered. The Inbox (with a server that has one) is first
+/// and carries the count of its open items – warn while one of them is an
+/// approval that can be answered.
 class DesktopRail extends ConsumerWidget {
   const DesktopRail({super.key, required this.location});
 
@@ -32,12 +35,15 @@ class DesktopRail extends ConsumerWidget {
     final cs = context.colors;
     final tools = ref.watch(desktopToolsProvider);
     final pending = ref.watch(answerableApprovalCountProvider).value ?? 0;
+    // the Inbox only with a server that has it (API 23)
+    final inboxOn = ref.watch(inboxSupportedProvider);
+    final inbox = inboxOn ? ref.watch(inboxProvider) : null;
     final selected = DesktopArea.of(location);
     final groups = [
       for (final g in DesktopArea.groups)
         [
           for (final a in g)
-            if (!a.tool || tools) a,
+            if ((!a.tool || tools) && (a != DesktopArea.inbox || inboxOn)) a,
         ],
     ].where((g) => g.isNotEmpty).toList();
 
@@ -50,6 +56,8 @@ class DesktopRail extends ConsumerWidget {
       selected: a == selected,
       dot: a == DesktopArea.approvals && pending > 0,
       pending: pending,
+      badge: a == DesktopArea.inbox ? inbox?.open ?? 0 : 0,
+      badgeWarn: (inbox?.approvals ?? 0) > 0,
       // the area as it was left (L2b2)
       onTap: () => context.go(places.target(a, location)),
     );
@@ -131,6 +139,8 @@ class _RailItem extends StatefulWidget {
     this.selected = false,
     this.dot = false,
     this.pending = 0,
+    this.badge = 0,
+    this.badgeWarn = false,
   });
 
   /// Its key is `rail.<name>`.
@@ -141,6 +151,11 @@ class _RailItem extends StatefulWidget {
   final bool selected;
   final bool dot;
   final int pending;
+
+  /// The Inbox: its open items (0: no badge), warn while one is an approval
+  /// that can be answered.
+  final int badge;
+  final bool badgeWarn;
   final VoidCallback onTap;
 
   @override
@@ -180,6 +195,8 @@ class _RailItemState extends State<_RailItem> {
     }
     final semantics = widget.dot
         ? '${widget.title}, ${l.approvalsBadge(widget.pending)}'
+        : widget.badge > 0
+        ? '${widget.title}, ${l.inboxOpen(widget.badge)}'
         : widget.title;
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -201,21 +218,73 @@ class _RailItemState extends State<_RailItem> {
               key: Key('rail.${widget.name}'),
               behavior: HitTestBehavior.opaque,
               onTap: widget.onTap,
-              child: AnimatedContainer(
-                duration: DelveDesktop.hover,
-                width: DelveDesktop.railItemWidth,
-                height: DelveDesktop.railItemHeight,
-                decoration: BoxDecoration(
-                  color: background,
-                  borderRadius: BorderRadius.circular(
-                    DelveDesktop.railItemRadius,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  AnimatedContainer(
+                    duration: DelveDesktop.hover,
+                    width: DelveDesktop.railItemWidth,
+                    height: DelveDesktop.railItemHeight,
+                    decoration: BoxDecoration(
+                      color: background,
+                      borderRadius: BorderRadius.circular(
+                        DelveDesktop.railItemRadius,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: icon,
                   ),
-                ),
-                alignment: Alignment.center,
-                child: icon,
+                  if (widget.badge > 0)
+                    Positioned(
+                      top: 0,
+                      right: -1,
+                      child: RailBadge(
+                        key: Key('rail.${widget.name}.badge'),
+                        count: widget.badge,
+                        warn: widget.badgeWarn,
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The Inbox badge (Components “Rail”): the number of open items, 16 high
+/// and at least as wide, radius 8, 10.5 / 600 with tabular figures; 99+
+/// from a hundred. Warn (`warn-fg` with its dark text) while an approval
+/// can be answered, else `surface-4` with `text-primary`.
+class RailBadge extends StatelessWidget {
+  const RailBadge({super.key, required this.count, required this.warn});
+
+  final int count;
+  final bool warn;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colors;
+    return Container(
+      height: DelveDesktop.railBadge,
+      constraints: const BoxConstraints(minWidth: DelveDesktop.railBadge),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: warn ? cs.tertiary : cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(DelveDesktop.railBadge / 2),
+      ),
+      child: Text(
+        count > 99 ? '99+' : '$count',
+        style: context.text.labelSmall!.copyWith(
+          fontSize: DelveDesktop.railBadgeFont,
+          height: 1,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0,
+          fontFeatures: const [FontFeature.tabularFigures()],
+          color: warn ? cs.onTertiary : cs.onSurface,
         ),
       ),
     );

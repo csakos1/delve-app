@@ -29,7 +29,8 @@ bool _windowFocused() {
 /// (here or anywhere: the outcome shows for 1.5 s), closed or opened. One at
 /// a time: a second approval only counts in the status bar. Nothing shows
 /// for what waited already when the app started, or where the approval is
-/// on the page anyway (its chat, Approvals, the Dashboard's card).
+/// on the page anyway (its chat, Approvals, the Dashboard's card, the
+/// Inbox's list).
 class ApprovalNotice extends ConsumerStatefulWidget {
   const ApprovalNotice({super.key, required this.location});
 
@@ -66,6 +67,8 @@ class _ApprovalNoticeState extends ConsumerState<ApprovalNotice> {
     final path = Uri.parse(widget.location).path;
     return path == Routes.dashboard ||
         path.startsWith(Routes.approvals) ||
+        path == Routes.inbox ||
+        path.startsWith('${Routes.inbox}/') ||
         path == Routes.chat(item.approval.conversationId);
   }
 

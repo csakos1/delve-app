@@ -9,6 +9,8 @@ import '../ui/desktop/areas.dart';
 import '../ui/desktop/chats_area.dart';
 import '../ui/desktop/desktop_shell.dart';
 import '../ui/desktop/files_area.dart';
+import '../ui/desktop/inbox_area.dart';
+import '../ui/desktop/inbox_detail.dart';
 import '../ui/desktop/news_area.dart';
 import '../ui/desktop/panes.dart';
 import '../ui/desktop/schedules_area.dart';
@@ -83,6 +85,7 @@ GoRouter buildDesktopRouter({
   final approvalsKey = GlobalKey<NavigatorState>(
     debugLabel: 'desktop.approvals',
   );
+  final inboxKey = GlobalKey<NavigatorState>(debugLabel: 'desktop.inbox');
 
   Widget morePage(MorePage page, GoRouterState state) => switch (page) {
     MorePage.settings => const SettingsScreen(),
@@ -121,6 +124,32 @@ GoRouter buildDesktopRouter({
           child: DesktopShell(location: state.uri.toString(), child: child),
         ),
         routes: [
+          // the Inbox (L2e): the list stays while the item in the content
+          // changes
+          ShellRoute(
+            navigatorKey: inboxKey,
+            pageBuilder: (context, state, child) => NoTransitionPage<void>(
+              key: state.pageKey,
+              child: InboxArea(location: state.uri.toString(), content: child),
+            ),
+            routes: [
+              GoRoute(
+                path: Routes.inbox,
+                pageBuilder: (_, state) =>
+                    _flat(state, const InboxPlaceholder()),
+              ),
+              GoRoute(
+                path: '${Routes.inbox}/:id',
+                pageBuilder: (_, state) {
+                  final id = state.pathParameters['id']!;
+                  return _flat(
+                    state,
+                    InboxDetail(key: ValueKey('inbox.item.$id'), id: id),
+                  );
+                },
+              ),
+            ],
+          ),
           // before the Chats shell: '/chats/approvals' is an area of its own
           ShellRoute(
             navigatorKey: approvalsKey,

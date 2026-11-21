@@ -104,9 +104,13 @@ String desktopLocation(String location) {
 
 /// Where the phone router goes for a desktop [location] (when the window
 /// shrinks below 720 dp): the paths are the phone's, a new chat drops its
-/// kind (the phone remembers its own).
+/// kind (the phone remembers its own); the Inbox is the desktop's only and
+/// becomes Chats.
 String phoneLocation(String location) {
   final uri = Uri.parse(location);
   if (uri.path == Routes.newChat) return Routes.newChat;
+  if (uri.path == Routes.inbox || uri.path.startsWith('${Routes.inbox}/')) {
+    return Routes.chats;
+  }
   return location;
 }

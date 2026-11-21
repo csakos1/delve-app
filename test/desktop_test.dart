@@ -278,6 +278,9 @@ void main() {
       expect(desktopLocation(Routes.chat('a b')), Routes.chat('a b'));
       expect(phoneLocation(newChatLocation('general')), Routes.newChat);
       expect(phoneLocation(Routes.newsStory(4)), Routes.newsStory(4));
+      // the Inbox is the desktop's only
+      expect(phoneLocation(Routes.inbox), Routes.chats);
+      expect(phoneLocation(Routes.inboxItem('must_read:8121')), Routes.chats);
     });
 
     test('areas of locations', () {
@@ -291,7 +294,12 @@ void main() {
       expect(DesktopArea.of(Routes.filePreview), DesktopArea.files);
       expect(DesktopArea.of(Routes.clipboard), isNull);
       expect(DesktopArea.ofDigit('4'), DesktopArea.dashboard);
-      expect(DesktopArea.ofDigit('1'), isNull); // the Inbox: L2e
+      expect(DesktopArea.ofDigit('1'), DesktopArea.inbox);
+      expect(DesktopArea.of(Routes.inbox), DesktopArea.inbox);
+      expect(
+        DesktopArea.of(Routes.inboxItem('watch_hit:17')),
+        DesktopArea.inbox,
+      );
     });
 
     test('the selected chat of a location', () {
