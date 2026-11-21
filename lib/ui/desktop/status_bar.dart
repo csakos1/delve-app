@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../api/models/models.dart';
 import '../../app/approvals.dart';
+import '../../app/inbox.dart';
 import '../../app/router.dart';
 import '../../app/system.dart';
 import '../../l10n/app_localizations.dart';
@@ -56,10 +57,10 @@ String? hottestText(List<GpuInfo>? gpus) {
 }
 
 /// The desktop's 24 px status bar (design 27): left what needs the reader
-/// (connection, approvals with the nearest deadline), right the machine
-/// (run, model, slot, VRAM, hottest GPU). Segments are absent rather than
-/// zero; offline hides the machine instead of showing stale values. Every
-/// segment is a button.
+/// (connection, what the Inbox holds open, approvals with the nearest
+/// deadline), right the machine (run, model, slot, VRAM, hottest GPU).
+/// Segments are absent rather than zero; offline hides the machine instead
+/// of showing stale values. Every segment is a button.
 /// The status bar's model segment: what Ctrl+M and the palette's “Switch
 /// the local model” hang the picker on (L2d3).
 final GlobalKey statusModelAnchor = GlobalKey(debugLabel: 'status.model');
@@ -151,6 +152,8 @@ class _DesktopStatusBarState extends ConsumerState<DesktopStatusBar> {
     final status =
         ref.watch(connectionStatusProvider).value ?? ConnectionStatus.initial;
     final inbox = ref.watch(approvalInboxProvider).value;
+    // everything the Inbox holds open: the rail badge's number (L2e)
+    final open = ref.watch(inboxProvider.select((s) => s.open));
     final runs = ref.watch(liveRunsProvider);
     final info = ref.watch(systemProvider).info;
     final width = MediaQuery.sizeOf(context).width;
@@ -169,6 +172,17 @@ class _DesktopStatusBarState extends ConsumerState<DesktopStatusBar> {
 
     final left = <Widget>[
       _connection(l, status),
+      // absent, not zero; in a compact window it gives way to the approvals
+      // (they are part of its number, and the rail's badge shows it)
+      if (open > 0 &&
+          (width >= DelveDesktop.listOverlayBelow ||
+              (pending.isEmpty && late.isEmpty)))
+        _Segment(
+          key: const Key('status.inbox'),
+          icon: DelveIcons.inbox,
+          text: l.inboxOpen(open),
+          onTap: () => context.go(Routes.inbox),
+        ),
       if (pending.isNotEmpty)
         _Segment(
           key: const Key('status.approvals'),

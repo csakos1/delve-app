@@ -287,6 +287,19 @@ class InboxController extends Notifier<InboxState> {
     }
   }
 
+  /// The listing [id] was opened from its watch (the Watches area, the
+  /// Dashboard's card): its hit leaves the Inbox, as with Open link there.
+  /// Nothing happens when the Inbox does not hold it; a failure leaves it.
+  Future<void> hitOpened(int id) async {
+    final item = '${InboxKind.watchHit}:$id';
+    if (state.openItem(item) == null) return;
+    try {
+      await done(item);
+    } on Object {
+      // it stays in the list
+    }
+  }
+
   /// The last copy of an item that was open or under Done today while the
   /// app ran – also after it left (the content keeps showing it).
   InboxItem? known(String id) => _known[id];

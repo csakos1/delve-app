@@ -10,8 +10,10 @@ import '../../app/inbox.dart';
 import '../../app/news.dart';
 import '../../app/router.dart';
 import '../../app/system.dart';
+import '../../data/db/database.dart' show ApprovalRow;
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
+import '../chat/approval_card.dart' show approvalOutcomeLook, isAnswerable;
 import '../chat/tool_step_card.dart' show displayCommand;
 import '../format.dart';
 import '../screens/news_story_screen.dart' show NewsStoryInspector;
@@ -99,7 +101,9 @@ class InboxArea extends ConsumerWidget {
 /// The Inbox's list column (27W-1a): every open item, newest first and all
 /// kinds mixed, as three-line rows – the kind and the time, the gist (a
 /// command in full), where it comes from; under them “Done today”,
-/// collapsed, with Undo on its rows; at the foot the keys. J / K (↓ / ↑)
+/// collapsed, with Undo on its rows; at the foot the keys. An approval
+/// that was answered shows how it ended for 1.5 s before its row goes
+/// (27W-1b). J / K (↓ / ↑)
 /// step through the rows, Enter goes into the content, E clears the open
 /// item and moves on, Ctrl+Z brings the last cleared one back, Ctrl+R
 /// reloads.
@@ -130,6 +134,14 @@ class _InboxListState extends ConsumerState<InboxList> {
   /// A second's tick while an agent waits (the countdowns).
   Timer? _tick;
 
+  /// The approval rows of the last build, by item id.
+  Map<String, InboxItem> _approvalRows = const {};
+
+  /// Approval rows that left the list answered (or lapsed), with how they
+  /// ended: shown for [DelveDesktop.outcomeHold], then gone.
+  final Map<String, (InboxItem, ApprovalRow)> _leaving = {};
+  final Map<String, Timer> _leaveTimers = {};
+
   @override
   void initState() {
     super.initState();
@@ -144,9 +156,40 @@ class _InboxListState extends ConsumerState<InboxList> {
   @override
   void dispose() {
     _tick?.cancel();
+    for (final t in _leaveTimers.values) {
+      t.cancel();
+    }
     _keys.unregister(this);
     _pageKeys.unregister(this);
     super.dispose();
+  }
+
+  /// The row of [item] stays for a moment with its [outcome].
+  void _leave(InboxItem item, ApprovalRow outcome) {
+    final id = item.id;
+    _leaving[id] = (item, outcome);
+    _leaveTimers[id]?.cancel();
+    _leaveTimers[id] = Timer(DelveDesktop.outcomeHold, () {
+      _leaveTimers.remove(id);
+      if (!mounted) return;
+      setState(() => _leaving.remove(id));
+    });
+  }
+
+  /// The open items with the rows that are leaving among them, each where
+  /// its time puts it (newest first).
+  List<InboxItem> _withLeaving(List<InboxItem> items) {
+    if (_leaving.isEmpty) return items;
+    final rows = [...items];
+    for (final (item, _) in _leaving.values) {
+      if (rows.any((i) => i.id == item.id)) continue;
+      final at = item.at;
+      final before = at == null
+          ? -1
+          : rows.indexWhere((i) => i.at == null || i.at!.isBefore(at));
+      rows.insert(before < 0 ? rows.length : before, item);
+    }
+    return rows;
   }
 
   void _ticking(bool on) {
@@ -356,11 +399,31 @@ class _InboxListState extends ConsumerState<InboxList> {
     final items = view.items;
     final done = view.done;
     final open = widget.selected;
+    // an approval that left the list because it was answered – here or
+    // anywhere – or lapsed says how it ended before its row goes
+    final approvals = ref.watch(approvalInboxProvider).value;
+    final openIds = {for (final i in items) i.id};
+    final waiting = {
+      for (final i in items)
+        if (i.isApproval) i.subject,
+    };
+    for (final was in _approvalRows.values) {
+      if (openIds.contains(was.id) || _leaving.containsKey(was.id)) continue;
+      // pending → late: the same approval under its other id
+      if (waiting.contains(was.subject)) continue;
+      final row = approvals?.byId(was.subject)?.approval;
+      if (row != null && !isAnswerable(row)) _leave(was, row);
+    }
+    _approvalRows = {
+      for (final i in items)
+        if (i.isApproval) i.id: i,
+    };
+    final rows = _withLeaving(items);
     // an open item under Done today shows its row
     final doneShown =
         done.isNotEmpty && (_doneOpen || done.any((i) => i.id == open));
     _order = [
-      for (final i in items) i.id,
+      for (final i in rows) i.id,
       if (doneShown)
         for (final i in done) i.id,
     ];
@@ -394,7 +457,7 @@ class _InboxListState extends ConsumerState<InboxList> {
         key: const Key('inbox.list'),
         padding: const EdgeInsets.only(bottom: DelveTokens.space4),
         children: [
-          if (items.isEmpty)
+          if (rows.isEmpty)
             Padding(
               key: const Key('inbox.empty'),
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -414,15 +477,24 @@ class _InboxListState extends ConsumerState<InboxList> {
                 ],
               ),
             ),
-          for (final i in items)
-            InboxRow(
-              item: i,
-              now: now,
-              selected: i.id == open,
-              onTap: () => _open(i.id),
-              onDone: i.doneable ? () => unawaited(_done(i)) : null,
-              menu: _menu(l, i, open: true),
-            ),
+          for (final i in rows)
+            if (_leaving[i.id] case (_, final outcome)?)
+              InboxRow(
+                item: i,
+                now: now,
+                selected: i.id == open,
+                outcome: outcome,
+                onTap: () => _open(i.id),
+              )
+            else
+              InboxRow(
+                item: i,
+                now: now,
+                selected: i.id == open,
+                onTap: () => _open(i.id),
+                onDone: i.doneable ? () => unawaited(_done(i)) : null,
+                menu: _menu(l, i, open: true),
+              ),
           if (done.isNotEmpty)
             _DoneToday(
               count: done.length,
@@ -591,9 +663,10 @@ class _KeyHints extends StatelessWidget {
 /// An item in the Inbox's list column (Components “Inbox”): the kind's icon
 /// in its colour; the kind's word and the time; the gist – a command in
 /// mono, wrapping at spaces, never cut; where it comes from in one line (a
-/// waiting approval starts with the agent's countdown). On hover Done (or
-/// Undo under “Done today”, where the gist is muted and the last line says
-/// when it was cleared).
+/// waiting approval starts with the agent's countdown; an answered one that
+/// is leaving shows its status chip there). On hover Done (or Undo under
+/// “Done today”, where the gist is muted and the last line says when it was
+/// cleared).
 class InboxRow extends ConsumerWidget {
   const InboxRow({
     super.key,
@@ -602,6 +675,7 @@ class InboxRow extends ConsumerWidget {
     required this.selected,
     required this.onTap,
     this.cleared = false,
+    this.outcome,
     this.onDone,
     this.onUndo,
     this.menu = const [],
@@ -614,6 +688,10 @@ class InboxRow extends ConsumerWidget {
 
   /// It is under “Done today”.
   final bool cleared;
+
+  /// An approval that was answered (or lapsed) and is leaving the list:
+  /// its last line is how it ended.
+  final ApprovalRow? outcome;
   final VoidCallback? onDone;
   final VoidCallback? onUndo;
   final List<DesktopMenuItem> menu;
@@ -706,12 +784,7 @@ class InboxRow extends ConsumerWidget {
       );
     }
 
-    // the model that did not load reads as the Model row writes it
-    var gist = item.title;
-    if (item.llamaSwitch case final sw?) {
-      final llama = ref.watch(systemProvider.select((v) => v.info?.llama));
-      gist = llama?.presetText(sw.to) ?? sw.to;
-    }
+    final gist = inboxGist(ref, item);
 
     return DesktopRowFrame(
       key: ValueKey('inbox.row.${item.id}'),
@@ -790,7 +863,32 @@ class InboxRow extends ConsumerWidget {
                       color: cleared ? cs.onSurfaceVariant : cs.onSurface,
                     ),
                   ),
-                if (source.isNotEmpty) ...[
+                if (outcome case final a?) ...[
+                  const SizedBox(height: 3),
+                  Row(
+                    key: ValueKey('inbox.row.outcome.${item.id}'),
+                    children: [
+                      switch (approvalOutcomeLook(l, a.status)) {
+                        (final kind, final icon, final label) => StatusChip(
+                          kind: kind,
+                          icon: icon,
+                          label: label,
+                        ),
+                      },
+                      const SizedBox(width: DelveTokens.space2),
+                      Flexible(
+                        child: Text(
+                          l.inboxLeaves,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: DelveDesktopText.rowSecondary.copyWith(
+                            color: d.textMuted,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ] else if (source.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
                     source,

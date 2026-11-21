@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../api/models/models.dart';
 import '../../app/dashboard.dart';
+import '../../app/inbox.dart';
 import '../../app/layout.dart';
 import '../../app/news.dart';
 import '../../app/router.dart';
@@ -17,6 +18,7 @@ import '../../sync/sync_providers.dart';
 import '../../theme/delve_theme.dart';
 import '../desktop/approvals_card.dart';
 import '../desktop/desktop_page.dart';
+import '../desktop/inbox_block.dart';
 import '../format.dart';
 import '../links.dart';
 import '../schedule_text.dart';
@@ -28,6 +30,7 @@ import '../widgets/news_ui.dart';
 import '../widgets/page_scaffolds.dart';
 import '../widgets/status_ui.dart';
 import '../widgets/system_ui.dart';
+import '../widgets/watch_ui.dart' show openHit;
 import '../widgets/water_chart.dart';
 
 /// 12 Dashboard: connection, the clipboard's two buttons (DA1), the Lake
@@ -62,6 +65,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     unawaited(_refreshSystem());
     unawaited(_refreshWatches());
     unawaited(_refreshNews());
+    // the Inbox block is the desktop's (L2e)
+    if (DesktopLayout.of(context)) unawaited(_refreshInbox());
     final service = ref.read(dashboardServiceProvider);
     if (service == null) return;
     try {
@@ -91,6 +96,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       await ref.read(newsProvider.notifier).refresh();
     } on Object {
       // kept in NewsView.error
+    }
+  }
+
+  /// The Inbox block keeps what it had when this fails.
+  Future<void> _refreshInbox() async {
+    try {
+      await ref.read(inboxProvider.notifier).refresh();
+    } on Object {
+      // kept in InboxState.error
     }
   }
 
@@ -169,36 +183,38 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   /// The desktop's Dashboard (design 27W-4a): the 66 px header with the
   /// date, “Needs approval” over the cards, the cards in 1 – 4 columns in a
-  /// page of at most 1840. Ctrl+R and the header's button refresh it; no
-  /// pull-to-refresh, no connection pill (the status bar has it).
+  /// page of at most 1840 – the Inbox block under the Morning brief. Ctrl+R
+  /// and the header's button refresh it; no pull-to-refresh, no connection
+  /// pill (the status bar has it).
   Widget _desktop(BuildContext context, AppLocalizations l, Widget water) {
     _keys.register(this, PageCommands(refresh: () => unawaited(_refresh())));
     final cs = context.colors;
     final muted = context.delve.textMuted;
     final updated = _updated;
     const brief = BriefCard();
+    // under the brief; nothing with a server that has no Inbox
+    const inbox = InboxBlock();
     const news = NewsCard();
     const watches = WatchesCard();
     const system = SystemCard();
-    // the Inbox block joins under the brief with L2e
     final List<List<Widget>> columns = switch (dashboardColumns(
       MediaQuery.sizeOf(context).width,
     )) {
       1 => [
-        [water, brief, news, watches, system],
+        [water, brief, inbox, news, watches, system],
       ],
       2 => [
         [water, system],
-        [brief, news, watches],
+        [brief, inbox, news, watches],
       ],
       3 => [
         [water, system],
-        [brief, watches],
+        [brief, inbox, watches],
         [news],
       ],
       _ => [
         [water],
-        [brief, watches],
+        [brief, inbox, watches],
         [news],
         [system],
       ],
@@ -942,7 +958,7 @@ class _RecentHitLine extends ConsumerWidget {
         : (hit.watchName, secondary);
     return InkWell(
       key: Key('dashboard.watches.hit.${i.id}'),
-      onTap: () => openLink(context, ref, i.url),
+      onTap: () => openHit(context, ref, i),
       onLongPress: () => copyLink(context, i.url),
       child: Container(
         constraints: const BoxConstraints(minHeight: 56),
@@ -989,7 +1005,7 @@ class _RecentHitLine extends ConsumerWidget {
             ),
             IconButton(
               tooltip: l.watchOpenLink,
-              onPressed: () => openLink(context, ref, i.url),
+              onPressed: () => openHit(context, ref, i),
               icon: SymbolIcon(
                 DelveIcons.openLink,
                 size: DelveTokens.iconMd,

@@ -887,7 +887,7 @@ class WatchHitInspector extends ConsumerWidget {
               children: [
                 FilledButton.icon(
                   key: const Key('inspector.hit.open'),
-                  onPressed: () => unawaited(openLink(context, ref, i.url)),
+                  onPressed: () => unawaited(openHit(context, ref, i)),
                   icon: const SymbolIcon(DelveIcons.openLink, size: 16),
                   label: Text(l.watchOpenLink),
                 ),

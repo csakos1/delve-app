@@ -9782,6 +9782,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Undo Done / the archive'**
   String get shortcutsUndoDone;
+
+  /// No description provided for @inboxLeaves.
+  ///
+  /// In en, this message translates to:
+  /// **'leaves the list'**
+  String get inboxLeaves;
+
+  /// No description provided for @inboxBlockMore.
+  ///
+  /// In en, this message translates to:
+  /// **'+ {count} more'**
+  String inboxBlockMore(int count);
+
+  /// No description provided for @inboxBlockAbove.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{The approval is in the card above} other{The {count} approvals are in the card above}}'**
+  String inboxBlockAbove(int count);
+
+  /// No description provided for @inboxBlockMoreAbove.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{+ {more} more · the approval is in the card above} other{+ {more} more · the {count} approvals are in the card above}}'**
+  String inboxBlockMoreAbove(int more, int count);
+
+  /// No description provided for @inboxBlockEmptyCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing needs you · last cleared {time}'**
+  String inboxBlockEmptyCleared(String time);
+
+  /// No description provided for @inboxBlockSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Model switch'**
+  String get inboxBlockSwitch;
+
+  /// No description provided for @inboxBlockSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get inboxBlockSchedule;
+
+  /// No description provided for @schedulesMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed its last time'**
+  String get schedulesMissed;
+
+  /// No description provided for @schedulesMissedWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed its last time: the desktop was off or the server was not running.'**
+  String get schedulesMissedWhy;
 }
 
 class _AppLocalizationsDelegate

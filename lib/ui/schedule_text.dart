@@ -100,8 +100,16 @@ String outcomeWord(AppLocalizations l, LastOutcome o) => switch (o) {
   LastOutcome.queued => l.schedulesStatusQueued,
 };
 
-/// "Last run 20:52 · OK", "Last run Sun 18:00 · Failed", "Not run yet".
+/// Its last time passed without a run (the desktop was off, the server was
+/// not running): the server says it as a failure with the error `missed`
+/// (API 23), and [Schedule.lastRunAt] is still the run before it.
+bool scheduleMissed(Schedule s) =>
+    s.lastStatus == 'failed' && s.lastError == 'missed';
+
+/// "Last run 20:52 · OK", "Last run Sun 18:00 · Failed", "Not run yet";
+/// "Missed its last time" for a schedule that was skipped.
 String lastRunText(AppLocalizations l, Schedule s, DateTime now) {
+  if (scheduleMissed(s)) return l.schedulesMissed;
   final at = s.lastRunAt;
   final outcome = lastOutcome(s);
   if (at == null || outcome == null) return l.schedulesNotRunYet;

@@ -38,6 +38,16 @@ class ApprovalInbox {
   final List<InboxApproval> recent;
 
   bool get isEmpty => pending.isEmpty && expired.isEmpty && recent.isEmpty;
+
+  /// The approval [requestId] wherever it is now (null: not among them).
+  InboxApproval? byId(String requestId) {
+    for (final list in [pending, expired, recent]) {
+      for (final i in list) {
+        if (i.approval.requestId == requestId) return i;
+      }
+    }
+    return null;
+  }
 }
 
 extension ApprovalInboxQueries on AppDatabase {

@@ -6235,4 +6235,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shortcutsUndoDone => 'Undo Done / the archive';
+
+  @override
+  String get inboxLeaves => 'leaves the list';
+
+  @override
+  String inboxBlockMore(int count) {
+    return '+ $count more';
+  }
+
+  @override
+  String inboxBlockAbove(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'The $count approvals are in the card above',
+      one: 'The approval is in the card above',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String inboxBlockMoreAbove(int more, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+ $more more · the $count approvals are in the card above',
+      one: '+ $more more · the approval is in the card above',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String inboxBlockEmptyCleared(String time) {
+    return 'Nothing needs you · last cleared $time';
+  }
+
+  @override
+  String get inboxBlockSwitch => 'Model switch';
+
+  @override
+  String get inboxBlockSchedule => 'Schedule';
+
+  @override
+  String get schedulesMissed => 'Missed its last time';
+
+  @override
+  String get schedulesMissedWhy =>
+      'Missed its last time: the desktop was off or the server was not running.';
 }

@@ -110,6 +110,13 @@ abstract final class DelveDesktop {
   /// screen this long.
   static const Duration inboxReadAfter = Duration(seconds: 2);
 
+  /// The Dashboard's Inbox block: the newest items as 32 px rows with the
+  /// kind's word in an 86 px column; 30 px for “Nothing needs you”.
+  static const int inboxBlockRows = 3;
+  static const double inboxBlockRow = 32;
+  static const double inboxBlockWord = 86;
+  static const double inboxBlockEmpty = 30;
+
   // density
   static const double rowTwoLine = 52;
   static const double rowOneLine = 32;

@@ -576,7 +576,10 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                 key: const Key('schedule.page.failed'),
                 kind: StatusKind.alert,
                 icon: DelveIcons.error,
-                text: [lastRunText(l, s, now), ?s.lastError].join(' · '),
+                // a missed time has no run to name and no error to quote
+                text: scheduleMissed(s)
+                    ? l.schedulesMissedWhy
+                    : [lastRunText(l, s, now), ?s.lastError].join(' · '),
               ),
             ),
           Row(

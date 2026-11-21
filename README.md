@@ -542,9 +542,9 @@ Terminal settings, General chat settings – and a News feed's page are pages of
 here: the 48 px header (a back arrow while the area has a page under it), the phone's body in
 the 680 px column, no app bar; the phone key's lines and the settings' model pickers are
 dialogs.
-The Inbox (`inbox_area.dart`, `inbox_detail.dart`, `lib/app/inbox.dart`; L2e, backend API 23 –
-`kInboxRevision`; with an older server the rail, the palette, the shortcut sheet and Ctrl+1
-leave it out): the first rail item, with a badge of its open items (warn while one of them is
+The Inbox (`inbox_area.dart`, `inbox_detail.dart`, `inbox_block.dart`, `lib/app/inbox.dart`;
+L2e, backend API 23 – `kInboxRevision`; with an older server the rail, the palette, the
+shortcut sheet and Ctrl+1 leave it out): the first rail item, with a badge of its open items (warn while one of them is
 an approval that can be answered). One list of what needs the reader, read from
 `GET /api/v1/inbox` and kept in memory (`inboxProvider`: read again on `inbox.updated`, on an
 approval, a watcher's listing, a News round, a failed model switch, a schedule's change, and
@@ -557,8 +557,19 @@ here, never cleared), a hit its listing (Open link clears it), a must-read the r
 into its area; the inspector shows the approval's run, the hit's watch or the Story. J / K
 step, Enter goes into the content, E clears the open item and moves on, Ctrl+Z (or Undo on a
 row, in the content, in the list's snackbar) brings the last cleared one back – a story that
-was read comes back unread. An item that leaves while it is open stays on screen. The phone
-has no Inbox.
+was read comes back unread. An item that leaves while it is open stays on screen; an approval
+that was answered (here or anywhere) says how it ended in its row for 1.5 s before the row
+goes. The count shows in three more places, always the same number: the status bar's
+“N open” (left group, after the connection; a click opens the Inbox; absent at zero, and in a
+window under 900 px while the approvals segment is there), and the Dashboard's Inbox block
+(`inbox_block.dart`) under the Morning brief – the three newest items the “Needs approval”
+card does not show as 32 px rows (icon, the kind's word in an 86 px column, the gist in one
+line, the time; a row opens its item, the header the Inbox), then “+ N more · the N approvals
+are in the card above”; with nothing open one line, “Nothing needs you · last cleared HH:mm”.
+A hit whose link is opened from its watch – the Watches area, the Hit inspector, the
+Dashboard's Watches card – leaves the Inbox too (`openHit`). A schedule whose time passed
+without a run (`last_error: missed`) reads “Missed its last time” on the Schedules pages
+instead of “Last run … · Failed” (`scheduleMissed`). The phone has no Inbox.
 Focus and keys (`pane_focus.dart`): every pane has its own focus point (`PaneFocus`). F6 /
 Shift+F6 go round the list, the content, the dock (when open) and the inspector, the pane
 drawing the 2 px accent ring after a key; a click on a row gives its pane the focus without

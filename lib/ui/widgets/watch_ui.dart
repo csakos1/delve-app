@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/models/models.dart';
+import '../../app/inbox.dart';
+import '../../app/layout.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../desktop/desktop_row.dart';
@@ -13,6 +15,15 @@ import '../links.dart';
 import '../watch_text.dart';
 import 'page_scaffolds.dart';
 import 'status_ui.dart';
+
+/// Opens a listing's link. In the desktop layout its hit also leaves the
+/// Inbox (L2e): what was opened from its watch does not wait there too.
+Future<void> openHit(BuildContext context, WidgetRef ref, WatchItem item) {
+  if (DesktopLayout.of(context)) {
+    unawaited(ref.read(inboxProvider.notifier).hitOpened(item.id));
+  }
+  return openLink(context, ref, item.url);
+}
 
 /// "2 new" (design 21c): accent-container pill, not tappable.
 class NewPill extends StatelessWidget {
@@ -211,7 +222,7 @@ class HitRow extends ConsumerWidget {
       ),
       _ => null,
     };
-    void open() => openLink(context, ref, i.url);
+    void open() => openHit(context, ref, i);
     return Semantics(
       button: true,
       label: [
@@ -509,7 +520,7 @@ class _DesktopHitRowState extends ConsumerState<DesktopHitRow> {
   /// The last click (a second one within [kDoubleTapTimeout] opens).
   DateTime? _lastTap;
 
-  void _open() => unawaited(openLink(context, ref, widget.item.url));
+  void _open() => unawaited(openHit(context, ref, widget.item));
 
   void _tap() {
     final now = DateTime.now();

@@ -13,6 +13,7 @@ import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../format.dart';
 import '../links.dart';
+import '../schedule_text.dart' show scheduleMissed;
 import '../screens/approvals_screen.dart' show ApprovalDetail;
 import '../screens/news_story_screen.dart' show NewsStoryScreen;
 import '../watch_text.dart';
@@ -86,6 +87,15 @@ InboxLook inboxLook(BuildContext context, InboxItem item) {
   };
 }
 
+/// An item's gist as its row writes it: its title – for a failed switch the
+/// model that did not load, as the Model row names it.
+String inboxGist(WidgetRef ref, InboxItem item) {
+  final sw = item.llamaSwitch;
+  if (sw == null) return item.title;
+  final llama = ref.watch(systemProvider.select((v) => v.info?.llama));
+  return llama?.presetText(sw.to) ?? sw.to;
+}
+
 /// Where the Inbox goes once the open item [id] was cleared: the row that
 /// takes its place, or the list alone when it was the last one.
 String inboxRouteAfter(InboxState view, String id) {
@@ -98,8 +108,8 @@ String inboxRouteAfter(InboxState view, String id) {
 
 /// A failed schedule's reason in words: a missed time, or the run's error.
 String scheduleFailureText(AppLocalizations l, Schedule s) {
+  if (scheduleMissed(s)) return l.inboxScheduleMissed;
   final error = s.lastError;
-  if (error == 'missed') return l.inboxScheduleMissed;
   return error == null || error.isEmpty ? l.inboxScheduleFailed : error;
 }
 
@@ -579,7 +589,7 @@ class _NoticeDetail extends ConsumerWidget {
       link = Routes.system;
     } else if (item.schedule case final s?) {
       heading = s.name;
-      final missed = s.lastError == 'missed';
+      final missed = scheduleMissed(s);
       body = missed ? l.inboxScheduleMissedBody : l.inboxScheduleFailedBody;
       facts.addAll([
         if (!missed) (l.inboxFactReason, scheduleFailureText(l, s)),

@@ -4620,5 +4620,45 @@
   "inboxFactAskedBy": "Asked by",
   "inboxFactNextRun": "Next run",
   "shortcutsDoneOrArchive": "Done (Inbox) · archive the open chat",
-  "shortcutsUndoDone": "Undo Done / the archive"
+  "shortcutsUndoDone": "Undo Done / the archive",
+  "inboxLeaves": "leaves the list",
+  "inboxBlockMore": "+ {count} more",
+  "@inboxBlockMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inboxBlockAbove": "{count, plural, =1{The approval is in the card above} other{The {count} approvals are in the card above}}",
+  "@inboxBlockAbove": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inboxBlockMoreAbove": "{count, plural, =1{+ {more} more · the approval is in the card above} other{+ {more} more · the {count} approvals are in the card above}}",
+  "@inboxBlockMoreAbove": {
+    "placeholders": {
+      "more": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inboxBlockEmptyCleared": "Nothing needs you · last cleared {time}",
+  "@inboxBlockEmptyCleared": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "inboxBlockSwitch": "Model switch",
+  "inboxBlockSchedule": "Schedule",
+  "schedulesMissed": "Missed its last time",
+  "schedulesMissedWhy": "Missed its last time: the desktop was off or the server was not running."
 }
