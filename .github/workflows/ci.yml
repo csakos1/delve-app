@@ -51,6 +51,8 @@ jobs:
       - run: flutter test
       - name: hook syntax
         run: sh -n .githooks/pre-commit
+      - name: script syntax
+        run: python3 -m py_compile tool/*.py
 
   build:
     name: debug apk
@@ -81,3 +83,45 @@ jobs:
           name: delve-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 14
+
+  linux:
+    name: linux bundle
+    runs-on: ubuntu-24.04
+    needs: check
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: build tools, GTK 3, libsecret (the keyring plugin)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev libsecret-1-dev desktop-file-utils
+      - run: flutter pub get
+      - run: flutter build linux --release
+      - name: the installer, into an empty home and out again
+        run: |
+          export HOME="$RUNNER_TEMP/home"
+          unset XDG_DATA_HOME
+          mkdir -p "$HOME"
+          python3 tool/linux-install.py
+          python3 tool/linux-install.py        # an update over itself
+          test -x "$HOME/.local/opt/delve/delve"
+          test -f "$HOME/.local/opt/delve/lib/libapp.so"
+          test -f "$HOME/.local/share/icons/hicolor/scalable/apps/hu.csakos.delve.svg"
+          desktop-file-validate "$HOME/.local/share/applications/hu.csakos.delve.desktop"
+          python3 tool/linux-install.py --uninstall
+          test ! -e "$HOME/.local/opt/delve"
+          test ! -e "$HOME/.local/share/applications/hu.csakos.delve.desktop"
+          test ! -e "$HOME/.local/share/icons/hicolor/scalable/apps/hu.csakos.delve.svg"
+      - name: one file (a tar keeps the executable bit)
+        run: tar -C build/linux/x64/release -czf delve-linux-x64.tar.gz bundle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: delve-linux-x64
+          path: delve-linux-x64.tar.gz
+          retention-days: 14
+          compression-level: 0

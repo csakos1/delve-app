@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The app icon for the desktop (design "App icon", concept B "D of depth"): the middle
+     72 of the Android adaptive icon's 108 canvas on its background colour, the corners
+     of the legacy launcher PNGs (radius 13.5 of 72). The paths are those of
+     android/app/src/main/res/drawable/ic_launcher_foreground.xml: change both together.
+     tool/linux-install.py copies it into the user's icon theme. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="18 18 72 72">
+  <rect x="18" y="18" width="72" height="72" rx="13.5" fill="#111213"/>
+  <g transform="translate(2 0)">
+    <path fill="#ECEEF0" d="M36,31H52A23,23 0 0 1 52,77H36A3,3 0 0 1 33,74V34A3,3 0 0 1 36,31Z"/>
+    <path fill="#7A7D83" d="M42.5,37.5H53A17.5,17.5 0 0 1 53,72.5H42.5A3,3 0 0 1 39.5,69.5V40.5A3,3 0 0 1 42.5,37.5Z"/>
+    <path fill="#323438" d="M48,44H54A12,12 0 0 1 54,68H48A2,2 0 0 1 46,66V46A2,2 0 0 1 48,44Z"/>
+    <path fill="#111213" d="M54,50.5H55A6.5,6.5 0 0 1 55,63.5H54A2,2 0 0 1 52,61.5V52.5A2,2 0 0 1 54,50.5Z"/>
+    <path fill="#5FD4EA" d="M54.5,58H58A1.5,1.5 0 0 1 59.5,59.5V59.5A1.5,1.5 0 0 1 58,61H54.5A1.5,1.5 0 0 1 53,59.5V59.5A1.5,1.5 0 0 1 54.5,58Z"/>
+  </g>
+</svg>

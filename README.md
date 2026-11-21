@@ -361,6 +361,8 @@ tool/
   gen_contract_samples.py    regenerates samples.json with the backend serializers
   android-setup.py           one-off Android project settings
   linux-setup.py             one-off Linux runner settings (title, no header bar on Hyprland)
+  linux-install.py           installs the Linux release build for the user: the bundle, a
+                             launcher entry and the icon; an update; --uninstall
   ws-record.py               records WebSocket conversations with a backend
   format.sh                  dart format for hand-written files
 ```
@@ -429,8 +431,24 @@ sudo pacman -S --needed clang cmake ninja gtk3 pkgconf libsecret   # once
 # linux/ was made once with: flutter create --org hu.csakos --project-name delve
 #   --platforms linux .  (then rm -f test/widget_test.dart; python3 tool/linux-setup.py)
 flutter build linux --release
-build/linux/x64/release/bundle/delve
+build/linux/x64/release/bundle/delve          # run it from the build, or
+python3 tool/linux-install.py                 # install it for this user; again: an update
+python3 tool/linux-install.py --uninstall
 ```
+
+`tool/linux-install.py` needs no root. It copies the bundle to `~/.local/opt/delve` and writes
+a launcher entry (`~/.local/share/applications/hu.csakos.delve.desktop`) and the icon
+(`~/.local/share/icons/hicolor/scalable/apps/hu.csakos.delve.svg`, from `linux/packaging/` –
+the Android icon's paths on its background). The entry is named after the window's app id
+(`APPLICATION_ID` in `linux/CMakeLists.txt`): that is how the compositor, a task bar and the
+notification daemon find the icon. An update copies the new bundle next to the old one and
+swaps them, so a running Delve keeps working and stays the old version until it is restarted.
+Nothing starts with the session and nothing sits in a tray; there is no `delve` on the `PATH`
+either (that name is the backend's CLI) – start it from the launcher, with
+`gtk-launch hu.csakos.delve` or as `~/.local/opt/delve/delve`. `--uninstall` removes the three
+and leaves what the app wrote (its settings and databases, the token in the keyring);
+`--bundle DIR` installs another bundle, for example the CI's `delve-linux-x64` artifact
+(`tar xzf delve-linux-x64.tar.gz`, then `--bundle bundle`).
 
 From a window of 720 dp the desktop app uses the desktop layout (design "27 Desktop –
 Workbench"; below 720 the phone layout, unchanged): a rail of areas, the area's panes (list
@@ -679,7 +697,9 @@ Widgets use `Theme.of(context)`, `context.delve` (`DelveColors`), `DelveText` an
 
 `.github/workflows/ci.yml`: gitleaks; `pub get`, generated code current, format,
 `flutter analyze`, `flutter test`; a debug APK as a build artifact (with push when the
-`GOOGLE_SERVICES_JSON` secret is set).
+`GOOGLE_SERVICES_JSON` secret is set); the Linux release bundle (Ubuntu 24.04), which
+`tool/linux-install.py` installs into an empty home, updates and removes again (the launcher
+entry goes through `desktop-file-validate`), kept as the `delve-linux-x64` artifact.
 
 ## Pre-commit hook
 
