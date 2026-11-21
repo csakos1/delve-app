@@ -321,4 +321,181 @@ void main() {
       expect(find.text('Fetching the text now'), findsOneWidget);
     });
   });
+  group('Long press: the summary card (N4a)', () {
+    /// The News page with [item] as the sailing section's story.
+    Future<TestEnv> openWith(
+      WidgetTester t, {
+      Map<String, Object?> item = const {},
+      Map<String, Object?>? story,
+    }) async {
+      final env = await pumpDelve(
+        t,
+        before: (env) async {
+          serve(env.server, story: story);
+          env.server.json('GET', '/api/v1/news/sections', {
+            'data': [
+              {
+                ...FakeServer.sample('news_section'),
+                'top': [newsJson(item)],
+              },
+            ],
+          });
+        },
+      );
+      await t.tap(find.text('More'));
+      await t.pumpAndSettle();
+      await t.tap(find.text('News'));
+      await t.pumpAndSettle();
+      return env;
+    }
+
+    bool marksRead(FakeServer server) => server.requests.any((r) {
+      if (r.method != 'PATCH') return false;
+      final d = r.data;
+      final body = (d is String ? jsonDecode(d) : d) as Map<String, Object?>;
+      return body.containsKey('read');
+    });
+
+    testWidgets('the summary, the actions under it, not read', (t) async {
+      final env = await openWith(t);
+      await t.longPress(find.byKey(const Key('news.row.8121')));
+      await t.pumpAndSettle();
+      final card = find.byKey(const Key('news.peek'));
+      expect(card, findsOneWidget);
+      Finder inCard(Finder f) => find.descendant(of: card, matching: f);
+      expect(
+        inCard(find.textContaining('A Team USA vízre tette')),
+        findsOneWidget,
+      );
+      expect(inCard(find.text('AI summary')), findsOneWidget);
+      // the summary first, the actions under it
+      final summary = t.getTopLeft(
+        find.byKey(const Key('news.peek.summary.text')),
+      );
+      final save = t.getTopLeft(find.byKey(const Key('news.menu.save')));
+      expect(summary.dy < save.dy, isTrue);
+      expect(inCard(find.text('Hide Sail-World')), findsOneWidget);
+      expect(inCard(find.text('Copy link')), findsOneWidget);
+      // nothing was loaded or marked: the card shows what the list had
+      expect(env.server.calls, isNot(contains('GET /api/v1/news/items/8121')));
+      // the scrim closes it, still unread
+      await t.tapAt(const Offset(4, 4));
+      await t.pumpAndSettle();
+      expect(card, findsNothing);
+      expect(marksRead(env.server), isFalse);
+      // an action from the card
+      await t.longPress(find.byKey(const Key('news.row.8121')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('news.menu.more')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('news.peek')), findsNothing);
+      expect(_body(env.server, 'PATCH', '/api/v1/news/items/8121'), {
+        'feedback': 'more',
+      });
+      expect(marksRead(env.server), isFalse);
+    });
+
+    testWidgets('its head opens the reading view (which reads it)', (t) async {
+      final env = await openWith(t);
+      await t.longPress(find.byKey(const Key('news.row.8121')));
+      await t.pumpAndSettle();
+      await t.tap(find.byKey(const Key('news.peek.open')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('news.peek')), findsNothing);
+      expect(find.byKey(const Key('news.story')), findsOneWidget);
+      expect(marksRead(env.server), isTrue);
+    });
+
+    testWidgets('no text yet: Fetch text from the card, still unread', (
+      t,
+    ) async {
+      final bare = storyJson({
+        'text_state': null,
+        'text': null,
+        'text_at': null,
+        'summary_hu': null,
+        'summary_basis': null,
+      });
+      final env = await openWith(
+        t,
+        item: const {
+          'text_state': null,
+          'summary_hu': null,
+          'summary_basis': null,
+        },
+        story: bare,
+      );
+      env.server.json('POST', '/api/v1/news/items/8121/text', {
+        ...bare,
+        'text_state': 'queued',
+        'text_now': true,
+      });
+      await t.longPress(find.byKey(const Key('news.row.8121')));
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('news.peek.state.none')), findsOneWidget);
+      expect(find.text('No summary yet'), findsOneWidget);
+      await t.tap(find.byKey(const Key('news.peek.fetch')));
+      await t.pumpAndSettle();
+      expect(env.server.calls, contains('POST /api/v1/news/items/8121/text'));
+      expect(find.byKey(const Key('news.peek.state.queued')), findsOneWidget);
+      expect(find.text('Fetching the text'), findsOneWidget);
+      expect(find.byKey(const Key('news.peek')), findsOneWidget);
+      expect(marksRead(env.server), isFalse);
+    });
+
+    testWidgets('a summary of the excerpt says so, here and in the reader', (
+      t,
+    ) async {
+      final failed = storyJson({
+        'text_state': 'failed',
+        'text': null,
+        'text_at': null,
+        'text_error': 'robots',
+        'summary_basis': 'excerpt',
+      });
+      await openWith(
+        t,
+        item: const {'text_state': 'failed', 'summary_basis': 'excerpt'},
+        story: failed,
+      );
+      await t.longPress(find.byKey(const Key('news.row.8121')));
+      await t.pumpAndSettle();
+      expect(find.text("AI summary · from the feed's excerpt"), findsOneWidget);
+      await t.tap(find.byKey(const Key('news.peek.open')));
+      await t.pumpAndSettle();
+      expect(
+        t.widget<Text>(find.byKey(const Key('news.story.ai.label'))).data,
+        "AI summary · from the feed's excerpt",
+      );
+    });
+
+    testWidgets('the text of a merged item names its publisher', (t) async {
+      await openWith(t, story: storyJson({'text_publisher': 'Scuttlebutt'}));
+      await t.tap(find.byKey(const Key('news.row.8121')));
+      await t.pumpAndSettle();
+      final info = find.byKey(const Key('news.story.textInfo'));
+      await t.ensureVisible(info);
+      expect(t.widget<Text>(info).data, startsWith('text from Scuttlebutt · '));
+    });
+
+    testWidgets('the Dashboard block: the same card', (t) async {
+      final env = await pumpDelve(t, before: (env) async => serve(env.server));
+      await t.tap(find.text('Dashboard').last);
+      await t.pumpAndSettle();
+      final card = find.byKey(const Key('dashboard.news'));
+      await t.ensureVisible(card);
+      await t.pumpAndSettle();
+      await t.longPress(
+        find.descendant(
+          of: card,
+          matching: find.byKey(const Key('news.row.8121')),
+        ),
+      );
+      await t.pumpAndSettle();
+      expect(find.byKey(const Key('news.peek')), findsOneWidget);
+      expect(find.byKey(const Key('news.peek.summary')), findsOneWidget);
+      expect(find.byKey(const Key('news.menu.save')), findsOneWidget);
+      expect(marksRead(env.server), isFalse);
+    });
+  });
 }

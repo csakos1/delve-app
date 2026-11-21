@@ -5020,6 +5020,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Written by the local model. It can contain errors.';
 
   @override
+  String get newsFromExcerpt => 'from the feed\'s excerpt';
+
+  @override
+  String get newsPeekNoSummary => 'No summary yet';
+
+  @override
+  String get newsPeekFetching => 'Fetching the text';
+
+  @override
+  String newsTextFrom(String publisher) {
+    return 'text from $publisher';
+  }
+
+  @override
   String get newsSummaryPending =>
       'The summary is written when llama-server is idle.';
 

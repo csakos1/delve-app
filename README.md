@@ -246,6 +246,15 @@ reached over Tailscale only.
   database (`persona_general`), because those chats work without the desktop; it is put
   before the system prompt of every General request, refreshed whenever the page loads or
   saves, and is not part of an export. Nothing else of the profile reaches a cloud model.
+- N4a: a long press on a story – the News page and the Dashboard's News block – opens a
+  small card by the row (`news_peek.dart`): the story's head, its Hungarian AI summary (or
+  what its text is doing: nothing asked yet – Fetch text from the card –, on its way, here
+  but not summarised yet, no text came – Try again), and under it the row's actions (More /
+  Less like this, Hide the feed, Save, Copy link). Nothing in it marks the story read; a tap
+  on its head opens the reading view, which does. A summary written from the feed's excerpt
+  (no article came, backend API 24) says so (“AI summary · from the feed's excerpt”), and a
+  text that is another publisher's article of the same story names it in the reader. On the
+  desktop a right click keeps the menu.
 
 With A6 the MVP is complete; B1 adds notifications, B2 the dashboard, B3 the system view,
 B4 schedules and the morning brief, B5 observability, B6 attachments and the share

@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 mixin _$NewsItem {
 
  int get id; String? get topic; String? get source;/// `feed` | `release`.
- String get kind; String get title; String get url; String? get publisher; String? get excerpt; DateTime? get publishedAt; DateTime get seenAt; bool get gn; int get sources; List<NewsRelease>? get releases; int? get score; String? get why; bool? get setup; String? get summaryHu; String? get textState; String get originalUrl; bool get read; bool get saved;/// `more` | `less` | null.
+ String get kind; String get title; String get url; String? get publisher; String? get excerpt; DateTime? get publishedAt; DateTime get seenAt; bool get gn; int get sources; List<NewsRelease>? get releases; int? get score; String? get why; bool? get setup; String? get summaryHu; String? get summaryBasis; String? get textState; String? get textPublisher; String get originalUrl; bool get read; bool get saved;/// `more` | `less` | null.
  String? get feedback;
 /// Create a copy of NewsItem
 /// with the given fields replaced by the non-null parameter values.
@@ -30,16 +30,16 @@ $NewsItemCopyWith<NewsItem> get copyWith => _$NewsItemCopyWithImpl<NewsItem>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NewsItem&&(identical(other.id, id) || other.id == id)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.source, source) || other.source == source)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.title, title) || other.title == title)&&(identical(other.url, url) || other.url == url)&&(identical(other.publisher, publisher) || other.publisher == publisher)&&(identical(other.excerpt, excerpt) || other.excerpt == excerpt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.seenAt, seenAt) || other.seenAt == seenAt)&&(identical(other.gn, gn) || other.gn == gn)&&(identical(other.sources, sources) || other.sources == sources)&&const DeepCollectionEquality().equals(other.releases, releases)&&(identical(other.score, score) || other.score == score)&&(identical(other.why, why) || other.why == why)&&(identical(other.setup, setup) || other.setup == setup)&&(identical(other.summaryHu, summaryHu) || other.summaryHu == summaryHu)&&(identical(other.textState, textState) || other.textState == textState)&&(identical(other.originalUrl, originalUrl) || other.originalUrl == originalUrl)&&(identical(other.read, read) || other.read == read)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.feedback, feedback) || other.feedback == feedback));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NewsItem&&(identical(other.id, id) || other.id == id)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.source, source) || other.source == source)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.title, title) || other.title == title)&&(identical(other.url, url) || other.url == url)&&(identical(other.publisher, publisher) || other.publisher == publisher)&&(identical(other.excerpt, excerpt) || other.excerpt == excerpt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.seenAt, seenAt) || other.seenAt == seenAt)&&(identical(other.gn, gn) || other.gn == gn)&&(identical(other.sources, sources) || other.sources == sources)&&const DeepCollectionEquality().equals(other.releases, releases)&&(identical(other.score, score) || other.score == score)&&(identical(other.why, why) || other.why == why)&&(identical(other.setup, setup) || other.setup == setup)&&(identical(other.summaryHu, summaryHu) || other.summaryHu == summaryHu)&&(identical(other.summaryBasis, summaryBasis) || other.summaryBasis == summaryBasis)&&(identical(other.textState, textState) || other.textState == textState)&&(identical(other.textPublisher, textPublisher) || other.textPublisher == textPublisher)&&(identical(other.originalUrl, originalUrl) || other.originalUrl == originalUrl)&&(identical(other.read, read) || other.read == read)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.feedback, feedback) || other.feedback == feedback));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,topic,source,kind,title,url,publisher,excerpt,publishedAt,seenAt,gn,sources,const DeepCollectionEquality().hash(releases),score,why,setup,summaryHu,textState,originalUrl,read,saved,feedback]);
+int get hashCode => Object.hashAll([runtimeType,id,topic,source,kind,title,url,publisher,excerpt,publishedAt,seenAt,gn,sources,const DeepCollectionEquality().hash(releases),score,why,setup,summaryHu,summaryBasis,textState,textPublisher,originalUrl,read,saved,feedback]);
 
 @override
 String toString() {
-  return 'NewsItem(id: $id, topic: $topic, source: $source, kind: $kind, title: $title, url: $url, publisher: $publisher, excerpt: $excerpt, publishedAt: $publishedAt, seenAt: $seenAt, gn: $gn, sources: $sources, releases: $releases, score: $score, why: $why, setup: $setup, summaryHu: $summaryHu, textState: $textState, originalUrl: $originalUrl, read: $read, saved: $saved, feedback: $feedback)';
+  return 'NewsItem(id: $id, topic: $topic, source: $source, kind: $kind, title: $title, url: $url, publisher: $publisher, excerpt: $excerpt, publishedAt: $publishedAt, seenAt: $seenAt, gn: $gn, sources: $sources, releases: $releases, score: $score, why: $why, setup: $setup, summaryHu: $summaryHu, summaryBasis: $summaryBasis, textState: $textState, textPublisher: $textPublisher, originalUrl: $originalUrl, read: $read, saved: $saved, feedback: $feedback)';
 }
 
 
@@ -50,7 +50,7 @@ abstract mixin class $NewsItemCopyWith<$Res>  {
   factory $NewsItemCopyWith(NewsItem value, $Res Function(NewsItem) _then) = _$NewsItemCopyWithImpl;
 @useResult
 $Res call({
- int id, String? topic, String? source, String kind, String title, String url, String? publisher, String? excerpt, DateTime? publishedAt, DateTime seenAt, bool gn, int sources, List<NewsRelease>? releases, int? score, String? why, bool? setup, String? summaryHu, String? textState, String originalUrl, bool read, bool saved, String? feedback
+ int id, String? topic, String? source, String kind, String title, String url, String? publisher, String? excerpt, DateTime? publishedAt, DateTime seenAt, bool gn, int sources, List<NewsRelease>? releases, int? score, String? why, bool? setup, String? summaryHu, String? summaryBasis, String? textState, String? textPublisher, String originalUrl, bool read, bool saved, String? feedback
 });
 
 
@@ -67,7 +67,7 @@ class _$NewsItemCopyWithImpl<$Res>
 
 /// Create a copy of NewsItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? topic = freezed,Object? source = freezed,Object? kind = null,Object? title = null,Object? url = null,Object? publisher = freezed,Object? excerpt = freezed,Object? publishedAt = freezed,Object? seenAt = null,Object? gn = null,Object? sources = null,Object? releases = freezed,Object? score = freezed,Object? why = freezed,Object? setup = freezed,Object? summaryHu = freezed,Object? textState = freezed,Object? originalUrl = null,Object? read = null,Object? saved = null,Object? feedback = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? topic = freezed,Object? source = freezed,Object? kind = null,Object? title = null,Object? url = null,Object? publisher = freezed,Object? excerpt = freezed,Object? publishedAt = freezed,Object? seenAt = null,Object? gn = null,Object? sources = null,Object? releases = freezed,Object? score = freezed,Object? why = freezed,Object? setup = freezed,Object? summaryHu = freezed,Object? summaryBasis = freezed,Object? textState = freezed,Object? textPublisher = freezed,Object? originalUrl = null,Object? read = null,Object? saved = null,Object? feedback = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,topic: freezed == topic ? _self.topic : topic // ignore: cast_nullable_to_non_nullable
@@ -86,7 +86,9 @@ as List<NewsRelease>?,score: freezed == score ? _self.score : score // ignore: c
 as int?,why: freezed == why ? _self.why : why // ignore: cast_nullable_to_non_nullable
 as String?,setup: freezed == setup ? _self.setup : setup // ignore: cast_nullable_to_non_nullable
 as bool?,summaryHu: freezed == summaryHu ? _self.summaryHu : summaryHu // ignore: cast_nullable_to_non_nullable
+as String?,summaryBasis: freezed == summaryBasis ? _self.summaryBasis : summaryBasis // ignore: cast_nullable_to_non_nullable
 as String?,textState: freezed == textState ? _self.textState : textState // ignore: cast_nullable_to_non_nullable
+as String?,textPublisher: freezed == textPublisher ? _self.textPublisher : textPublisher // ignore: cast_nullable_to_non_nullable
 as String?,originalUrl: null == originalUrl ? _self.originalUrl : originalUrl // ignore: cast_nullable_to_non_nullable
 as String,read: null == read ? _self.read : read // ignore: cast_nullable_to_non_nullable
 as bool,saved: null == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable
@@ -176,10 +178,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String? topic,  String? source,  String kind,  String title,  String url,  String? publisher,  String? excerpt,  DateTime? publishedAt,  DateTime seenAt,  bool gn,  int sources,  List<NewsRelease>? releases,  int? score,  String? why,  bool? setup,  String? summaryHu,  String? textState,  String originalUrl,  bool read,  bool saved,  String? feedback)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String? topic,  String? source,  String kind,  String title,  String url,  String? publisher,  String? excerpt,  DateTime? publishedAt,  DateTime seenAt,  bool gn,  int sources,  List<NewsRelease>? releases,  int? score,  String? why,  bool? setup,  String? summaryHu,  String? summaryBasis,  String? textState,  String? textPublisher,  String originalUrl,  bool read,  bool saved,  String? feedback)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NewsItem() when $default != null:
-return $default(_that.id,_that.topic,_that.source,_that.kind,_that.title,_that.url,_that.publisher,_that.excerpt,_that.publishedAt,_that.seenAt,_that.gn,_that.sources,_that.releases,_that.score,_that.why,_that.setup,_that.summaryHu,_that.textState,_that.originalUrl,_that.read,_that.saved,_that.feedback);case _:
+return $default(_that.id,_that.topic,_that.source,_that.kind,_that.title,_that.url,_that.publisher,_that.excerpt,_that.publishedAt,_that.seenAt,_that.gn,_that.sources,_that.releases,_that.score,_that.why,_that.setup,_that.summaryHu,_that.summaryBasis,_that.textState,_that.textPublisher,_that.originalUrl,_that.read,_that.saved,_that.feedback);case _:
   return orElse();
 
 }
@@ -197,10 +199,10 @@ return $default(_that.id,_that.topic,_that.source,_that.kind,_that.title,_that.u
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String? topic,  String? source,  String kind,  String title,  String url,  String? publisher,  String? excerpt,  DateTime? publishedAt,  DateTime seenAt,  bool gn,  int sources,  List<NewsRelease>? releases,  int? score,  String? why,  bool? setup,  String? summaryHu,  String? textState,  String originalUrl,  bool read,  bool saved,  String? feedback)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String? topic,  String? source,  String kind,  String title,  String url,  String? publisher,  String? excerpt,  DateTime? publishedAt,  DateTime seenAt,  bool gn,  int sources,  List<NewsRelease>? releases,  int? score,  String? why,  bool? setup,  String? summaryHu,  String? summaryBasis,  String? textState,  String? textPublisher,  String originalUrl,  bool read,  bool saved,  String? feedback)  $default,) {final _that = this;
 switch (_that) {
 case _NewsItem():
-return $default(_that.id,_that.topic,_that.source,_that.kind,_that.title,_that.url,_that.publisher,_that.excerpt,_that.publishedAt,_that.seenAt,_that.gn,_that.sources,_that.releases,_that.score,_that.why,_that.setup,_that.summaryHu,_that.textState,_that.originalUrl,_that.read,_that.saved,_that.feedback);case _:
+return $default(_that.id,_that.topic,_that.source,_that.kind,_that.title,_that.url,_that.publisher,_that.excerpt,_that.publishedAt,_that.seenAt,_that.gn,_that.sources,_that.releases,_that.score,_that.why,_that.setup,_that.summaryHu,_that.summaryBasis,_that.textState,_that.textPublisher,_that.originalUrl,_that.read,_that.saved,_that.feedback);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -217,10 +219,10 @@ return $default(_that.id,_that.topic,_that.source,_that.kind,_that.title,_that.u
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String? topic,  String? source,  String kind,  String title,  String url,  String? publisher,  String? excerpt,  DateTime? publishedAt,  DateTime seenAt,  bool gn,  int sources,  List<NewsRelease>? releases,  int? score,  String? why,  bool? setup,  String? summaryHu,  String? textState,  String originalUrl,  bool read,  bool saved,  String? feedback)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String? topic,  String? source,  String kind,  String title,  String url,  String? publisher,  String? excerpt,  DateTime? publishedAt,  DateTime seenAt,  bool gn,  int sources,  List<NewsRelease>? releases,  int? score,  String? why,  bool? setup,  String? summaryHu,  String? summaryBasis,  String? textState,  String? textPublisher,  String originalUrl,  bool read,  bool saved,  String? feedback)?  $default,) {final _that = this;
 switch (_that) {
 case _NewsItem() when $default != null:
-return $default(_that.id,_that.topic,_that.source,_that.kind,_that.title,_that.url,_that.publisher,_that.excerpt,_that.publishedAt,_that.seenAt,_that.gn,_that.sources,_that.releases,_that.score,_that.why,_that.setup,_that.summaryHu,_that.textState,_that.originalUrl,_that.read,_that.saved,_that.feedback);case _:
+return $default(_that.id,_that.topic,_that.source,_that.kind,_that.title,_that.url,_that.publisher,_that.excerpt,_that.publishedAt,_that.seenAt,_that.gn,_that.sources,_that.releases,_that.score,_that.why,_that.setup,_that.summaryHu,_that.summaryBasis,_that.textState,_that.textPublisher,_that.originalUrl,_that.read,_that.saved,_that.feedback);case _:
   return null;
 
 }
@@ -232,7 +234,7 @@ return $default(_that.id,_that.topic,_that.source,_that.kind,_that.title,_that.u
 @JsonSerializable()
 
 class _NewsItem implements NewsItem {
-  const _NewsItem({required this.id, this.topic, this.source, required this.kind, required this.title, required this.url, this.publisher, this.excerpt, this.publishedAt, required this.seenAt, this.gn = false, this.sources = 1, final  List<NewsRelease>? releases, this.score, this.why, this.setup, this.summaryHu, this.textState, required this.originalUrl, this.read = false, this.saved = false, this.feedback}): _releases = releases;
+  const _NewsItem({required this.id, this.topic, this.source, required this.kind, required this.title, required this.url, this.publisher, this.excerpt, this.publishedAt, required this.seenAt, this.gn = false, this.sources = 1, final  List<NewsRelease>? releases, this.score, this.why, this.setup, this.summaryHu, this.summaryBasis, this.textState, this.textPublisher, required this.originalUrl, this.read = false, this.saved = false, this.feedback}): _releases = releases;
   factory _NewsItem.fromJson(Map<String, dynamic> json) => _$NewsItemFromJson(json);
 
 @override final  int id;
@@ -261,7 +263,9 @@ class _NewsItem implements NewsItem {
 @override final  String? why;
 @override final  bool? setup;
 @override final  String? summaryHu;
+@override final  String? summaryBasis;
 @override final  String? textState;
+@override final  String? textPublisher;
 @override final  String originalUrl;
 @override@JsonKey() final  bool read;
 @override@JsonKey() final  bool saved;
@@ -281,16 +285,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NewsItem&&(identical(other.id, id) || other.id == id)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.source, source) || other.source == source)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.title, title) || other.title == title)&&(identical(other.url, url) || other.url == url)&&(identical(other.publisher, publisher) || other.publisher == publisher)&&(identical(other.excerpt, excerpt) || other.excerpt == excerpt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.seenAt, seenAt) || other.seenAt == seenAt)&&(identical(other.gn, gn) || other.gn == gn)&&(identical(other.sources, sources) || other.sources == sources)&&const DeepCollectionEquality().equals(other._releases, _releases)&&(identical(other.score, score) || other.score == score)&&(identical(other.why, why) || other.why == why)&&(identical(other.setup, setup) || other.setup == setup)&&(identical(other.summaryHu, summaryHu) || other.summaryHu == summaryHu)&&(identical(other.textState, textState) || other.textState == textState)&&(identical(other.originalUrl, originalUrl) || other.originalUrl == originalUrl)&&(identical(other.read, read) || other.read == read)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.feedback, feedback) || other.feedback == feedback));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NewsItem&&(identical(other.id, id) || other.id == id)&&(identical(other.topic, topic) || other.topic == topic)&&(identical(other.source, source) || other.source == source)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.title, title) || other.title == title)&&(identical(other.url, url) || other.url == url)&&(identical(other.publisher, publisher) || other.publisher == publisher)&&(identical(other.excerpt, excerpt) || other.excerpt == excerpt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.seenAt, seenAt) || other.seenAt == seenAt)&&(identical(other.gn, gn) || other.gn == gn)&&(identical(other.sources, sources) || other.sources == sources)&&const DeepCollectionEquality().equals(other._releases, _releases)&&(identical(other.score, score) || other.score == score)&&(identical(other.why, why) || other.why == why)&&(identical(other.setup, setup) || other.setup == setup)&&(identical(other.summaryHu, summaryHu) || other.summaryHu == summaryHu)&&(identical(other.summaryBasis, summaryBasis) || other.summaryBasis == summaryBasis)&&(identical(other.textState, textState) || other.textState == textState)&&(identical(other.textPublisher, textPublisher) || other.textPublisher == textPublisher)&&(identical(other.originalUrl, originalUrl) || other.originalUrl == originalUrl)&&(identical(other.read, read) || other.read == read)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.feedback, feedback) || other.feedback == feedback));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,topic,source,kind,title,url,publisher,excerpt,publishedAt,seenAt,gn,sources,const DeepCollectionEquality().hash(_releases),score,why,setup,summaryHu,textState,originalUrl,read,saved,feedback]);
+int get hashCode => Object.hashAll([runtimeType,id,topic,source,kind,title,url,publisher,excerpt,publishedAt,seenAt,gn,sources,const DeepCollectionEquality().hash(_releases),score,why,setup,summaryHu,summaryBasis,textState,textPublisher,originalUrl,read,saved,feedback]);
 
 @override
 String toString() {
-  return 'NewsItem(id: $id, topic: $topic, source: $source, kind: $kind, title: $title, url: $url, publisher: $publisher, excerpt: $excerpt, publishedAt: $publishedAt, seenAt: $seenAt, gn: $gn, sources: $sources, releases: $releases, score: $score, why: $why, setup: $setup, summaryHu: $summaryHu, textState: $textState, originalUrl: $originalUrl, read: $read, saved: $saved, feedback: $feedback)';
+  return 'NewsItem(id: $id, topic: $topic, source: $source, kind: $kind, title: $title, url: $url, publisher: $publisher, excerpt: $excerpt, publishedAt: $publishedAt, seenAt: $seenAt, gn: $gn, sources: $sources, releases: $releases, score: $score, why: $why, setup: $setup, summaryHu: $summaryHu, summaryBasis: $summaryBasis, textState: $textState, textPublisher: $textPublisher, originalUrl: $originalUrl, read: $read, saved: $saved, feedback: $feedback)';
 }
 
 
@@ -301,7 +305,7 @@ abstract mixin class _$NewsItemCopyWith<$Res> implements $NewsItemCopyWith<$Res>
   factory _$NewsItemCopyWith(_NewsItem value, $Res Function(_NewsItem) _then) = __$NewsItemCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String? topic, String? source, String kind, String title, String url, String? publisher, String? excerpt, DateTime? publishedAt, DateTime seenAt, bool gn, int sources, List<NewsRelease>? releases, int? score, String? why, bool? setup, String? summaryHu, String? textState, String originalUrl, bool read, bool saved, String? feedback
+ int id, String? topic, String? source, String kind, String title, String url, String? publisher, String? excerpt, DateTime? publishedAt, DateTime seenAt, bool gn, int sources, List<NewsRelease>? releases, int? score, String? why, bool? setup, String? summaryHu, String? summaryBasis, String? textState, String? textPublisher, String originalUrl, bool read, bool saved, String? feedback
 });
 
 
@@ -318,7 +322,7 @@ class __$NewsItemCopyWithImpl<$Res>
 
 /// Create a copy of NewsItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? topic = freezed,Object? source = freezed,Object? kind = null,Object? title = null,Object? url = null,Object? publisher = freezed,Object? excerpt = freezed,Object? publishedAt = freezed,Object? seenAt = null,Object? gn = null,Object? sources = null,Object? releases = freezed,Object? score = freezed,Object? why = freezed,Object? setup = freezed,Object? summaryHu = freezed,Object? textState = freezed,Object? originalUrl = null,Object? read = null,Object? saved = null,Object? feedback = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? topic = freezed,Object? source = freezed,Object? kind = null,Object? title = null,Object? url = null,Object? publisher = freezed,Object? excerpt = freezed,Object? publishedAt = freezed,Object? seenAt = null,Object? gn = null,Object? sources = null,Object? releases = freezed,Object? score = freezed,Object? why = freezed,Object? setup = freezed,Object? summaryHu = freezed,Object? summaryBasis = freezed,Object? textState = freezed,Object? textPublisher = freezed,Object? originalUrl = null,Object? read = null,Object? saved = null,Object? feedback = freezed,}) {
   return _then(_NewsItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,topic: freezed == topic ? _self.topic : topic // ignore: cast_nullable_to_non_nullable
@@ -337,7 +341,9 @@ as List<NewsRelease>?,score: freezed == score ? _self.score : score // ignore: c
 as int?,why: freezed == why ? _self.why : why // ignore: cast_nullable_to_non_nullable
 as String?,setup: freezed == setup ? _self.setup : setup // ignore: cast_nullable_to_non_nullable
 as bool?,summaryHu: freezed == summaryHu ? _self.summaryHu : summaryHu // ignore: cast_nullable_to_non_nullable
+as String?,summaryBasis: freezed == summaryBasis ? _self.summaryBasis : summaryBasis // ignore: cast_nullable_to_non_nullable
 as String?,textState: freezed == textState ? _self.textState : textState // ignore: cast_nullable_to_non_nullable
+as String?,textPublisher: freezed == textPublisher ? _self.textPublisher : textPublisher // ignore: cast_nullable_to_non_nullable
 as String?,originalUrl: null == originalUrl ? _self.originalUrl : originalUrl // ignore: cast_nullable_to_non_nullable
 as String,read: null == read ? _self.read : read // ignore: cast_nullable_to_non_nullable
 as bool,saved: null == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable

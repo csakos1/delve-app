@@ -7815,6 +7815,30 @@ abstract class AppLocalizations {
   /// **'Written by the local model. It can contain errors.'**
   String get newsAiDisclaimer;
 
+  /// No description provided for @newsFromExcerpt.
+  ///
+  /// In en, this message translates to:
+  /// **'from the feed\'s excerpt'**
+  String get newsFromExcerpt;
+
+  /// No description provided for @newsPeekNoSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'No summary yet'**
+  String get newsPeekNoSummary;
+
+  /// No description provided for @newsPeekFetching.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching the text'**
+  String get newsPeekFetching;
+
+  /// No description provided for @newsTextFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'text from {publisher}'**
+  String newsTextFrom(String publisher);
+
   /// No description provided for @newsSummaryPending.
   ///
   /// In en, this message translates to:

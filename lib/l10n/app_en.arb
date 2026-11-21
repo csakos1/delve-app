@@ -3809,6 +3809,17 @@
   "newsAiSummary": "AI summary",
   "newsWhy": "Why",
   "newsAiDisclaimer": "Written by the local model. It can contain errors.",
+  "newsFromExcerpt": "from the feed's excerpt",
+  "newsPeekNoSummary": "No summary yet",
+  "newsPeekFetching": "Fetching the text",
+  "newsTextFrom": "text from {publisher}",
+  "@newsTextFrom": {
+    "placeholders": {
+      "publisher": {
+        "type": "String"
+      }
+    }
+  },
   "newsSummaryPending": "The summary is written when llama-server is idle.",
   "newsFromTheFeed": "From the feed",
   "newsTeaserOnly": "Only the feed's teaser is here.",

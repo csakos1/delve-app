@@ -422,13 +422,21 @@ class _Story extends StatelessWidget {
         ],
         if (summaryBlock) ...[
           const SizedBox(height: 18),
-          _AiSummary(summary: i.summaryHu),
+          _AiSummary(
+            summary: i.summaryHu,
+            excerpt: i.summaryBasis == 'excerpt',
+          ),
         ],
         if (i.isRelease)
           _Releases(item: i, now: now)
         else if (text != null) ...[
           const SizedBox(height: DelveTokens.space5),
-          _Article(text: text, at: story.textAt, now: now),
+          _Article(
+            text: text,
+            at: story.textAt,
+            now: now,
+            publisher: i.textPublisher,
+          ),
         ] else ...[
           if (i.excerpt case final e? when e.trim().isNotEmpty)
             _Excerpt(text: e),
@@ -529,8 +537,11 @@ class _WhyQuote extends StatelessWidget {
 /// “AI summary” between two hairlines; with the text there but no summary
 /// yet, the pending line.
 class _AiSummary extends StatelessWidget {
-  const _AiSummary({required this.summary});
+  const _AiSummary({required this.summary, this.excerpt = false});
   final String? summary;
+
+  /// Written from the feed's excerpt: no article came (N4b).
+  final bool excerpt;
 
   @override
   Widget build(BuildContext context) {
@@ -568,9 +579,14 @@ class _AiSummary extends StatelessWidget {
                       color: muted,
                     ),
                     const SizedBox(width: DelveTokens.space1),
-                    Text(
-                      l.newsAiSummary,
-                      style: DelveText.monoSmall.copyWith(color: muted),
+                    Flexible(
+                      child: Text(
+                        excerpt
+                            ? '${l.newsAiSummary} · ${l.newsFromExcerpt}'
+                            : l.newsAiSummary,
+                        key: const Key('news.story.ai.label'),
+                        style: DelveText.monoSmall.copyWith(color: muted),
+                      ),
                     ),
                   ],
                 ),
@@ -731,10 +747,18 @@ class _SourcesState extends ConsumerState<_Sources> {
 /// The article: paragraphs (blank-line separated), 12 dp apart; at the end
 /// the size and when the text came.
 class _Article extends StatelessWidget {
-  const _Article({required this.text, required this.at, required this.now});
+  const _Article({
+    required this.text,
+    required this.at,
+    required this.now,
+    this.publisher,
+  });
   final String text;
   final DateTime? at;
   final DateTime now;
+
+  /// The text is a merged item's article: its publisher (N4b).
+  final String? publisher;
 
   @override
   Widget build(BuildContext context) {
@@ -756,12 +780,17 @@ class _Article extends StatelessWidget {
           ],
           const SizedBox(height: DelveTokens.space4),
           Text(
-            fetched == null
-                ? l.newsTextSize(tokenCount(text.length))
-                : l.newsTextSizeAt(
-                    tokenCount(text.length),
-                    clockTime(fetched, now),
-                  ),
+            [
+              if (publisher case final p?) l.newsTextFrom(p),
+              if (fetched == null)
+                l.newsTextSize(tokenCount(text.length))
+              else
+                l.newsTextSizeAt(
+                  tokenCount(text.length),
+                  clockTime(fetched, now),
+                ),
+            ].join(' · '),
+            key: const Key('news.story.textInfo'),
             style: DelveText.monoSmall.copyWith(color: context.delve.textMuted),
           ),
         ],

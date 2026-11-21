@@ -16,7 +16,10 @@ const int kNewsMustRead = 9;
 /// [score] .. [summaryHu] are null until the local model scored, explained
 /// and summarised it. [textState]: null (no text asked for) | `queued` |
 /// `ok` | `failed` (N1c). [originalUrl] is the publisher's address once a
-/// Google News link was followed, else [url].
+/// Google News link was followed, else [url]. [summaryBasis] (API 24):
+/// `text` | `excerpt` (no article came: written from the feed's excerpt) |
+/// null; [textPublisher] (API 24): the publisher of the text when it is a
+/// merged item's article.
 @freezed
 abstract class NewsItem with _$NewsItem {
   const factory NewsItem({
@@ -39,7 +42,9 @@ abstract class NewsItem with _$NewsItem {
     String? why,
     bool? setup,
     String? summaryHu,
+    String? summaryBasis,
     String? textState,
+    String? textPublisher,
     required String originalUrl,
     @Default(false) bool read,
     @Default(false) bool saved,

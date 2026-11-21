@@ -13,6 +13,7 @@ import '../../l10n/app_localizations.dart';
 import '../../theme/delve_theme.dart';
 import '../format.dart';
 import '../links.dart';
+import 'news_peek.dart';
 import 'page_scaffolds.dart';
 
 /// News icons (design 26 D3, `delve_tokens.json` → news.icons).
@@ -333,7 +334,8 @@ enum NewsRowLayout {
 
 /// One story: tags, title (2 lines, weight by read state), the why (unread
 /// only, one line), “publisher · N sources · age”. Tap → reading view; long
-/// press → [onLongPress] (the menu; on the Dashboard: copy the link).
+/// press → [onLongPress] ([showNewsMenu]: on the phone the summary card,
+/// on the desktop the menu).
 class NewsStoryRow extends ConsumerWidget {
   const NewsStoryRow({
     super.key,
@@ -524,12 +526,11 @@ class SelectedNewsStory extends InheritedWidget {
 void openNewsStory(BuildContext context, int id) =>
     context.open(Routes.newsStory(id));
 
-/// What the long-press menu offers.
-enum _MenuAction { more, less, hide, save, copy }
-
-/// The long-press menu of a row (design 26 D3-b6): More / Less like this,
-/// Hide the feed (not for a Google News story), Save, Copy link - opened
-/// under the pressed row.
+/// A row's long press (right click on the desktop): on the phone the card
+/// with the story's AI summary and the actions under it (N4a,
+/// [showNewsPeek]); on the desktop the menu (design 26 D3-b6) - More / Less
+/// like this, Hide the feed (not for a Google News story), Save, Copy link -
+/// opened under the row. Neither marks the story read.
 Future<void> showNewsMenu(
   BuildContext context,
   WidgetRef ref,
@@ -537,6 +538,60 @@ Future<void> showNewsMenu(
 ) async {
   final l = AppLocalizations.of(context);
   final messenger = ScaffoldMessenger.of(context);
+  final menu = DesktopLayout.of(context)
+      ? _desktopNewsMenu(context, item)
+      : showNewsPeek(context, item);
+  final choice = await menu;
+  if (choice == null || !context.mounted) return;
+  // the newest copy: the card may have fetched its text meanwhile
+  final story = ref.read(newsProvider).current(item);
+  final news = ref.read(newsProvider.notifier);
+  void say(String text, {VoidCallback? undo}) => messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(text),
+        action: undo == null
+            ? null
+            : SnackBarAction(label: l.newsUndo, onPressed: undo),
+      ),
+    );
+  try {
+    switch (choice) {
+      case NewsAction.open:
+        openNewsStory(context, story.id);
+      case NewsAction.more || NewsAction.less:
+        final f = choice == NewsAction.more ? 'more' : 'less';
+        final clear = story.feedback == f;
+        await news.mark(
+          story,
+          feedback: clear ? null : f,
+          clearFeedback: clear,
+        );
+        if (!clear) {
+          say(f == 'more' ? l.newsMoreLikeThis : l.newsLessLikeThis);
+        }
+      case NewsAction.hide:
+        final source = story.source!;
+        await news.setSource(source, enabled: false);
+        say(
+          l.newsSourceHidden(story.publisher ?? source),
+          undo: () => unawaited(news.setSource(source, enabled: true)),
+        );
+      case NewsAction.save:
+        await news.mark(story, saved: !story.saved);
+        say(story.saved ? l.newsRemovedFromSaved : l.newsSavedSnack);
+      case NewsAction.copy:
+        if (context.mounted) await copyLink(context, story.originalUrl);
+    }
+  } on Object catch (e) {
+    say(l.newsActionFailed(apiErrorText(l, e)));
+  }
+}
+
+/// The desktop's menu of a row: under it, from its left edge.
+Future<NewsAction?> _desktopNewsMenu(BuildContext context, NewsItem item) {
+  final l = AppLocalizations.of(context);
   final box = context.findRenderObject() as RenderBox?;
   final overlay =
       Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
@@ -547,12 +602,12 @@ Future<void> showNewsMenu(
     Rect.fromLTWH(topLeft.dx + DelveTokens.space4, topLeft.dy, 0, 0),
     Offset.zero & overlay.size,
   );
-  PopupMenuItem<_MenuAction> row(
-    _MenuAction a,
+  PopupMenuItem<NewsAction> row(
+    NewsAction a,
     IconData icon,
     String label, {
     bool filled = false,
-  }) => PopupMenuItem<_MenuAction>(
+  }) => PopupMenuItem<NewsAction>(
     key: Key('news.menu.${a.name}'),
     value: a,
     child: Row(
@@ -569,75 +624,38 @@ Future<void> showNewsMenu(
     ),
   );
   final hideable = item.source != null && !item.gn;
-  final choice = await showMenu<_MenuAction>(
+  return showMenu<NewsAction>(
     context: context,
     position: position,
     constraints: const BoxConstraints(minWidth: 248),
     items: [
       row(
-        _MenuAction.more,
+        NewsAction.more,
         NewsIcons.more,
         l.newsMoreLikeThis,
         filled: item.feedback == 'more',
       ),
       row(
-        _MenuAction.less,
+        NewsAction.less,
         NewsIcons.less,
         l.newsLessLikeThis,
         filled: item.feedback == 'less',
       ),
       if (hideable)
         row(
-          _MenuAction.hide,
+          NewsAction.hide,
           NewsIcons.hide,
           l.newsHideSource(item.publisher ?? item.source!),
         ),
       row(
-        _MenuAction.save,
+        NewsAction.save,
         NewsIcons.saved,
         item.saved ? l.newsRemoveFromSaved : l.newsSave,
         filled: item.saved,
       ),
-      row(_MenuAction.copy, NewsIcons.copyLink, l.newsCopyLink),
+      row(NewsAction.copy, NewsIcons.copyLink, l.newsCopyLink),
     ],
   );
-  if (choice == null || !context.mounted) return;
-  final news = ref.read(newsProvider.notifier);
-  void say(String text, {VoidCallback? undo}) => messenger
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        content: Text(text),
-        action: undo == null
-            ? null
-            : SnackBarAction(label: l.newsUndo, onPressed: undo),
-      ),
-    );
-  try {
-    switch (choice) {
-      case _MenuAction.more || _MenuAction.less:
-        final f = choice == _MenuAction.more ? 'more' : 'less';
-        final clear = item.feedback == f;
-        await news.mark(item, feedback: clear ? null : f, clearFeedback: clear);
-        if (!clear) {
-          say(f == 'more' ? l.newsMoreLikeThis : l.newsLessLikeThis);
-        }
-      case _MenuAction.hide:
-        final source = item.source!;
-        await news.setSource(source, enabled: false);
-        say(
-          l.newsSourceHidden(item.publisher ?? source),
-          undo: () => unawaited(news.setSource(source, enabled: true)),
-        );
-      case _MenuAction.save:
-        await news.mark(item, saved: !item.saved);
-        say(item.saved ? l.newsRemovedFromSaved : l.newsSavedSnack);
-      case _MenuAction.copy:
-        if (context.mounted) await copyLink(context, item.originalUrl);
-    }
-  } on Object catch (e) {
-    say(l.newsActionFailed(apiErrorText(l, e)));
-  }
 }
 
 /// D3-a Dashboard News block, between the Brief and Watches: the header
@@ -773,7 +791,7 @@ class NewsCard extends ConsumerWidget {
                   layout: NewsRowLayout.dashboard,
                   why: n == 0,
                   gap: 14,
-                  onLongPress: (ctx, i) => copyLink(ctx, i.originalUrl),
+                  onLongPress: (ctx, i) => unawaited(showNewsMenu(ctx, ref, i)),
                 ),
             ],
             if (digest.failing > 0)
